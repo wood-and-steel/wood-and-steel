@@ -1,4 +1,4 @@
-import { cities, routes } from "./GameMap";
+import { cities, routes } from "./GameData";
 import { cardinalDirection } from "./geo";
 
 // Return cities connected to fromCitiesKeys

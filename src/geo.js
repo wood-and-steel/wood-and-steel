@@ -1,4 +1,4 @@
-import { cities } from "./GameMap";
+import { cities } from "./GameData";
 
 // Given two cities, returns the compass heading from one to the other
 

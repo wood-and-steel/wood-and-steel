@@ -1,4 +1,4 @@
-import { cities, commodities } from "./GameMap";
+import { cities, commodities } from "./GameData";
 
 export default class Contract {
 
