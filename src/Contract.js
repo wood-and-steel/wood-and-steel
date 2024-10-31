@@ -77,12 +77,10 @@ export default class Contract {
     }
   }
   get type() { return this.#type; }
+
+  types = Object.freeze({
+    Market: "Market",
+    Private: "Private",
+    Fulfilled: "Fulfilled",
+  });
 }
-
-// Static fields
-
-Contract.types = {
-  Market: "Market",
-  Private: "Private",
-  Fulfilled: "Fulfilled",
-};

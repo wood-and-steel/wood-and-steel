@@ -267,7 +267,7 @@ export const routes = new Map([
   [ "Thunder Bay-Winnipeg", { "length": 4, "mountainous": false, cities: ["Thunder Bay", "Winnipeg"] } ]
 ])
 
-export const commodities = new Map(
+export const commodities = new Map([
   [ "coal", "coal" ],
   [ "copper", "copper" ],
   [ "lead", "lead" ],
@@ -300,4 +300,4 @@ export const commodities = new Map(
   [ "corn", "corn" ],
   [ "imports", "imports" ],
   [ "tourists", "tourists" ]
-);
+]);

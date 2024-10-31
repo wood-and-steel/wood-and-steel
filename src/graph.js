@@ -114,8 +114,8 @@ export function generateStartingContract(activeCitiesKeys) {
   // List and count commodities in candidate destinations
   
   const candidateCountByCommodity = new Map();
-  candidatesInChosenDirection.forEach(c => {
-    cities.get(c).commodities.forEach(commodity => {
+  candidatesInChosenDirection.forEach(candidate => {
+    cities.get(candidate).commodities.forEach(commodity => {
       if (candidateCountByCommodity.has(commodity)) 
         candidateCountByCommodity.set(commodity, (candidateCountByCommodity.get(commodity) + 1))
       else
@@ -146,12 +146,14 @@ export function generateStartingContract(activeCitiesKeys) {
   // Choose the destination, part 1: list candidates that don't supply the contractCommodity by their value
   
   let sumValues = 0;
-  const weightedCandidates = new Map(candidatesInChosenDirection
-                                     .filter(candidate => !cities.get(candidate).commodities.includes(contractCommodity))
-                                     .map(candidate => {
-                                       sumValues += valueOfCity(candidate);
-                                       return [candidate, valueOfCity(candidate)];
-                                     }));
+  const weightedCandidates = new Map(
+    candidatesInChosenDirection
+      .filter(candidate => !cities.get(candidate).commodities.includes(contractCommodity))
+      .map(candidate => {
+        sumValues += valueOfCity(candidate);
+        return [candidate, valueOfCity(candidate)];
+      })
+  );
 
   console.log(`weightedCandidates:\n${[...weightedCandidates]}`);
 
