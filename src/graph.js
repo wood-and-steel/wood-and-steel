@@ -1,4 +1,5 @@
 import { cities, routes } from "./GameData";
+import Contract from "./Contract";
 import { cardinalDirection } from "./geo";
 
 // Return cities connected to fromCitiesKeys
@@ -65,8 +66,6 @@ function citiesByDirection(
 
   return candidatesByDirection;
 }
-
-// TODO: Make and return a real Contract object instead of a string
 
 export function generateStartingContract(activeCitiesKeys) {
   
@@ -172,9 +171,11 @@ export function generateStartingContract(activeCitiesKeys) {
     else
       skipped += cityValue;
   });
-  console.log(`contractCity: ${contractCity}`);
 
-  return `Deliver ${contractCommodity} to ${contractCity}`;
+  const startingContract = new Contract(contractCity, contractCommodity, "private");
+  console.log(`${startingContract}`);
+
+  return startingContract;
 }
 
 function valueOfCity(cityKey) {

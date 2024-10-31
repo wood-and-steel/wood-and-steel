@@ -13,7 +13,8 @@ export const WoodAndSteel = {
     // into an interactive state.
 
     generateContract: ({ G }, activeCities) => {
-      G.contractsGenerated.push(generateStartingContract(activeCities));
+      const contract = generateStartingContract(activeCities);
+      G.contractsGenerated.push(contract.toJSON());
     },
   },
 };

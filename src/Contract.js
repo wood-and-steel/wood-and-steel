@@ -7,18 +7,19 @@ export default class Contract {
   #player;
   #type;
 
-  constructor({
+  constructor(
     destinationKey,                 // Key of the destination city
     commodity,                      // Name of the commodity
-    type = Contract.types.Market,   // One of Contract.types
+    type = "market",                // One of ["market", "private", "fulfilled"]
     player = null,                  // ID of player who has claimed or fulfilled a contract
-  }) {
+  ) {
       if (
         !cities.get(destinationKey) || 
         !commodities.get(commodity) ||
-        !Contract.types.hasOwnProperty(type)
+        !["market", "private", "fulfilled"].includes(type)
       ) {
         // TODO: Add test for player validity
+        console.error("new Contract() failed");
         return undefined;
       }
       this.#destinationKey = destinationKey;
@@ -31,6 +32,10 @@ export default class Contract {
   // TODO: rewardValue() { return distance from the destination to the nearest city that produces the commodity * $3K }
 
   toString() { return `${this.#commodity} -> ${this.#destinationKey} (${this.#type}${(this.#player ? `, ${this.#player}` : "")})`; }
+
+  // Need explicit JSON rendering to support being in G (see https://boardgame.io/documentation/#/?id=state)
+  toJSON() { return `{ "destinationKey": "${this.#destinationKey}", "commodity:" "${this.#commodity}", "type": "${this.#type}", "player": ${this.#player} }`};
+  // TODO: Deserialize from JSON to a Contract object in the right way
 
   equals(that) {
       return that instanceof Contract &&
@@ -70,7 +75,7 @@ export default class Contract {
   get player() { return this.#player; }
 
   set type(t) { 
-    if (Contract.types.hasOwnProperty(t)) {
+    if (["market", "private", "fulfilled"].includes(t)) {
       this.#type = t;
     } else {
       console.error(`Contract.type(${t}): no such contract type`);
@@ -78,9 +83,4 @@ export default class Contract {
   }
   get type() { return this.#type; }
 
-  types = Object.freeze({
-    Market: "Market",
-    Private: "Private",
-    Fulfilled: "Fulfilled",
-  });
 }
