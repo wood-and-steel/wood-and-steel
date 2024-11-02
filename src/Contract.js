@@ -1,36 +1,52 @@
 import { cities, commodities } from "./GameData";
+import { shortestDistance } from "./graph";
 
+/**
+ * Represents a contract
+ *
+ * @export
+ * @class Contract
+ * @typedef {Contract}
+ * @property {string} destinationKey    - Key of the destination city
+ * @property {string} commodity         - Name of the commodity
+ * @property {string} type              - One of ["market", "private", "fulfilled"]
+ * @property {string} [player]          - Key of the destination city
+ * @property {number} rewardValue       - Monetary value of contract upon fulfillment (read-only)
+*/
 export default class Contract {
 
-  #destinationKey;
+  #destinationKey; 
   #commodity;
   #player;
   #type;
-
-  constructor(
-    destinationKey,                 // Key of the destination city
-    commodity,                      // Name of the commodity
-    type = "market",                // One of ["market", "private", "fulfilled"]
-    player = null,                  // ID of player who has claimed or fulfilled a contract
-  ) {
-      if (
-        !cities.get(destinationKey) || 
-        !commodities.get(commodity) ||
-        !["market", "private", "fulfilled"].includes(type)
-      ) {
-        // TODO: Add test for player validity
-        console.error("new Contract() failed");
-        return undefined;
-      }
-      this.#destinationKey = destinationKey;
-      this.#commodity = commodity;
-      this.#type = type;
-      this.#player = player;
+  
+  /**
+   * Creates an instance of Contract.
+   *
+   * @constructor
+   * @param {string} destinationKey     - Key of the destination city
+   * @param {string} commodity          - Name of the commodity
+   * @param {string} [type="market"]    - One of ["market", "private", "fulfilled"]
+   * @param {*} [player=null]           - ID of the player who holds it or has fulfilled it
+   */
+  constructor(destinationKey, commodity, type = "market", player = null) {
+    if (
+      !cities.get(destinationKey) || 
+      !commodities.get(commodity) ||
+      !["market", "private", "fulfilled"].includes(type)
+      // TODO: Add test for player validity
+    ) {
+      console.error("new Contract() failed");
+      return undefined;
+    }
+    this.#destinationKey = destinationKey;
+    this.#commodity = commodity;
+    this.#type = type;
+    this.#player = player;
   }
 
   // Instance methods
-  // TODO: rewardValue() { return distance from the destination to the nearest city that produces the commodity * $3K }
-
+  
   toString() { return `${this.#commodity} -> ${this.#destinationKey} (${this.#type}${(this.#player ? `, ${this.#player}` : "")})`; }
 
   // Need explicit JSON rendering to support being in G (see https://boardgame.io/documentation/#/?id=state)
@@ -38,15 +54,15 @@ export default class Contract {
   // TODO: Deserialize from JSON to a Contract object in the right way
 
   equals(that) {
-      return that instanceof Contract &&
-          this.#destinationKey === that.destinationKey &&
-          this.#commodity === that.commodity &&
-          this.#type === that.type &&
-          this.#player === that.player;
+    return that instanceof Contract &&
+      this.#destinationKey === that.destinationKey &&
+      this.#commodity === that.commodity &&
+      this.#type === that.type &&
+      this.#player === that.player;
   }
 
   // Static methods
-  // static rewardValue(c) {  }
+  // static foo(c) {  }
 
   // Fields
 
@@ -83,4 +99,9 @@ export default class Contract {
   }
   get type() { return this.#type; }
 
+  // rewardValue is read-only; setter is undefined
+  get rewardValue() {
+    return shortestDistance(this.#destinationKey, c => cities.get(c)?.commodities.includes(this.#commodity)) * 3000;
+  }
+  
 }
