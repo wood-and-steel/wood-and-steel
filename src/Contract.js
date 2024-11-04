@@ -301,7 +301,6 @@ export default class Contract {
     //  - available within any active city or 1 away from them
     
     const citiesWithinOneHop = [ ...(citiesConnectedTo(activeCitiesKeys, 1)), ...activeCitiesKeys ];
-    console.log(`citiesWithinOneHop\n${citiesWithinOneHop}`);
 
     const possibleCommodities = new Set();
     citiesWithinOneHop.forEach(cityWithinOneHop => {
@@ -309,8 +308,8 @@ export default class Contract {
         .filter(commodity => !cities.get(contractCity).commodities.includes(commodity))
         .forEach(commodityNotInContractCity => possibleCommodities.add(commodityNotInContractCity));
     });
-    console.log(`possibleCommodities\n${[...possibleCommodities]}`);
 
+    // TODO: Write test to ensure this case never happens (low priority, seems very unlikely by inspection)
     if (possibleCommodities.size === 0) {
       console.error(`generateMarketContract: no possible commodities`);
       return undefined;
