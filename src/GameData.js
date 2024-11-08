@@ -13,7 +13,7 @@
  * value: {
  *  state           string
  *  country         string
- *  label           string (can be null) - prettier version of name
+ *  label           string (can be null) - prettier version of key
  *  latitude        number
  *  longitude       number
  *  large           boolean
