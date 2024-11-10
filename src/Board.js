@@ -1,4 +1,6 @@
 import React from "react";
+import { cities } from "./GameData";
+import { valueOfCity, rewardValue } from "./Contract";
 
 export function WoodAndSteelState({ ctx, G, moves }) {
 
@@ -31,12 +33,22 @@ export function WoodAndSteelState({ ctx, G, moves }) {
     padding: '0.25rem',
     margin: '0rem',
     backgroundColor: '#f0f0f0',
+    textAlign: 'left', 
+    border: 'solid 1px rgba(0, 0, 0, 0.2)'
   };
 
   const contractsList = G.contracts.map((contract, index) => 
-    <div key={index} style={contractStyle}>
-      {contract.commodity} to {contract.destinationKey} ({contract.type}) {contract.fulfilled ? "FULFILLED" : null}
-    </div>
+    <button id={index} style={contractStyle} name="toggleContractFulfilled">
+      <span style={contract.fulfilled ? {textDecoration: 'line-through'} : null}>
+        {contract.commodity} to {contract.destinationKey} ({contract.type})
+      </span> 
+      {contract.fulfilled ? " FULFILLED " : " "}
+      ${`${rewardValue(contract)/1000}`}K
+    </button>
+  );
+
+  const cityValues = [...cities].map(([key, ...rest]) =>
+    <div style={{width: '140px', display: 'inline-block'}}>{key} {valueOfCity(G, key)}</div>
   );
 
   function handleSubmit(e) {
@@ -54,9 +66,14 @@ export function WoodAndSteelState({ ctx, G, moves }) {
       case "privateContract":
         moves.generatePrivateContract(activeCities, activeCities[0]);
         break;
-      default:
+      case "marketContract":
         moves.generateMarketContract(activeCities);
-    }
+        break;
+      case "toggleContractFulfilled":
+        moves.toggleContractFulfilled(e.nativeEvent.submitter.id);
+        break;
+      default:
+      }
   }
 
   return (
@@ -73,7 +90,8 @@ export function WoodAndSteelState({ ctx, G, moves }) {
         </div>
         <div>Private contracts use the first listed city as the one with the latest delivery completed.</div>
         {contractsList}
-        </form>
+      </form>
+      <div style={{marginTop: '1rem'}}>{cityValues}</div>
     </div>
   );
 }

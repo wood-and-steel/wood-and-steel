@@ -35,12 +35,14 @@ export function valueOfCity(G, cityKey) {
     }
   });
 
-  return 2 * (1 + 
+  const value = 2 * (1 + 
     (city.commodities.length > 0) + 
     city.large + 
     (3 * city.westCoast)) +
     (2 * contractsFulfilledHere) +
     commoditiesDeliveredFromHere.size;
+  
+  return value;
 }
 
 
