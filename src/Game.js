@@ -1,4 +1,4 @@
-import Contract from "./Contract"
+import { generateMarketContract, generatePrivateContract, generateStartingContract } from './Contract';
 import { TurnOrder } from 'boardgame.io/core';
 
 export const WoodAndSteel = {
@@ -12,27 +12,27 @@ export const WoodAndSteel = {
 
     // TODO: Get rid of generate*Contract as moves; wired them up this way temporarily to work around my lack of React skill
     generateStartingContract: ({ G, playerID }, activeCities) => {
-      const contract = Contract.generateStartingContract(G, activeCities);
+      const contract = generateStartingContract(G, activeCities);
       if (contract) {
-        G.contracts.push(contract.toJSON());
+        G.contracts.push(contract);
       } else {
         console.error("Game.js: generateStartingContract failed");
       }
     },
 
     generatePrivateContract: ({ G, playerID }, activeCities, currentCityKey) => {
-      const contract = Contract.generatePrivateContract(G, activeCities, currentCityKey);
+      const contract = generatePrivateContract(G, activeCities, currentCityKey);
       if (contract) {
-        G.contracts.push(contract.toJSON());
+        G.contracts.push(contract);
       } else {
         console.error("Game.js: generatePrivateContract failed");
       }
   },
 
     generateMarketContract: ({ G, playerID }, activeCities) => {
-      const contract = Contract.generateMarketContract(G, activeCities);
+      const contract = generateMarketContract(G, activeCities);
       if (contract) {
-        G.contracts.push(contract.toJSON());
+        G.contracts.push(contract);
       } else {
         console.error("Game.js: generateMarketContract failed");
       }

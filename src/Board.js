@@ -1,8 +1,5 @@
 import React from "react";
 
-// Following imports are for generating test output
-import Contract from "./Contract";
-
 export function WoodAndSteelState({ ctx, G, moves }) {
 
   const pageStyle = {
@@ -38,7 +35,7 @@ export function WoodAndSteelState({ ctx, G, moves }) {
 
   const contractsList = G.contracts.map((contract, index) => 
     <div key={index} style={contractStyle}>
-      {Contract.fromJSON(contract).toString()}
+      {contract.commodity} to {contract.destinationKey} ({contract.type}) {contract.fulfilled ? "FULFILLED" : null}
     </div>
   );
 
