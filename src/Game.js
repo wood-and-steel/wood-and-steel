@@ -10,22 +10,32 @@ export const WoodAndSteel = {
 
   moves: {
 
+    // TODO: Get rid of generate*Contract as moves; wired them up this way temporarily to work around my lack of React skill
     generateStartingContract: ({ G, playerID }, activeCities) => {
-      // TODO: Remove generateStartingContract. Wired it up this way for now to work around my lack of React skill.
       const contract = Contract.generateStartingContract(G, activeCities);
-      G.contracts.push(contract.toJSON());
+      if (contract) {
+        G.contracts.push(contract.toJSON());
+      } else {
+        console.error("Game.js: generateStartingContract failed");
+      }
     },
 
     generatePrivateContract: ({ G, playerID }, activeCities, currentCityKey) => {
-      // TODO: Remove generatePrivateContract. Wired it up this way for now to work around my lack of React skill.
       const contract = Contract.generatePrivateContract(G, activeCities, currentCityKey);
-      G.contracts.push(contract.toJSON());
-    },
+      if (contract) {
+        G.contracts.push(contract.toJSON());
+      } else {
+        console.error("Game.js: generatePrivateContract failed");
+      }
+  },
 
     generateMarketContract: ({ G, playerID }, activeCities) => {
-      // TODO: Remove generateMarketContract. Wired it up this way for now to work around my lack of React skill.
       const contract = Contract.generateMarketContract(G, activeCities);
-      G.contracts.push(contract.toJSON());
+      if (contract) {
+        G.contracts.push(contract.toJSON());
+      } else {
+        console.error("Game.js: generateMarketContract failed");
+      }
     },
   },
 

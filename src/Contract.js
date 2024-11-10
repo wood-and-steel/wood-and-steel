@@ -216,6 +216,11 @@ export default class Contract {
       candidatesInChosenDirection.filter(candidate => !cities.get(candidate).commodities.includes(contractCommodity))
     );
   
+    if (!contractCommodity || !contractCity) {
+      console.error(`generateStartingContract: missing commodity (${contractCommodity}) or city (${contractCity})`);
+      return undefined;
+    }
+
     return new Contract(contractCity, contractCommodity, "private");  
   };
 
@@ -266,6 +271,10 @@ export default class Contract {
 
     // Pick a commodity for the contract
     const contractCommodity = [...availableCommodities][Math.floor(Math.random() * availableCommodities.size)];
+    if (!contractCommodity || !contractCity) {
+      console.error(`generatePrivateContract: missing commodity (${contractCommodity}) or city (${contractCity})`);
+      return undefined;
+    }
 
     return new Contract(contractCity, contractCommodity, "private");  
   };
@@ -310,6 +319,11 @@ export default class Contract {
     // Pick a commodity for the contract
     const contractCommodity = [...possibleCommodities][Math.floor(Math.random() * possibleCommodities.size)];
   
+    if (!contractCommodity || !contractCity) {
+      console.error(`generateMarketContract: missing commodity (${contractCommodity}) or city (${contractCity})`);
+      return undefined;
+    }
+
     return new Contract(contractCity, contractCommodity, "market");  
   };
 }
