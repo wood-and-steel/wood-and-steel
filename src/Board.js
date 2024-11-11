@@ -24,7 +24,7 @@ export function WoodAndSteelState({ ctx, G, moves }) {
     gap: '0.5rem',
   };
   const buttonStyle = {
-    height: '40px',
+    height: '32px',
     textAlign: 'center',
     paddingLeft: '1rem',
     paddingRight: '1rem',
@@ -103,9 +103,9 @@ export function WoodAndSteelState({ ctx, G, moves }) {
           <button name="marketContract" style={buttonStyle}>Generate Market Contract</button>
         </div>
         <div>Private contracts use the first listed city as the one with the latest delivery completed.</div>
-        {contractsList}
+      <div style={{margin: '0.5rem 0rem'}}>{cityValues}</div>
+      {contractsList}
       </form>
-      <div style={{marginTop: '1rem'}}>{cityValues}</div>
     </div>
   );
 }

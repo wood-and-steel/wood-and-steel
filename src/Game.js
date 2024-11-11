@@ -14,7 +14,7 @@ export const WoodAndSteel = {
     generateStartingContract: ({ G, playerID }, activeCities) => {
       const contract = generateStartingContract(G, activeCities);
       if (contract) {
-        G.contracts.push(contract);
+        G.contracts.unshift(contract);
       } else {
         console.error("Game.js: generateStartingContract failed");
       }
@@ -23,7 +23,7 @@ export const WoodAndSteel = {
     generatePrivateContract: ({ G, playerID }, activeCities, currentCityKey) => {
       const contract = generatePrivateContract(G, activeCities, currentCityKey);
       if (contract) {
-        G.contracts.push(contract);
+        G.contracts.unshift(contract);
       } else {
         console.error("Game.js: generatePrivateContract failed");
       }
@@ -32,7 +32,7 @@ export const WoodAndSteel = {
     generateMarketContract: ({ G, playerID }, activeCities) => {
       const contract = generateMarketContract(G, activeCities);
       if (contract) {
-        G.contracts.push(contract);
+        G.contracts.unshift(contract);
       } else {
         console.error("Game.js: generateMarketContract failed");
       }
