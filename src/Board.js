@@ -39,6 +39,19 @@ export function WoodAndSteelState({ ctx, G, moves }) {
     border: 'solid 1px rgba(0, 0, 0, 0.2)',
     cursor: 'pointer',
   };
+  const cityTableStyle = {
+    margin: '0.5rem 0rem', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    flexWrap: 'wrap',
+    height: '280px',
+  };
+  const cityCellStyle = {
+    display: 'flow',
+    flex: '1 1',
+    width: '115px',
+    opacity: '0.8',
+  };
 
   const contractsList = G.contracts.map((contract, index) => 
     <div>
@@ -56,7 +69,7 @@ export function WoodAndSteelState({ ctx, G, moves }) {
   );
 
   const cityValues = [...cities].map(([key, ...rest]) =>
-    <div style={{width: '140px', display: 'inline-block', opacity: '0.8'}}>
+    <div style={cityCellStyle}>
       <span style={{opacity: '0.65', paddingRight: '0.4rem'}}>{key}</span> 
       <span style={{fontWeight: '600'}}>{valueOfCity(G, key)}</span>
     </div>
@@ -112,7 +125,7 @@ export function WoodAndSteelState({ ctx, G, moves }) {
         <div>
           <div><span style={{fontWeight: 600}}>Private</span>: First listed city should be the one with the latest delivery completed.</div>
         </div>
-        <div style={{margin: '0.5rem 0rem', flexDirection: 'column'}}>{cityValues}</div>
+        <div style={cityTableStyle}>{cityValues}</div>
       {contractsList}
       </form>
     </div>
