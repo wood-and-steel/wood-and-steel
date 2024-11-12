@@ -22,12 +22,14 @@ export function WoodAndSteelState({ ctx, G, moves }) {
     display: 'flex',
     flexDirection: 'row',
     gap: '0.5rem',
+    alignItems: 'center',
   };
   const buttonStyle = {
-    height: '32px',
+    height: '28px',
     textAlign: 'center',
     paddingLeft: '1rem',
     paddingRight: '1rem',
+    alignItems: 'center',
   };
   const contractStyle = {
     padding: '0.25rem 0.75rem',
@@ -66,17 +68,20 @@ export function WoodAndSteelState({ ctx, G, moves }) {
 
     const form = e.target;
     const formData = new FormData(form);
-    const activeCities = Object.fromEntries(formData.entries()).activeCities.split(',').map(i => i.trim());
+    const inputParameters = Object.fromEntries(formData.entries()).inputParameters.split(',').map(i => i.trim());
 
     switch (e.nativeEvent.submitter.name) {
       case "startingContract":
-        moves.generateStartingContract(activeCities);
+        moves.generateStartingContract(inputParameters);
         break;
       case "privateContract":
-        moves.generatePrivateContract(activeCities, activeCities[0]);
+        moves.generatePrivateContract(inputParameters, inputParameters[0]);
         break;
       case "marketContract":
-        moves.generateMarketContract(activeCities);
+        moves.generateMarketContract(inputParameters);
+        break;
+      case "manualContract":
+        moves.addManualContract(inputParameters[0], inputParameters[1], inputParameters[2]);
         break;
       case "toggleContractFulfilled":
         moves.toggleContractFulfilled(e.nativeEvent.submitter.id);
@@ -94,16 +99,20 @@ export function WoodAndSteelState({ ctx, G, moves }) {
     <div style={pageStyle}>
       <form style={formStyle} method="post" onSubmit={handleSubmit}>
         <label style={textBoxStyle}>
-          <span>Active cities:</span>
-          <input name="activeCities" autoFocus={true} defaultValue="Jacksonville,Tallahassee" />
+          <span>Active cities, or <em>destination, commodity, type</em> for manual contracts:</span>
+          <input name="inputParameters" autoFocus={true} defaultValue="Jacksonville,Tallahassee" />
         </label>
         <div style={buttonBarStyle}>
-          <button name="startingContract" style={buttonStyle}>Generate Starting Contract</button>
-          <button name="privateContract" style={buttonStyle}>Generate Private Contract</button>
-          <button name="marketContract" style={buttonStyle}>Generate Market Contract</button>
+          <span style={{alignSelf: 'center'}}>Generate a contract:</span>
+          <button name="startingContract" style={buttonStyle}>Starting</button>
+          <button name="privateContract" style={buttonStyle}>Private</button>
+          <button name="marketContract" style={buttonStyle}>Market</button>
+          <button name="manualContract" style={{marginLeft: '2rem', ...buttonStyle}}>Add Manual</button>
         </div>
-        <div>Private contracts use the first listed city as the one with the latest delivery completed.</div>
-      <div style={{margin: '0.5rem 0rem'}}>{cityValues}</div>
+        <div>
+          <div><span style={{fontWeight: 600}}>Private</span>: First listed city should be the one with the latest delivery completed.</div>
+        </div>
+        <div style={{margin: '0.5rem 0rem'}}>{cityValues}</div>
       {contractsList}
       </form>
     </div>

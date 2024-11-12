@@ -1,4 +1,4 @@
-import { cities } from "./GameData";
+import { cities, commodities } from "./GameData";
 import { shortestDistance, citiesConnectedTo } from "./graph";
 import { cardinalDirection } from "./geo";
 
@@ -10,52 +10,6 @@ import { cardinalDirection } from "./geo";
  * @property {boolean} fulfilled
  * @property {any} playerID
  */
-
-/**
- * Returns the value of a city
- * 
- * @param {*} G
- * @param {string} cityKey 
- * @returns {number|undefined}
- */
-export function valueOfCity(G, cityKey) {
-  const city = cities.get(cityKey);
-
-  if (city === undefined) {
-    console.error(`valueOfCity("${cityKey}"): could not find cityKey)`);
-    return undefined;
-  }
-
-  let contractsFulfilledHere = 0, contractsWithCommoditiesFromHere = 0;
-
-  G.contracts.forEach(contract => {
-    if (contract.fulfilled) {
-      contractsFulfilledHere += (contract.destinationKey === cityKey);
-      contractsWithCommoditiesFromHere += (city.commodities.includes(contract.commodity));
-    }
-  });
-
-  const value = 2 * (1 + 
-    (city.commodities.length > 0) + 
-    city.large + 
-    (3 * city.westCoast)) +
-    (2 * contractsFulfilledHere) +
-    contractsWithCommoditiesFromHere;
-  
-  return value;
-}
-
-
-/**
- * Dollar value of this contract if fulfilled
- *
- * @param {Contract}
- * @type {number}
- */
-export function rewardValue(contract) {
-  return shortestDistance(contract.destinationKey, c => cities.get(c)?.commodities.includes(contract.commodity)) * 3000;
-}
-
 
 /**
  * Create a starting private contract for a given pair of starting cities
@@ -127,19 +81,9 @@ export function generateStartingContract(G, activeCitiesKeys) {
     candidatesInChosenDirection.filter(candidate => !cities.get(candidate).commodities.includes(contractCommodity))
   );
 
-  if (!contractCommodity || !contractCity) {
-    console.error(`generateStartingContract: missing commodity (${contractCommodity}) or city (${contractCity})`);
-    return undefined;
-  }
-
-  return {
-    destinationKey: contractCity, 
-    commodity: contractCommodity, 
-    type: "private",
-    player: null,
-    fulfilled: false,
-  }
+  return newContract(contractCity, contractCommodity, { type: "private" });
 };
+
 
 /**
  * Create a private contract from the given active cities and the starting city
@@ -151,7 +95,7 @@ export function generateStartingContract(G, activeCitiesKeys) {
  */
 export function generatePrivateContract(G, activeCitiesKeys, currentCityKey) {  
   if (!Array.isArray(activeCitiesKeys) || activeCitiesKeys.length === 0) {
-    console.error(`generateMarketContract(${activeCitiesKeys}): not an array with at least 1 city`);
+    console.error(`generateMarketContract(${activeCitiesKeys}): not an array of non-zero length`);
     return undefined;
   }
 
@@ -187,19 +131,10 @@ export function generatePrivateContract(G, activeCitiesKeys, currentCityKey) {
 
   // Pick a commodity for the contract
   const contractCommodity = [...availableCommodities][Math.floor(Math.random() * availableCommodities.size)];
-  if (!contractCommodity || !contractCity) {
-    console.error(`generatePrivateContract: missing commodity (${contractCommodity}) or city (${contractCity})`);
-    return undefined;
-  }
 
-  return {
-    destinationKey: contractCity, 
-    commodity: contractCommodity, 
-    type: "private",
-    player: null,
-    fulfilled: false,
-  }
+  return newContract(contractCity, contractCommodity, { type: "private" });
 };
+
 
 /**
  * Create a market contract from the given active cities
@@ -240,18 +175,7 @@ export function generateMarketContract(G, activeCitiesKeys) {
   // Pick a commodity for the contract
   const contractCommodity = [...possibleCommodities][Math.floor(Math.random() * possibleCommodities.size)];
 
-  if (!contractCommodity || !contractCity) {
-    console.error(`generateMarketContract: missing commodity (${contractCommodity}) or city (${contractCity})`);
-    return undefined;
-  }
-
-  return {
-    destinationKey: contractCity, 
-    commodity: contractCommodity, 
-    type: "market",
-    player: null,
-    fulfilled: false,
-  }
+  return newContract(contractCity, contractCommodity, { type: "market" });
 };
 
 
@@ -330,5 +254,92 @@ function citiesByDirection(fromCitiesKeys, candidateCitiesKeys)
   }
 
   return candidatesByDirection;
+}
+
+
+/**
+ * Validates parameters and returns a contract object
+ *
+ * @export
+ * @param {string} destinationKey
+ * @param {string} commodity
+ * @param {{ type: string; fulfilled: boolean; }} [options={
+ *   type: "market",
+ *   fulfilled: false,
+ *   player: null
+ * }]
+ * @returns {Contract|undefined} - contract object if successful, or undefined if not
+ */
+export function newContract(destinationKey, commodity, options = {
+  type: "market",
+  fulfilled: false,
+  player: null,
+}) {
+  if ((typeof destinationKey !== "string") || !cities.get(destinationKey)) {
+    console.error(`newContract: "${destinationKey}" is not a city`);
+    return undefined;
+  }
+  if ((typeof commodity !== "string") || !commodities.get(commodity)) {
+    console.error(`newContract: "${commodity}" is not a commodity`);
+    return undefined;
+  }
+  if (!(["market", "private"].includes(options.type))) {
+    console.error(`newContract: "${options.type}" is not a valid type`);
+    return undefined;
+  }
+
+  return {
+    destinationKey: destinationKey, 
+    commodity: commodity, 
+    type: options.type,
+    fulfilled: options.fulfilled,
+    player: null,
+  }
+}
+
+
+/**
+ * Returns the value of a city
+ * 
+ * @param {*} G
+ * @param {string} cityKey 
+ * @returns {number|undefined}
+ */
+export function valueOfCity(G, cityKey) {
+  const city = cities.get(cityKey);
+
+  if (city === undefined) {
+    console.error(`valueOfCity("${cityKey}"): could not find cityKey)`);
+    return undefined;
+  }
+
+  let contractsFulfilledHere = 0, contractsWithCommoditiesFromHere = 0;
+
+  G.contracts.forEach(contract => {
+    if (contract.fulfilled) {
+      contractsFulfilledHere += (contract.destinationKey === cityKey);
+      contractsWithCommoditiesFromHere += (city.commodities.includes(contract.commodity));
+    }
+  });
+
+  const value = 2 * (1 + 
+    (city.commodities.length > 0) + 
+    city.large + 
+    (3 * city.westCoast)) +
+    (2 * contractsFulfilledHere) +
+    contractsWithCommoditiesFromHere;
+  
+  return value;
+}
+
+
+/**
+ * Dollar value of this contract if fulfilled
+ *
+ * @param {Contract}
+ * @type {number}
+ */
+export function rewardValue(contract) {
+  return shortestDistance(contract.destinationKey, c => cities.get(c)?.commodities.includes(contract.commodity)) * 3000;
 }
 

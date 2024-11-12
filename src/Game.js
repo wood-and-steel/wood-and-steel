@@ -1,4 +1,4 @@
-import { generateMarketContract, generatePrivateContract, generateStartingContract } from './Contract';
+import { generateMarketContract, generatePrivateContract, generateStartingContract, newContract } from './Contract';
 import { TurnOrder } from 'boardgame.io/core';
 
 export const WoodAndSteel = {
@@ -35,6 +35,15 @@ export const WoodAndSteel = {
         G.contracts.unshift(contract);
       } else {
         console.error("Game.js: generateMarketContract failed");
+      }
+    },
+
+    addManualContract: ({ G, playerID }, destinationKey, commodity, type) => {
+      const contract = newContract(destinationKey, commodity, { type: type })
+      if (contract) {
+        G.contracts.unshift(contract);
+      } else {
+        console.error("Game.js: generateManualContract failed");
       }
     },
 
