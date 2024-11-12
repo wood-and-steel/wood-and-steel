@@ -112,7 +112,7 @@ export function WoodAndSteelState({ ctx, G, moves }) {
         <div>
           <div><span style={{fontWeight: 600}}>Private</span>: First listed city should be the one with the latest delivery completed.</div>
         </div>
-        <div style={{margin: '0.5rem 0rem'}}>{cityValues}</div>
+        <div style={{margin: '0.5rem 0rem', flexDirection: 'column'}}>{cityValues}</div>
       {contractsList}
       </form>
     </div>
