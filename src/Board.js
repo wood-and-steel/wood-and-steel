@@ -1,6 +1,6 @@
 import React from "react";
 import { cities } from "./GameData";
-import { valueOfCity, rewardValue } from "./Contract";
+import { valueOfCity, rewardValue, railroadTieValue } from "./Contract";
 
 export function WoodAndSteelState({ ctx, G, moves }) {
 
@@ -58,9 +58,9 @@ export function WoodAndSteelState({ ctx, G, moves }) {
       <button id={index} style={contractStyle} name="toggleContractFulfilled">
         <span style={contract.fulfilled ? {textDecoration: 'line-through'} : null}>
           {contract.commodity} to {contract.destinationKey} ({contract.type})
+          ${`${rewardValue(contract)/1000}`}K + {railroadTieValue(contract)} {railroadTieValue(contract) > 1 ? "ties" : "tie"} 
         </span> 
         {contract.fulfilled ? " FULFILLED " : " "}
-        ${`${rewardValue(contract)/1000}`}K
       </button>
       <button id={index} style={{fontSize: '120%', backgroundColor: 'Window', border: 'none', cursor: 'pointer' }} name="deleteContract">
         ✕

@@ -356,7 +356,7 @@ export function railroadTieValue(contract) {
   // 1 railroad tie if the commodity is available in the same region as the destintation, 2 ties if the closest supplying city
   // is in an adjacent region, and 3 ties if it needs to move from Eastern to Western or vice versa
   const destinationRegion = cities.get(contract.destinationKey).region;
-  const commodityRegions = commodities.get(contract.commodity);
+  const commodityRegions = commodities.get(contract.commodity).regions;
 
   if (commodityRegions.includes(destinationRegion)) {
     return 1;
