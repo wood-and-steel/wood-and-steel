@@ -340,6 +340,30 @@ export function valueOfCity(G, cityKey) {
  * @type {number}
  */
 export function rewardValue(contract) {
+  // $3,000 per segment of the diwtance between the destination city and the closest city that provides the commodity
   return shortestDistance(contract.destinationKey, c => cities.get(c)?.commodities.includes(contract.commodity)) * 3000;
 }
 
+
+/**
+ * Railroad tie value of this contract if fulfilled
+ *
+ * @param {Contract}
+ * @type {number}
+ */
+export function railroadTieValue(contract) {
+
+  // 1 railroad tie if the commodity is available in the same region as the destintation, 2 ties if the closest supplying city
+  // is in an adjacent region, and 3 ties if it needs to move from Eastern to Western or vice versa
+  const destinationRegion = cities.get(contract.destinationKey).region;
+  const commodityRegions = commodities.get(contract.commodity);
+
+  if (commodityRegions.includes(destinationRegion)) {
+    return 1;
+  } else if (destinationRegion === "Central" || commodityRegions.includes("Central")) {
+    return 2;
+  }
+
+  // Not the same region and neither is Central, so it must be a Western-Eastern delivery (in either direction)
+  return 3;
+}
