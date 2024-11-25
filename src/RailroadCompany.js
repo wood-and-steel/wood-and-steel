@@ -1,4 +1,5 @@
 import { routes } from "./GameData";
+import { citiesConnectedTo } from "./graph";
 
 class RailroadCompany {
   constructor(name) {
@@ -20,9 +21,7 @@ class RailroadCompany {
 
     // Check if the route connects to our existing network
     const [city1, city2] = routes.get(routeKey).cities;
-    const isConnected = false;
-      
-    this.cities.has(city1) || this.cities.has(city2);
+    const isConnected = this.cities.has(city1) || this.cities.has(city2);
 
     if (!isConnected) {
       return false;
@@ -33,8 +32,9 @@ class RailroadCompany {
     return true;
   }
 
+
   /**
-   * Checks if adding a route would be valid
+   * Checks if adding a route is possible by making sure it shares one city with the exsiting network
    * @param {string} routeKey - The key of the route
    * @returns {boolean} - Whether the route can be added
    */
@@ -47,7 +47,7 @@ class RailroadCompany {
 
 
   /**
-   * Gets all cities in the network
+   * Gets all cities in this company's railway network
    * @returns {Set<string>} - Set of city keys
    */
   getCities() {
@@ -98,9 +98,9 @@ class RailroadManager {
    * @param {Array<string>} cities - Array of cities in the route
    * @returns {boolean} - Whether any city is owned by another company
    */
-  isCityOwnedByOther(companyName, cities) {
-    return cities.some(city => {
-      const owner = this.cityOwnership.get(city);
+  isCityOwnedByOther(companyName, cityKeys) {
+    return cityKeys.some(cityKey => {
+      const owner = this.cityOwnership.get(cityKey);
       return owner && owner !== companyName;
     });
   }
@@ -127,23 +127,23 @@ class RailroadManager {
    * @returns {boolean} - Whether route was successfully assigned
    */
   assignRoute(companyName, routeKey) {
-      // Check if company exists
-      const company = this.companies.get(companyName);
-      if (!company) return false;
+    // Check if company exists
+    const company = this.companies.get(companyName);
+    if (!company) return false;
 
-      // Check if route is already owned
-      if (this.routeOwnership.has(routeKey)) return false;
+    // Check if route is already owned
+    if (this.routeOwnership.has(routeKey)) return false;
 
-      // Check if any cities in the route are owned by other companies
-      if (this.isCityOwnedByOther(companyName, routes.get(routeKey).cities)) return false;
+    // Check if any cities in the route are owned by other companies
+    if (this.isCityOwnedByOther(companyName, routes.get(routeKey).cities)) return false;
 
-      // Try to add route to company
-      if (!company.addRoute(routeKey)) return false;
+    // Try to add route to company
+    if (!company.addRoute(routeKey)) return false;
 
-      // If successful, record ownership of route and cities
-      this.routeOwnership.set(routeKey, companyName);
-      this.claimCities(companyName, routes.get(routeKey).cities);
-      return true;
+    // If successful, record ownership of route and cities
+    this.routeOwnership.set(routeKey, companyName);
+    this.claimCities(companyName, routes.get(routeKey).cities);
+    return true;
   }
 
 
@@ -153,17 +153,17 @@ class RailroadManager {
    * @returns {string|null} - Name of the owning company or null
    */
   getRouteOwner(routeKey) {
-      return this.routeOwnership.get(routeKey) || null;
+    return this.routeOwnership.get(routeKey) || null;
   }
 
 
   /**
    * Gets the company that owns a specific city
-   * @param {string} city - The city name
+   * @param {string} city - The city key
    * @returns {string|null} - Name of the owning company or null
    */
-  getCityOwner(city) {
-      return this.cityOwnership.get(city) || null;
+  getCityOwner(cityKey) {
+    return this.cityOwnership.get(cityKey) || null;
   }
 
 
@@ -173,7 +173,7 @@ class RailroadManager {
    * @returns {RailroadCompany|null} - The company object or null
    */
   getCompany(name) {
-      return this.companies.get(name) || null;
+    return this.companies.get(name) || null;
   }
 
 
@@ -182,24 +182,89 @@ class RailroadManager {
    * @returns {Map} - Map of all companies
    */
   getCompanies() {
-      return new Map(this.companies);
-  }
-
-
-  /**
-   * Gets all unowned routes
-   * @returns {Set<string>} - Set of unowned route keys
-   */
-  getUnownedRoutes(allRoutes) {
-      const unownedRoutes = new Set();
-      for (const routeKey of allRoutes.keys()) {
-          if (!this.routeOwnership.has(routeKey)) {
-              unownedRoutes.add(routeKey);
-          }
-      }
-      return unownedRoutes;
+    return new Map(this.companies);
   }
 }
 
-// Create global instance
+
+function initializeRailroads() {
+  // Calculate how many routes we want to assign (5% of total)
+  const startingCityKeys = ["Quebec City", "Montreal", "Boston", "Portland ME", "Philadelphia", "New York", "Washington", 
+    "Richmond", "Norfolk", "Raleigh", "Charleston", "Savannah", "Jacksonville", "Tallahassee"];
+  const offLimitsCitiesForIndiesAtStart = new Set(startingCityKeys);
+
+  const withinTwoOfStartingCities = citiesConnectedTo(startingCityKeys, 2);
+  withinTwoOfStartingCities.forEach(cityKey => {offLimitsCitiesForIndiesAtStart.add(cityKey)});
+
+  const routesAvailableToIndies = new Set(routes.entries());
+
+  offLimitsCitiesForIndiesAtStart.forEach(cityKey => { 
+    routesAvailableToIndies.forEach(routeValue, routeKey => {
+      if (routeValue.cities.includes(cityKey)).
+    })
+  })
+
+  const numberOfRoutesToAssign = Math.ceil(routes.size * 0.05);
+  
+  // Convert routes Map to array of entries for easier random selection
+  const routeEntries = Array.from(routes.entries());
+  
+  // Shuffle the routes array
+  function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+  }
+  
+  const shuffledRoutes = shuffle([...routeEntries]);
+  
+  // Try to assign routes one by one
+  let assignedCount = 0;
+  let companyCounter = 1;
+  
+  while (assignedCount < numberOfRoutesToAssign && shuffledRoutes.length > 0) {
+      const [routeKey, routeData] = shuffledRoutes.pop();
+      
+      // Create a new company name
+      const companyName = `Railroad ${companyCounter}`;
+      
+      // Try to create company and assign the route
+      if (railroadManager.createCompany(companyName) && 
+          railroadManager.assignRoute(companyName, routeKey, routeData)) {
+          assignedCount++;
+          companyCounter++;
+      }
+  }
+  
+  // Return statistics about the initialization
+  return {
+      companiesCreated: companyCounter - 1,
+      routesAssigned: assignedCount,
+      totalRoutes: routes.size,
+      percentageAssigned: (assignedCount / routes.size * 100).toFixed(1)
+  };
+}
+
+// Clear any existing data
 const railroadManager = new RailroadManager();
+
+// Run the initialization
+const stats = initializeRailroads();
+
+// Log the results
+console.log(`Initialization complete:
+Companies created: ${stats.companiesCreated}
+Routes assigned: ${stats.routesAssigned}
+Total routes: ${stats.totalRoutes}
+Percentage assigned: ${stats.percentageAssigned}%
+
+Companies and their routes:`);
+
+// Log each company and its route
+for (const [name, company] of railroadManager.getCompanies()) {
+  const routes = Array.from(company.getRoutes().keys());
+  console.log(`\n${name}:`);
+  routes.forEach(route => console.log(`  ${route}`));
+}
