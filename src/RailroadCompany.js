@@ -71,7 +71,7 @@ class RailroadCompany {
 }
 
 
-class RailroadManager {
+export class RailroadManager {
   constructor() {
     this.companies = new Map();
     this.routeOwnership = new Map();
@@ -187,27 +187,30 @@ class RailroadManager {
 }
 
 
-function initializeRailroads() {
-  // Calculate how many routes we want to assign (5% of total)
-  const startingCityKeys = ["Quebec City", "Montreal", "Boston", "Portland ME", "Philadelphia", "New York", "Washington", 
-    "Richmond", "Norfolk", "Raleigh", "Charleston", "Savannah", "Jacksonville", "Tallahassee"];
-  const offLimitsCitiesForIndiesAtStart = new Set(startingCityKeys);
+export function initializeIndependentRailroads() {
+  // Get the set of cities that are valid endpoints for independent railroads: everything not within 2 hops of possible startting cities
+  const routesAvailableToIndies = new Set();
 
-  const withinTwoOfStartingCities = citiesConnectedTo(startingCityKeys, 2);
-  withinTwoOfStartingCities.forEach(cityKey => {offLimitsCitiesForIndiesAtStart.add(cityKey)});
-
-  const routesAvailableToIndies = new Set(routes.entries());
-
-  offLimitsCitiesForIndiesAtStart.forEach(cityKey => { 
-    routesAvailableToIndies.forEach(routeValue, routeKey => {
-      if (routeValue.cities.includes(cityKey)).
-    })
+  const withinTwoOfStartingCities = citiesConnectedTo(
+    [
+      "Quebec City", "Montreal", "Boston", "Portland ME", "Philadelphia", "New York", "Washington", 
+      "Richmond", "Norfolk", "Raleigh", "Charleston", "Savannah", "Jacksonville", "Tallahassee"
+    ], 
+    {
+      distance: 2,
+      includeFromCities: true
+    }
+  );
+  routes.forEach((routeValue, routeKey) => { 
+    if (!withinTwoOfStartingCities.has(routeValue.cities[0]) && !withinTwoOfStartingCities.has(routeValue.cities[1]))
+      routesAvailableToIndies.add(routeKey);
   })
 
-  const numberOfRoutesToAssign = Math.ceil(routes.size * 0.05);
+  // Calculate how many routes we want to assign (5% of total)
+  const numberOfRoutesToAssign = Math.ceil(routesAvailableToIndies.size * 0.05);
   
   // Convert routes Map to array of entries for easier random selection
-  const routeEntries = Array.from(routes.entries());
+  const routeEntries = Array.from(routesAvailableToIndies.entries());
   
   // Shuffle the routes array
   function shuffle(array) {
@@ -251,7 +254,7 @@ function initializeRailroads() {
 const railroadManager = new RailroadManager();
 
 // Run the initialization
-const stats = initializeRailroads();
+const stats = initializeIndependentRailroads();
 
 // Log the results
 console.log(`Initialization complete:

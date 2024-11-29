@@ -1,12 +1,35 @@
 import { generateMarketContract, generatePrivateContract, generateStartingContract, newContract } from './Contract';
 import { TurnOrder } from 'boardgame.io/core';
+import { initializeIndependentRailroads, RailroadManager } from './RailroadCompany';
 
 export const WoodAndSteel = {
   name: "wood-and-steel",
   
-  setup: () => ({ 
-    contracts: Array(0),
-  }),
+  setup: () => {
+
+    const railroadManager = new RailroadManager();
+    const stats = initializeIndependentRailroads();
+
+    // Log the results
+    console.log(`Initialization complete:
+    Companies created: ${stats.companiesCreated}
+    Routes assigned: ${stats.routesAssigned}
+    Total routes: ${stats.totalRoutes}
+    Percentage assigned: ${stats.percentageAssigned}%
+
+    Companies and their routes:`);
+
+    // Log each company and its route
+    for (const [name, company] of railroadManager.getCompanies()) {
+      const routes = Array.from(company.getRoutes().keys());
+      console.log(`\n${name}:`);
+      routes.forEach(route => console.log(`  ${route}`));
+    }
+    initializeIndependentRailroads();
+    return { 
+      contracts: Array(0),
+    }
+  },
 
   moves: {
 
