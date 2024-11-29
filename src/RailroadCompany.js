@@ -209,7 +209,7 @@ export class RailroadManager {
 }
 
 
-export function initializeIndependentRailroads() {
+export function initializeIndependentRailroads(railroadManager) {
   // Get the set of cities that are valid endpoints for independent railroads: everything not within 2 hops of possible startting cities
   const routesAvailableToIndies = new Set();
 
@@ -277,28 +277,6 @@ export function initializeIndependentRailroads() {
   };
 }
 
-// Clear any existing data
-const railroadManager = new RailroadManager();
-
-// Run the initialization
-const stats = initializeIndependentRailroads();
-
-// Log the results
-console.log(`Initialization complete:
-Companies created: ${stats.companiesCreated}
-Routes assigned: ${stats.routesAssigned}
-Total routes: ${stats.totalRoutes}
-Percentage assigned: ${stats.percentageAssigned}%
-
-Companies and their routes:`);
-
-// Log each company and its route
-for (const [name, company] of railroadManager.getCompanies()) {
-  const routes = Array.from(company.getRoutes().keys());
-  console.log(`\n${name}:`);
-  routes.forEach(route => console.log(`  ${route}`));
-}
-
 
 /**
  * generateRailroadName - First version written by Claude.ai
@@ -307,7 +285,7 @@ for (const [name, company] of railroadManager.getCompanies()) {
  */
 function generateRailroadName(state) {
   // Common railroad terms that work anywhere
-  const directions = ["Northern", "Southern", "Eastern", "Western", "Central"];
+  const regions = ["Northern", "Southern", "Eastern", "Western", "Central"];
   
   const grandNames = [
       "Pioneer", "Liberty", "Enterprise", "Commonwealth", "Republic", "Continental",
@@ -610,7 +588,7 @@ function generateRailroadName(state) {
   } 
   else if (nameStyle < 0.6) {
       // 40% chance: Industry/regional name (e.g. Michigan Lumber)
-      const direction = Math.random() < 0.5 ? `${random(directions)} ` : '';
+      const direction = Math.random() < 0.5 ? `${random(regions)} ` : '';
       const industry = random(stateCharacteristics[state]?.industries);
       return `${stateCharacteristics[state].name} ${direction}${industry} ${suffix}`;
   }
@@ -619,7 +597,7 @@ function generateRailroadName(state) {
       const firstPart = random(stateCharacteristics[state].features);
       let secondPart = firstPart;
       while (secondPart === firstPart) { 
-        secondPart = random([...directions, ...stateCharacteristics[state].features]);
+        secondPart = random([...regions, ...stateCharacteristics[state].features]);
       }
       return `${firstPart} & ${secondPart} ${suffix}`;
   }
