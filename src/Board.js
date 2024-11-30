@@ -159,12 +159,12 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
 
         <div style={{display: "flex", paddingTop: "0.5em", paddingBottom: "1em", borderBottom: "solid 1px silver"}}>
           <label style={textBoxStyle}>
-            <span><b>City 1, City 2</b> for Starting contracts, or <b>destination, commodity, type</b> for Manual contracts:</span>
+            <span><b>City 1, City 2</b> for Starting contracts<span style={{display: "none"}}>, or <b>destination, commodity, type</b> for Manual contracts</span>:</span>
             <input name="inputParameters" autoFocus={true} defaultValue="Jacksonville,Tallahassee" />
           </label>
           <div style={{paddingLeft: "2em", ...buttonBarStyle}}>
             <button name="startingContract" style={buttonStyle}>Starting</button>
-            <button name="manualContract" style={buttonStyle}>Manual</button>
+            <button name="manualContract" style={{display: "none", ...buttonStyle}}>Manual</button>
           </div>
         </div>
         <div style={cityTableStyle}>{cityValues}</div>
