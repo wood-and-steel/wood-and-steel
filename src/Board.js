@@ -2,7 +2,7 @@ import React from "react";
 import { cities } from "./GameData";
 import { valueOfCity, rewardValue, railroadTieValue } from "./Contract";
 
-export function WoodAndSteelState({ ctx, G, moves }) {
+export function WoodAndSteelState({ ctx, G, moves, playerID }) {
 
   const pageStyle = {
     padding: '1rem',
@@ -86,6 +86,8 @@ export function WoodAndSteelState({ ctx, G, moves }) {
     </div>
   );
 
+  const playerBoard = G.players.map(([key, {name}]) => <div style={{fontWeight: (ctx.currentPlayer === key) ? "bold" : "400"}}>{name}</div> );
+
   function handleSubmit(e) {
     // Prevent the browser from reloading the page
     e.preventDefault();
@@ -115,13 +117,22 @@ export function WoodAndSteelState({ ctx, G, moves }) {
           moves.deleteContract(e.nativeEvent.submitter.id);
         }
         break;
-        default:
+      case "endTurn":
+        moves.endTurn({ playerID: ctx.currentPlayer});
+        break;
+      default:
       }
   }
 
   return (
-    <div style={pageStyle}>
+    <div style={{display: (ctx.currentPlayer === playerID ? "block" : "none"), ...pageStyle}}>
       <form style={formStyle} method="post" onSubmit={handleSubmit}>
+        
+        <div>
+          {playerBoard}
+          <button name="endTurn" style={buttonStyle}>End Turn</button>
+        </div>
+
         <label style={textBoxStyle}>
           <span>Active cities, or <em>destination, commodity, type</em> for manual contracts:</span>
           <input name="inputParameters" autoFocus={true} defaultValue="Jacksonville,Tallahassee" />
@@ -137,7 +148,7 @@ export function WoodAndSteelState({ ctx, G, moves }) {
           <div><span style={{fontWeight: 600}}>Private</span>: First listed city should be the one with the latest delivery completed.</div>
         </div>
         <div style={cityTableStyle}>{cityValues}</div>
-      {contractsList}
+        {contractsList}
       </form>
     </div>
   );

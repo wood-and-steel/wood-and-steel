@@ -5,15 +5,16 @@ import { WoodAndSteelState } from './Board';
 
 const WoodAndSteelClient = Client({ 
   game: WoodAndSteel,
-  numPlayers: 3,
+  multiplayer: Local({ persist: false }),
+  numPlayers: 2,
   board: WoodAndSteelState,
-  multiplayer: Local(),
   debug: false,
 });
 
 const App = () => (
   <div>
     <WoodAndSteelClient playerID="0" />
+    <WoodAndSteelClient playerID="1" />
   </div>
 );
 

@@ -21,6 +21,10 @@ export const WoodAndSteel = {
     
     return { 
       contracts: Array(0),
+      players: [
+        [ '0', { name: "Player 0", activeCities: [] } ],
+        [ '1', { name: "Player 1", activeCities: [] } ],
+      ],
     }
   },
 
@@ -73,11 +77,12 @@ export const WoodAndSteel = {
       if (contractIndex !== -1) G.contracts.splice(contractIndex, 1);
     },
 
+    endTurn: ({ G, events }) => {
+      events.endTurn();
+    }
   },
 
   turn: {
-    // HACK: Storing multiple players in G for contracts, but only rendeirng client
-    // for player 0, so we want to make sure it's always player 0's turn for now.
-    order: TurnOrder.CUSTOM(['0']),
+    order: TurnOrder.DEFAULT,
   }
 };
