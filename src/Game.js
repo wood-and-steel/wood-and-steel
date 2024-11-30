@@ -40,7 +40,7 @@ export const WoodAndSteel = {
       }
     },
 
-    generatePrivateContract: ({ G, playerID }, activeCities, currentCityKey) => {
+    generatePrivateContract: ({ G }, activeCities, currentCityKey) => {
       const contract = generatePrivateContract(G, activeCities, currentCityKey);
       if (contract) {
         G.contracts.unshift(contract);
@@ -49,7 +49,7 @@ export const WoodAndSteel = {
       }
     },
 
-    generateMarketContract: ({ G, playerID }, activeCities) => {
+    generateMarketContract: ({ G }, activeCities) => {
       const contract = generateMarketContract(G, activeCities);
       if (contract) {
         G.contracts.unshift(contract);
@@ -58,7 +58,7 @@ export const WoodAndSteel = {
       }
     },
 
-    addManualContract: ({ G, playerID }, destinationKey, commodity, type) => {
+    addManualContract: ({ G }, destinationKey, commodity, type) => {
       const contract = newContract(destinationKey, commodity, { type: type })
       if (contract) {
         G.contracts.unshift(contract);
@@ -67,17 +67,29 @@ export const WoodAndSteel = {
       }
     },
 
-    toggleContractFulfilled: ({ G, playerID }, contractId) => {
+    toggleContractFulfilled: ({ G, ctx }, contractId) => {
+      // Get this contract
       const contractIndex = G.contracts.findIndex(c => c.id === contractId);
-      if (contractIndex !== -1) G.contracts[contractIndex].fulfilled = !G.contracts[contractIndex].fulfilled;
+      if (contractIndex !== -1) {
+        // Toggle the fulfilled state
+        G.contracts[contractIndex].fulfilled = !G.contracts[contractIndex].fulfilled;
+
+        // Add the destination city to this player's active cities
+        if (G.contracts[contractIndex].fulfilled) {
+          const thisPlayersCities = G.players.find(([id, props]) => id === ctx.currentPlayer)[1].activeCities;
+          if (!thisPlayersCities.includes(G.contracts[contractIndex].destinationKey)) {
+            thisPlayersCities.push(G.contracts[contractIndex].destinationKey);
+          } 
+        }
+      }
     },
 
-    deleteContract: ({ G, playerID }, contractId) => {
+    deleteContract: ({ G }, contractId) => {
       const contractIndex = G.contracts.findIndex(c => c.id === contractId);
       if (contractIndex !== -1) G.contracts.splice(contractIndex, 1);
     },
 
-    endTurn: ({ G, events }) => {
+    endTurn: ({ events }) => {
       events.endTurn();
     }
   },
