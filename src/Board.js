@@ -90,7 +90,7 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
     <div style={{
       display: "flex",
       gap: "1rem",
-      marginBottom: "1rem",
+      marginBottom: "0.5rem",
     }}>
       {G.players.map(([key, {name, activeCities}]) => 
         <div style={{
@@ -103,7 +103,8 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
             marginBottom: "0.25rem",
           }}>{name}</div>
           {activeCities.map(city => <div>{city}</div>)}
-        </div> )}
+        </div> 
+      )}
     </div>;
 
   function handleSubmit(e) {
@@ -136,7 +137,7 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
         }
         break;
       case "endTurn":
-        moves.endTurn({ playerID: ctx.currentPlayer});
+        moves.endTurn();
         break;
       default:
       }
@@ -148,7 +149,9 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
         
         <div>
           {playerBoard}
-          <button name="endTurn" style={buttonStyle}>End Turn</button>
+          <div style={{textAlign: "center"}}>
+            <button name="endTurn" style={buttonStyle}>End Turn</button>
+          </div>
         </div>
 
         <label style={textBoxStyle}>

@@ -20,7 +20,7 @@ import { weightedRandom } from "./utils";
  * @param {string[2]} activeCitiesKeys - Keys of two starting cities
  * @returns {Contract}
  */
-export function generateStartingContract(G, activeCitiesKeys) {  
+export function generateStartingContract(G, activeCitiesKeys, playerID) {  
   if (!Array.isArray(activeCitiesKeys) || activeCitiesKeys.length !== 2) {
     console.error(`generateStartingContract(${activeCitiesKeys}): not an Array(2)`);
     return undefined;
@@ -85,6 +85,9 @@ export function generateStartingContract(G, activeCitiesKeys) {
     G,
     candidatesInChosenDirection.filter(candidate => !cities.get(candidate).commodities.includes(contractCommodity))
   );
+
+  // Make the two starting cities the active cities for this player
+  G.players.find(([id, props]) => id === playerID)[1].activeCities = activeCitiesKeys;
 
   return newContract(contractCity, contractCommodity, { type: "private" });
 };

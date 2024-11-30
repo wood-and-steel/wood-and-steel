@@ -22,8 +22,8 @@ export const WoodAndSteel = {
     return { 
       contracts: Array(0),
       players: [
-        [ '0', { name: "Player 0", activeCities: ["Jacksonville", "Tallahassee"] } ],
-        [ '1', { name: "Player 1", activeCities: ["New York", "Philadelphia"] } ],
+        [ '0', { name: "Player 0", activeCities: Array(0) } ],
+        [ '1', { name: "Player 1", activeCities: Array(0) } ],
       ],
     }
   },
@@ -31,8 +31,8 @@ export const WoodAndSteel = {
   moves: {
 
     // TODO: Get rid of generate*Contract as moves; wired them up this way temporarily to work around my lack of React skill
-    generateStartingContract: ({ G, playerID }, activeCities) => {
-      const contract = generateStartingContract(G, activeCities);
+    generateStartingContract: ({ G, ctx }, activeCities) => {
+      const contract = generateStartingContract(G, activeCities, ctx.currentPlayer);
       if (contract) {
         G.contracts.unshift(contract);
       } else {
