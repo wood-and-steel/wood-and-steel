@@ -69,19 +69,24 @@ export const WoodAndSteel = {
 
     toggleContractFulfilled: ({ G, ctx }, contractId) => {
       // Get this contract
-      const contractIndex = G.contracts.findIndex(c => c.id === contractId);
+      const index = G.contracts.findIndex(c => c.id === contractId);
 
-      if (contractIndex !== -1)
-        if ((G.contracts[contractIndex].player === ctx.currentPlayer) || G.contracts[contractIndex].type === "market") {
+      if (index !== -1)
+        if ((G.contracts[index].player === ctx.currentPlayer) || G.contracts[index].type === "market") {
           
         // Toggle the fulfilled state
-        G.contracts[contractIndex].fulfilled = !G.contracts[contractIndex].fulfilled;
+        G.contracts[index].fulfilled = !G.contracts[index].fulfilled;
+
+        // If it's a market contract, add the current player if it's being fulfilled, or remove them otherwise
+        if (G.contracts[index].type === "market") {
+          G.contracts[index].player = G.contracts[index].fulfilled ? ctx.currentPlayer : null;
+        }
 
         // Add the destination city to this player's active cities
-        if (G.contracts[contractIndex].fulfilled) {
+        if (G.contracts[index].fulfilled) {
           const thisPlayersCities = G.players.find(([id, props]) => id === ctx.currentPlayer)[1].activeCities;
-          if (!thisPlayersCities.includes(G.contracts[contractIndex].destinationKey)) {
-            thisPlayersCities.push(G.contracts[contractIndex].destinationKey);
+          if (!thisPlayersCities.includes(G.contracts[index].destinationKey)) {
+            thisPlayersCities.push(G.contracts[index].destinationKey);
           } 
         }
       }
