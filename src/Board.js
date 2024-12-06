@@ -33,29 +33,35 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
     } = options;
   
     function compareContractsFn(a , b) {
-      const aValue = (a.type === "private" ? 10 : 0) + (a.fulfilled ? 100 : 0);
-      const bValue = (b.type === "private" ? 10 : 0) + (b.fulfilled ? 100 : 0);
+      const aValue = (a.type === "market" ? 10 : 0) + (a.fulfilled ? 100 : 0);
+      const bValue = (b.type === "market" ? 10 : 0) + (b.fulfilled ? 100 : 0);
       if (aValue < bValue) return -1;
       if (aValue > bValue) return 1;
       else return 0;
     }
 
-    let filteredContracts = G.contracts.filter(contract => contract.type === type);
-    if (type === "private" && playerID) {
-      filteredContracts = filteredContracts.filter(contract => contract.playerID === playerID);
-    }
+    // Open market contracts are listed in a common area, fulfilled ones with the rest of that player's contracts
+    const filteredContracts = (
+      type === "market" ?
+      G.contracts.filter(contract => contract.type === "market" && !contract.fulfilled) :
+      G.contracts.filter(contract => contract.playerID === playerID)
+    );
 
     return filteredContracts.toSorted(compareContractsFn).map((contract, index) => {
       let style = {
         ...contractStyles.fulfilled[contract.fulfilled], 
         ...contractStyles.type[contract.type], 
-        ...(contract.playerID === ctx.currentPlayer || contract.type === "market" ? contractStyles.enabled : contractStyles.disabled)
+        ...(
+          contract.playerID === ctx.currentPlayer || (contract.type === "market" && (!contract.fulfilled || contract.playerID === ctx.currentPlayer)) ? 
+          contractStyles.enabled : 
+          contractStyles.disabled
+        )
       };
       const value = `$${rewardValue(contract)/1000}K + ${railroadTieValue(contract)} ${railroadTieValue(contract) > 1 ? "RR ties" : "RR tie"}`;
 
       return (<div key={index}>
         <button className="contract" id={contract.id} style={style} name="toggleContractFulfilled">
-          {contract.commodity} to {contract.destinationKey} ({value}) {contract.fulfilled ? " FULFILLED " : " "}
+          {contract.commodity} to {contract.destinationKey} ({value})
         </button>
         <button className="deleteButton" id={contract.id} style={{display: contract.fulfilled ? "none" : "inline"}} name="deleteContract">✕</button>
       </div>);
