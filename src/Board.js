@@ -60,19 +60,6 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
         private: { color: 'black' },
       }
     },
-    cityTable: {
-      margin: '1rem 0rem', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      flexWrap: 'wrap',
-      height: '280px',
-    },
-    cityCell: {
-      display: 'flow',
-      flex: '1 1',
-      width: '115px',
-      opacity: '0.8',
-    },
     playerBoard: {
       display: "flex",
       gap: "1rem",
@@ -118,7 +105,7 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
   }
 
   const cityValues = [...cities].map(([key, value]) =>
-    <div key={key} style={styles.cityCell}>
+    <div key={key} className="cityCell">
       <span 
         style={{opacity: '0.65', paddingRight: '0.4rem', cursor: 'default'}} 
         title={value.commodities.length === 0 ? "(no commodities)" : value.commodities.toString().replaceAll(',', ", ")}
@@ -200,7 +187,7 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
   const marketContractsList = filteredContractsList();
 
   return (
-    <div style={{display: (ctx.currentPlayer === playerID ? "block" : "none"), ...styles.page}}>
+    <div className="boardPage" style={{display: (ctx.currentPlayer === playerID ? "block" : "none")}}>
       <form style={styles.form} method="post" onSubmit={handleSubmit}>
         
         <div>
@@ -221,8 +208,8 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
           <div style={{fontWeight: "bold", width: "18rem", paddingBottom: "0.25rem"}}>Market contracts</div>
           {marketContractsList}
         </div>
-        <div style={styles.cityTable}>{cityValues}</div>
-        <div style={styles.cityTable}>{commodityList}</div>
+        <div className="cityTable">{cityValues}</div>
+        <div className="cityTable">{commodityList}</div>
       </form>
     </div>
   );

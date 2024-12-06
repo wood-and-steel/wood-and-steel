@@ -11,3 +11,27 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.boardPage {
+    padding: 1rem;
+}
+
+.cityTable {
+  margin: 1rem 0rem; 
+  display: flex; 
+  flex-direction: column; 
+  flex-wrap: wrap;
+  height: 280px;
+}
+
+.cityCell {
+  display: flow;
+  flex: 1 1;
+  width: 115px;
+  opacity: 0.8;
+}
+
+.cityCell:hover {
+  background-color: rgb(240, 240, 250);
+  opacity: 1.0;
+}
