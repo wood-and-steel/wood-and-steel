@@ -113,13 +113,12 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
     // Prevent the browser from reloading the page
     e.preventDefault();
 
-    const form = e.target;
-    const formData = new FormData(form);
-    const inputParameters = Object.fromEntries(formData.entries()).inputParameters.split(',').map(i => i.trim());
+    const inputParameters = input.split(',').map(i => i.trim());
 
     switch (e.nativeEvent.submitter.name) {
       case "startingContract":
         moves.generateStartingContract(inputParameters);
+        setInput("");
         break;
       case "privateContract":
         moves.generatePrivateContract();
@@ -134,8 +133,11 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
         moves.toggleContractFulfilled(e.nativeEvent.submitter.id);
         break;
       case "deleteContract":
-        if (window.confirm("Delete this contract?")) {
-          moves.deleteContract(e.nativeEvent.submitter.id);
+        const contractIndex = G.contracts.findIndex(c => c.id === e.nativeEvent.submitter.id);
+        const contract = G.contracts[contractIndex];
+        if (window.confirm(`Delete "${contract.commodity} to ${contract.destinationKey}?"`)) {
+            setInput(`${contract.commodity}, ${contract.destinationKey}, ${contract.type}`); 
+            moves.deleteContract(e.nativeEvent.submitter.id);
         }
         break;
       case "endTurn":
@@ -146,6 +148,8 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
   }
 
   const marketContractsList = filteredContractsList();
+  const [input, setInput] = React.useState('');
+  const startingContractExists = G.contracts.filter(contract => contract.playerID === playerID).length > 0;
 
   return (
     <div className="boardPage" style={{display: (ctx.currentPlayer === playerID ? "block" : "none")}}>
@@ -154,12 +158,33 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
         <div>
           <div className="buttonBar" style={{ backgroundColor: "#606060", padding: "0.75em"}}>
             <span style={{ color: "white" }}>Generate contract:</span>
-            <button name="privateContract" className="button">Private</button>
+            <button 
+              name="privateContract" 
+              className="button"
+              style={{ display: startingContractExists ? "block" : "none" }}
+            >Private</button>
             <button name="marketContract" className="button">Market</button>
             <button name="endTurn" className="button" style={{marginLeft: "1rem"}}>End Turn</button>
-            <span style={{ color: "white", paddingLeft: "1.5rem", fontSize: "90%" }}>Starting city 1, city 2, or<br />Manual commodity, destination, type:</span>
-            <input name="inputParameters" style={{width: "15rem", height: "20px"}} />
-            <button name="startingContract" className="button">Starting</button>
+            <div style={{ display: "inline" }}>
+            <span style={{ 
+              color: "white", paddingLeft: "1.5rem", fontSize: "90%",
+              display: startingContractExists ? "none" : "block",
+            }}>
+              <b>Starting</b> city 1, city 2, or<br />
+            </span>
+            <span style={{ color: "white", paddingLeft: "1.5rem", fontSize: "90%" }}><b>Manual</b> commodity, destination, type:</span>
+            </div>
+            <input 
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              name="inputParameters" 
+              style={{width: "15rem", height: "20px"}} 
+            />
+            <button 
+              name="startingContract" 
+              className="button"
+              style={{ display: startingContractExists ? "none" : "block" }}
+            >Starting</button>
             <button name="manualContract" className="button">Manual</button>
           </div>
           {playerBoard}
