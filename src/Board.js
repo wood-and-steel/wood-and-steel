@@ -6,13 +6,9 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
 
   const contractStyles = {
     enabled: {
-      backgroundColor: '#f0f0f0',
-      border: 'solid 1px rgba(0, 0, 0, 0.2)',
       cursor: 'pointer',
     },
     disabled: {
-      backgroundColor: 'transparent',
-      border: 'solid 1px rgba(0, 0, 0, 0.2)',
       cursor: 'default',
       opacity: '0.6',
     },
@@ -23,6 +19,14 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
     type: {
       market: { color: 'blue' },
       private: { color: 'black' },
+    }
+  };
+
+  const buttonStyles = {
+    disabled: {
+      color: "#a0a0a0",
+      border: "solid 1px #c0c0c0",
+      backgroundColor: "white",
     }
   };
 
@@ -84,6 +88,8 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
     <div key={key}>{key} <span style={{opacity: "0.6"}}>• {value.cities.toString().replaceAll(',', ", ")}</span></div>
   );
 
+  const startingContractExists = G.contracts.filter(contract => contract.playerID === playerID).length > 0;
+
   const playerBoard = 
     <div className="playerBoard">
       {G.players.map(([key, {name, activeCities}]) => {
@@ -102,6 +108,14 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
             {activeCities.map(city => <div>{city}</div>)}
           </div>
           <div style={{display: "flex", flexDirection: "column", gap: "0.25em", paddingTop: "0.5em"}}>
+            <button 
+              name="privateContract" 
+              className="button"
+              style={{ 
+                ...( ctx.currentPlayer === key ? {} : buttonStyles.disabled ),
+                display: startingContractExists ? "block" : "none" 
+              }}
+            >Generate Private Contract</button>
             {contractsList}
           </div>
         </div>);
@@ -149,21 +163,13 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
 
   const marketContractsList = filteredContractsList();
   const [input, setInput] = React.useState('');
-  const startingContractExists = G.contracts.filter(contract => contract.playerID === playerID).length > 0;
 
   return (
     <div className="boardPage" style={{display: (ctx.currentPlayer === playerID ? "block" : "none")}}>
       <form className="form" method="post" onSubmit={handleSubmit}>
         
         <div>
-          <div className="buttonBar" style={{ backgroundColor: "#606060", padding: "0.75em"}}>
-            <span style={{ color: "white" }}>Generate contract:</span>
-            <button 
-              name="privateContract" 
-              className="button"
-              style={{ display: startingContractExists ? "block" : "none" }}
-            >Private</button>
-            <button name="marketContract" className="button">Market</button>
+          <div className="buttonBar" style={{ backgroundColor: "#606060", padding: "0.75em", position: "fixed", top: "0", left: "0", right: "0"}}>
             <button name="endTurn" className="button" style={{marginLeft: "1rem"}}>End Turn</button>
             <div style={{ display: "inline" }}>
             <span style={{ 
@@ -185,15 +191,16 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
               className="button"
               style={{ display: startingContractExists ? "none" : "block" }}
             >Starting</button>
-            <button name="manualContract" className="button">Manual</button>
+            <button name="manualContract" className="button">Manual Contract</button>
           </div>
           {playerBoard}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", margin: "auto", padding: "0.5rem"} }>
           <div style={{fontWeight: "bold", width: "18rem", paddingBottom: "0.25rem"}}>Market contracts</div>
-          {marketContractsList}
-        </div>
+            <button name="marketContract" className="button">Generate Market Contract</button>
+            {marketContractsList}
+          </div>
         <div className="cityTable">{cityValues}</div>
         <div className="cityTable">{commodityList}</div>
       </form>
