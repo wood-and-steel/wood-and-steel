@@ -10,21 +10,15 @@ export const WoodAndSteel = {
   setup: () => {
 
     initializeIndependentRailroads(railroadManager);
+    const independentRailroads = railroadManager.getCompanies();
 
-    console.log("Independent railroad companies:");
-
-    // Log each company and its route
-    for (const [name, company] of railroadManager.getCompanies()) {
-      const routes = Array.from(company.getRoutes().keys());
-      console.log(`\n${name}: ${routes.reduce((concat, route, index) => concat += (index === routes.length-1 ? route : `${route}, `))}`);
-    }
-    
     return { 
       contracts: Array(0),
       players: [
         [ '0', { name: "Player 0", activeCities: Array(0) } ],
         [ '1', { name: "Player 1", activeCities: Array(0) } ],
       ],
+      independentRailroads: independentRailroads,
     }
   },
 

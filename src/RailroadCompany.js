@@ -89,7 +89,6 @@ export class RailroadManager {
     this.cityOwnership = new Map(); // Tracks which company owns each city
   }
 
-
   /**
    * Creates a new railroad company
    * @param {string} name - Name of the company
@@ -192,27 +191,39 @@ export class RailroadManager {
   /**
    * Gets a company by name
    * @param {string} name - Company name
-   * @returns {RailroadCompany|null} - The company object or null
+   * @returns {Object|null} - a JSON-serializable object or undefined
    */
   getCompany(name) {
-    return this.companies.get(name) || null;
+    const company = this.companies.get(name);
+    
+    if (company) {
+
+      return {
+        name: company.name,
+        playerID: company.playerID,
+        routes: [...company.getRoutes()],
+      }
+    } else {
+      return company;
+    }
   }
 
 
   /**
    * Gets all companies
-   * @returns {Map} - Map of all companies
+   * @returns {Array<Object>} - array of all companies and their properties
    */
   getCompanies() {
-    return new Map(this.companies);
+    const companies = [];
+    this.companies.forEach((value, key) => companies.push(this.getCompany(key)));
+    return companies;
   }
 }
 
 
 export function initializeIndependentRailroads(railroadManager) {
-  // Get the set of cities that are valid endpoints for independent railroads: everything not within 2 hops of possible startting cities
-  const routesAvailableToIndies = new Set();
 
+  // Get the set of cities that are valid endpoints for independent railroads: everything not within 2 hops of possible startting cities
   const withinTwoOfStartingCities = citiesConnectedTo(
     [
       "Quebec City", "Montreal", "Boston", "Portland ME", "Philadelphia", "New York", "Washington", 
@@ -223,6 +234,8 @@ export function initializeIndependentRailroads(railroadManager) {
       includeFromCities: true
     }
   );
+
+  const routesAvailableToIndies = new Set();
   routes.forEach((routeValue, routeKey) => { 
     if (!withinTwoOfStartingCities.has(routeValue.cities[0]) && !withinTwoOfStartingCities.has(routeValue.cities[1]))
       routesAvailableToIndies.add(routeKey);
