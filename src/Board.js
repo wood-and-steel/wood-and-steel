@@ -93,14 +93,15 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
   const playerBoard = 
     <div className="playerBoard">
       {G.players.map(([key, {name, activeCities}]) => {
+        const activePlayerBoard = ctx.currentPlayer === key;
         const contractsList = filteredContractsList({ type: "private", playerID: key })
-        return (<div style={{flexGrow: 1}}>
+        return (<div key={key} style={{flexGrow: 1}}>
           <div style={{
-            backgroundColor: (ctx.currentPlayer === key) ? "#f0f2ff" : "transparent",
+            backgroundColor: activePlayerBoard ? "#f0f2ff" : "transparent",
             padding: "0.5rem",
           }}>
             <div style={{
-              fontWeight: (ctx.currentPlayer === key) ? "bold" : "400",
+              fontWeight: activePlayerBoard ? "bold" : "400",
               marginBottom: "0.25rem",
             }}>
               {name}
@@ -112,7 +113,7 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
               name="privateContract" 
               className="button"
               style={{ 
-                ...( ctx.currentPlayer === key ? {} : buttonStyles.disabled ),
+                ...( activePlayerBoard ? {} : buttonStyles.disabled ),
                 display: startingContractExists ? "block" : "none" 
               }}
             >Generate Private Contract</button>
