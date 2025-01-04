@@ -18,6 +18,19 @@ export function weightedRandom(weightedMap) {
   });
 
   return chosenKey;
+}
+
+/**
+* Like Math.random(), but with a Gaussian distribution
+*  
+* @returns {number} - Number between 0 and 1
+ */
+export function gaussianRandom() {
+  const val = Math.sqrt( -2.0 * Math.log( 1 - Math.random() ) ) * Math.cos( 2.0 * Math.PI * Math.random() );
+  if (val < 0.0 || val > 1.0) {
+    // Happens <0.02% of the time
+    return Math.random();
+  } else {
+    return val;
   }
-
-
+}
