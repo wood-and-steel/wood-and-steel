@@ -90,10 +90,11 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
 
   const independentRailroadList =
     <div className="independentRailroads">
-      {G.independentRailroads.map(railroad =>
-        <div key={railroad.name}>
+      {G.independentRailroads.map((railroad, index) =>
+        <div key={index} style={{marginBottom: "0.1rem"}}>
+          <button name="acquireIndependentRailroad" id={index} className="button" style={{marginRight: "0.5rem"}}>Acquire</button>
           <span style={{opacity: "0.6"}}>{railroad.name}</span>
-          {railroad.routes.map(route => <span style={{margin: "0 0.3rem"}}>• {route}</span> )}
+          {railroad.routes.map(route => <span style={{marginLeft: "0.3rem"}}>• {route}</span> )}
         </div>
       )}
     </div>
@@ -163,6 +164,13 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
         if (window.confirm(`Delete "${contract.commodity} to ${contract.destinationKey}?"`)) {
             setInput(`${contract.commodity}, ${contract.destinationKey}, ${contract.type}`); 
             moves.deleteContract(e.nativeEvent.submitter.id);
+        }
+        break;
+      case "acquireIndependentRailroad":
+        const railroadIndex = e.nativeEvent.submitter.id;
+        const railroad = G.independentRailroads[railroadIndex];
+        if (window.confirm(`Is the current player buying ${railroad.name}?`)) {
+          moves.acquireIndependentRailroad(railroadIndex);
         }
         break;
       case "endTurn":

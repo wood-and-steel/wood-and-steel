@@ -1,6 +1,7 @@
 import { generateMarketContract, generatePrivateContract, generateStartingContract, newContract } from './Contract';
 import { TurnOrder } from 'boardgame.io/core';
 import { initializeIndependentRailroads, RailroadManager, growIndependentRailroads } from './independentRailroads';
+import { routes } from './GameData';
 
 const independentRailroadManager = new RailroadManager();
 
@@ -111,6 +112,22 @@ export const WoodAndSteel = {
     deleteContract: ({ G }, contractID) => {
       const contractIndex = G.contracts.findIndex(c => c.id === contractID);
       if (contractIndex !== -1 && !G.contracts[contractIndex].fulfilled) G.contracts.splice(contractIndex, 1);
+    },
+
+    acquireIndependentRailroad: ({ G, ctx }, railroadID) => {
+      // Get all the cities in this RR
+      const citiesInRailroad = new Set();
+      [...G.independentRailroads[railroadID].routes].forEach(routeKey => {
+        const [city1, city2] = routes.get(routeKey).cities;
+        citiesInRailroad.add(city1).add(city2);
+      });
+  
+      // Add them to the current player's active cities
+      const currentPlayer = G.players.find(([id, props]) => id === ctx.currentPlayer)[1];
+      [...citiesInRailroad].forEach(city => currentPlayer.activeCities.push(city));
+
+      // Delete the railroad
+      G.independentRailroads.splice(railroadID, 1);
     },
 
     endTurn: ({ events }) => {
