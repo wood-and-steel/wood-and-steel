@@ -396,8 +396,10 @@ export function growIndependentRailroads(G) {
   const numberOfRoutesToAdd = newRouteCount - startingRouteCount;
   const addedRoutes = new Set();
 
-  // Now we try to expand
-  while (addedRoutes.size < numberOfRoutesToAdd) {
+  // Now we try to expand, up to 100 times
+  let countOfAttempts = 0;
+
+  while (addedRoutes.size < numberOfRoutesToAdd && countOfAttempts++ < 100) {
     // Pick an indepdendent RR at random
     const railroadToExpandIndex = Math.floor(Math.random() * G.independentRailroads.length);
     const railroadToExpand = G.independentRailroads[railroadToExpandIndex];
@@ -419,7 +421,23 @@ export function growIndependentRailroads(G) {
       cities.get(cityKey).routes.forEach(r => routesSuperset.add(r));
     })
 
-    const possibleRoutes = routesSuperset.difference(new Set([...railroadToExpand.routes])).intersection(routesNotNearActiveCities);
+    // Get all the cities in other independent RRs
+    const citiesInOtherRailroads = new Set();
+    for (let i = 0; i < G.independentRailroads.length; i++) {
+      if (i !== railroadToExpandIndex) {
+        [...G.independentRailroads[i].routes].forEach(routeKey => {
+          const [city1, city2] = routes.get(routeKey).cities;
+          citiesInOtherRailroads.add(city1).add(city2);
+        })
+      }
+    };
+
+    const routesOneHapAwayFromIndies = routesWithoutTheseCities(citiesConnectedTo(citiesInOtherRailroads, { includeFromCities: true }));
+
+    const possibleRoutes = routesSuperset
+      .difference(new Set([...railroadToExpand.routes]))
+      .difference(routesOneHapAwayFromIndies)
+      .intersection(routesNotNearActiveCities);
 
     if (possibleRoutes.size > 0) {
       const routeToAdd = randomArrayItem([...possibleRoutes]);
