@@ -149,15 +149,18 @@ function MarketContracts({ G, ctx }) {
 
 // Independent Railroads Component
 function IndependentRailroads({ G }) {
+  // Convert object to array for rendering
+  const railroadsArray = Object.values(G.independentRailroads);
+  
   return (
     <div>
       <div style={{fontWeight: "bold", paddingBottom: "0.5rem"}}>Independent railroads</div>
       <div className="independentRailroads">
-        {G.independentRailroads.map((railroad, index) =>
-          <div key={index} style={{marginBottom: "0.1rem"}}>
+        {railroadsArray.map((railroad) =>
+          <div key={railroad.name} style={{marginBottom: "0.1rem"}}>
             <button 
               name="acquireIndependentRailroad" 
-              id={index} 
+              id={railroad.name} 
               className="button" 
               style={{marginRight: "0.5rem"}}
             >Acquire</button>
@@ -288,10 +291,10 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
         }
         break;
       case "acquireIndependentRailroad":
-        const railroadIndex = e.nativeEvent.submitter.id;
-        const railroad = G.independentRailroads[railroadIndex];
+        const railroadName = e.nativeEvent.submitter.id;
+        const railroad = G.independentRailroads[railroadName];
         if (railroad && window.confirm(`Is the current player buying ${railroad.name}?`)) {
-          moves.acquireIndependentRailroad(railroadIndex);
+          moves.acquireIndependentRailroad(railroadName);
         }
         break;
       case "endTurn":

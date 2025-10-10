@@ -10,7 +10,13 @@ export const WoodAndSteel = {
 
     const independentRailroadManager = new RailroadManager();
     initializeIndependentRailroads(independentRailroadManager);
-    const independentRailroads = independentRailroadManager.getCompanies();
+    const independentRailroadsArray = independentRailroadManager.getCompanies();
+
+    // Convert array to object keyed by railroad name for stable IDs
+    const independentRailroads = {};
+    independentRailroadsArray.forEach(railroad => {
+      independentRailroads[railroad.name] = railroad;
+    });
 
     return { 
       contracts: Array(0),
@@ -113,10 +119,17 @@ export const WoodAndSteel = {
       if (contractIndex !== -1 && !G.contracts[contractIndex].fulfilled) G.contracts.splice(contractIndex, 1);
     },
 
-    acquireIndependentRailroad: ({ G, ctx }, railroadID) => {
+    acquireIndependentRailroad: ({ G, ctx }, railroadName) => {
+      // Validate railroad exists
+      const railroad = G.independentRailroads[railroadName];
+      if (!railroad) {
+        console.error(`Game.js: Railroad ${railroadName} not found`);
+        return;
+      }
+
       // Get all the cities in this RR
       const citiesInRailroad = new Set();
-      [...G.independentRailroads[railroadID].routes].forEach(routeKey => {
+      [...railroad.routes].forEach(routeKey => {
         const [city1, city2] = routes.get(routeKey).cities;
         citiesInRailroad.add(city1);
         citiesInRailroad.add(city2);
@@ -126,8 +139,8 @@ export const WoodAndSteel = {
       const currentPlayer = G.players.find(([id, props]) => id === ctx.currentPlayer)[1];
       [...citiesInRailroad].forEach(city => currentPlayer.activeCities.push(city));
 
-      // Delete the railroad
-      G.independentRailroads.splice(railroadID, 1);
+      // Delete the railroad using its name
+      delete G.independentRailroads[railroadName];
     },
 
     endTurn: ({ events }) => {

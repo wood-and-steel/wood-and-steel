@@ -365,7 +365,8 @@ export function growIndependentRailroads(G) {
    * cities will make a decent approximation.
    */
   const routesNotNearActiveCities = routesWithoutTheseCities(activeCitiesPlusOneHop);
-  const startingRouteCount = G.independentRailroads.reduce((acc, current) => acc + current.routes.length, 0);
+  const railroadsArray = Object.values(G.independentRailroads);
+  const startingRouteCount = railroadsArray.reduce((acc, current) => acc + current.routes.length, 0);
   let startingOccupancy = Math.round(100 * startingRouteCount / routesNotNearActiveCities.size);
 
   if (startingOccupancy < smallestMappedOccupancy)
@@ -401,8 +402,9 @@ export function growIndependentRailroads(G) {
 
   while (addedRoutes.size < numberOfRoutesToAdd && countOfAttempts++ < 100) {
     // Pick an indepdendent RR at random
-    const railroadToExpandIndex = Math.floor(Math.random() * G.independentRailroads.length);
-    const railroadToExpand = G.independentRailroads[railroadToExpandIndex];
+    const railroadNames = Object.keys(G.independentRailroads);
+    const randomRailroadName = railroadNames[Math.floor(Math.random() * railroadNames.length)];
+    const railroadToExpand = G.independentRailroads[randomRailroadName];
 
     /*
      *  Add one route
@@ -423,9 +425,9 @@ export function growIndependentRailroads(G) {
 
     // Get all the cities in other independent RRs
     const citiesInOtherRailroads = new Set();
-    for (let i = 0; i < G.independentRailroads.length; i++) {
-      if (i !== railroadToExpandIndex) {
-        [...G.independentRailroads[i].routes].forEach(routeKey => {
+    for (const [name, railroad] of Object.entries(G.independentRailroads)) {
+      if (name !== randomRailroadName) {
+        [...railroad.routes].forEach(routeKey => {
           const [city1, city2] = routes.get(routeKey).cities;
           citiesInOtherRailroads.add(city1).add(city2);
         })
