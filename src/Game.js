@@ -3,22 +3,21 @@ import { TurnOrder } from 'boardgame.io/core';
 import { initializeIndependentRailroads, RailroadManager, growIndependentRailroads } from './independentRailroads';
 import { routes } from './GameData';
 
-const independentRailroadManager = new RailroadManager();
-
 export const WoodAndSteel = {
   name: "wood-and-steel",
   
-  setup: () => {
+  setup: ({ numPlayers = 2 }) => {
 
+    const independentRailroadManager = new RailroadManager();
     initializeIndependentRailroads(independentRailroadManager);
     const independentRailroads = independentRailroadManager.getCompanies();
 
     return { 
       contracts: Array(0),
-      players: [
-        [ '0', { name: "Player 0", activeCities: Array(0) } ],
-        [ '1', { name: "Player 1", activeCities: Array(0) } ],
-      ],
+      players: Array.from({ length: numPlayers }, (_, i) => [
+        String(i),
+        { name: `Player ${i}`, activeCities: Array(0) }
+      ]),
       independentRailroads: independentRailroads,
     }
   },
@@ -119,7 +118,8 @@ export const WoodAndSteel = {
       const citiesInRailroad = new Set();
       [...G.independentRailroads[railroadID].routes].forEach(routeKey => {
         const [city1, city2] = routes.get(routeKey).cities;
-        citiesInRailroad.add(city1).add(city2);
+        citiesInRailroad.add(city1);
+        citiesInRailroad.add(city2);
       });
   
       // Add them to the current player's active cities
