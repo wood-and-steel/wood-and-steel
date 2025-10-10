@@ -3,6 +3,9 @@ import { cities, commodities } from "./GameData";
 import { valueOfCity, rewardValue, railroadTieValue } from "./Contract";
 
 export function WoodAndSteelState({ ctx, G, moves, playerID }) {
+  // React hooks must be at the top of the component
+  const [input, setInput] = React.useState('');
+  const [cityInput, setCityInput] = React.useState('');
 
   const contractStyles = {
     enabled: {
@@ -94,7 +97,7 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
         <div key={index} style={{marginBottom: "0.1rem"}}>
           <button name="acquireIndependentRailroad" id={index} className="button" style={{marginRight: "0.5rem"}}>Acquire</button>
           <span style={{opacity: "0.6"}}>{railroad.name}</span>
-          {railroad.routes.map(route => <span style={{marginLeft: "0.3rem"}}>• {route}</span> )}
+          {railroad.routes.map((route, routeIndex) => <span key={routeIndex} style={{marginLeft: "0.3rem"}}>• {route}</span> )}
         </div>
       )}
     </div>
@@ -117,7 +120,7 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
             }}>
               {name}
             </div>
-            {activeCities.map(city => <div>{city}</div>)}
+            {activeCities.map((city, index) => <div key={index}>{city}</div>)}
           </div>
           <div style={{display: "flex", flexDirection: "column", gap: "0.25em", paddingTop: "0.5em"}}>
             <button 
@@ -181,8 +184,6 @@ export function WoodAndSteelState({ ctx, G, moves, playerID }) {
   }
 
   const marketContractsList = filteredContractsList();
-  const [input, setInput] = React.useState('');
-  const [cityInput, setCityInput] = React.useState('');
 
   return (
     <div className="boardPage" style={{display: (ctx.currentPlayer === playerID ? "block" : "none")}}>
