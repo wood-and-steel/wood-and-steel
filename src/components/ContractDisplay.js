@@ -1,6 +1,6 @@
 import React from "react";
 import { rewardValue, railroadTieValue } from "../Contract";
-import { contractStyles } from "./styles";
+import { contractStyles } from "../shared/styles/styles";
 
 function getContractValue(contract) {
   const ties = railroadTieValue(contract);

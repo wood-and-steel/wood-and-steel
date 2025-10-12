@@ -1,8 +1,8 @@
 import React from "react";
 import { cities, commodities } from "../GameData";
 import { valueOfCity } from "../Contract";
-import { commodityIcons } from "./commodityIcons";
-import { formatCommodityList } from "./helpers";
+import { commodityIcons } from "../shared/assets/icons";
+import { formatCommodityList } from "../utils/helpers";
 
 // Reference Tables Component
 export function ReferenceTables({ G }) {

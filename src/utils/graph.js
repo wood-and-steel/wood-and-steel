@@ -1,4 +1,4 @@
-import { cities, routes } from "./GameData";
+import { cities, routes } from "../GameData";
 
 /**
  * Returns all cities connected to one or more cities within a number of segments

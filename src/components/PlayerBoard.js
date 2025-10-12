@@ -1,6 +1,6 @@
 import React from "react";
 import { ContractsList } from "./ContractsList";
-import { buttonStyles } from "./styles";
+import { buttonStyles } from "../shared/styles/styles";
 
 // Player Board Component
 export function PlayerBoard({ G, ctx, startingContractExists }) {

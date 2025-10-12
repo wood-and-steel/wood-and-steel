@@ -1,4 +1,4 @@
-import { cities } from "./GameData";
+import { cities } from "../GameData";
 
 // Constants for geographic calculations
 const DEG_TO_RAD = Math.PI / 180.0;

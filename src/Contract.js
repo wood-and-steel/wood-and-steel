@@ -1,6 +1,6 @@
 import { cities, commodities } from "./GameData";
-import { shortestDistance, citiesConnectedTo } from "./graph";
-import { cardinalDirection } from "./geo";
+import { shortestDistance, citiesConnectedTo } from "./utils/graph";
+import { cardinalDirection } from "./utils/geo";
 import { weightedRandom, randomSetItem } from "./utils";
 
 /**
