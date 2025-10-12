@@ -1,4 +1,4 @@
-import { cities, routes } from "./GameData";
+import { cities, routes } from "./data";
 import { citiesConnectedTo } from "./utils/graph";
 import { weightedRandom, randomArrayItem } from "./utils/random";
 

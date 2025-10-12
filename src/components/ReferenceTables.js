@@ -1,5 +1,5 @@
 import React from "react";
-import { cities, commodities } from "../GameData";
+import { cities, commodities } from "../data";
 import { valueOfCity } from "../Contract";
 import { commodityIcons } from "../shared/assets/icons";
 import { formatCommodityList } from "../utils/helpers";

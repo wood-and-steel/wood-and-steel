@@ -1,7 +1,7 @@
 import { generateMarketContract, generatePrivateContract, generateStartingContract, newContract } from './Contract';
 import { TurnOrder } from 'boardgame.io/core';
 import { initializeIndependentRailroads, RailroadManager, growIndependentRailroads } from './independentRailroads';
-import { routes } from './GameData';
+import { routes } from './data';
 
 export const WoodAndSteel = {
   name: "wood-and-steel",
