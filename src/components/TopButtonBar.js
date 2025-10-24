@@ -31,22 +31,12 @@ export function TopButtonBar({ input, setInput, cityInput, setCityInput, startin
   const availablePairs = getAvailableStartingPairs();
   
   return (
-    <div className="buttonBar" style={{ backgroundColor: "#606060", padding: "0.75em", position: "fixed", top: "0", left: "0", right: "0"}}>
+    <div className="buttonBar">
       {/* Game code display - clickable to open game list */}
       {gameManager && (
         <span 
           onClick={onShowGameList}
-          style={{ 
-            color: "white", 
-            fontWeight: "bold", 
-            fontSize: "110%", 
-            marginRight: "1.5rem",
-            padding: "0.25rem 0.75rem",
-            backgroundColor: "#404040",
-            borderRadius: "4px",
-            cursor: "pointer",
-            userSelect: "none"
-          }}
+          className="buttonBar__gameCode"
           title="Click to view all games"
         >
           Game: {gameManager.currentGameCode}
@@ -56,21 +46,14 @@ export function TopButtonBar({ input, setInput, cityInput, setCityInput, startin
       {/* End turn button - not shown during setup (auto-advances) */}
       <button 
         name="endTurn" 
-        className="button" 
-        style={{ display: currentPhase === 'play' ? 'inline-block' : 'none' }}
+        className={`button ${currentPhase === 'play' ? '' : 'button--hidden'}`}
       >End Turn</button>
 
-      <div style={{ display: "inline" }}>
-        <span style={{ 
-          color: "white", paddingLeft: "1.5rem", fontSize: "90%",
-          display: currentPhase === 'setup' ? "block" : "none",
-        }}>
+      <div className="buttonBar__section">
+        <span className={`buttonBar__label ${currentPhase === 'setup' ? '' : 'hidden'}`}>
           <b>Choose starting cities:</b>
         </span>
-        <span style={{ 
-          color: "white", paddingLeft: "1.5rem", fontSize: "90%",
-          display: currentPhase === 'play' ? "block" : "none",
-        }}>
+        <span className={`buttonBar__label ${currentPhase === 'play' ? '' : 'hidden'}`}>
           <b>Manual</b> commodity, destination, type:
         </span>
       </div>
@@ -81,11 +64,7 @@ export function TopButtonBar({ input, setInput, cityInput, setCityInput, startin
           value={input}
           onChange={e => setInput(e.target.value)}
           name="startingPairSelector"
-          style={{
-            width: "15rem",
-            height: "24px",
-            marginLeft: "0.5rem"
-          }}
+          className="buttonBar__input--large"
         >
           <option value="">-- Select a pair --</option>
           {availablePairs.map((pair, index) => (
@@ -101,32 +80,26 @@ export function TopButtonBar({ input, setInput, cityInput, setCityInput, startin
         value={input}
         onChange={e => setInput(e.target.value)}
         name="inputParameters" 
-        style={{
-          width: "15rem", 
-          height: "20px",
-          display: currentPhase === 'play' ? 'inline-block' : 'none'
-        }} 
+        className={`buttonBar__input ${currentPhase === 'play' ? '' : 'hidden'}`}
       />
       
       <button 
         name="startingContract" 
-        className="button"
-        style={{ display: currentPhase === 'setup' ? "inline-block" : "none" }}
+        className={`button ${currentPhase === 'setup' ? '' : 'button--hidden'}`}
         disabled={!input || currentPhase !== 'setup'}
       >Choose Starting Cities</button>
       <button 
         name="manualContract" 
-        className="button"
-        style={{ display: currentPhase === 'play' ? "block" : "none" }}
+        className={`button ${currentPhase === 'play' ? '' : 'button--hidden'}`}
       >Manual Contract</button>
 
-      <div style={{ display: currentPhase === 'play' ? "inline" : "none" }}>
-        <span style={{ color: "white", paddingLeft: " 1.5rem", fontSize: "90%" }}><b>Cities:</b></span>
+      <div className={`buttonBar__section ${currentPhase === 'play' ? '' : 'buttonBar__section--hidden'}`}>
+        <span className="buttonBar__label"><b>Cities:</b></span>
         <input 
           value={cityInput}
           onChange={e => setCityInput(e.target.value)}
           name="cityList" 
-          style={{width: "8rem", height: "20px", margin: "0 0.5rem"}} 
+          className="buttonBar__input--small"
         />
         <button name="addCities" className="button">Add Cities</button>
       </div>

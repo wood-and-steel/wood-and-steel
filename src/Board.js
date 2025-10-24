@@ -65,7 +65,7 @@ export function WoodAndSteelState({ ctx, G, moves, playerID, gameManager }) {
   // Render different UI based on phase
   if (currentPhase === 'scoring') {
     return (
-      <div className="boardPage" style={{display: (ctx.currentPlayer === playerID ? "block" : "none")}}>
+      <div className={`boardPage ${ctx.currentPlayer === playerID ? '' : 'boardPage--hidden'}`}>
         <form className="form" method="post" onSubmit={handleSubmit}>
           <TopButtonBar 
             input={input} 
@@ -78,7 +78,7 @@ export function WoodAndSteelState({ ctx, G, moves, playerID, gameManager }) {
             gameManager={gameManager}
             onShowGameList={() => setShowGameList(true)}
           />
-          <div style={{ padding: "5rem 2rem", textAlign: "center" }}>
+          <div className="padding-xl text-center">
             <h1>Scoring Phase</h1>
             <p>Game scoring will be implemented here.</p>
           </div>
@@ -89,7 +89,7 @@ export function WoodAndSteelState({ ctx, G, moves, playerID, gameManager }) {
   }
 
   return (
-    <div className="boardPage" style={{display: (ctx.currentPlayer === playerID ? "block" : "none")}}>
+    <div className={`boardPage ${ctx.currentPlayer === playerID ? '' : 'boardPage--hidden'}`}>
       <form className="form" method="post" onSubmit={handleSubmit}>
         <div>
           <TopButtonBar 

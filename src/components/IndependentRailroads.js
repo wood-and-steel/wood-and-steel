@@ -7,19 +7,18 @@ export function IndependentRailroads({ G }) {
   
   return (
     <div>
-      <div style={{fontWeight: "bold", paddingBottom: "0.5rem"}}>Independent railroads</div>
+      <div className="independentRailroads__title">Independent railroads</div>
       <div className="independentRailroads">
         {railroadsArray.map((railroad) =>
-          <div key={railroad.name} style={{marginBottom: "0.1rem"}}>
+          <div key={railroad.name} className="independentRailroads__item">
             <button 
               name="acquireIndependentRailroad" 
               id={railroad.name} 
-              className="button" 
-              style={{marginRight: "0.5rem"}}
+              className="button independentRailroads__button"
             >Acquire</button>
-            <span style={{opacity: "0.6"}}>{railroad.name}</span>
+            <span className="independentRailroads__name">{railroad.name}</span>
             {railroad.routes.map((route, routeIndex) => (
-              <span key={routeIndex} style={{marginLeft: "0.3rem"}}>• {route}</span>
+              <span key={routeIndex} className="independentRailroads__route">• {route}</span>
             ))}
           </div>
         )}

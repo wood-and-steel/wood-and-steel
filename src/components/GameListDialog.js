@@ -57,57 +57,38 @@ export function GameListDialog({ gameManager, onClose }) {
 
   return (
     <>
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          padding: '2rem',
-          borderRadius: '8px',
-          maxWidth: '500px',
-          width: '90%',
-          maxHeight: '80vh',
-          overflow: 'auto'
-        }}>
-          <h2 style={{ marginTop: 0 }}>All Games</h2>
+      <div className="modal">
+        <div className="modal__content">
+          <h2 className="modal__title">All Games</h2>
           {games.length === 0 ? (
             <p>No games found.</p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="table">
               <thead>
-                <tr style={{ borderBottom: '2px solid #ccc' }}>
-                  <th style={{ padding: '0.5rem', textAlign: 'left' }}>Code</th>
-                  <th style={{ padding: '0.5rem', textAlign: 'left' }}>Phase</th>
-                  <th style={{ padding: '0.5rem', textAlign: 'left' }}>Turn</th>
+                <tr className="table__header">
+                  <th className="table__headerCell">Code</th>
+                  <th className="table__headerCell">Phase</th>
+                  <th className="table__headerCell">Turn</th>
                 </tr>
               </thead>
               <tbody>
                 {games.map(game => (
-                  <tr key={game.code} style={{
-                    backgroundColor: game.code === currentCode ? '#e6f3ff' : 'transparent',
-                    borderBottom: '1px solid #eee'
-                  }}>
-                    <td style={{ padding: '0.5rem', fontWeight: game.code === currentCode ? 'bold' : 'normal' }}>
+                  <tr 
+                    key={game.code} 
+                    className={`table__row ${game.code === currentCode ? 'table__row--current' : ''}`}
+                  >
+                    <td className={`table__cell ${game.code === currentCode ? 'table__cell--bold' : ''}`}>
                       {game.code}
                       {game.code === currentCode && ' (current)'}
                     </td>
-                    <td style={{ padding: '0.5rem' }}>{game.phase}</td>
-                    <td style={{ padding: '0.5rem' }}>{game.turn}</td>
+                    <td className="table__cell">{game.phase}</td>
+                    <td className="table__cell">{game.turn}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+          <div className="modal__actions">
             <button 
               onClick={handleNewGame}
               className="button"
@@ -128,8 +109,7 @@ export function GameListDialog({ gameManager, onClose }) {
             </button>
             <button 
               onClick={onClose}
-              className="button"
-              style={{ marginLeft: 'auto' }}
+              className="button button--auto-margin"
             >
               Close
             </button>
@@ -169,26 +149,9 @@ function GameSwitchDialog({ switchCode, setSwitchCode, onSwitch, onCancel }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1001
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '2rem',
-        borderRadius: '8px',
-        maxWidth: '400px',
-        width: '90%'
-      }}>
-        <h2 style={{ marginTop: 0 }}>Switch Game</h2>
+    <div className="modal modal--nested">
+      <div className="modal__content modal__content--small">
+        <h2 className="modal__title">Switch Game</h2>
         <p>Enter the 4-letter code of the game you want to switch to:</p>
         <input
           type="text"
@@ -197,16 +160,10 @@ function GameSwitchDialog({ switchCode, setSwitchCode, onSwitch, onCancel }) {
           onKeyDown={handleKeyPress}
           placeholder="ABCD"
           maxLength={4}
-          style={{
-            width: '100%',
-            padding: '0.5rem',
-            fontSize: '1.2rem',
-            textTransform: 'uppercase',
-            marginBottom: '1rem'
-          }}
+          className="modal__input"
           autoFocus
         />
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+        <div className="modal__actions modal__actions--end">
           <button 
             type="button"
             onClick={onCancel}
@@ -239,26 +196,9 @@ function GameDeleteDialog({ deleteCode, setDeleteCode, onDelete, onCancel }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1001
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '2rem',
-        borderRadius: '8px',
-        maxWidth: '400px',
-        width: '90%'
-      }}>
-        <h2 style={{ marginTop: 0 }}>Delete Game</h2>
+    <div className="modal modal--nested">
+      <div className="modal__content modal__content--small">
+        <h2 className="modal__title">Delete Game</h2>
         <p>Enter the 4-letter code of the game you want to delete:</p>
         <input
           type="text"
@@ -267,16 +207,10 @@ function GameDeleteDialog({ deleteCode, setDeleteCode, onDelete, onCancel }) {
           onKeyDown={handleKeyPress}
           placeholder="ABCD"
           maxLength={4}
-          style={{
-            width: '100%',
-            padding: '0.5rem',
-            fontSize: '1.2rem',
-            textTransform: 'uppercase',
-            marginBottom: '1rem'
-          }}
+          className="modal__input"
           autoFocus
         />
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+        <div className="modal__actions modal__actions--end">
           <button 
             type="button"
             onClick={onCancel}
@@ -287,9 +221,8 @@ function GameDeleteDialog({ deleteCode, setDeleteCode, onDelete, onCancel }) {
           <button 
             type="button"
             onClick={onDelete}
-            className="button"
+            className="button button--danger"
             disabled={!deleteCode || deleteCode.length !== 4}
-            style={{ backgroundColor: '#d32f2f', color: 'white' }}
           >
             Delete
           </button>

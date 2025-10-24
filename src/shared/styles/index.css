@@ -1,3 +1,62 @@
+/* ========================================
+   CSS VARIABLES
+   ======================================== */
+:root {
+  /* Colors */
+  --color-primary: #404040;
+  --color-primary-dark: #606060;
+  --color-secondary: #f0f2ff;
+  --color-accent: #e6f3ff;
+  
+  --color-text: #000000;
+  --color-text-muted: #a0a0a0;
+  --color-text-light: #ffffff;
+  
+  --color-border: #404040;
+  --color-border-light: #c0c0c0;
+  --color-border-subtle: #eee;
+  --color-border-medium: #ccc;
+  
+  --color-bg-white: #ffffff;
+  --color-bg-light: #f0f2ff;
+  --color-bg-hover: rgb(240, 240, 250);
+  --color-bg-overlay: rgba(0, 0, 0, 0.5);
+  
+  --color-contract-market: blue;
+  --color-contract-private: black;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3.5rem;
+  --spacing-3xl: 5rem;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  
+  /* Z-Index */
+  --z-modal: 1000;
+  --z-modal-nested: 1001;
+  
+  /* Sizes */
+  --button-height: 26px;
+  --input-height: 20px;
+  --input-height-md: 24px;
+  --icon-size: 24px;
+  
+  /* Opacity */
+  --opacity-disabled: 0.6;
+  --opacity-muted: 0.65;
+  --opacity-subtle: 0.8;
+}
+
+/* ========================================
+   GLOBAL STYLES
+   ======================================== */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -12,61 +71,211 @@ code {
     monospace;
 }
 
+/* ========================================
+   LAYOUT COMPONENTS
+   ======================================== */
 .boardPage {
-    padding: 1rem;
-    padding-top: 3.5rem;
+  padding: var(--spacing-md);
+  padding-top: var(--spacing-2xl);
+}
+
+.boardPage--hidden {
+  display: none;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   font-size: 14px;
 }
 
+/* ========================================
+   BUTTON BAR
+   ======================================== */
 .buttonBar {
   display: flex;
   flex-direction: row;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   align-items: center;
+  background-color: var(--color-primary-dark);
+  padding: 0.75em;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 
+.buttonBar__gameCode {
+  color: var(--color-text-light);
+  font-weight: bold;
+  font-size: 110%;
+  margin-right: var(--spacing-lg);
+  padding: var(--spacing-xs) 0.75rem;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+}
+
+.buttonBar__label {
+  color: var(--color-text-light);
+  padding-left: var(--spacing-lg);
+  font-size: 90%;
+}
+
+.buttonBar__input {
+  width: 15rem;
+  height: var(--input-height);
+  margin: 0 var(--spacing-sm);
+}
+
+.buttonBar__input--large {
+  width: 15rem;
+  height: var(--input-height-md);
+  margin-left: var(--spacing-sm);
+}
+
+.buttonBar__input--small {
+  width: 8rem;
+  height: var(--input-height);
+  margin: 0 var(--spacing-sm);
+}
+
+.buttonBar__section {
+  display: inline;
+}
+
+.buttonBar__section--hidden {
+  display: none;
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
 .button {
-  height: 26px;
+  height: var(--button-height);
   text-align: center;
-  padding: 0 0.5rem;
+  padding: 0 var(--spacing-sm);
   align-items: center;
   width: fit-content;
-  border-radius: 4px;
-  border: solid 1px #404040;
+  border-radius: var(--radius-sm);
+  border: solid 1px var(--color-border);
 }
 
-.contract {
-  margin: 0rem;
-  text-align: left; 
-  width: fit-content;
-  background-color: transparent;
-  border: none;
+.button:disabled {
+  color: var(--color-text-muted);
+  border: solid 1px var(--color-border-light);
+  background-color: var(--color-bg-white);
+}
+
+.button--hidden {
+  display: none;
+}
+
+.button--auto-margin {
+  margin-left: auto;
+}
+
+.button--danger {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.button--danger:disabled {
+  background-color: #e57373;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .deleteButton {
-  font-size: 120%; 
-  background-color: transparent; 
-  border: none; 
+  font-size: 120%;
+  background-color: transparent;
+  border: none;
   cursor: pointer;
 }
 
-.playerBoard {
-  display: flex;
-  gap: 1rem;
-  margin: 0.5rem 0;
+/* ========================================
+   CONTRACTS
+   ======================================== */
+.contract {
+  margin: 0;
+  text-align: left;
+  width: fit-content;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
 }
 
+.contract:disabled {
+  cursor: default;
+  opacity: var(--opacity-disabled);
+}
+
+.contract--fulfilled {
+  text-decoration: line-through;
+}
+
+.contract--market {
+  color: var(--color-contract-market);
+}
+
+.contract--private {
+  color: var(--color-contract-private);
+}
+
+/* ========================================
+   PLAYER BOARD
+   ======================================== */
+.playerBoard {
+  display: flex;
+  gap: var(--spacing-md);
+  margin: var(--spacing-sm) 0;
+}
+
+.playerBoard__player {
+  flex-grow: 1;
+}
+
+.playerBoard__info {
+  padding: var(--spacing-sm);
+}
+
+.playerBoard__info--active {
+  background-color: var(--color-bg-light);
+}
+
+.playerBoard__name {
+  margin-bottom: var(--spacing-xs);
+}
+
+.playerBoard__name--active {
+  font-weight: bold;
+}
+
+.playerBoard__contracts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding-top: var(--spacing-sm);
+}
+
+/* ========================================
+   REFERENCE TABLES
+   ======================================== */
 .referenceTable {
-  margin: 1rem 0rem; 
-  display: flex; 
-  flex-direction: column; 
+  margin: var(--spacing-md) 0;
+  display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
+}
+
+.referenceTable__title {
+  font-weight: bold;
+  padding-top: var(--spacing-md);
+}
+
+.referenceTable__title--first {
+  padding-top: 0;
 }
 
 .cityTable {
@@ -81,10 +290,217 @@ code {
   display: flow;
   flex: 1 1;
   width: 115px;
-  opacity: 0.8;
+  opacity: var(--opacity-subtle);
 }
 
 .cityCell:hover {
-  background-color: rgb(240, 240, 250);
+  background-color: var(--color-bg-hover);
   opacity: 1.0;
+}
+
+.cityCell__name {
+  opacity: var(--opacity-muted);
+  padding-right: 0.4rem;
+  cursor: default;
+}
+
+.cityCell__value {
+  font-weight: 600;
+}
+
+.commodityRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.commodityRow__icon {
+  width: var(--icon-size);
+  height: var(--icon-size);
+}
+
+.commodityRow__cities {
+  opacity: var(--opacity-disabled);
+}
+
+/* ========================================
+   MODAL / DIALOG
+   ======================================== */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+
+.modal--nested {
+  z-index: var(--z-modal-nested);
+}
+
+.modal__content {
+  background-color: var(--color-bg-white);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-md);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.modal__content--small {
+  max-width: 400px;
+}
+
+.modal__title {
+  margin-top: 0;
+}
+
+.modal__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.modal__actions--end {
+  justify-content: flex-end;
+}
+
+.modal__input {
+  width: 100%;
+  padding: var(--spacing-sm);
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-md);
+}
+
+/* ========================================
+   TABLES
+   ======================================== */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table__header {
+  border-bottom: 2px solid var(--color-border-medium);
+}
+
+.table__headerCell {
+  padding: var(--spacing-sm);
+  text-align: left;
+}
+
+.table__row {
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.table__row--current {
+  background-color: var(--color-accent);
+}
+
+.table__cell {
+  padding: var(--spacing-sm);
+}
+
+.table__cell--bold {
+  font-weight: bold;
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+.text-center {
+  text-align: center;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.gap-xs {
+  gap: var(--spacing-xs);
+}
+
+.gap-sm {
+  gap: var(--spacing-sm);
+}
+
+.gap-md {
+  gap: var(--spacing-md);
+}
+
+.padding-xl {
+  padding: var(--spacing-3xl) var(--spacing-xl);
+}
+
+.hidden {
+  display: none;
+}
+
+.visible {
+  display: block;
+}
+
+.inline {
+  display: inline;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+/* ========================================
+   MARKET CONTRACTS
+   ======================================== */
+.marketContracts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin: auto;
+  padding: var(--spacing-sm);
+}
+
+.marketContracts__title {
+  font-weight: bold;
+  width: 18rem;
+  padding-bottom: var(--spacing-xs);
+}
+
+/* ========================================
+   INDEPENDENT RAILROADS
+   ======================================== */
+.independentRailroads__title {
+  font-weight: bold;
+  padding-bottom: var(--spacing-sm);
+}
+
+.independentRailroads__item {
+  margin-bottom: 0.1rem;
+}
+
+.independentRailroads__button {
+  margin-right: var(--spacing-sm);
+}
+
+.independentRailroads__name {
+  opacity: var(--opacity-disabled);
+}
+
+.independentRailroads__route {
+  margin-left: 0.3rem;
 }

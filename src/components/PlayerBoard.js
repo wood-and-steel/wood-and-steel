@@ -1,6 +1,5 @@
 import React from "react";
 import { ContractsList } from "./ContractsList";
-import { buttonStyles } from "../shared/styles/styles";
 
 // Player Board Component
 export function PlayerBoard({ G, ctx, startingContractExists }) {
@@ -10,27 +9,18 @@ export function PlayerBoard({ G, ctx, startingContractExists }) {
         const activePlayerBoard = ctx.currentPlayer === key;
         
         return (
-          <div key={key} style={{flexGrow: 1}}>
-            <div style={{
-              backgroundColor: activePlayerBoard ? "#f0f2ff" : "transparent",
-              padding: "0.5rem",
-            }}>
-              <div style={{
-                fontWeight: activePlayerBoard ? "bold" : "400",
-                marginBottom: "0.25rem",
-              }}>
+          <div key={key} className="playerBoard__player">
+            <div className={`playerBoard__info ${activePlayerBoard ? 'playerBoard__info--active' : ''}`}>
+              <div className={`playerBoard__name ${activePlayerBoard ? 'playerBoard__name--active' : ''}`}>
                 {name}
               </div>
               {activeCities.map((city, index) => <div key={index}>{city}</div>)}
             </div>
-            <div style={{display: "flex", flexDirection: "column", gap: "0.25em", paddingTop: "0.5em"}}>
+            <div className="playerBoard__contracts">
               <button 
                 name="privateContract" 
-                className="button"
-                style={{ 
-                  ...( activePlayerBoard ? {} : buttonStyles.disabled ),
-                  display: startingContractExists ? "block" : "none" 
-                }}
+                className={`button ${!activePlayerBoard ? 'button:disabled' : ''} ${startingContractExists ? '' : 'hidden'}`}
+                disabled={!activePlayerBoard}
               >Generate Private Contract</button>
               <ContractsList G={G} ctx={ctx} type="private" playerID={key} />
             </div>
