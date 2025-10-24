@@ -233,11 +233,15 @@ export function listGames() {
     const metadata = metadataMap.get(code);
     
     if (state) {
+      // Extract player names from the game state
+      const playerNames = state.G?.players?.map(([id, player]) => player.name) || [];
+      
       games.push({
         code: code,
         phase: state.ctx?.phase || 'unknown',
         turn: state.ctx?.turn || 0,
         numPlayers: state.ctx?.numPlayers || 0,
+        playerNames: playerNames,
         metadata: metadata || {}
       });
     }

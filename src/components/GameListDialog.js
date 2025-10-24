@@ -56,6 +56,7 @@ export function GameListDialog({ gameManager, onClose }) {
                   <th className="table__headerCell">Code</th>
                   <th className="table__headerCell">Phase</th>
                   <th className="table__headerCell">Turn</th>
+                  <th className="table__headerCell">Players</th>
                 </tr>
               </thead>
               <tbody>
@@ -71,6 +72,7 @@ export function GameListDialog({ gameManager, onClose }) {
                     </td>
                     <td className="table__cell">{game.phase}</td>
                     <td className="table__cell">{game.turn}</td>
+                    <td className="table__cell">{game.playerNames?.join(', ') || 'N/A'}</td>
                   </tr>
                 ))}
               </tbody>
