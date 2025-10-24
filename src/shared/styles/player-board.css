@@ -1,6 +1,3 @@
-/* ========================================
-   PLAYER BOARD
-   ======================================== */
 .playerBoard {
   display: flex;
   gap: var(--spacing-md);
