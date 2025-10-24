@@ -446,9 +446,19 @@ code {
 
 .table__row {
   border-bottom: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.table__row:hover {
+  background-color: var(--color-bg-hover);
 }
 
 .table__row--current {
+  background-color: var(--color-accent);
+}
+
+.table__row--current:hover {
   background-color: var(--color-accent);
 }
 
