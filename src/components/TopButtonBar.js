@@ -1,4 +1,5 @@
 import React from "react";
+import ThemeToggle from "./ThemeToggle";
 
 // Available starting city pairs
 const STARTING_CITY_PAIRS = [
@@ -11,7 +12,7 @@ const STARTING_CITY_PAIRS = [
 ];
 
 // Top Button Bar Component
-export function TopButtonBar({ input, setInput, cityInput, setCityInput, startingContractExists, currentPhase, G, gameManager, onShowGameList }) {
+export function TopButtonBar({ input, setInput, cityInput, setCityInput, startingContractExists, currentPhase, G, gameManager, onShowGameList, theme, onThemeToggle }) {
   // Get available starting pairs (filter out already chosen ones)
   const getAvailableStartingPairs = () => {
     if (currentPhase !== 'setup') return STARTING_CITY_PAIRS;
@@ -102,6 +103,11 @@ export function TopButtonBar({ input, setInput, cityInput, setCityInput, startin
           className="buttonBar__input--small"
         />
         <button name="addCities" className="button">Add Cities</button>
+      </div>
+
+      {/* Theme toggle button */}
+      <div style={{ marginLeft: 'auto' }}>
+        <ThemeToggle theme={theme} onToggle={onThemeToggle} />
       </div>
     </div>
   );

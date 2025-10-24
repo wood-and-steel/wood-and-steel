@@ -2,7 +2,7 @@
    CSS VARIABLES
    ======================================== */
 :root {
-  /* Colors */
+  /* Colors - Light Mode */
   --color-primary: #404040;
   --color-primary-dark: #606060;
   --color-secondary: #f0f2ff;
@@ -54,6 +54,32 @@
   --opacity-subtle: 0.8;
 }
 
+/* Dark Mode */
+[data-theme="dark"] {
+  /* Colors - Dark Mode */
+  --color-primary: #505050;
+  --color-primary-dark: #303030;
+  --color-secondary: #1a1a2e;
+  --color-accent: #16213e;
+  
+  --color-text: #e0e0e0;
+  --color-text-muted: #808080;
+  --color-text-light: #ffffff;
+  
+  --color-border: #606060;
+  --color-border-light: #505050;
+  --color-border-subtle: #333;
+  --color-border-medium: #444;
+  
+  --color-bg-white: #1a1a1a;
+  --color-bg-light: #252525;
+  --color-bg-hover: rgb(35, 35, 45);
+  --color-bg-overlay: rgba(0, 0, 0, 0.7);
+  
+  --color-contract-market: #64b5f6;
+  --color-contract-private: #e0e0e0;
+}
+
 /* ========================================
    GLOBAL STYLES
    ======================================== */
@@ -64,6 +90,9 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg-white);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 code {
@@ -128,18 +157,30 @@ code {
   width: 15rem;
   height: var(--input-height);
   margin: 0 var(--spacing-sm);
+  background-color: var(--color-bg-white);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-light);
+  padding: 0 var(--spacing-xs);
 }
 
 .buttonBar__input--large {
   width: 15rem;
   height: var(--input-height-md);
   margin-left: var(--spacing-sm);
+  background-color: var(--color-bg-white);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-light);
+  padding: 0 var(--spacing-xs);
 }
 
 .buttonBar__input--small {
   width: 8rem;
   height: var(--input-height);
   margin: 0 var(--spacing-sm);
+  background-color: var(--color-bg-white);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-light);
+  padding: 0 var(--spacing-xs);
 }
 
 .buttonBar__section {
@@ -161,6 +202,9 @@ code {
   width: fit-content;
   border-radius: var(--radius-sm);
   border: solid 1px var(--color-border);
+  background-color: var(--color-bg-white);
+  color: var(--color-text);
+  cursor: pointer;
 }
 
 .button:disabled {
@@ -378,6 +422,9 @@ code {
   font-size: 1.2rem;
   text-transform: uppercase;
   margin-bottom: var(--spacing-md);
+  background-color: var(--color-bg-white);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-light);
 }
 
 /* ========================================
@@ -503,4 +550,31 @@ code {
 
 .independentRailroads__route {
   margin-left: 0.3rem;
+}
+
+/* ========================================
+   THEME TOGGLE
+   ======================================== */
+.themeToggle {
+  background: transparent;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  cursor: pointer;
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 26px;
+  transition: background-color 0.2s ease;
+}
+
+.themeToggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.themeToggle:active {
+  background-color: rgba(255, 255, 255, 0.2);
 }
