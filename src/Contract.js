@@ -353,17 +353,30 @@ export function rewardValue(contract) {
  */
 export function railroadTieValue(contract) {
 
-  // 1 railroad tie if the commodity is available in the same region as the destination, 2 ties if the closest supplying city
-  // is in an adjacent region, and 3 ties if it needs to move from Eastern to Western or vice versa
+  // The value of a contract is based on the shortest distance between the destination 
+  // city and any city that provides the commodity.
+
   const destinationRegion = cities.get(contract.destinationKey).region;
   const commodityRegions = commodities.get(contract.commodity).regions;
 
-  if (commodityRegions.includes(destinationRegion)) {
-    return 1;
-  } else if (destinationRegion === "Central" || commodityRegions.includes("Central")) {
-    return 2;
-  }
-
-  // Not the same region and neither is Central, so it must be a Western-Eastern delivery (in either direction)
-  return 3;
+  // Railroad tie value matrix: rows are destination regions, columns are commodity regions
+  // Order: NW, NC, NE, SW, SC, SE
+  const regionValues = {
+    "NW": [1, 2, 3, 2, 3, 4],
+    "NC": [2, 1, 2, 3, 2, 3],
+    "NE": [3, 2, 1, 4, 3, 2],
+    "SW": [2, 3, 4, 1, 2, 3],
+    "SC": [3, 2, 3, 2, 1, 2],
+    "SE": [4, 3, 2, 3, 2, 1]
+  };
+  
+  const regionOrder = ["NW", "NC", "NE", "SW", "SC", "SE"];
+  
+  // Find minimum railroad tie value across all commodity regions
+  const values = commodityRegions.map(commodityRegion => {
+    const columnIndex = regionOrder.indexOf(commodityRegion);
+    return regionValues[destinationRegion][columnIndex];
+  });
+  
+  return Math.min(...values);
 }
