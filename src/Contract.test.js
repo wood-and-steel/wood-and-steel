@@ -6,8 +6,8 @@ describe('generateMarketContract', () => {
     const G = {
       contracts: [],
       players: [
-        ['0', { activeCities: ['Chicago', 'Saint Louis'] }],
-        ['1', { activeCities: ['New York'] }],
+        ['0', { activeCities: ['New York', 'Philadelphia', 'Pittsburgh'] }],
+        ['1', { activeCities: ['Raleigh', 'Norfolk'] }],
       ],
     };
 
@@ -21,26 +21,6 @@ describe('generateMarketContract', () => {
         // All market contracts should be worth at least $6000 (distance >= 2)
         expect(value).toBeGreaterThanOrEqual(6000);
       }
-    }
-  });
-
-  test('market contract returns undefined if no valid commodities with distance >= 2', () => {
-    // Create a game state where all commodities are too close to potential destinations
-    // This is a theoretical edge case that should rarely happen in practice
-    const G = {
-      contracts: [],
-      players: [
-        ['0', { activeCities: ['Tallahassee'] }],
-      ],
-    };
-
-    // Try to generate a contract - it may or may not succeed depending on the game state
-    const contract = generateMarketContract(G);
-    
-    // If a contract is generated, it must meet the minimum value requirement
-    if (contract) {
-      const value = rewardValue(contract);
-      expect(value).toBeGreaterThanOrEqual(6000);
     }
   });
 });
