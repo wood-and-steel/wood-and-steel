@@ -174,6 +174,7 @@ export function generateMarketContract(G) {
   // Choose a commodity at random from those that are:
   //  - not available in the destination city
   //  - available within any active city or 1 away from them
+  //  - at least distance 2 from the destination (to ensure $6k or more value)
   
   const citiesWithinOneHop = citiesConnectedTo(activeCitiesKeys, {
     distance: 1,
@@ -188,14 +189,24 @@ export function generateMarketContract(G) {
       .forEach(commodityNotInContractCity => possibleCommodities.add(commodityNotInContractCity));
   });
 
+  // Filter out commodities that are too close to the destination (distance < 2)
+  // This ensures all market contracts are worth at least $6k (2 segments × $3k)
+  const validCommodities = new Set();
+  possibleCommodities.forEach(commodity => {
+    const distance = shortestDistance(contractCity, c => cities.get(c)?.commodities.includes(commodity));
+    if (distance >= 2) {
+      validCommodities.add(commodity);
+    }
+  });
+
   // TODO: Write test to ensure this case never happens (low priority, seems very unlikely by inspection)
-  if (possibleCommodities.size === 0) {
-    console.error(`generateMarketContract: no possible commodities`);
+  if (validCommodities.size === 0) {
+    console.error(`generateMarketContract: no valid commodities with distance >= 2`);
     return undefined;
   }
 
   // Pick a commodity for the contract
-  const contractCommodity = randomSetItem(possibleCommodities);
+  const contractCommodity = randomSetItem(validCommodities);
 
   return newContract(contractCity, contractCommodity, { type: "market" });
 };
