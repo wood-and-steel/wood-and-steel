@@ -148,11 +148,6 @@ export function deleteGame(code) {
   setBgioData(BGIO_METADATA_KEY, metadataMap);
   setBgioData(BGIO_INITIAL_KEY, initialMap);
   
-  // If this was the current game, clear current game
-  if (getCurrentGameCode() === normalizedCode) {
-    clearCurrentGameCode();
-  }
-  
   return true;
 }
 

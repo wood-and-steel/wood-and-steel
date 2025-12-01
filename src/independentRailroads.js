@@ -255,7 +255,7 @@ export function initializeIndependentRailroads(railroadManager) {
   );
   const routesAvailableToIndies = routesWithoutTheseCities(withinTwoOfStartingCities);
 
-  // Calculate how many routes we want to assign (5% of total)
+  // Calculate how many routes we want to assign (10% of total)
   const numberOfRoutesToAssign = Math.ceil(routesAvailableToIndies.size * 0.1);
   
   // Convert routes Map to array of entries for easier random selection
