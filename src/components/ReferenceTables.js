@@ -2,7 +2,11 @@ import React from "react";
 import { cities, commodities } from "../data";
 import { valueOfCity } from "../Contract";
 import { commodityIcons } from "../shared/assets/icons";
-import { formatCommodityList } from "../utils/helpers";
+
+// Helper functions
+function formatCommodityList(items) {
+  return items.toString().replaceAll(',', ', ');
+}
 
 // Reference Tables Component
 export function ReferenceTables({ G }) {
