@@ -125,7 +125,7 @@ export function generatePrivateContract(G, ctx) {
     weightedDirections.set("east", 7).set("west", 7);
   }
 
-  // Get all cities within 2 hops of current city, split by direction
+  // Get all cities within 2 hops of active cities, split by direction
   const candidatesByDirection = citiesByDirection( [ currentCityKey ], citiesConnectedTo(activeCitiesKeys, { distance: 2 }) );
   
   // Pick a direction and a city
