@@ -27,6 +27,7 @@ import { initializeIndependentRailroads } from '../independentRailroads';
 
 /**
  * Initial context (ctx) structure
+ * Mirrors boardgame.io's ctx object, excluding internal properties (prefixed with underscore)
  * @typedef {Object} GameContext
  * @property {string} phase - Current phase name ('setup', 'play', 'scoring')
  * @property {string} currentPlayer - ID of player whose turn it is ('0', '1', etc.)
@@ -34,6 +35,8 @@ import { initializeIndependentRailroads } from '../independentRailroads';
  * @property {Array<string>} playOrder - Array of player IDs in turn order
  * @property {number} playOrderPos - Index in playOrder for current player
  * @property {number} turn - Current turn number
+ * @property {number} [numMoves] - Number of moves made in current turn
+ * @property {*} [*] - Additional public ctx properties from boardgame.io
  */
 
 /**
@@ -75,10 +78,22 @@ export const useGameStore = create((set, get) => ({
   /**
    * Sync state from boardgame.io Client
    * One-way synchronization: bgio → Zustand
+   * Copies all ctx properties except internal ones (prefixed with underscore)
    * @param {GameState} G - Game state from bgio
    * @param {GameContext} ctx - Context from bgio
    */
   syncFromBgio: (G, ctx) => {
+    // Copy all ctx properties except internal ones (prefixed with underscore)
+    const publicCtx = Object.fromEntries(
+      Object.entries(ctx || {}).filter(([key]) => !key.startsWith('_'))
+    );
+    
+    // Deep clone arrays and objects in ctx to ensure immutability
+    const syncedCtx = {
+      ...publicCtx,
+      playOrder: [...(publicCtx.playOrder || [])],
+    };
+
     set({
       G: {
         contracts: [...(G.contracts || [])],
@@ -91,14 +106,7 @@ export const useGameStore = create((set, get) => ({
         ]),
         independentRailroads: { ...(G.independentRailroads || {}) }
       },
-      ctx: {
-        phase: ctx.phase || 'setup',
-        currentPlayer: ctx.currentPlayer || '0',
-        numPlayers: ctx.numPlayers || 2,
-        playOrder: [...(ctx.playOrder || [])],
-        playOrderPos: ctx.playOrderPos || 0,
-        turn: ctx.turn || 0,
-      }
+      ctx: syncedCtx
     });
   },
 
@@ -161,3 +169,13 @@ export const useGameStore = create((set, get) => ({
     return player ? player[1].activeCities : [];
   },
 }));
+
+// Expose store to window for console debugging (development only)
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  window.__gameStore = useGameStore;
+  window.__getGameState = () => useGameStore.getState();
+  console.log('🎮 Game store available in console:');
+  console.log('  - window.__gameStore - Zustand store hook');
+  console.log('  - window.__getGameState() - Get current state');
+  console.log('  - Use: import { compareStates, logStateComparison } from "./utils/stateDebug"');
+}

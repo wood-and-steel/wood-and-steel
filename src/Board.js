@@ -5,9 +5,23 @@ import { MarketContracts } from "./components/MarketContracts";
 import { IndependentRailroads } from "./components/IndependentRailroads";
 import { ReferenceTables } from "./components/ReferenceTables";
 import { GameListDialog } from "./components/GameListDialog";
+import { useBgioSync } from "./hooks/useBgioSync";
+import { useStateDebug } from "./hooks/useStateDebug";
+
+// Enable debug mode by setting this to true or via localStorage
+const DEBUG_MODE = typeof window !== 'undefined' && (
+  window.localStorage?.getItem('gameStateDebug') === 'true' ||
+  new URLSearchParams(window.location.search).get('debug') === 'true'
+);
 
 // Main Component
 export function WoodAndSteelState({ ctx, G, moves, playerID, gameManager }) {
+  // Sync state from bgio to Zustand store (one-way sync)
+  useBgioSync(G, ctx);
+  
+  // Optional: Debug state comparison (enable via ?debug=true in URL or localStorage)
+  useStateDebug(G, ctx, DEBUG_MODE);
+
   // React hooks must be at the top of the component
   const [input, setInput] = React.useState('');
   const [cityInput, setCityInput] = React.useState('');
