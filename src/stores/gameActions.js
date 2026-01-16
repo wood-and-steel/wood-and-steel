@@ -9,7 +9,12 @@
 
 import { useGameStore } from './gameStore';
 import { isMoveAllowed } from './moveValidation';
-import { generateStartingContract as generateStartingContractContract } from '../Contract';
+import { 
+  generateStartingContract as generateStartingContractContract,
+  generatePrivateContract as generatePrivateContractContract,
+  generateMarketContract as generateMarketContractContract,
+  newContract
+} from '../Contract';
 import { endTurn as endTurnEvent } from './events';
 
 /**
@@ -69,9 +74,31 @@ export function generateStartingContract(activeCities) {
  * @returns {void}
  */
 export function generatePrivateContract() {
-  // Stub: Will be implemented to create and add a private contract
-  // for the current player using the store's G and ctx
-  console.log('[STUB] generatePrivateContract called');
+  // Get current state from store
+  const { G, ctx } = useGameStore.getState();
+
+  // Validate move is allowed in current phase
+  if (!isMoveAllowed('generatePrivateContract', ctx)) {
+    console.warn('[generatePrivateContract] Move not allowed in current phase');
+    return;
+  }
+
+  // Generate the contract using Contract.js function
+  const contract = generatePrivateContractContract(G, ctx);
+  
+  if (!contract) {
+    console.error('[generatePrivateContract] Contract generation failed');
+    return;
+  }
+
+  // Update state immutably
+  useGameStore.setState((state) => ({
+    G: {
+      ...state.G,
+      // Add contract to beginning of contracts array
+      contracts: [contract, ...state.G.contracts]
+    }
+  }));
 }
 
 /**
@@ -81,9 +108,31 @@ export function generatePrivateContract() {
  * @returns {void}
  */
 export function generateMarketContract() {
-  // Stub: Will be implemented to create and add a market contract
-  // using the store's G state
-  console.log('[STUB] generateMarketContract called');
+  // Get current state from store
+  const { G, ctx } = useGameStore.getState();
+
+  // Validate move is allowed in current phase
+  if (!isMoveAllowed('generateMarketContract', ctx)) {
+    console.warn('[generateMarketContract] Move not allowed in current phase');
+    return;
+  }
+
+  // Generate the contract using Contract.js function
+  const contract = generateMarketContractContract(G);
+  
+  if (!contract) {
+    console.error('[generateMarketContract] Contract generation failed');
+    return;
+  }
+
+  // Update state immutably
+  useGameStore.setState((state) => ({
+    G: {
+      ...state.G,
+      // Add contract to beginning of contracts array
+      contracts: [contract, ...state.G.contracts]
+    }
+  }));
 }
 
 /**
@@ -96,9 +145,51 @@ export function generateMarketContract() {
  * @returns {void}
  */
 export function addManualContract(commodity, destinationKey, type) {
-  // Stub: Will be implemented to create and add a manual contract
-  // for the current player using the store's G and ctx
-  console.log('[STUB] addManualContract called with:', { commodity, destinationKey, type });
+  // Get current state from store
+  const { ctx } = useGameStore.getState();
+
+  // Validate move is allowed in current phase
+  if (!isMoveAllowed('addManualContract', ctx)) {
+    console.warn('[addManualContract] Move not allowed in current phase');
+    return;
+  }
+
+  // Validate parameters
+  if (typeof commodity !== 'string' || !commodity) {
+    console.error('[addManualContract] commodity must be a non-empty string');
+    return;
+  }
+
+  if (typeof destinationKey !== 'string' || !destinationKey) {
+    console.error('[addManualContract] destinationKey must be a non-empty string');
+    return;
+  }
+
+  if (!['private', 'market'].includes(type)) {
+    console.error('[addManualContract] type must be "private" or "market"');
+    return;
+  }
+
+  // Create the contract using Contract.js function
+  // For private contracts, set playerID to current player; for market contracts, leave it null
+  const contract = newContract(destinationKey, commodity, { 
+    type: type, 
+    playerID: type === 'private' ? ctx.currentPlayer : null 
+  });
+  
+  if (!contract) {
+    console.error('[addManualContract] Contract creation failed');
+    return;
+  }
+
+  // Update state immutably
+  useGameStore.setState((state) => ({
+    G: {
+      ...state.G,
+      // Add contract to beginning of contracts array
+      contracts: [contract, ...state.G.contracts]
+    }
+  }));
 }
 
 /**
