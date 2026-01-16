@@ -437,7 +437,15 @@ export function acquireIndependentRailroad(railroadName) {
  * @returns {void}
  */
 export function endTurn() {
-  // Stub: Will be implemented to advance to the next player
-  // by updating ctx.currentPlayer, ctx.playOrderPos, and ctx.turn
-  console.log('[STUB] endTurn called');
+  // Get current state from store
+  const { ctx } = useGameStore.getState();
+
+  // Validate move is allowed in current phase
+  if (!isMoveAllowed('endTurn', ctx)) {
+    console.warn('[endTurn] Move not allowed in current phase');
+    return;
+  }
+
+  // Call the events.endTurn() stub (will be fully implemented in Phase 3)
+  endTurnEvent();
 }
