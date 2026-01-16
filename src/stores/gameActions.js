@@ -16,6 +16,7 @@ import {
   newContract
 } from '../Contract';
 import { endTurn as endTurnEvent } from './events';
+import { routes } from '../data';
 
 /**
  * Generate a starting contract for a player during the setup phase.
@@ -200,9 +201,109 @@ export function addManualContract(commodity, destinationKey, type) {
  * @returns {void}
  */
 export function toggleContractFulfilled(contractID) {
-  // Stub: Will be implemented to toggle fulfilled status
-  // and update player active cities accordingly using the store's G and ctx
-  console.log('[STUB] toggleContractFulfilled called with:', contractID);
+  // Get current state from store
+  const { G, ctx } = useGameStore.getState();
+
+  // Validate move is allowed in current phase
+  if (!isMoveAllowed('toggleContractFulfilled', ctx)) {
+    console.warn('[toggleContractFulfilled] Move not allowed in current phase');
+    return;
+  }
+
+  // Validate contractID parameter
+  if (typeof contractID !== 'string' || !contractID) {
+    console.error('[toggleContractFulfilled] contractID must be a non-empty string');
+    return;
+  }
+
+  // Find the contract
+  const contractIndex = G.contracts.findIndex(c => c.id === contractID);
+  if (contractIndex === -1) {
+    console.error(`[toggleContractFulfilled] Contract with ID "${contractID}" not found`);
+    return;
+  }
+
+  const contract = G.contracts[contractIndex];
+
+  // Only toggle if it's the current player's contract or an unfulfilled market contract
+  // or a fulfilled market contract by the current player
+  const canToggle = 
+    (contract.playerID === ctx.currentPlayer) || 
+    (contract.type === 'market' && !contract.fulfilled) ||
+    (contract.type === 'market' && contract.fulfilled && contract.playerID === ctx.currentPlayer);
+
+  if (!canToggle) {
+    console.warn(`[toggleContractFulfilled] Contract "${contractID}" cannot be toggled by current player`);
+    return;
+  }
+
+  // Update state immutably
+  useGameStore.setState((state) => {
+    // Create updated contract with toggled fulfilled status
+    const updatedContract = {
+      ...contract,
+      fulfilled: !contract.fulfilled
+    };
+
+    // Handle market contract playerID assignment
+    if (updatedContract.fulfilled && updatedContract.type === 'market') {
+      updatedContract.playerID = ctx.currentPlayer;
+    } else if (!updatedContract.fulfilled && updatedContract.type === 'market') {
+      updatedContract.playerID = null;
+    }
+
+    // Update contracts array with the modified contract
+    const updatedContracts = state.G.contracts.map((c, idx) => 
+      idx === contractIndex ? updatedContract : c
+    );
+
+    // Get current player's data
+    const currentPlayerEntry = state.G.players.find(([id]) => id === ctx.currentPlayer);
+    if (!currentPlayerEntry) {
+      console.error(`[toggleContractFulfilled] Current player "${ctx.currentPlayer}" not found`);
+      return state; // Return unchanged state on error
+    }
+
+    const [, playerProps] = currentPlayerEntry;
+    let updatedActiveCities = [...playerProps.activeCities];
+
+    if (updatedContract.fulfilled) {
+      // Add the destination city to this player's active cities if it's not already there
+      if (!updatedActiveCities.includes(updatedContract.destinationKey)) {
+        updatedActiveCities = [...updatedActiveCities, updatedContract.destinationKey];
+      }
+    } else {
+      // Remove the destination city from this player's active cities if this was their only fulfilled contract with it
+      const hasOtherFulfilledContract = updatedContracts.some(c => 
+        c.id !== contractID &&
+        c.playerID === ctx.currentPlayer &&
+        c.fulfilled &&
+        c.destinationKey === updatedContract.destinationKey
+      );
+
+      if (!hasOtherFulfilledContract) {
+        // Remove all instances of this city (in case of duplicates)
+        updatedActiveCities = updatedActiveCities.filter(
+          city => city !== updatedContract.destinationKey
+        );
+      }
+    }
+
+    // Update players array with modified active cities
+    const updatedPlayers = state.G.players.map(([id, props]) =>
+      id === ctx.currentPlayer
+        ? [id, { ...props, activeCities: updatedActiveCities }]
+        : [id, props]
+    );
+
+    return {
+      G: {
+        ...state.G,
+        contracts: updatedContracts,
+        players: updatedPlayers
+      }
+    };
+  });
 }
 
 /**
@@ -213,9 +314,43 @@ export function toggleContractFulfilled(contractID) {
  * @returns {void}
  */
 export function deleteContract(contractID) {
-  // Stub: Will be implemented to remove a contract from the store's G.contracts
-  // Only works if the contract is not fulfilled
-  console.log('[STUB] deleteContract called with:', contractID);
+  // Get current state from store
+  const { G, ctx } = useGameStore.getState();
+
+  // Validate move is allowed in current phase
+  if (!isMoveAllowed('deleteContract', ctx)) {
+    console.warn('[deleteContract] Move not allowed in current phase');
+    return;
+  }
+
+  // Validate contractID parameter
+  if (typeof contractID !== 'string' || !contractID) {
+    console.error('[deleteContract] contractID must be a non-empty string');
+    return;
+  }
+
+  // Find the contract
+  const contractIndex = G.contracts.findIndex(c => c.id === contractID);
+  if (contractIndex === -1) {
+    console.error(`[deleteContract] Contract with ID "${contractID}" not found`);
+    return;
+  }
+
+  const contract = G.contracts[contractIndex];
+
+  // Only delete if the contract is not fulfilled
+  if (contract.fulfilled) {
+    console.warn(`[deleteContract] Cannot delete fulfilled contract "${contractID}"`);
+    return;
+  }
+
+  // Update state immutably by removing the contract
+  useGameStore.setState((state) => ({
+    G: {
+      ...state.G,
+      contracts: state.G.contracts.filter((c, idx) => idx !== contractIndex)
+    }
+  }));
 }
 
 /**
@@ -226,11 +361,73 @@ export function deleteContract(contractID) {
  * @returns {void}
  */
 export function acquireIndependentRailroad(railroadName) {
-  // Stub: Will be implemented to:
-  // 1. Validate railroad exists in store's G.independentRailroads
-  // 2. Add all cities in the railroad to current player's activeCities
-  // 3. Remove the railroad from G.independentRailroads
-  console.log('[STUB] acquireIndependentRailroad called with:', railroadName);
+  // Get current state from store
+  const { G, ctx } = useGameStore.getState();
+
+  // Validate move is allowed in current phase
+  if (!isMoveAllowed('acquireIndependentRailroad', ctx)) {
+    console.warn('[acquireIndependentRailroad] Move not allowed in current phase');
+    return;
+  }
+
+  // Validate railroadName parameter
+  if (typeof railroadName !== 'string' || !railroadName) {
+    console.error('[acquireIndependentRailroad] railroadName must be a non-empty string');
+    return;
+  }
+
+  // Validate railroad exists
+  const railroad = G.independentRailroads[railroadName];
+  if (!railroad) {
+    console.error(`[acquireIndependentRailroad] Railroad "${railroadName}" not found`);
+    return;
+  }
+
+  // Get all the cities in this railroad from its routes
+  const citiesInRailroad = new Set();
+  railroad.routes.forEach(routeKey => {
+    const route = routes.get(routeKey);
+    if (route && route.cities) {
+      route.cities.forEach(city => citiesInRailroad.add(city));
+    }
+  });
+
+  // Update state immutably
+  useGameStore.setState((state) => {
+    // Get current player's data
+    const currentPlayerEntry = state.G.players.find(([id]) => id === ctx.currentPlayer);
+    if (!currentPlayerEntry) {
+      console.error(`[acquireIndependentRailroad] Current player "${ctx.currentPlayer}" not found`);
+      return state; // Return unchanged state on error
+    }
+
+    const [, playerProps] = currentPlayerEntry;
+    
+    // Add all cities from the railroad to current player's active cities
+    // Use Set to avoid duplicates, then convert back to array
+    const updatedActiveCities = Array.from(new Set([
+      ...playerProps.activeCities,
+      ...citiesInRailroad
+    ]));
+
+    // Update players array with modified active cities
+    const updatedPlayers = state.G.players.map(([id, props]) =>
+      id === ctx.currentPlayer
+        ? [id, { ...props, activeCities: updatedActiveCities }]
+        : [id, props]
+    );
+
+    // Remove the railroad from independentRailroads using destructuring
+    const { [railroadName]: _removed, ...restRailroads } = state.G.independentRailroads;
+
+    return {
+      G: {
+        ...state.G,
+        players: updatedPlayers,
+        independentRailroads: restRailroads
+      }
+    };
+  });
 }
 
 /**
