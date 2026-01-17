@@ -16,6 +16,7 @@ import {
   newContract
 } from '../Contract';
 import { endTurn as endTurnEvent } from './events';
+import { checkPhaseTransition } from './phaseManager';
 import { routes } from '../data';
 
 /**
@@ -63,6 +64,10 @@ export function generateStartingContract(activeCities) {
       )
     }
   }));
+
+  // Check for phase transition after state update
+  const updatedState = useGameStore.getState();
+  checkPhaseTransition(updatedState.G, updatedState.ctx);
 
   // Automatically end turn after choosing starting cities
   endTurnEvent();
@@ -134,6 +139,10 @@ export function generateMarketContract() {
       contracts: [contract, ...state.G.contracts]
     }
   }));
+
+  // Check for phase transition after state update
+  const updatedState = useGameStore.getState();
+  checkPhaseTransition(updatedState.G, updatedState.ctx);
 }
 
 /**
@@ -191,6 +200,10 @@ export function addManualContract(commodity, destinationKey, type) {
       contracts: [contract, ...state.G.contracts]
     }
   }));
+
+  // Check for phase transition after state update
+  const updatedState = useGameStore.getState();
+  checkPhaseTransition(updatedState.G, updatedState.ctx);
 }
 
 /**
@@ -304,6 +317,10 @@ export function toggleContractFulfilled(contractID) {
       }
     };
   });
+
+  // Check for phase transition after state update
+  const updatedState = useGameStore.getState();
+  checkPhaseTransition(updatedState.G, updatedState.ctx);
 }
 
 /**
@@ -351,6 +368,10 @@ export function deleteContract(contractID) {
       contracts: state.G.contracts.filter((c, idx) => idx !== contractIndex)
     }
   }));
+
+  // Check for phase transition after state update
+  const updatedState = useGameStore.getState();
+  checkPhaseTransition(updatedState.G, updatedState.ctx);
 }
 
 /**
@@ -428,6 +449,10 @@ export function acquireIndependentRailroad(railroadName) {
       }
     };
   });
+
+  // Check for phase transition after state update
+  const updatedState = useGameStore.getState();
+  checkPhaseTransition(updatedState.G, updatedState.ctx);
 }
 
 /**
