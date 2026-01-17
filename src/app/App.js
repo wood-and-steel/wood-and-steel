@@ -1,9 +1,6 @@
 import React from 'react';
-import { Client } from 'boardgame.io/react';
-import { Local } from 'boardgame.io/multiplayer';
-import { WoodAndSteel } from '../Game';
+import { GameProvider } from '../providers/GameProvider';
 import { WoodAndSteelState } from '../Board';
-import { useBgioSync } from '../hooks/useBgioSync';
 import { 
   getCurrentGameCode, 
   createNewGame,
@@ -14,26 +11,6 @@ import {
   isValidGameCode,
   normalizeGameCode
 } from '../utils/gameManager';
-
-/**
- * Wrapper component that syncs bgio state to Zustand store
- * This ensures state synchronization happens for each player instance
- */
-const BgioSyncWrapper = ({ ctx, G, ...rest }) => {
-  // Sync state from bgio to Zustand store (one-way sync)
-  useBgioSync(G, ctx);
-  
-  // Pass all props to the board component
-  return <WoodAndSteelState ctx={ctx} G={G} {...rest} />;
-};
-
-const WoodAndSteelClient = Client({ 
-  game: WoodAndSteel,
-  multiplayer: Local({ persist: true }),
-  numPlayers: 2,
-  board: BgioSyncWrapper,
-  debug: false,
-});
 
 const App = () => {
   // Get or create game code
@@ -54,7 +31,7 @@ const App = () => {
     onNewGame: () => {
       const newCode = createNewGame();
       setCurrentGameCodeState(newCode);
-      // Force page reload to reset the boardgame.io client
+      // Force page reload to reset the game state
       window.location.reload();
     },
     onSwitchGame: (code) => {
@@ -87,16 +64,12 @@ const App = () => {
 
   return (
     <div>
-      <WoodAndSteelClient 
-        playerID="0" 
-        matchID={currentGameCode}
-        gameManager={gameManager}
-      />
-      <WoodAndSteelClient 
-        playerID="1" 
-        matchID={currentGameCode}
-        gameManager={gameManager}
-      />
+      <GameProvider playerID="0">
+        <WoodAndSteelState gameManager={gameManager} />
+      </GameProvider>
+      <GameProvider playerID="1">
+        <WoodAndSteelState gameManager={gameManager} />
+      </GameProvider>
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { IndependentRailroads } from "./components/IndependentRailroads";
 import { ReferenceTables } from "./components/ReferenceTables";
 import { GameListDialog } from "./components/GameListDialog";
 import { useStateDebug } from "./hooks/useStateDebug";
+import { useGame } from "./hooks/useGame";
 
 // Enable debug mode by setting this to true or via localStorage
 const DEBUG_MODE = typeof window !== 'undefined' && (
@@ -14,7 +15,10 @@ const DEBUG_MODE = typeof window !== 'undefined' && (
 );
 
 // Main Component
-export function WoodAndSteelState({ ctx, G, moves, playerID, gameManager }) {
+export function WoodAndSteelState({ gameManager }) {
+  // Get game state and moves from useGame hook instead of props
+  const { G, ctx, moves, playerID } = useGame();
+  
   // Optional: Debug state comparison (enable via ?debug=true in URL or localStorage)
   useStateDebug(G, ctx, DEBUG_MODE);
 
