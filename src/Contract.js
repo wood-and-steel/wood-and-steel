@@ -16,7 +16,7 @@ import { weightedRandom, randomSetItem } from "./utils/random";
 /**
  * Create a starting private contract for a given pair of starting cities
  *
- * @param {*} G - boardgame.io global state
+ * @param {*} G - Game state object
  * @param {string[2]} activeCitiesKeys - Keys of two starting cities
  * @param {*} playerID - player who will hold this contract
  * @returns {Contract}
@@ -94,7 +94,7 @@ export function generateStartingContract(G, activeCitiesKeys, playerID) {
 /**
  * Create a private contract from the given active cities and the starting city
  *
- * @param {*} G - boardgame.io global state
+ * @param {*} G - Game state object
  * @param {string[]} activeCitiesKeys - Keys of all active cities
  * @param {string} currentCityKey - Key of the city to determine direction from
  * @returns {Contract}
@@ -151,7 +151,7 @@ export function generatePrivateContract(G, ctx) {
 /**
  * Create a market contract from the given active cities
  *
- * @param {*} G - boardgame.io global state
+ * @param {*} G - Game state object
  * @returns {Contract}
  */
 export function generateMarketContract(G) {
@@ -208,7 +208,7 @@ export function generateMarketContract(G) {
 
 /**
  * Randomly pick a city, weighted by the relative value of the cities
- * @param {*} G - boardgame.io global state
+ * @param {*} G - Game state object
  * @param {Array<String>|Set<String>} cities - Keys of cities to select from
  * @returns {String} - Key of randomly selected city
  */

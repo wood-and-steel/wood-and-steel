@@ -2,8 +2,8 @@
  * Game action functions that implement game moves.
  * These functions update the Zustand store to modify game state.
  * 
- * Each function implements a game move without the boardgame.io
- * context objects (G, ctx, events), accessing state directly from the store.
+ * Each function accesses state directly from the store and updates it
+ * according to game rules and move validation.
  */
 
 import { useGameStore } from './gameStore';

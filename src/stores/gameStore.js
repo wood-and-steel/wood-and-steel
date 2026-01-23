@@ -26,8 +26,8 @@ import { initializeIndependentRailroads } from '../independentRailroads';
  */
 
 /**
- * Initial context (ctx) structure
- * Mirrors boardgame.io's ctx object, excluding internal properties (prefixed with underscore)
+ * Game context (ctx) structure
+ * Contains game flow metadata (phase, current player, turn info)
  * @typedef {Object} GameContext
  * @property {string} phase - Current phase name ('setup', 'play', 'scoring')
  * @property {string} currentPlayer - ID of player whose turn it is ('0', '1', etc.)
@@ -36,7 +36,6 @@ import { initializeIndependentRailroads } from '../independentRailroads';
  * @property {number} playOrderPos - Index in playOrder for current player
  * @property {number} turn - Current turn number
  * @property {number} [numMoves] - Number of moves made in current turn
- * @property {*} [*] - Additional public ctx properties from boardgame.io
  */
 
 /**
@@ -69,7 +68,7 @@ function getInitialState(numPlayers = 2) {
 
 /**
  * Zustand store for game state
- * Mirrors boardgame.io's G and ctx structures
+ * Manages game state (G) and game context (ctx)
  */
 export const useGameStore = create((set, get) => ({
   // Initial state
@@ -142,5 +141,4 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
   console.log('🎮 Game store available in console:');
   console.log('  - window.__gameStore - Zustand store hook');
   console.log('  - window.__getGameState() - Get current state');
-  console.log('  - Use: import { compareStates, logStateComparison } from "./utils/stateDebug"');
 }

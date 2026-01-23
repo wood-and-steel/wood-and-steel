@@ -10,9 +10,8 @@ import {
 } from './gameActions';
 
 /**
- * Moves API object that matches boardgame.io's moves pattern.
- * This allows components to use the same `moves.moveName(args)` API
- * as boardgame.io, but calls the Zustand-based move functions.
+ * Moves API object that provides a consistent interface for game moves.
+ * Components can use `moves.moveName(args)` to execute game actions.
  * 
  * @param {Object} store - Zustand store instance (for future flexibility, currently unused)
  * @returns {Object} Object containing all available moves

@@ -3,7 +3,7 @@ import { useGameContext } from '../providers/GameProvider';
 /**
  * Hook that provides easy access to game state and moves
  * 
- * Returns the same API as boardgame.io Client's board component props:
+ * Returns:
  * - G: Game state
  * - ctx: Game context (phase, currentPlayer, etc.)
  * - moves: Object containing all available moves

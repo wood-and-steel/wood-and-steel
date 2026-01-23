@@ -1,12 +1,12 @@
 /**
  * Game Manager - Handles multiple game instances with unique four-letter codes
  * Works with Zustand store state persistence
- * Maintains compatibility with boardgame.io's Local multiplayer storage format for migration
+ * Uses localStorage with a format compatible with legacy saved games
  */
 
 import { serializeState, deserializeState, isValidSerializedState } from './stateSerialization';
 
-// Storage keys - using bgio format for backward compatibility
+// Storage keys - using legacy format for backward compatibility with existing saved games
 const BGIO_STATE_KEY = 'bgio_state';
 const BGIO_METADATA_KEY = 'bgio_metadata';
 const BGIO_INITIAL_KEY = 'bgio_initial';
@@ -68,9 +68,9 @@ export function isValidGameCode(code) {
 }
 
 /**
- * Get all boardgame.io storage data
+ * Get all game storage data from localStorage
  * @param {string} key - Storage key (state, metadata, or initial)
- * @returns {Map} - Map of matchID to data
+ * @returns {Map} - Map of game code to data
  */
 function getBgioData(key) {
   try {
@@ -108,9 +108,9 @@ function getBgioData(key) {
 }
 
 /**
- * Set boardgame.io storage data
+ * Set game storage data in localStorage
  * @param {string} key - Storage key (state, metadata, or initial)
- * @param {Map} dataMap - Map of matchID to data
+ * @param {Map} dataMap - Map of game code to data
  * @returns {boolean} - True if saved successfully
  */
 function setBgioData(key, dataMap) {
@@ -144,8 +144,7 @@ function setBgioData(key, dataMap) {
 }
 
 /**
- * Switch to a different game by updating the active matchID to the game code
- * boardgame.io uses "default" as matchID, we'll use the game code as matchID
+ * Switch to a different game by updating the active game code
  * @param {string} code - Game code to switch to
  * @returns {boolean} - True if switched successfully
  */
@@ -178,7 +177,7 @@ export function switchToGame(code) {
 
 /**
  * Delete a game from localStorage
- * Removes all boardgame.io data for this matchID
+ * Removes all game data for this game code
  * @param {string} code - Game code
  * @returns {boolean} - True if deleted, false if not found
  */
@@ -228,7 +227,7 @@ export function deleteGame(code) {
 }
 
 /**
- * List all game codes (matchIDs that are valid game codes)
+ * List all game codes
  * @returns {string[]} - Array of game codes
  */
 export function listGameCodes() {
@@ -370,7 +369,7 @@ export function createNewGame() {
 
 /**
  * Save game state to localStorage
- * Stores state in the same format as bgio for compatibility: { G: {...}, ctx: {...} }
+ * Stores state in format: { G: {...}, ctx: {...} }
  * @param {string} code - Game code
  * @param {Object} G - Game state
  * @param {Object} ctx - Game context
