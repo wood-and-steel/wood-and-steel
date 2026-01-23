@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Wood and Steel is a board game web application built with React and boardgame.io. It's a train game for 1-6 players set in the age of steam engines (1830-1940), where players act as railroad owners expanding their networks across the eastern United States and southern Canada.
+Wood and Steel is a board game web application built with React and Zustand. It's a train game for 1-6 players set in the age of steam engines (1830-1940), where players act as railroad owners expanding their networks across the eastern United States and southern Canada.
 
 ### Hybrid Gameplay Model
 
@@ -15,10 +15,9 @@ The app delegates grunt work while players focus on the interesting decisions.
 ## Technology Stack
 
 - **Framework**: React 18.3.1
-- **Game Engine**: boardgame.io 0.50.2
 - **Build Tool**: react-scripts 5.0.1 (Create React App)
 - **Testing**: Jest + React Testing Library
-- **State Management**: boardgame.io built-in state management
+- **State Management**: Zustand
 - **Styling**: Centralized CSS (no inline styles)
 
 ## Development Setup
@@ -75,9 +74,8 @@ wood-and-steel-bgio/
 │   ├── shared/          # Shared utilities and styles
 │   │   └── styles/      # Centralized CSS
 │   ├── utils/           # Utility functions
-│   ├── Board.js         # boardgame.io board component
+│   ├── Board.js         # Main game board component
 │   ├── Contract.js      # Contract generation logic
-│   ├── Game.js          # boardgame.io game definition
 │   ├── independentRailroads.js  # Independent railroad logic
 │   └── index.js         # Entry point
 ├── package.json
@@ -86,10 +84,11 @@ wood-and-steel-bgio/
 
 ## Key Files and Their Purposes
 
-- **Game.js**: boardgame.io game definition with setup, phases, and moves
 - **Board.js**: Main React component that renders the game UI
 - **Contract.js**: Logic for generating different types of contracts (starting, private, market)
 - **independentRailroads.js**: Management of AI-controlled railroad companies
+- **stores/gameActions.js**: Game move implementations that modify game state
+- **stores/phaseConfig.js**: Phase configuration and transition logic
 - **components/**: Presentational React components for UI elements
 
 ## Coding Conventions
@@ -138,20 +137,24 @@ export function MyComponent({ isActive, onAction }) {
 }
 ```
 
-### boardgame.io Patterns
+### Game State Patterns
 
-1. **Game state (G)**: Always treat as immutable; modify properties directly in moves; must be a JSON-serializable object
-2. **Moves**: Define as functions in the `moves` object
-3. **Phases**: Use for different game stages (setup, play, scoring)
-4. **Context (ctx)**: Access game metadata (currentPlayer, phase, turn)
+1. **Game state (G)**: Always treat as immutable; use Zustand's setState to update; must be a JSON-serializable object
+2. **Moves**: Define as functions in `stores/gameActions.js` that update the Zustand store
+3. **Phases**: Use for different game stages (setup, play, scoring) - configured in `stores/phaseConfig.js`
+4. **Context (ctx)**: Access game metadata (currentPlayer, phase, turn) from the Zustand store
 
 Example:
 ```javascript
-moves: {
-  myMove: ({ G, ctx }, arg) => {
-    // Modify G directly (boardgame.io handles immutability)
-    G.someProperty = newValue;
-  }
+// In stores/gameActions.js
+export function myMove(arg) {
+  const { G, ctx } = useGameStore.getState();
+  useGameStore.setState((state) => ({
+    G: {
+      ...state.G,
+      someProperty: newValue
+    }
+  }));
 }
 ```
 
@@ -166,7 +169,7 @@ moves: {
 
 ### Phase System
 
-The game uses boardgame.io's phases feature:
+The game uses a custom phase system:
 
 1. **Setup Phase**: Players choose starting cities and receive starting contracts
 2. **Play Phase**: Main gameplay with all actions available
@@ -254,10 +257,11 @@ test('renders component correctly', () => {
 
 ### Adding a New Move
 
-1. Add move function in `Game.js` under appropriate phase
-2. Implement logic that modifies `G` state
-3. Call move from Board component or UI component
-4. Test manually in development mode
+1. Add move function in `stores/gameActions.js`
+2. Implement logic that modifies `G` state using the Zustand store
+3. Add move validation in `stores/moveValidation.js` if needed
+4. Call move from Board component or UI component via the moves object
+5. Test manually in development mode
 
 ### Modifying Styles
 
@@ -287,7 +291,7 @@ Key areas still in development:
 
 ## Resources
 
-- [boardgame.io Documentation](https://boardgame.io/documentation/)
+- [Zustand Documentation](https://zustand-demo.pmnd.rs/)
 - [React Documentation](https://react.dev/)
 - [React Testing Library](https://testing-library.com/react)
 
@@ -295,5 +299,5 @@ Key areas still in development:
 
 - Check `/docs/` for detailed documentation
 - Review similar components for patterns
-- Read boardgame.io docs for game engine questions
+- Review `stores/gameActions.js` for move implementation patterns
 - Test changes thoroughly before committing

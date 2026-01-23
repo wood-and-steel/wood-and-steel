@@ -4,12 +4,12 @@ import { createMoves } from '../stores/moves';
 
 /**
  * Game Context that provides G, ctx, moves, and playerID to child components
- * This replaces the props that boardgame.io Client automatically passed to board components
+ * Provides the same interface that components expect for accessing game state
  */
 const GameContext = createContext(null);
 
 /**
- * GameProvider component that replaces boardgame.io Client
+ * GameProvider component that provides game state and moves to child components
  * 
  * Uses Zustand store as the single source of truth for game state.
  * All player instances share the same store, but each provider instance

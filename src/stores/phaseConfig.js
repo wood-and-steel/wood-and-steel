@@ -1,8 +1,7 @@
 import { growIndependentRailroads } from '../independentRailroads';
 
 /**
- * Phase configuration extracted from Game.js
- * Defines phase structure, transitions, and hooks for turn/phase management
+ * Phase configuration that defines phase structure, transitions, and hooks for turn/phase management
  */
 
 /**

@@ -1,10 +1,9 @@
 /**
- * Game action stubs that mirror the move structure from Game.js
- * These functions are initially stubs that don't modify state.
- * They will be implemented in future phases to update the Zustand store.
+ * Game action functions that implement game moves.
+ * These functions update the Zustand store to modify game state.
  * 
- * Each function mirrors the corresponding move from Game.js but without
- * the boardgame.io context objects (G, ctx, events).
+ * Each function implements a game move without the boardgame.io
+ * context objects (G, ctx, events), accessing state directly from the store.
  */
 
 import { useGameStore } from './gameStore';
@@ -33,7 +32,6 @@ function saveCurrentGameState() {
 
 /**
  * Generate a starting contract for a player during the setup phase.
- * Mirrors: setup.moves.generateStartingContract
  * 
  * @param {Array<string>} activeCities - Array of two starting city keys
  * @returns {void}
@@ -93,7 +91,6 @@ export function generateStartingContract(activeCities) {
 
 /**
  * Generate a private contract for the current player.
- * Mirrors: play.moves.generatePrivateContract
  * 
  * @returns {void}
  */
@@ -130,7 +127,6 @@ export function generatePrivateContract() {
 
 /**
  * Generate a market contract (available to all players).
- * Mirrors: play.moves.generateMarketContract
  * 
  * @returns {void}
  */
@@ -171,7 +167,6 @@ export function generateMarketContract() {
 
 /**
  * Add a manually created contract.
- * Mirrors: play.moves.addManualContract
  * 
  * @param {string} commodity - Commodity name
  * @param {string} destinationKey - Destination city key
@@ -235,7 +230,6 @@ export function addManualContract(commodity, destinationKey, type) {
 
 /**
  * Toggle the fulfilled status of a contract.
- * Mirrors: play.moves.toggleContractFulfilled
  * 
  * @param {string} contractID - ID of the contract to toggle
  * @returns {void}
@@ -355,7 +349,6 @@ export function toggleContractFulfilled(contractID) {
 
 /**
  * Delete an unfulfilled contract.
- * Mirrors: play.moves.deleteContract
  * 
  * @param {string} contractID - ID of the contract to delete
  * @returns {void}
@@ -409,7 +402,6 @@ export function deleteContract(contractID) {
 
 /**
  * Acquire an independent railroad for the current player.
- * Mirrors: play.moves.acquireIndependentRailroad
  * 
  * @param {string} railroadName - Name of the independent railroad to acquire
  * @returns {void}
@@ -493,7 +485,6 @@ export function acquireIndependentRailroad(railroadName) {
 
 /**
  * End the current player's turn.
- * Mirrors: play.moves.endTurn
  * 
  * @returns {void}
  */
