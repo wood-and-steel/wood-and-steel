@@ -1,6 +1,9 @@
 # Wood and Steel Architecture: boardgame.io Integration
 
-This document describes how Wood and Steel uses boardgame.io (bgio) and outlines what would need to be implemented to replace it with a local implementation.
+> **⚠️ ARCHIVED DOCUMENTATION**  
+> This document describes the historical boardgame.io (bgio) implementation that has since been removed. The codebase now uses a Zustand-based implementation with custom state management, moves, and phase/turn management. This document is kept for reference purposes only.
+
+This document describes how Wood and Steel previously used boardgame.io (bgio) and what was implemented to replace it with a local implementation.
 
 ## Table of Contents
 

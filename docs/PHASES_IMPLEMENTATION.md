@@ -1,7 +1,7 @@
 # Phases Implementation
 
 ## Overview
-The game now uses boardgame.io's phases feature to structure gameplay into three distinct phases.
+The game uses a custom phases system to structure gameplay into three distinct phases. Phase configuration is defined in `src/stores/phaseConfig.js`.
 
 ## Phase Structure
 
@@ -55,9 +55,8 @@ The game now uses boardgame.io's phases feature to structure gameplay into three
 
 ## Key Implementation Details
 
-### Game.js Changes
-- Removed top-level `moves` and `turn` objects
-- Added `phases` object with three phase definitions
+### Phase Configuration (phaseConfig.js)
+- Phase definitions are configured in `src/stores/phaseConfig.js`
 - Each phase has its own `moves`, `turn`, and `endIf` configurations
 - Setup phase auto-ends when all players have at least one private contract
 - Play phase has no automatic end condition yet
