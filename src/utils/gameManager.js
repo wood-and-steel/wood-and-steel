@@ -13,15 +13,34 @@ const BGIO_INITIAL_KEY = 'bgio_initial';
 const CURRENT_GAME_KEY = 'bgio_current_game';
 
 /**
- * Generate a random four-letter code (A-Z)
+ * Generate a random four-letter code (A-Z), avoiding explicit words
  * @returns {string} - Four-letter uppercase code
  */
 export function generateGameCode() {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  // List of explicit words to avoid
+  const explicitWords = [
+    'FUCK', 'SHIT', 'CUNT', 'PISS', 'DICK', 'COCK', 'TWAT', 'FAGG', 'SUCK', 
+    'ANAL', 'TITS', 'DAMN', 'JIZZ', 'MUFF', 'PORN', 'WANK', 'CUMS', 'DYKE',
+    'SEXX', 'HELL', 'BUTT', 'BLOW', 'JERK', 'BOOB', 'SODO', 'SHTS', 'PUSS'
+  ];
   let code = '';
-  for (let i = 0; i < 4; i++) {
-    code += letters.charAt(Math.floor(Math.random() * letters.length));
+  let attempts = 0;
+  const maxAttempts = 100; // avoid infinite loop
+
+  do {
+    code = '';
+    for (let i = 0; i < 4; i++) {
+      code += letters.charAt(Math.floor(Math.random() * letters.length));
+    }
+    attempts++;
+  } while (explicitWords.includes(code) && attempts < maxAttempts);
+
+  if (attempts >= maxAttempts) {
+    // Fallback: allow code, but should be extremely unlikely
+    return code;
   }
+
   return code;
 }
 
