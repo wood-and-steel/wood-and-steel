@@ -3,6 +3,7 @@
  * Tests persistence across moves, turns, phases, game switching, and reloads
  */
 
+import { vi } from 'vitest';
 import {
   generateGameCode,
   generateUniqueGameCode,
@@ -26,14 +27,14 @@ import { checkPhaseTransition } from '../stores/phaseManager';
 const localStorageMock = (() => {
   let store = {};
   return {
-    getItem: jest.fn((key) => store[key] || null),
-    setItem: jest.fn((key, value) => {
+    getItem: vi.fn((key) => store[key] || null),
+    setItem: vi.fn((key, value) => {
       store[key] = value.toString();
     }),
-    removeItem: jest.fn((key) => {
+    removeItem: vi.fn((key) => {
       delete store[key];
     }),
-    clear: jest.fn(() => {
+    clear: vi.fn(() => {
       store = {};
     }),
   };
@@ -48,7 +49,7 @@ beforeAll(() => {
 beforeEach(() => {
   localStorageMock.clear();
   useGameStore.getState().resetState();
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe('Persistence Tests', () => {

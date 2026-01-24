@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders game UI with starting cities prompt', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  const buttons = screen.getAllByRole('button', { name: /choose starting cities/i });
+  expect(buttons.length).toBeGreaterThan(0);
+  expect(buttons[0]).toBeInTheDocument();
 });
