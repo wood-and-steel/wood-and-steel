@@ -13,71 +13,24 @@ const GAME_INITIAL_KEY = 'game_initial';
 const CURRENT_GAME_KEY = 'current_game';
 
 /**
- * Generate a random four-letter code (A-Z), avoiding explicit words
- * @returns {string} - Four-letter uppercase code
+ * Generate a random five-letter code (no vowels to avoid making words)
+ * @returns {string} - Five-letter uppercase code
  */
 export function generateGameCode() {
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  // List of explicit words to avoid
-  const explicitWords = [
-    'FUCK', 'PHUC', 'FUKK', 'FUXK', 'PHUK', 'FOOK', 'FUCQ', 'FUKS', 'FOOK',
-    'SHIT', 'SHET', 'SHYT', 'SHTS', 'SHAT', 'SCAT',
-    'CUNT', 'KUNT', 'QUNT', 'SUNT', 'KUMS', 'KUMZ',
-    'PISS', 'PISZ', 'PISH', 'PISX',
-    'DICK', 'DIKK', 'DYCK', 'DIKC', 'DICQ', 'DIKQ',
-    'COCK', 'KOKK', 'KOCK', 'COKK', 'COKC', 'COCC',
-    'TWAT', 'TWOT', 'TUAT', 'TWET', 'TWAQ', 'TUWT',
-    'FAGG', 'FAGS', 'FAQQ', 'FAGZ',
-    'SUCK', 'SUKK', 'SUXK', 'SUCQ', 'SUKQ', 'SUKS', 'SUQS',
-    'ANAL', 'AYNL', 'ANUL', 'AANL',
-    'TITS', 'TITZ', 'TIDS', 'TIIS', 'TITX', 'TITQ',
-    'DAMN', 'DAMM',
-    'JIZZ', 'JIZS', 'JYZZ', 'JISS',
-    'MUFF', 'MUFY', 'MUFZ', 'MUUF',
-    'PORN', 'PRON',
-    'WANK', 'WANC', 'WANQ', 'WENK', 'WANX',
-    'COOM', 'CUHM', 'QUMS',
-    'DYKE', 'DIKE', 'DYQE',
-    'SEXX', 'SEKS', 'SEXZ', 'SECK',
-    'HELL', 'HLLL', 'HELZ',
-    'BUTT', 'BUTS', 'BUUT', 'BUTE', 'BUTZ', 'BUTC',
-    'BLOW', 'BLOO', 'BLOZ', 'BLOH',
-    'JERK', 'JIRK', 'JURK', 'JERQ', 'JERX',
-    'BOOB', 'BOBZ',
-    'SODO', 'SOAD',
-    'PUSS', 'PUSY', 'PUSZ', 'PUSC', 'PUZZ', 'PUZS',
-    'COME', 'KOME', 'QOME', 'COMZ',
-    'ASSS', 'ASSH', 'ARSE', 'ASSX', 'ASSQ',
-    'SUXX', 'SUKQ', 'SUKX', 'SUQX', 'SUXQ',
-    'TURD', 'TURT', 'TURQ',
-    'SHAG', 'SHGG', 'SAGG',
-    'BUMS', 'BUMZ', 'BUMB', 'BUUM',
-    'ARSE', 'ARZE', 'ARSZ',
-    'HORR', 'HORE', 'HORS'
-  ];
+  const letters = 'BCDFGHJKLMNPQRSTVWXYZ';
   let code = '';
-  let attempts = 0;
-  const maxAttempts = 100; // avoid infinite loop
 
-  do {
-    code = '';
-    for (let i = 0; i < 4; i++) {
-      code += letters.charAt(Math.floor(Math.random() * letters.length));
-    }
-    attempts++;
-  } while (explicitWords.includes(code) && attempts < maxAttempts);
-
-  if (attempts >= maxAttempts) {
-    // Fallback: allow code, but should be extremely unlikely
-    return code;
+  code = '';
+  for (let i = 0; i < 5; i++) {
+    code += letters.charAt(Math.floor(Math.random() * letters.length));
   }
 
   return code;
 }
 
 /**
- * Generate a unique four-letter code that doesn't exist in current games
- * @returns {string} - Unique four-letter uppercase code
+ * Generate a unique code that doesn't exist in current games
+ * @returns {string} - Unique game code
  */
 export function generateUniqueGameCode() {
   const existingCodes = listGameCodes();
@@ -107,14 +60,14 @@ export function normalizeGameCode(code) {
 }
 
 /**
- * Validate game code format (exactly 4 letters A-Z, case-insensitive)
+ * Validate game code format (4 or 5 letters A-Z, case-insensitive)
  * @param {string} code - Game code to validate
  * @returns {boolean} - True if valid format
  */
 export function isValidGameCode(code) {
   if (!code) return false;
   const normalized = normalizeGameCode(code);
-  return /^[A-Z]{4}$/.test(normalized);
+  return /^[A-Z]{4,5}$/.test(normalized);
 }
 
 /**
@@ -285,7 +238,7 @@ export function listGameCodes() {
   const stateMap = getGameData(GAME_STATE_KEY);
   
   for (const [matchID] of stateMap) {
-    // Only include valid 4-letter codes
+    // Only include valid game codes
     if (isValidGameCode(matchID)) {
       codes.push(matchID);
     }

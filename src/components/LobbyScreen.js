@@ -86,7 +86,7 @@ export function LobbyScreen({ gameManager, onEnterGame, onNewGame }) {
                   <th className="table__headerCell">Code</th>
                   <th className="table__headerCell">Phase</th>
                   <th className="table__headerCell">Players</th>
-                  <th className="table__headerCell">Last Turn</th>
+                  <th className="table__headerCell table__headerCell--hide-mobile">Last Turn</th>
                   <th className="table__headerCell">Delete</th>
                 </tr>
               </thead>
@@ -103,7 +103,7 @@ export function LobbyScreen({ gameManager, onEnterGame, onNewGame }) {
                     </td>
                     <td className="table__cell">{game.phase}</td>
                     <td className="table__cell">{game.numPlayers}</td>
-                    <td className="table__cell">{formatLastModified(game.lastModified)}</td>
+                    <td className="table__cell table__cell--hide-mobile">{formatLastModified(game.lastModified)}</td>
                     <td className="table__cell table__cell--delete">
                       <button 
                         className="button button--icon button--danger"

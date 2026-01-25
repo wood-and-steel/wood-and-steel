@@ -1,25 +1,29 @@
 /* ========================================
    BUTTON BAR
    ======================================== */
+
+/* Mobile Layout (default, < 768px) */
 .buttonBar {
   display: flex;
   flex-direction: row;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
   align-items: center;
   background-color: var(--color-primary-dark);
-  padding: 0.75em;
+  padding: 0.5em;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
+  z-index: 100;
+  flex-wrap: wrap;
 }
 
 .buttonBar__gameCode {
   color: var(--color-text-light);
   font-weight: bold;
-  font-size: 110%;
-  margin-right: var(--spacing-lg);
-  padding: var(--spacing-xs) 0.75rem;
+  font-size: 0.9rem;
+  margin-right: var(--spacing-sm);
+  padding: var(--spacing-xs) 0.5rem;
   background-color: var(--color-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -28,38 +32,41 @@
 
 .buttonBar__label {
   color: var(--color-text-light);
-  padding-left: var(--spacing-lg);
-  font-size: 90%;
+  padding-left: var(--spacing-sm);
+  font-size: 0.8rem;
 }
 
 .buttonBar__input {
-  width: 15rem;
+  width: 10rem;
   height: var(--input-height);
-  margin: 0 var(--spacing-sm);
+  margin: 0 var(--spacing-xs);
   background-color: var(--color-bg-white);
   color: var(--color-text);
   border: 1px solid var(--color-border-light);
   padding: 0 var(--spacing-xs);
+  font-size: 0.85rem;
 }
 
 .buttonBar__input--large {
-  width: 15rem;
+  width: 10rem;
   height: var(--input-height-md);
-  margin-left: var(--spacing-sm);
+  margin-left: var(--spacing-xs);
   background-color: var(--color-bg-white);
   color: var(--color-text);
   border: 1px solid var(--color-border-light);
   padding: 0 var(--spacing-xs);
+  font-size: 0.85rem;
 }
 
 .buttonBar__input--small {
-  width: 8rem;
+  width: 6rem;
   height: var(--input-height);
-  margin: 0 var(--spacing-sm);
+  margin: 0 var(--spacing-xs);
   background-color: var(--color-bg-white);
   color: var(--color-text);
   border: 1px solid var(--color-border-light);
   padding: 0 var(--spacing-xs);
+  font-size: 0.85rem;
 }
 
 .buttonBar__section {
@@ -68,6 +75,81 @@
 
 .buttonBar__section--hidden {
   display: none;
+}
+
+/* Tablet Layout (768px - 1023px) */
+@media (min-width: 768px) {
+  .buttonBar {
+    gap: var(--spacing-sm);
+    padding: 0.65em;
+    flex-wrap: nowrap;
+  }
+
+  .buttonBar__gameCode {
+    font-size: 1rem;
+    margin-right: var(--spacing-md);
+    padding: var(--spacing-xs) 0.65rem;
+  }
+
+  .buttonBar__label {
+    padding-left: var(--spacing-md);
+    font-size: 0.85rem;
+  }
+
+  .buttonBar__input {
+    width: 12rem;
+    margin: 0 var(--spacing-sm);
+    font-size: 0.9rem;
+  }
+
+  .buttonBar__input--large {
+    width: 12rem;
+    margin-left: var(--spacing-sm);
+    font-size: 0.9rem;
+  }
+
+  .buttonBar__input--small {
+    width: 7rem;
+    margin: 0 var(--spacing-sm);
+    font-size: 0.9rem;
+  }
+}
+
+/* Desktop Layout (>= 1024px) */
+@media (min-width: 1024px) {
+  .buttonBar {
+    gap: var(--spacing-sm);
+    padding: 0.75em;
+  }
+
+  .buttonBar__gameCode {
+    font-size: 110%;
+    margin-right: var(--spacing-lg);
+    padding: var(--spacing-xs) 0.75rem;
+  }
+
+  .buttonBar__label {
+    padding-left: var(--spacing-lg);
+    font-size: 90%;
+  }
+
+  .buttonBar__input {
+    width: 15rem;
+    margin: 0 var(--spacing-sm);
+    font-size: 1rem;
+  }
+
+  .buttonBar__input--large {
+    width: 15rem;
+    margin-left: var(--spacing-sm);
+    font-size: 1rem;
+  }
+
+  .buttonBar__input--small {
+    width: 8rem;
+    margin: 0 var(--spacing-sm);
+    font-size: 1rem;
+  }
 }
 
 /* ========================================
@@ -114,56 +196,134 @@
 /* ========================================
    LOBBY SCREEN
    ======================================== */
+
+/* Mobile Layout (default, < 768px) */
 .lobbyScreen {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xl);
-  background-color: var(--color-bg);
+  justify-content: flex-start;
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-light);
 }
 
 .lobbyScreen__content {
   width: 100%;
-  max-width: 800px;
   background-color: var(--color-bg-white);
   border-radius: var(--radius-md);
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: var(--spacing-lg);
 }
 
 .lobbyScreen__title {
-  margin: 0 0 var(--spacing-lg) 0;
-  font-size: 2rem;
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: 1.5rem;
   text-align: center;
   color: var(--color-text);
 }
 
 .lobbyScreen__emptyState {
   text-align: center;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg);
 }
 
 .lobbyScreen__emptyState p {
-  margin: 0 0 var(--spacing-lg) 0;
-  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
 }
 
 .lobbyScreen__actions {
-  margin-top: var(--spacing-lg);
+  margin-top: var(--spacing-md);
   display: flex;
   justify-content: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
 }
 
 .lobbyScreen__newGame {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  margin: var(--spacing-md);
+  gap: var(--spacing-sm);
+  margin: var(--spacing-sm) 0;
   flex-wrap: wrap;
   justify-content: center;
+  font-size: 0.9rem;
+}
+
+/* Tablet Layout (768px - 1023px) */
+@media (min-width: 768px) {
+  .lobbyScreen {
+    padding: var(--spacing-lg);
+    justify-content: center;
+  }
+
+  .lobbyScreen__content {
+    max-width: 600px;
+    padding: var(--spacing-lg);
+    margin-top: 0;
+  }
+
+  .lobbyScreen__title {
+    font-size: 1.75rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .lobbyScreen__emptyState {
+    padding: var(--spacing-xl);
+  }
+
+  .lobbyScreen__emptyState p {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .lobbyScreen__actions {
+    margin-top: var(--spacing-lg);
+    gap: var(--spacing-sm);
+  }
+
+  .lobbyScreen__newGame {
+    gap: var(--spacing-md);
+    margin: var(--spacing-md);
+    font-size: 1rem;
+  }
+}
+
+/* Desktop Layout (>= 1024px) */
+@media (min-width: 1024px) {
+  .lobbyScreen {
+    padding: var(--spacing-xl);
+  }
+
+  .lobbyScreen__content {
+    max-width: 800px;
+    padding: var(--spacing-xl);
+  }
+
+  .lobbyScreen__title {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .lobbyScreen__emptyState {
+    padding: var(--spacing-xl);
+  }
+
+  .lobbyScreen__emptyState p {
+    font-size: 1rem;
+  }
+
+  .lobbyScreen__actions {
+    margin-top: var(--spacing-lg);
+    gap: var(--spacing-sm);
+  }
+
+  .lobbyScreen__newGame {
+    gap: var(--spacing-md);
+    margin: var(--spacing-md);
+  }
 }
 
 .table__cell--delete {

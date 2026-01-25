@@ -37,6 +37,12 @@ All design tokens are defined as CSS variables for consistency:
   --spacing-xs: 0.25rem;
   --spacing-md: 1rem;
   
+  /* Breakpoints */
+  --breakpoint-mobile: 480px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-desktop-lg: 1280px;
+  
   /* Z-Index */
   --z-modal: 1000;
 }
@@ -46,6 +52,7 @@ All design tokens are defined as CSS variables for consistency:
 - Easy theme changes (just update variables)
 - Consistent spacing/colors across the app
 - Self-documenting code
+- Centralized breakpoint management
 
 ### 2. Component Classes (BEM-inspired)
 
@@ -89,6 +96,56 @@ Common patterns available as single-purpose utilities:
 <div className="flex flex-column gap-md">
   {/* Content */}
 </div>
+```
+
+### 4. Responsive Breakpoint System
+
+The app uses a **3-layout approach** (mobile, tablet, desktop) for pixel-perfect designs at each breakpoint:
+
+**Breakpoints:**
+- **Mobile**: `< 768px` (default, mobile-first)
+- **Tablet**: `768px - 1023px`
+- **Desktop**: `>= 1024px`
+
+**Implementation Pattern:**
+```css
+/* Mobile Layout (default, < 768px) */
+.myComponent {
+  padding: var(--spacing-sm);
+  font-size: 0.9rem;
+}
+
+/* Tablet Layout (768px - 1023px) */
+@media (min-width: 768px) {
+  .myComponent {
+    padding: var(--spacing-md);
+    font-size: 1rem;
+  }
+}
+
+/* Desktop Layout (>= 1024px) */
+@media (min-width: 1024px) {
+  .myComponent {
+    padding: var(--spacing-lg);
+    font-size: 1.1rem;
+  }
+}
+```
+
+**Responsive Utilities:**
+- `.show-mobile`, `.show-tablet`, `.show-desktop` - Show only on specific breakpoint
+- `.hide-mobile`, `.hide-tablet`, `.hide-desktop` - Hide on specific breakpoint
+- `.table__cell--hide-mobile` - Hide table columns on mobile
+
+**Example Usage:**
+```jsx
+{/* Show different content per breakpoint */}
+<div className="show-mobile">Mobile only</div>
+<div className="show-tablet">Tablet only</div>
+<div className="show-desktop">Desktop only</div>
+
+{/* Hide less important columns on mobile */}
+<th className="table__headerCell table__headerCell--hide-mobile">Last Turn</th>
 ```
 
 ## Component Patterns
@@ -148,6 +205,9 @@ Use template literals for conditional classes:
 3. **Scope styles to components** - `.playerBoard__name` not `.name`
 4. **Use utility classes** for simple, one-off layouts
 5. **Add comments** to organize sections in CSS
+6. **Start with mobile layout** - Use mobile-first approach, then add tablet/desktop overrides
+7. **Define all 3 breakpoints** - Even if similar, explicitly define mobile/tablet/desktop for pixel-perfect control
+8. **Use breakpoint variables** - Reference `var(--breakpoint-tablet)` in comments for clarity
 
 ### DON'T ❌
 
@@ -156,19 +216,48 @@ Use template literals for conditional classes:
 3. **No magic numbers** - Use variables (`var(--spacing-md)`)
 4. **No generic class names** - `.info` is too vague
 5. **No duplicate styles** - DRY principle
+6. **No fluid responsive** - Use discrete breakpoints, not continuous scaling
+7. **Don't skip breakpoints** - Define all three layouts even if they're similar
 
 ## Adding New Styles
 
 ### For a New Component
 
-1. **Add a CSS section:**
+1. **Add a CSS section with responsive breakpoints:**
 ```css
 /* ========================================
    MY NEW COMPONENT
    ======================================== */
-.myComponent { }
-.myComponent__element { }
-.myComponent--modifier { }
+
+/* Mobile Layout (default, < 768px) */
+.myComponent {
+  padding: var(--spacing-sm);
+  font-size: 0.9rem;
+}
+
+.myComponent__element {
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Tablet Layout (768px - 1023px) */
+@media (min-width: 768px) {
+  .myComponent {
+    padding: var(--spacing-md);
+    font-size: 1rem;
+  }
+  
+  .myComponent__element {
+    margin-bottom: var(--spacing-sm);
+  }
+}
+
+/* Desktop Layout (>= 1024px) */
+@media (min-width: 1024px) {
+  .myComponent {
+    padding: var(--spacing-lg);
+    font-size: 1.1rem;
+  }
+}
 ```
 
 2. **Use in JSX:**
@@ -234,21 +323,41 @@ Add to the utilities section if it's reusable:
 4. **Type safety** - No runtime style errors
 5. **Better IDE support** - CSS autocomplete and linting
 
+## Responsive Design Philosophy
+
+This app uses a **3-layout breakpoint system** rather than fluid responsive design:
+
+1. **Mobile Layout** (`< 768px`) - Optimized for touch, vertical scrolling, compact information
+2. **Tablet Layout** (`768px - 1023px`) - Balanced layout with more horizontal space
+3. **Desktop Layout** (`>= 1024px`) - Full-featured layout with maximum information density
+
+**Why 3 layouts instead of fluid?**
+- Pixel-perfect control at each breakpoint
+- Easier to maintain with small team (1-2 developers)
+- Clear separation of concerns
+- Better performance (no complex calculations)
+- Matches the fixed screen set requirement
+
+**Example: LobbyScreen Component**
+- Mobile: Compact padding, smaller fonts, hidden "Last Turn" column
+- Tablet: Medium padding, readable fonts, all columns visible
+- Desktop: Spacious padding, larger fonts, full table with all details
+
 ## Future Improvements
 
 Consider these enhancements as the app grows:
 
 1. **CSS Modules** - Scoped styles per component file
-2. **Sass/SCSS** - Variables, nesting, mixins
-3. **Styled Components** - CSS-in-JS with TypeScript support
-4. **Tailwind CSS** - Utility-first framework
-5. **Design tokens** - JSON-based design system
+2. **Sass/SCSS** - Variables, nesting, mixins for cleaner breakpoint management
+3. **Design tokens** - JSON-based design system for programmatic access
+4. **Container queries** - When browser support improves, for component-level responsiveness
 
 For now, the current CSS architecture is:
 - ✅ Simple and maintainable
 - ✅ Well-organized and documented
 - ✅ Scalable for future growth
 - ✅ Zero inline styles
+- ✅ Responsive with pixel-perfect breakpoints
 
 ## Quick Reference
 
@@ -273,9 +382,17 @@ For now, the current CSS architecture is:
 <div className="playerBoard">
   <div className="playerBoard__player">
     <div className="playerBoard__info playerBoard__info--active">
+
+// Responsive breakpoints
+@media (min-width: 768px) { /* Tablet */ }
+@media (min-width: 1024px) { /* Desktop */ }
+
+// Hide/show by breakpoint
+<div className="show-mobile">Mobile only</div>
+<th className="table__headerCell table__headerCell--hide-mobile">Hidden on mobile</th>
 ```
 
 ---
 
-**Last Updated:** October 23, 2025  
+**Last Updated:** January 25, 2026  
 **Maintainer:** Development Team

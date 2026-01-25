@@ -37,3 +37,64 @@
 .table__cell--bold {
   font-weight: bold;
 }
+
+/* ========================================
+   RESPONSIVE TABLE STYLES
+   ======================================== */
+
+/* Mobile Layout (default, < 768px) */
+.table {
+  font-size: 0.85rem;
+}
+
+.table__headerCell {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.8rem;
+}
+
+.table__cell {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.85rem;
+}
+
+/* Hide less important columns on mobile */
+@media (max-width: 767px) {
+  .table__cell--hide-mobile,
+  .table__headerCell--hide-mobile {
+    display: none;
+  }
+}
+
+/* Tablet Layout (768px - 1023px) */
+@media (min-width: 768px) {
+  .table {
+    font-size: 0.9rem;
+  }
+
+  .table__headerCell {
+    padding: var(--spacing-sm);
+    font-size: 0.9rem;
+  }
+
+  .table__cell {
+    padding: var(--spacing-sm);
+    font-size: 0.9rem;
+  }
+}
+
+/* Desktop Layout (>= 1024px) */
+@media (min-width: 1024px) {
+  .table {
+    font-size: 1rem;
+  }
+
+  .table__headerCell {
+    padding: var(--spacing-sm);
+    font-size: 1rem;
+  }
+
+  .table__cell {
+    padding: var(--spacing-sm);
+    font-size: 1rem;
+  }
+}

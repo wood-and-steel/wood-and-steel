@@ -50,6 +50,12 @@
   --opacity-disabled: 0.6;
   --opacity-muted: 0.65;
   --opacity-subtle: 0.8;
+  
+  /* Breakpoints */
+  --breakpoint-mobile: 480px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-desktop-lg: 1280px;
 }
 
 /* Dark Mode */
