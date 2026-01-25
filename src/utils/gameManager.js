@@ -322,7 +322,8 @@ export function clearCurrentGameCode() {
 
 /**
  * Get all games with their codes and basic info
- * @returns {Array<{code: string, phase: string, players: any}>} - Array of game info
+ * Sorted by lastModified descending (most recent first)
+ * @returns {Array<{code: string, phase: string, turn: number, numPlayers: number, lastModified: string, playerNames: Array<string>, metadata: Object}>} - Array of game info
  */
 export function listGames() {
   const operation = 'listGames';
@@ -337,7 +338,7 @@ export function listGames() {
     for (const code of codes) {
       try {
         const state = stateMap.get(code);
-        const metadata = metadataMap.get(code);
+        const metadata = metadataMap.get(code) || {};
         
         if (state) {
           // Extract player names from the game state
@@ -348,8 +349,9 @@ export function listGames() {
             phase: state.ctx?.phase || 'unknown',
             turn: state.ctx?.turn || 0,
             numPlayers: state.ctx?.numPlayers || 0,
+            lastModified: metadata.lastModified || new Date(0).toISOString(), // Default to epoch if missing
             playerNames: playerNames,
-            metadata: metadata || {}
+            metadata: metadata
           });
         }
       } catch (e) {
@@ -358,7 +360,12 @@ export function listGames() {
       }
     }
     
-    return games.sort((a, b) => a.code.localeCompare(b.code));
+    // Sort by lastModified descending (most recent first)
+    return games.sort((a, b) => {
+      const timeA = new Date(a.lastModified).getTime();
+      const timeB = new Date(b.lastModified).getTime();
+      return timeB - timeA; // Descending order
+    });
   } catch (e) {
     console.error(`[${operation}] Unexpected error listing games:`, e.message);
     console.error(`[${operation}] Error details:`, e);
@@ -368,6 +375,7 @@ export function listGames() {
 
 /**
  * Create a new game with a unique code
+ * Sets initial lastModified timestamp in metadata
  * @returns {string} - The generated game code
  * @throws {Error} If code generation or storage fails
  */
@@ -377,6 +385,14 @@ export function createNewGame() {
   try {
     const code = generateUniqueGameCode();
     setCurrentGameCode(code);
+    
+    // Set initial lastModified timestamp in metadata
+    const metadataMap = getGameData(GAME_METADATA_KEY);
+    metadataMap.set(code, {
+      lastModified: new Date().toISOString() // ISO 8601 format for cloud compatibility
+    });
+    setGameData(GAME_METADATA_KEY, metadataMap);
+    
     console.info(`[${operation}] Created new game with code:`, code);
     return code;
   } catch (e) {
@@ -389,6 +405,7 @@ export function createNewGame() {
 /**
  * Save game state to localStorage
  * Stores state in format: { G: {...}, ctx: {...} }
+ * Updates lastModified timestamp in metadata
  * @param {string} code - Game code
  * @param {Object} G - Game state
  * @param {Object} ctx - Game context
@@ -437,6 +454,15 @@ export function saveGameState(code, G, ctx) {
       console.error(`[${operation}] Failed to persist state to localStorage for game "${normalizedCode}"`);
       return false;
     }
+    
+    // Update lastModified timestamp in metadata
+    const metadataMap = getGameData(GAME_METADATA_KEY);
+    const existingMetadata = metadataMap.get(normalizedCode) || {};
+    metadataMap.set(normalizedCode, {
+      ...existingMetadata,
+      lastModified: new Date().toISOString() // ISO 8601 format for cloud compatibility
+    });
+    setGameData(GAME_METADATA_KEY, metadataMap);
     
     return true;
   } catch (e) {

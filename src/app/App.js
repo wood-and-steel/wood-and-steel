@@ -1,7 +1,9 @@
 import React from 'react';
 import { GameProvider } from '../providers/GameProvider';
 import { WoodAndSteelState } from '../Board';
+import { LobbyScreen } from '../components/LobbyScreen';
 import { useGameStore } from '../stores/gameStore';
+import { useLobbyStore } from '../stores/lobbyStore';
 import { 
   getCurrentGameCode, 
   createNewGame,
@@ -11,130 +13,136 @@ import {
   switchToGame,
   isValidGameCode,
   normalizeGameCode,
-  loadGameState
+  loadGameState,
+  clearCurrentGameCode,
+  setCurrentGameCode
 } from '../utils/gameManager';
 
 const App = () => {
-  // Get or create game code
-  const [currentGameCode, setCurrentGameCodeState] = React.useState(() => {
-    try {
-      let code = getCurrentGameCode();
-      
-      // If no current game or it doesn't exist, create a new one
-      if (!code || !gameExists(code)) {
-        code = createNewGame();
-      }
-      
-      return code;
-    } catch (error) {
-      console.error('[App] Error initializing game code:', error.message);
-      // Return a fallback code - will be handled in useEffect
-      return null;
-    }
-  });
+  const { isLobbyMode, setLobbyMode, setSelectedGame } = useLobbyStore();
+  const [currentGameCode, setCurrentGameCodeState] = React.useState(null);
 
-  // Load game state on mount
+  // Initialize lobby mode on mount
   React.useEffect(() => {
     const code = getCurrentGameCode();
     
-    // Handle case where no game code exists
-    if (!code) {
-      try {
-        const newCode = createNewGame();
-        setCurrentGameCodeState(newCode);
-        console.info('[App] Created new game after initialization failure');
-      } catch (error) {
-        console.error('[App] Critical: Unable to create game:', error.message);
-        alert('Unable to initialize the game. Please refresh the page. If the problem persists, try clearing your browser\'s localStorage.');
-      }
-      return;
-    }
-    if (code && gameExists(code)) {
+    // If no current game or it doesn't exist, go to lobby mode
+    if (!code || !gameExists(code)) {
+      setLobbyMode(true);
+      setSelectedGame(null);
+      setCurrentGameCodeState(null);
+      console.info('[App] No current game, starting in lobby mode');
+    } else {
+      // Game exists, load it and exit lobby mode
       try {
         const savedState = loadGameState(code);
-        if (savedState) {
-          // Validate loaded state has required structure
-          if (savedState.G && savedState.ctx) {
-            // Load state into Zustand store
-            useGameStore.setState({
-              G: savedState.G,
-              ctx: savedState.ctx
-            });
-            console.info('[App] Successfully loaded game state for:', code);
-          } else {
-            console.warn('[App] Loaded state missing required structure (G or ctx), creating new game');
-            // Fallback: create new game if state is invalid
-            const newCode = createNewGame();
-            setCurrentGameCodeState(newCode);
-            // State will be initialized by the game setup
-          }
+        if (savedState && savedState.G && savedState.ctx) {
+          // Load state into Zustand store
+          useGameStore.setState({
+            G: savedState.G,
+            ctx: savedState.ctx
+          });
+          setSelectedGame(code);
+          setLobbyMode(false);
+          setCurrentGameCodeState(code);
+          console.info('[App] Successfully loaded game state for:', code);
         } else {
-          console.info('[App] No saved state found, starting fresh game');
-          // State will be initialized by the game setup
+          // Invalid state, go to lobby
+          console.warn('[App] Loaded state missing required structure, going to lobby');
+          setLobbyMode(true);
+          setSelectedGame(null);
+          setCurrentGameCodeState(null);
         }
       } catch (error) {
         console.error('[App] Error loading game state:', error.message);
-        console.error('[App] Error details:', error);
-        // Fallback: create new game if load fails
-        try {
-          const newCode = createNewGame();
-          setCurrentGameCodeState(newCode);
-          console.info('[App] Created new game as fallback after load error');
-        } catch (fallbackError) {
-          console.error('[App] Failed to create fallback game:', fallbackError.message);
-          // Last resort: show user-friendly error
-          alert('Unable to load or create a game. Please refresh the page. If the problem persists, try clearing your browser\'s localStorage.');
-        }
+        // On error, go to lobby
+        setLobbyMode(true);
+        setSelectedGame(null);
+        setCurrentGameCodeState(null);
       }
-    } else {
-      console.info('[App] No current game or game does not exist, starting fresh');
-      // State will be initialized by the game setup
     }
-    // Note: State saving happens automatically after moves in gameActions.js
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only on mount - currentGameCode is handled in initial state
+  }, []); // Run only on mount
 
-  // Pass game management functions to the board through context
+  // Handler to enter a game
+  const handleEnterGame = React.useCallback((code) => {
+    try {
+      const normalizedCode = normalizeGameCode(code);
+      
+      if (!isValidGameCode(normalizedCode)) {
+        alert(`Invalid game code: "${code}"`);
+        return;
+      }
+      
+      if (!gameExists(normalizedCode)) {
+        alert(`Game "${normalizedCode}" not found.`);
+        return;
+      }
+      
+      // Load game state
+      const savedState = loadGameState(normalizedCode);
+      if (savedState && savedState.G && savedState.ctx) {
+        // Load state into Zustand store
+        useGameStore.setState({
+          G: savedState.G,
+          ctx: savedState.ctx
+        });
+        // Set as current game
+        setCurrentGameCode(normalizedCode);
+        setSelectedGame(normalizedCode);
+        setLobbyMode(false);
+        setCurrentGameCodeState(normalizedCode);
+        console.info('[App] Entered game:', normalizedCode);
+      } else {
+        alert(`Unable to load game "${normalizedCode}". The game state may be corrupted.`);
+      }
+    } catch (error) {
+      console.error('[App] Error entering game:', error.message);
+      alert(`Unable to enter game "${code}". ${error.message || 'Please try again.'}`);
+    }
+  }, [setSelectedGame, setLobbyMode]);
+
+  // Handler to create a new game
+  const handleNewGame = React.useCallback(() => {
+    try {
+      const newCode = createNewGame();
+      
+      // Initialize game state to initial values
+      useGameStore.getState().resetState(2);
+      
+      // Set as current game
+      setCurrentGameCode(newCode);
+      setSelectedGame(newCode);
+      setLobbyMode(false);
+      setCurrentGameCodeState(newCode);
+      console.info('[App] Created and entered new game:', newCode);
+    } catch (error) {
+      console.error('[App] Error creating new game:', error.message);
+      alert(`Unable to create a new game. ${error.message || 'Please try again or refresh the page.'}`);
+    }
+  }, [setSelectedGame, setLobbyMode]);
+
+  // Pass game management functions to components
   const gameManager = {
     currentGameCode,
-    onNewGame: () => {
-      try {
-        const newCode = createNewGame();
-        setCurrentGameCodeState(newCode);
-        // Force page reload to reset the game state
-        window.location.reload();
-      } catch (error) {
-        console.error('[App] Error creating new game:', error.message);
-        alert(`Unable to create a new game. ${error.message || 'Please try again or refresh the page.'}`);
-      }
-    },
+    onNewGame: handleNewGame,
     onSwitchGame: (code) => {
-      try {
-        if (switchToGame(code)) {
-          setCurrentGameCodeState(normalizeGameCode(code));
-          // Force page reload to switch the game
-          window.location.reload();
-        } else {
-          alert(`Game "${code}" not found. Please check the code and try again.`);
-        }
-      } catch (error) {
-        console.error('[App] Error switching game:', error.message);
-        alert(`Unable to switch to game "${code}". ${error.message || 'Please try again.'}`);
-      }
+      handleEnterGame(code);
     },
     onDeleteGame: (code) => {
       try {
-        if (deleteGame(code)) {
-          // If we deleted the current game, create a new one
-          if (normalizeGameCode(code) === currentGameCode) {
-            try {
-              const newCode = createNewGame();
-              setCurrentGameCodeState(newCode);
-              window.location.reload();
-            } catch (createError) {
-              console.error('[App] Error creating new game after deletion:', createError.message);
-              alert('Game deleted, but unable to create a new game. Please refresh the page.');
-            }
+        const normalizedCode = normalizeGameCode(code);
+        const wasCurrentGame = normalizedCode === currentGameCode;
+        
+        if (deleteGame(normalizedCode)) {
+          // If we deleted the current game, return to lobby
+          if (wasCurrentGame) {
+            clearCurrentGameCode();
+            setSelectedGame(null);
+            setLobbyMode(true);
+            setCurrentGameCodeState(null);
+            // Clear game store state
+            useGameStore.getState().resetState(2);
           }
           return true;
         }
@@ -152,6 +160,18 @@ const App = () => {
     normalizeGameCode
   };
 
+  // Conditional rendering: show lobby or game board
+  if (isLobbyMode) {
+    return (
+      <LobbyScreen 
+        gameManager={gameManager}
+        onEnterGame={handleEnterGame}
+        onNewGame={handleNewGame}
+      />
+    );
+  }
+
+  // Render game board when not in lobby mode
   return (
     <div>
       <GameProvider playerID="0">

@@ -11,7 +11,7 @@ const STARTING_CITY_PAIRS = [
 ];
 
 // Top Button Bar Component
-export function TopButtonBar({ input, setInput, cityInput, setCityInput, startingContractExists, currentPhase, G, gameManager, onShowGameList }) {
+export function TopButtonBar({ input, setInput, cityInput, setCityInput, startingContractExists, currentPhase, G, gameManager, onNavigateToLobby }) {
   // Get available starting pairs (filter out already chosen ones)
   const getAvailableStartingPairs = () => {
     if (currentPhase !== 'setup') return STARTING_CITY_PAIRS;
@@ -32,12 +32,12 @@ export function TopButtonBar({ input, setInput, cityInput, setCityInput, startin
   
   return (
     <div className="buttonBar">
-      {/* Game code display - clickable to open game list */}
+      {/* Game code display - clickable to navigate to lobby */}
       {gameManager && (
         <span 
-          onClick={onShowGameList}
+          onClick={onNavigateToLobby}
           className="buttonBar__gameCode"
-          title="Click to view all games"
+          title="Click to return to lobby"
         >
           Game: {gameManager.currentGameCode}
         </span>

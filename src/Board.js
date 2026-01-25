@@ -4,18 +4,24 @@ import { PlayerBoard } from "./components/PlayerBoard";
 import { MarketContracts } from "./components/MarketContracts";
 import { IndependentRailroads } from "./components/IndependentRailroads";
 import { ReferenceTables } from "./components/ReferenceTables";
-import { GameListDialog } from "./components/GameListDialog";
 import { useGame } from "./hooks/useGame";
+import { useLobbyStore } from "./stores/lobbyStore";
 
 // Main Component
 export function WoodAndSteelState({ gameManager }) {
   // Get game state and moves from useGame hook instead of props
   const { G, ctx, moves, playerID } = useGame();
+  const { clearSelection, setLobbyMode } = useLobbyStore();
 
   // React hooks must be at the top of the component
   const [input, setInput] = React.useState('');
   const [cityInput, setCityInput] = React.useState('');
-  const [showGameList, setShowGameList] = React.useState(false);
+  
+  // Handler to navigate to lobby
+  const handleNavigateToLobby = React.useCallback(() => {
+    clearSelection();
+    setLobbyMode(true);
+  }, [clearSelection, setLobbyMode]);
   
   // Theme management - use system preference
   React.useEffect(() => {
@@ -100,14 +106,13 @@ export function WoodAndSteelState({ gameManager }) {
             currentPhase={currentPhase}
             G={G}
             gameManager={gameManager}
-            onShowGameList={() => setShowGameList(true)}
+            onNavigateToLobby={handleNavigateToLobby}
           />
           <div className="padding-xl text-center">
             <h1>Scoring Phase</h1>
             <p>Game scoring will be implemented here.</p>
           </div>
         </form>
-        {showGameList && gameManager && <GameListDialog gameManager={gameManager} onClose={() => setShowGameList(false)} />}
       </div>
     );
   }
@@ -125,7 +130,7 @@ export function WoodAndSteelState({ gameManager }) {
             currentPhase={currentPhase}
             G={G}
             gameManager={gameManager}
-            onShowGameList={() => setShowGameList(true)}
+            onNavigateToLobby={handleNavigateToLobby}
           />
           <PlayerBoard G={G} ctx={ctx} startingContractExists={startingContractExists} />
         </div>
@@ -134,7 +139,6 @@ export function WoodAndSteelState({ gameManager }) {
         {currentPhase === 'play' && <IndependentRailroads G={G} />}
         <ReferenceTables G={G} />
       </form>
-      {showGameList && gameManager && <GameListDialog gameManager={gameManager} onClose={() => setShowGameList(false)} />}
     </div>
   );
 }

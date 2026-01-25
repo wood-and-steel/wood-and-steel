@@ -110,3 +110,54 @@
 .independentRailroads__route {
   margin-left: 0.3rem;
 }
+
+/* ========================================
+   LOBBY SCREEN
+   ======================================== */
+.lobbyScreen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  background-color: var(--color-bg);
+}
+
+.lobbyScreen__content {
+  width: 100%;
+  max-width: 800px;
+  background-color: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.lobbyScreen__title {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: 2rem;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.lobbyScreen__emptyState {
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
+.lobbyScreen__emptyState p {
+  margin: 0 0 var(--spacing-lg) 0;
+  color: var(--color-text-secondary);
+}
+
+.lobbyScreen__actions {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.table__cell--delete {
+  text-align: center;
+  width: 60px;
+}
