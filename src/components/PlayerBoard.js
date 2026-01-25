@@ -6,7 +6,7 @@ export function PlayerBoard({ G, ctx, startingContractExists }) {
   const activePlayer = G.players.find(([key]) => key === ctx.currentPlayer);
   if (!activePlayer) return null;
 
-  const [key, { name, activeCities }] = activePlayer;
+  const [key, { name }] = activePlayer;
 
   return (
     <div className="playerBoard">
@@ -15,7 +15,6 @@ export function PlayerBoard({ G, ctx, startingContractExists }) {
           <div className="playerBoard__name playerBoard__name--active">
             {name}
           </div>
-          {activeCities.map((city, index) => <div key={index}>{city}</div>)}
         </div>
         <div className="playerBoard__contracts">
           <button

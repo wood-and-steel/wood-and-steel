@@ -38,11 +38,25 @@
   cursor: default;
 }
 
+.cityCell__name--active {
+  font-weight: bold;
+  opacity: 1.0;
+}
+
 .cityCell__value {
   font-weight: 600;
 }
 
 .commodityRow {
+  display: flex;
+  flex-direction: column;
+}
+
+.commodityRow:not(:first-child) {
+  margin-top: calc(var(--spacing-sm) * 1.25);
+}
+
+.commodityRow__header {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);

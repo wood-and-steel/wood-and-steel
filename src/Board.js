@@ -162,7 +162,7 @@ export function WoodAndSteelState({ gameManager }) {
             </>
           )}
           {activeTab === 'commodities' && <CommoditiesPage />}
-          {activeTab === 'cities' && <CitiesPage G={G} />}
+          {activeTab === 'cities' && <CitiesPage G={G} ctx={ctx} />}
         </div>
       </form>
     </div>
