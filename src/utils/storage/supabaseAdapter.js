@@ -182,9 +182,9 @@ export class SupabaseAdapter extends StorageAdapter {
         .from('games')
         .select('code, last_modified, state')
         .eq('code', normalizedCode)
-        .single();
+        .maybeSingle();
       
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = not found, which is okay
+      if (fetchError) {
         console.error(`[SupabaseAdapter.${operation}] Error checking existing game "${normalizedCode}":`, fetchError.message);
         return { success: false };
       }
@@ -272,7 +272,7 @@ export class SupabaseAdapter extends StorageAdapter {
         .from('games')
         .select('last_modified')
         .eq('code', normalizedCode)
-        .single();
+        .maybeSingle();
       
       if (error || !data) {
         return null;
@@ -308,20 +308,20 @@ export class SupabaseAdapter extends StorageAdapter {
         .from('games')
         .select('state')
         .eq('code', normalizedCode)
-        .single();
+        .maybeSingle();
       
       if (error) {
-        if (error.code === 'PGRST116') {
-          // Not found - this is okay
-          console.info(`[SupabaseAdapter.${operation}] No saved state found for game:`, normalizedCode);
-          return null;
-        }
         console.error(`[SupabaseAdapter.${operation}] Error loading game "${normalizedCode}":`, error.message);
         return null;
       }
       
       if (!data || !data.state) {
-        console.warn(`[SupabaseAdapter.${operation}] Game "${normalizedCode}" has no state data`);
+        // No row found or no state data - this is okay
+        if (!data) {
+          console.info(`[SupabaseAdapter.${operation}] No saved state found for game:`, normalizedCode);
+        } else {
+          console.warn(`[SupabaseAdapter.${operation}] Game "${normalizedCode}" has no state data`);
+        }
         return null;
       }
       
