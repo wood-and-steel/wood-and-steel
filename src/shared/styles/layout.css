@@ -19,6 +19,10 @@
   font-size: 0.85rem;
 }
 
+.pageContent {
+  padding: var(--spacing-md);
+}
+
 /* Tablet Layout (768px - 1023px) */
 @media (min-width: 768px) {
   .boardPage {

@@ -3,7 +3,8 @@ import { TopButtonBar } from "./components/TopButtonBar";
 import { PlayerBoard } from "./components/PlayerBoard";
 import { MarketContracts } from "./components/MarketContracts";
 import { IndependentRailroads } from "./components/IndependentRailroads";
-import { ReferenceTables } from "./components/ReferenceTables";
+import { CommoditiesPage } from "./components/CommoditiesPage";
+import { CitiesPage } from "./components/CitiesPage";
 import { EditPlaytestDialog } from "./components/EditPlaytestDialog";
 import { useGame } from "./hooks/useGame";
 import { useLobbyStore } from "./stores/lobbyStore";
@@ -17,6 +18,7 @@ export function WoodAndSteelState({ gameManager }) {
   // React hooks must be at the top of the component
   const [input, setInput] = React.useState('');
   const [isEditPlaytestDialogOpen, setIsEditPlaytestDialogOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState('board');
   
   // Handler to navigate to lobby
   const handleNavigateToLobby = React.useCallback(() => {
@@ -109,6 +111,8 @@ export function WoodAndSteelState({ gameManager }) {
             gameManager={gameManager}
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
@@ -139,6 +143,8 @@ export function WoodAndSteelState({ gameManager }) {
             gameManager={gameManager}
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
@@ -147,12 +153,17 @@ export function WoodAndSteelState({ gameManager }) {
             ctx={ctx}
             moves={moves}
           />
-          <PlayerBoard G={G} ctx={ctx} startingContractExists={startingContractExists} />
+          {activeTab === 'board' && (
+            <>
+              <PlayerBoard G={G} ctx={ctx} startingContractExists={startingContractExists} />
+              {/* Only show market contracts and independent railroads during play phase */}
+              {currentPhase === 'play' && <MarketContracts G={G} ctx={ctx} />}
+              {currentPhase === 'play' && <IndependentRailroads G={G} />}
+            </>
+          )}
+          {activeTab === 'commodities' && <CommoditiesPage />}
+          {activeTab === 'cities' && <CitiesPage G={G} />}
         </div>
-        {/* Only show market contracts and independent railroads during play phase */}
-        {currentPhase === 'play' && <MarketContracts G={G} ctx={ctx} />}
-        {currentPhase === 'play' && <IndependentRailroads G={G} />}
-        <ReferenceTables G={G} />
       </form>
     </div>
   );

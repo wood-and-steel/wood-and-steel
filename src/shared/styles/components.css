@@ -77,6 +77,41 @@
   display: none;
 }
 
+.buttonBar__tabs {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-left: var(--spacing-sm);
+  margin-right: var(--spacing-sm);
+}
+
+.buttonBar__tab {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.buttonBar__tab:hover {
+  background-color: var(--color-primary-light);
+}
+
+.buttonBar__tab--active {
+  background-color: var(--color-bg-white);
+  color: var(--color-text);
+  border-color: var(--color-border-medium);
+  font-weight: 600;
+}
+
+.buttonBar__tab--active:hover {
+  background-color: var(--color-bg-white);
+}
+
 /* Tablet Layout (768px - 1023px) */
 @media (min-width: 768px) {
   .buttonBar {
@@ -111,6 +146,17 @@
   .buttonBar__input--small {
     width: 7rem;
     margin: 0 var(--spacing-sm);
+    font-size: 0.9rem;
+  }
+
+  .buttonBar__tabs {
+    gap: var(--spacing-sm);
+    margin-left: var(--spacing-md);
+    margin-right: var(--spacing-md);
+  }
+
+  .buttonBar__tab {
+    padding: var(--spacing-xs) var(--spacing-md);
     font-size: 0.9rem;
   }
 }
@@ -148,6 +194,17 @@
   .buttonBar__input--small {
     width: 8rem;
     margin: 0 var(--spacing-sm);
+    font-size: 1rem;
+  }
+
+  .buttonBar__tabs {
+    gap: var(--spacing-sm);
+    margin-left: var(--spacing-lg);
+    margin-right: var(--spacing-lg);
+  }
+
+  .buttonBar__tab {
+    padding: var(--spacing-xs) var(--spacing-lg);
     font-size: 1rem;
   }
 }
@@ -210,11 +267,7 @@
 
 .lobbyScreen__content {
   width: 100%;
-  background-color: var(--color-bg-white);
-  border-radius: var(--radius-md);
   padding: var(--spacing-md);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-top: var(--spacing-lg);
 }
 
 .lobbyScreen__title {

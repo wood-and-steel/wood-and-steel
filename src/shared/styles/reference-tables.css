@@ -7,7 +7,8 @@
 
 .referenceTable__title {
   font-weight: bold;
-  padding-top: var(--spacing-md);
+  padding-top: 0;
+  margin-bottom: var(--spacing-sm);
 }
 
 .referenceTable__title--first {

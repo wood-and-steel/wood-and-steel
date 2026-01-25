@@ -11,7 +11,7 @@ const STARTING_CITY_PAIRS = [
 ];
 
 // Top Button Bar Component
-export function TopButtonBar({ input, setInput, startingContractExists, currentPhase, G, gameManager, onNavigateToLobby, onOpenEditPlaytest }) {
+export function TopButtonBar({ input, setInput, startingContractExists, currentPhase, G, gameManager, onNavigateToLobby, onOpenEditPlaytest, activeTab, onTabChange }) {
   // Get available starting pairs (filter out already chosen ones)
   const getAvailableStartingPairs = () => {
     if (currentPhase !== 'setup') return STARTING_CITY_PAIRS;
@@ -42,6 +42,31 @@ export function TopButtonBar({ input, setInput, startingContractExists, currentP
           Game: {gameManager.currentGameCode}
         </span>
       )}
+
+      {/* Tab switcher */}
+      <div className="buttonBar__tabs">
+        <button
+          type="button"
+          className={`buttonBar__tab ${activeTab === 'board' ? 'buttonBar__tab--active' : ''}`}
+          onClick={() => onTabChange('board')}
+        >
+          Board
+        </button>
+        <button
+          type="button"
+          className={`buttonBar__tab ${activeTab === 'commodities' ? 'buttonBar__tab--active' : ''}`}
+          onClick={() => onTabChange('commodities')}
+        >
+          Commodities
+        </button>
+        <button
+          type="button"
+          className={`buttonBar__tab ${activeTab === 'cities' ? 'buttonBar__tab--active' : ''}`}
+          onClick={() => onTabChange('cities')}
+        >
+          Cities
+        </button>
+      </div>
 
       {/* End turn button - not shown during setup (auto-advances) */}
       <button 
