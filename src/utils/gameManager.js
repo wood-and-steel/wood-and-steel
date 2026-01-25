@@ -20,9 +20,40 @@ export function generateGameCode() {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   // List of explicit words to avoid
   const explicitWords = [
-    'FUCK', 'SHIT', 'CUNT', 'PISS', 'DICK', 'COCK', 'TWAT', 'FAGG', 'SUCK', 
-    'ANAL', 'TITS', 'DAMN', 'JIZZ', 'MUFF', 'PORN', 'WANK', 'CUMS', 'DYKE',
-    'SEXX', 'HELL', 'BUTT', 'BLOW', 'JERK', 'BOOB', 'SODO', 'SHTS', 'PUSS'
+    'FUCK', 'PHUC', 'FUKK', 'FUXK', 'PHUK', 'FOOK', 'FUCQ', 'FUKS', 'FOOK',
+    'SHIT', 'SHET', 'SHYT', 'SHTS', 'SHAT', 'SCAT',
+    'CUNT', 'KUNT', 'QUNT', 'SUNT', 'KUMS', 'KUMZ',
+    'PISS', 'PISZ', 'PISH', 'PISX',
+    'DICK', 'DIKK', 'DYCK', 'DIKC', 'DICQ', 'DIKQ',
+    'COCK', 'KOKK', 'KOCK', 'COKK', 'COKC', 'COCC',
+    'TWAT', 'TWOT', 'TUAT', 'TWET', 'TWAQ', 'TUWT',
+    'FAGG', 'FAGS', 'FAQQ', 'FAGZ',
+    'SUCK', 'SUKK', 'SUXK', 'SUCQ', 'SUKQ', 'SUKS', 'SUQS',
+    'ANAL', 'AYNL', 'ANUL', 'AANL',
+    'TITS', 'TITZ', 'TIDS', 'TIIS', 'TITX', 'TITQ',
+    'DAMN', 'DAMM',
+    'JIZZ', 'JIZS', 'JYZZ', 'JISS',
+    'MUFF', 'MUFY', 'MUFZ', 'MUUF',
+    'PORN', 'PRON',
+    'WANK', 'WANC', 'WANQ', 'WENK', 'WANX',
+    'COOM', 'CUHM', 'QUMS',
+    'DYKE', 'DIKE', 'DYQE',
+    'SEXX', 'SEKS', 'SEXZ', 'SECK',
+    'HELL', 'HLLL', 'HELZ',
+    'BUTT', 'BUTS', 'BUUT', 'BUTE', 'BUTZ', 'BUTC',
+    'BLOW', 'BLOO', 'BLOZ', 'BLOH',
+    'JERK', 'JIRK', 'JURK', 'JERQ', 'JERX',
+    'BOOB', 'BOBZ',
+    'SODO', 'SOAD',
+    'PUSS', 'PUSY', 'PUSZ', 'PUSC', 'PUZZ', 'PUZS',
+    'COME', 'KOME', 'QOME', 'COMZ',
+    'ASSS', 'ASSH', 'ARSE', 'ASSX', 'ASSQ',
+    'SUXX', 'SUKQ', 'SUKX', 'SUQX', 'SUXQ',
+    'TURD', 'TURT', 'TURQ',
+    'SHAG', 'SHGG', 'SAGG',
+    'BUMS', 'BUMZ', 'BUMB', 'BUUM',
+    'ARSE', 'ARZE', 'ARSZ',
+    'HORR', 'HORE', 'HORS'
   ];
   let code = '';
   let attempts = 0;
