@@ -108,7 +108,7 @@ const App = () => {
       const newCode = createNewGame();
       
       // Initialize game state to initial values
-      useGameStore.getState().resetState(2);
+      useGameStore.getState().resetState(3);
       
       // Set as current game
       setCurrentGameCode(newCode);
@@ -142,7 +142,7 @@ const App = () => {
             setLobbyMode(true);
             setCurrentGameCodeState(null);
             // Clear game store state
-            useGameStore.getState().resetState(2);
+            useGameStore.getState().resetState(3);
           }
           return true;
         }
@@ -178,6 +178,9 @@ const App = () => {
         <WoodAndSteelState gameManager={gameManager} />
       </GameProvider>
       <GameProvider playerID="1">
+        <WoodAndSteelState gameManager={gameManager} />
+      </GameProvider>
+      <GameProvider playerID="2">
         <WoodAndSteelState gameManager={gameManager} />
       </GameProvider>
     </div>

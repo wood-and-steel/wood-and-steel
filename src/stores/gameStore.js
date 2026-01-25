@@ -31,7 +31,7 @@ import { initializeIndependentRailroads } from '../independentRailroads';
  * @typedef {Object} GameContext
  * @property {string} phase - Current phase name ('setup', 'play', 'scoring')
  * @property {string} currentPlayer - ID of player whose turn it is ('0', '1', etc.)
- * @property {number} numPlayers - Total number of players (2)
+ * @property {number} numPlayers - Total number of players (3)
  * @property {Array<string>} playOrder - Array of player IDs in turn order
  * @property {number} playOrderPos - Index in playOrder for current player
  * @property {number} turn - Current turn number
@@ -40,10 +40,10 @@ import { initializeIndependentRailroads } from '../independentRailroads';
 
 /**
  * Initial state factory
- * @param {number} numPlayers - Number of players (default: 2)
+ * @param {number} numPlayers - Number of players (default: 3)
  * @returns {{G: GameState, ctx: GameContext}}
  */
-function getInitialState(numPlayers = 2) {
+function getInitialState(numPlayers = 3) {
   const independentRailroads = initializeIndependentRailroads();
 
   return {
@@ -76,9 +76,9 @@ export const useGameStore = create((set, get) => ({
 
   /**
    * Reset state to initial values
-   * @param {number} numPlayers - Number of players (default: 2)
+   * @param {number} numPlayers - Number of players (default: 3)
    */
-  resetState: (numPlayers = 2) => {
+  resetState: (numPlayers = 3) => {
     set(getInitialState(numPlayers));
   },
 
