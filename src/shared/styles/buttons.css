@@ -35,15 +35,6 @@
   justify-content: center;
 }
 
-.button--icon-square {
-  padding-left: var(--spacing-xs);
-  padding-right: var(--spacing-xs);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
-}
-
 .button--danger {
   background-color: #dc3545;
   color: var(--color-text-light);

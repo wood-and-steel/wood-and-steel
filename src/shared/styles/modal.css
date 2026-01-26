@@ -21,10 +21,6 @@
   overflow: auto;
 }
 
-.modal__content--small {
-  max-width: 25rem;
-}
-
 .modal__title {
   margin-top: 0;
 }
@@ -34,17 +30,6 @@
   gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
   flex-wrap: wrap;
-}
-
-.modal__input {
-  width: 100%;
-  padding: var(--spacing-sm);
-  font-size: 1.25rem;
-  text-transform: uppercase;
-  margin-bottom: var(--spacing-md);
-  background-color: var(--color-bg-white);
-  color: var(--color-text);
-  border: var(--border-width-md) solid var(--color-border-light);
 }
 
 /* ========================================

@@ -5,7 +5,7 @@
 /* Mobile Layout (default, < 768px) */
 .boardPage {
   padding: var(--spacing-sm);
-  padding-top: 4rem; /* Account for fixed buttonBar height on mobile */
+  padding-bottom: 3.125rem; /* Account for fixed navBar height on mobile */
 }
 
 .boardPage--hidden {
@@ -20,14 +20,14 @@
 }
 
 .pageContent {
-  padding: var(--spacing-md);
+  padding: 0;
 }
 
 /* Tablet Layout (768px - 1023px) */
 @media (min-width: 768px) {
   .boardPage {
     padding: var(--spacing-md);
-    padding-top: 3.5rem; /* Account for fixed buttonBar height on tablet */
+    padding-bottom: 5rem; /* Account for fixed navBar height on tablet */
   }
 
   .form {
@@ -39,7 +39,7 @@
 @media (min-width: 1024px) {
   .boardPage {
     padding: var(--spacing-md);
-    padding-top: var(--spacing-2xl); /* Original spacing for desktop */
+    padding-top: var(--spacing-2xl); /* Account for fixed navBar height on desktop */
   }
 
   .form {
