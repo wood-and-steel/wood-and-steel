@@ -2,9 +2,9 @@ import React from "react";
 import { TopButtonBar } from "./components/TopButtonBar";
 import { PlayerBoard } from "./components/PlayerBoard";
 import { MarketContracts } from "./components/MarketContracts";
-import { IndependentRailroads } from "./components/IndependentRailroads";
 import { CommoditiesPage } from "./components/CommoditiesPage";
 import { CitiesPage } from "./components/CitiesPage";
+import { IndependentRailroadsPage } from "./components/IndependentRailroadsPage";
 import { EditPlaytestDialog } from "./components/EditPlaytestDialog";
 import { useGame } from "./hooks/useGame";
 import { useLobbyStore } from "./stores/lobbyStore";
@@ -163,13 +163,13 @@ export function WoodAndSteelState({ gameManager }) {
           {activeTab === 'board' && (
             <>
               <PlayerBoard G={G} ctx={ctx} startingContractExists={startingContractExists} currentPhase={currentPhase} onStartingPairSelect={handleStartingPairSelect} />
-              {/* Only show market contracts and independent railroads during play phase */}
+              {/* Only show market contracts during play phase */}
               {currentPhase === 'play' && <MarketContracts G={G} ctx={ctx} />}
-              {currentPhase === 'play' && <IndependentRailroads G={G} />}
             </>
           )}
           {activeTab === 'commodities' && <CommoditiesPage />}
           {activeTab === 'cities' && <CitiesPage G={G} ctx={ctx} />}
+          {activeTab === 'indies' && <IndependentRailroadsPage />}
         </div>
       </form>
     </div>

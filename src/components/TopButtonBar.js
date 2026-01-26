@@ -39,6 +39,13 @@ export function TopButtonBar({ input, setInput, startingContractExists, currentP
         >
           Cities
         </button>
+        <button
+          type="button"
+          className={`buttonBar__tab ${activeTab === 'indies' ? 'buttonBar__tab--active' : ''}`}
+          onClick={() => onTabChange('indies')}
+        >
+          Indies
+        </button>
       </div>
 
       

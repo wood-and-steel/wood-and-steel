@@ -202,16 +202,16 @@
 .independentRailroads {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.independentRailroads__title {
-  font-weight: bold;
-  padding-bottom: var(--spacing-sm);
+  gap: var(--spacing-sm);
+  align-items: center;
 }
 
 .independentRailroads__item {
-  margin-bottom: 0.1rem;
+  padding: var(--spacing-xs);
+  background-color: var(--color-bg-white);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-light);
+  width: 100%;
 }
 
 .independentRailroads__button {
@@ -224,6 +224,20 @@
 
 .independentRailroads__route {
   margin-left: 0.3rem;
+}
+
+/* Tablet Layout (768px - 1023px) */
+@media (min-width: 768px) {
+  .independentRailroads__item {
+    width: 20rem;
+  }
+}
+
+/* Desktop Layout (>= 1024px) */
+@media (min-width: 1024px) {  
+  .independentRailroads__item {
+    width: 20rem;
+  }
 }
 
 /* ========================================
