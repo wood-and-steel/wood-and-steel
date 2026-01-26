@@ -1,5 +1,5 @@
 import React from "react";
-import { TopButtonBar } from "./components/TopButtonBar";
+import { NavBar } from "./components/NavBar";
 import { PlayerBoard } from "./components/PlayerBoard";
 import { MarketContracts } from "./components/MarketContracts";
 import { CommoditiesPage } from "./components/CommoditiesPage";
@@ -109,7 +109,7 @@ export function WoodAndSteelState({ gameManager }) {
     return (
       <div className={`boardPage ${ctx.currentPlayer === playerID ? '' : 'boardPage--hidden'}`}>
         <form className="form" method="post" onSubmit={handleSubmit}>
-          <TopButtonBar 
+          <NavBar 
             input={input} 
             setInput={setInput}
             startingContractExists={startingContractExists}
@@ -141,7 +141,7 @@ export function WoodAndSteelState({ gameManager }) {
     <div className={`boardPage ${ctx.currentPlayer === playerID ? '' : 'boardPage--hidden'}`}>
       <form className="form" method="post" onSubmit={handleSubmit}>
         <div>
-          <TopButtonBar 
+          <NavBar 
             input={input} 
             setInput={setInput}
             startingContractExists={startingContractExists}

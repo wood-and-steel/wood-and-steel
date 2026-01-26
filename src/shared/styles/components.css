@@ -1,181 +1,315 @@
 /* ========================================
-   BUTTON BAR
+   NAV BAR
    ======================================== */
 
 /* Mobile Layout (default, < 768px) */
-.buttonBar {
+.navBar {
   display: flex;
   flex-direction: row;
-  gap: var(--spacing-xs);
   align-items: center;
+  justify-content: center;
   background-color: var(--color-primary-dark);
-  padding: 0.5em;
+  padding: var(--spacing-sm) var(--spacing-xs);
   position: fixed;
-  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  flex-wrap: wrap;
+  height: 2.5rem;
 }
 
-.buttonBar__gameCode {
-  color: var(--color-text-light);
-  font-weight: bold;
-  font-size: 0.9rem;
-  margin-right: var(--spacing-sm);
-  padding: var(--spacing-xs) 0.5rem;
-  background-color: var(--color-primary);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  user-select: none;
-}
-
-.buttonBar__label {
-  color: var(--color-text-light);
-  padding-left: var(--spacing-sm);
-  font-size: 0.8rem;
-}
-
-.buttonBar__input--large {
-  width: 10rem;
-  height: var(--input-height-md);
-  margin-left: var(--spacing-xs);
-  background-color: var(--color-bg-white);
-  color: var(--color-text);
-  border: 1px solid var(--color-border-light);
-  padding: 0 var(--spacing-xs);
-  font-size: 0.85rem;
-}
-
-.buttonBar__section {
-  display: inline;
-}
-
-.buttonBar__section--hidden {
-  display: none;
-}
-
-.buttonBar__right {
-  margin-left: auto;
-}
-
-.buttonBar__tabs {
+/* Mobile: Bottom nav tabs with icon and label */
+.navBar__tabs--mobile {
   display: flex;
   gap: var(--spacing-xs);
-  margin-left: var(--spacing-sm);
-  margin-right: var(--spacing-sm);
+  width: 100%;
+  justify-content: space-around;
+  align-items: center;
 }
 
-.buttonBar__tab {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-sm);
+.navBar__tab--mobile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  background-color: transparent;
+  border: none;
   cursor: pointer;
-  font-size: 0.85rem;
+  color: var(--color-text-light);
+  transition: opacity 0.2s ease;
+  flex: 1;
+  max-width: 80px;
+}
+
+.navBar__tab--mobile:hover {
+  opacity: 0.8;
+}
+
+.navBar__tab--mobile--active {
+  opacity: 1;
+}
+
+.navBar__tabIcon--mobile {
+  width: 24px;
+  height: 24px;
+  opacity: 0.7;
+  filter: brightness(0) invert(1);
+  transition: opacity 0.2s ease;
+}
+
+.navBar__tab--mobile--active .navBar__tabIcon--mobile {
+  opacity: 1;
+}
+
+.navBar__tabLabel--mobile {
+  font-size: 0.7rem;
   font-weight: 500;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-  white-space: nowrap;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
 }
 
-.buttonBar__tab:hover {
-  background-color: var(--color-primary-light);
-}
-
-.buttonBar__tab--active {
-  background-color: var(--color-bg-white);
-  color: var(--color-text);
-  border-color: var(--color-border-medium);
+.navBar__tab--mobile--active .navBar__tabLabel--mobile {
+  opacity: 1;
   font-weight: 600;
 }
 
-.buttonBar__tab--active:hover {
+/* Desktop tabs - hidden on mobile */
+.navBar__tabs {
+  display: none;
+}
+
+.navBar__menuButton--desktop {
+  display: none;
+}
+
+/* Mobile: Floating menu button (bottom right) */
+.navBar__menuButton {
+  position: fixed;
+  bottom: 54.4px; /* nav bar height (38.4px) + spacing (16px) */
+  right: var(--spacing-md);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--color-primary-dark);
+  border: 2px solid var(--color-border-light);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 101;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navBar__menuButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.navBar__menuButton:active {
+  transform: scale(0.95);
+}
+
+.navBar__menuIcon {
+  width: 24px;
+  height: 24px;
+  filter: brightness(0) invert(1);
+}
+
+/* Menu dropdown */
+.navBar__menu {
+  position: fixed;
+  bottom: 116.4px; /* menu button bottom (54.4px) + menu button height (56px) + spacing (6px) */
+  right: var(--spacing-md);
   background-color: var(--color-bg-white);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 102;
+  min-width: 200px;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navBar__menuItem {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.navBar__menuItem:hover {
+  background-color: var(--color-bg-hover);
+}
+
+.navBar__menuItem:active {
+  background-color: var(--color-bg-active);
 }
 
 /* Tablet Layout (768px - 1023px) */
 @media (min-width: 768px) {
-  .buttonBar {
-    gap: var(--spacing-sm);
-    padding: 0.65em;
-    flex-wrap: nowrap;
+
+  .navBar {
+    height: 48px;
+    padding: var(--spacing-md) var(--spacing-sm);
   }
 
-  .buttonBar__gameCode {
-    font-size: 1rem;
-    margin-right: var(--spacing-md);
-    padding: var(--spacing-xs) 0.65rem;
+  .navBar__tabIcon--mobile {
+    width: 28px;
+    height: 28px;
   }
 
-  .buttonBar__label {
-    padding-left: var(--spacing-md);
-    font-size: 0.85rem;
+  .navBar__tabLabel--mobile {
+    font-size: 0.75rem;
   }
 
-  .buttonBar__input--large {
-    width: 12rem;
-    margin-left: var(--spacing-sm);
-    font-size: 0.9rem;
+  .navBar__menuButton {
+    bottom: 64px; /* nav bar height (48px) + spacing (16px) */
+    width: 64px;
+    height: 64px;
   }
 
-  .buttonBar__input--small {
-    width: 7rem;
-    margin: 0 var(--spacing-sm);
-    font-size: 0.9rem;
+  .navBar__menuIcon {
+    width: 28px;
+    height: 28px;
   }
 
-  .buttonBar__tabs {
-    gap: var(--spacing-sm);
-    margin-left: var(--spacing-md);
-    margin-right: var(--spacing-md);
-  }
-
-  .buttonBar__tab {
-    padding: var(--spacing-xs) var(--spacing-md);
-    font-size: 0.9rem;
+  .navBar__menu {
+    bottom: 134px; /* menu button bottom (64px) + menu button height (64px) + spacing (6px) */
+    min-width: 220px;
   }
 }
 
 /* Desktop Layout (>= 1024px) */
 @media (min-width: 1024px) {
-  .buttonBar {
-    gap: var(--spacing-sm);
-    padding: 0.75em;
+  .navBar {
+    position: fixed;
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    height: auto;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
   }
 
-  .buttonBar__gameCode {
-    font-size: 110%;
-    margin-right: var(--spacing-lg);
-    padding: var(--spacing-xs) 0.75rem;
+  /* Hide mobile tabs on desktop */
+  .navBar__tabs--mobile {
+    display: none;
   }
 
-  .buttonBar__label {
-    padding-left: var(--spacing-lg);
-    font-size: 90%;
+  /* Hide floating menu button on desktop */
+  .navBar__menuButton {
+    display: none;
   }
 
-  .buttonBar__input--large {
-    width: 15rem;
-    margin-left: var(--spacing-sm);
-    font-size: 1rem;
+  /* Show desktop menu button in nav bar */
+  .navBar__menuButton--desktop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: var(--spacing-lg);
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: opacity 0.2s ease;
   }
 
-  .buttonBar__input--small {
-    width: 8rem;
-    margin: 0 var(--spacing-sm);
-    font-size: 1rem;
+  .navBar__menuButton--desktop:hover {
+    opacity: 0.8;
   }
 
-  .buttonBar__tabs {
-    gap: var(--spacing-sm);
-    margin-left: var(--spacing-lg);
-    margin-right: var(--spacing-lg);
+  .navBar__menuButton--desktop .navBar__menuIcon {
+    width: 24px;
+    height: 24px;
   }
 
-  .buttonBar__tab {
-    padding: var(--spacing-xs) var(--spacing-lg);
-    font-size: 1rem;
+  /* Show desktop tabs */
+  .navBar__tabs {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+    justify-content: center;
+  }
+
+  .navBar__tab {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+    background-color: var(--color-primary);
+    color: var(--color-text-light);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .navBar__tab:hover {
+    background-color: var(--color-primary-light);
+  }
+
+  .navBar__tab--active {
+    background-color: var(--color-bg-white);
+    color: var(--color-text);
+    border-color: var(--color-border-medium);
+    font-weight: 600;
+  }
+
+  .navBar__tab--active:hover {
+    background-color: var(--color-bg-white);
+  }
+
+  .navBar__tabIcon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0);
+    flex-shrink: 0;
+  }
+
+  .navBar__tab--active .navBar__tabIcon {
+    filter: none;
+  }
+
+  .navBar__tabLabel {
+    font-size: 0.9rem;
+  }
+
+  /* Desktop menu positioning */
+  .navBar__menu {
+    position: fixed;
+    top: calc(var(--spacing-sm) + 2.5rem + var(--spacing-sm)); /* Top padding + button height + bottom padding */
+    left: var(--spacing-lg);
+    bottom: auto;
+    right: auto;
+    min-width: 220px;
   }
 }
 

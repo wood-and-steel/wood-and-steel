@@ -56,6 +56,10 @@
   --breakpoint-tablet: 768px;
   --breakpoint-desktop: 1024px;
   --breakpoint-desktop-lg: 1280px;
+  
+  /* Media query breakpoints (for use in @media queries) */
+  --mq-tablet: 768px;
+  --mq-desktop: 1024px;
 }
 
 /* Dark Mode */
