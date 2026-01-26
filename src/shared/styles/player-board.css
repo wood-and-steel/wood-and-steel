@@ -33,3 +33,35 @@
   gap: var(--spacing-xs);
   padding-top: var(--spacing-sm);
 }
+
+.playerBoard__startingPairs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+}
+
+.playerBoard__startingPairsLabel {
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  font-weight: bold;
+}
+
+.playerBoard__pairButton {
+  width: 100%;
+}
+
+/* Tablet Layout (768px - 1023px) */
+@media (min-width: 768px) {
+  .playerBoard__pairButton {
+    width: 15rem;
+  }
+}
+
+/* Desktop Layout (>= 1024px) */
+@media (min-width: 1024px) {
+  .playerBoard__pairButton {
+    width: 15rem;
+  }
+}

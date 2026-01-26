@@ -49,6 +49,13 @@ export function WoodAndSteelState({ gameManager }) {
   const startingContractExists = G.contracts.filter(contract => contract.playerID === playerID).length > 0;
   const currentPhase = ctx.phase;
 
+  // Handler for starting city pair selection
+  const handleStartingPairSelect = React.useCallback((pair) => {
+    const inputParameters = pair;
+    moves.generateStartingContract(inputParameters);
+    setInput("");
+  }, [moves]);
+
   function handleSubmit(e) {
     // Prevent the browser from reloading the page
     e.preventDefault();
@@ -155,7 +162,7 @@ export function WoodAndSteelState({ gameManager }) {
           />
           {activeTab === 'board' && (
             <>
-              <PlayerBoard G={G} ctx={ctx} startingContractExists={startingContractExists} currentPhase={currentPhase} />
+              <PlayerBoard G={G} ctx={ctx} startingContractExists={startingContractExists} currentPhase={currentPhase} onStartingPairSelect={handleStartingPairSelect} />
               {/* Only show market contracts and independent railroads during play phase */}
               {currentPhase === 'play' && <MarketContracts G={G} ctx={ctx} />}
               {currentPhase === 'play' && <IndependentRailroads G={G} />}
