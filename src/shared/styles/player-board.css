@@ -15,6 +15,12 @@
   align-items: center;
 }
 
+.playerBoard__buttonGroup {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
 .playerBoard__info--active {
   background-color: var(--color-bg-active);
 }

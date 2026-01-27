@@ -42,11 +42,25 @@ export function PlayerBoard({ G, ctx, startingContractExists, currentPhase, onSt
           <div className="playerBoard__name playerBoard__name--active">
             {name}
           </div>
-          {/* End turn button - not shown during setup (auto-advances) */}
-          <button 
-            name="endTurn" 
-            className={`button ${currentPhase === 'play' ? '' : 'button--hidden'}`}
-          >End Turn</button>
+          <div className="playerBoard__buttonGroup">
+            <button
+              name="privateContract"
+              className={`button ${startingContractExists ? '' : 'button--hidden'}`}
+            >
+              +1 P
+            </button>
+            <button
+              name="marketContract"
+              className={`button ${currentPhase === 'play' ? '' : 'button--hidden'}`}
+            >
+              +1 M
+            </button>
+            {/* End turn button - not shown during setup (auto-advances) */}
+            <button 
+              name="endTurn" 
+              className={`button ${currentPhase === 'play' ? '' : 'button--hidden'}`}
+            >End Turn</button>
+          </div>
         </div>
         
         {/* Starting city pair buttons - shown during setup phase */}
@@ -70,13 +84,8 @@ export function PlayerBoard({ G, ctx, startingContractExists, currentPhase, onSt
           </div>
         )}
         <div className="playerBoard__contracts">
-          <button
-            name="privateContract"
-            className={`button ${startingContractExists ? '' : 'hidden'}`}
-          >
-            Generate Private Contract
-          </button>
           <ContractsList G={G} ctx={ctx} type="private" playerID={key} onToggleFulfilled={onToggleFulfilled} onDelete={onDelete} />
+          <ContractsList G={G} ctx={ctx} type="market" onToggleFulfilled={onToggleFulfilled} onDelete={onDelete} />
         </div>
       </div>
     </div>

@@ -49,7 +49,7 @@ export function NavBar({ input, setInput, startingContractExists, currentPhase, 
   );
 
   const tabs = [
-    { id: "board", label: "Board" },
+    { id: "board", label: "Contracts" },
     { id: "commodities", label: "Commodities" },
     { id: "indies", label: "Railroads" },
     { id: "cities", label: "Cities" },

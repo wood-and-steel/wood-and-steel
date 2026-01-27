@@ -1,7 +1,6 @@
 import React from "react";
 import { NavBar } from "./components/NavBar";
 import { PlayerBoard } from "./components/PlayerBoard";
-import { MarketContracts } from "./components/MarketContracts";
 import { CommoditiesPage } from "./components/CommoditiesPage";
 import { CitiesPage } from "./components/CitiesPage";
 import { IndependentRailroadsPage } from "./components/IndependentRailroadsPage";
@@ -166,11 +165,7 @@ export function WoodAndSteelState({ gameManager }) {
             moves={moves}
           />
           {activeTab === 'board' && (
-            <>
-              <PlayerBoard G={G} ctx={ctx} startingContractExists={startingContractExists} currentPhase={currentPhase} onStartingPairSelect={handleStartingPairSelect} onToggleFulfilled={handleToggleFulfilled} onDelete={handleDelete} />
-              {/* Only show market contracts during play phase */}
-              {currentPhase === 'play' && <MarketContracts G={G} ctx={ctx} onToggleFulfilled={handleToggleFulfilled} onDelete={handleDelete} />}
-            </>
+            <PlayerBoard G={G} ctx={ctx} startingContractExists={startingContractExists} currentPhase={currentPhase} onStartingPairSelect={handleStartingPairSelect} onToggleFulfilled={handleToggleFulfilled} onDelete={handleDelete} />
           )}
           {activeTab === 'commodities' && <CommoditiesPage />}
           {activeTab === 'cities' && <CitiesPage G={G} ctx={ctx} />}
