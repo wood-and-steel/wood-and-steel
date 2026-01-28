@@ -75,11 +75,22 @@ export class SupabaseAdapter extends StorageAdapter {
 
   /**
    * Perform anonymous authentication
+   * Checks for existing session first to avoid unnecessary authentication calls
    * 
    * @returns {Promise<void>}
    */
   async _initialize() {
     try {
+      // Check if there's already a valid session
+      const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
+      
+      if (session && session.user) {
+        // We already have a valid session, no need to authenticate again
+        console.info('[SupabaseAdapter] Using existing anonymous session');
+        return;
+      }
+      
+      // No valid session found, sign in anonymously
       const { data, error } = await this.supabase.auth.signInAnonymously();
       
       if (error) {
