@@ -10,7 +10,6 @@ import {
   gameExists,
   listGames,
   deleteGame,
-  switchToGame,
   isValidGameCode,
   normalizeGameCode,
   loadGameState,
