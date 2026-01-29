@@ -3,6 +3,20 @@ import { useLobbyStore } from "../stores/lobbyStore";
 import { useStorage } from "../providers/StorageProvider";
 
 /**
+ * User-friendly error messages for seat assignment errors
+ */
+const JOIN_ERROR_MESSAGES = {
+  INVALID_CODE: 'Invalid game code format. Please check and try again.',
+  GAME_NOT_FOUND: 'Game not found. Please check the code and try again.',
+  WRONG_GAME_MODE: 'This game is not accepting join requests (hotseat mode).',
+  GAME_FULL: 'This game is full. No more players can join.',
+  ALREADY_JOINED: 'You have already joined this game.',
+  GAME_STARTED: 'This game has already started.',
+  UPDATE_FAILED: 'Unable to join game. Please try again.',
+  NOT_JOINED: 'You have not joined this game.',
+};
+
+/**
  * Lobby Screen Component
  * Full-screen lobby that serves as the entry point for the application
  * Allows players to manage their games (view, enter, delete, create new)
@@ -13,6 +27,11 @@ export function LobbyScreen({ gameManager, onEnterGame, onNewGame }) {
   const [showLoadingIndicator, setShowLoadingIndicator] = React.useState(false);
   const { selectedGameCode } = useLobbyStore();
   const storage = useStorage();
+  
+  // Join game state
+  const [joinGameCode, setJoinGameCode] = React.useState('');
+  const [joinError, setJoinError] = React.useState('');
+  const [isJoining, setIsJoining] = React.useState(false);
 
   // Refresh games list when needed
   const refreshGames = React.useCallback(async (showLoading = false) => {
@@ -99,6 +118,62 @@ export function LobbyScreen({ gameManager, onEnterGame, onNewGame }) {
     }
   };
 
+  // Handle joining a BYOD game
+  const handleJoinGame = async (e) => {
+    e.preventDefault();
+    
+    const code = joinGameCode.trim().toUpperCase();
+    
+    // Basic validation
+    if (!code) {
+      setJoinError('Please enter a game code.');
+      return;
+    }
+    
+    // Clear previous error
+    setJoinError('');
+    setIsJoining(true);
+    
+    try {
+      // Attempt to join the game (this uses cloud storage internally)
+      const result = await storage.joinGame(code);
+      
+      if (!result.success) {
+        // Show user-friendly error message
+        const errorMessage = JOIN_ERROR_MESSAGES[result.error] || 'Unable to join game. Please try again.';
+        setJoinError(errorMessage);
+        setIsJoining(false);
+        return;
+      }
+      
+      // Successfully joined! Switch to cloud storage (BYOD is cloud-only)
+      if (storage.storageType !== 'cloud') {
+        storage.setStorageType('cloud');
+      }
+      
+      // Enter the game (this will load the game and show WaitingForPlayersScreen)
+      if (onEnterGame) {
+        await onEnterGame(code);
+      }
+      
+      // Clear the form
+      setJoinGameCode('');
+    } catch (error) {
+      console.error('[LobbyScreen] Error joining game:', error);
+      setJoinError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  // Clear join error when user starts typing
+  const handleJoinCodeChange = (e) => {
+    setJoinGameCode(e.target.value);
+    if (joinError) {
+      setJoinError('');
+    }
+  };
+
   // Format lastModified timestamp to readable date/time
   const formatLastModified = (isoString) => {
     try {
@@ -134,6 +209,42 @@ export function LobbyScreen({ gameManager, onEnterGame, onNewGame }) {
             <span className="lobbyScreen__loadingIndicator" aria-label="Loading">
               <span className="lobbyScreen__spinner"></span>
             </span>
+          )}
+        </div>
+
+        {/* Join Game Section
+            TODO: Once the "Cloud (BYOD)" tab is implemented, this section should only
+            be visible on that tab. For now, it's shown on all tabs since BYOD games
+            can only be joined via cloud storage anyway. */}
+        <div className="lobbyScreen__joinGame">
+          <form onSubmit={handleJoinGame} className="lobbyScreen__joinForm">
+            <label htmlFor="joinGameCode" className="lobbyScreen__joinLabel">
+              Join a game:
+            </label>
+            <input
+              id="joinGameCode"
+              type="text"
+              value={joinGameCode}
+              onChange={handleJoinCodeChange}
+              placeholder="Enter game code"
+              className="lobbyScreen__joinInput"
+              maxLength={6}
+              disabled={isJoining}
+              autoComplete="off"
+              autoCapitalize="characters"
+            />
+            <button
+              type="submit"
+              className="button lobbyScreen__joinButton"
+              disabled={isJoining || !joinGameCode.trim()}
+            >
+              {isJoining ? 'Joining...' : 'Join'}
+            </button>
+          </form>
+          {joinError && (
+            <p className="lobbyScreen__joinError" role="alert">
+              {joinError}
+            </p>
           )}
         </div>
         
