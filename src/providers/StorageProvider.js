@@ -26,6 +26,49 @@ const StorageContext = createContext(null);
 const STORAGE_PREFERENCE_KEY = 'storage_preference';
 const CURRENT_GAME_LOCAL_KEY = 'current_game_local';
 const CURRENT_GAME_CLOUD_KEY = 'current_game_cloud';
+const DEVICE_ID_KEY = 'device_id';
+
+/**
+ * Generate a UUID v4.
+ * Uses crypto.randomUUID() if available, otherwise falls back to manual generation.
+ * 
+ * @returns {string} - UUID v4 string (e.g., '550e8400-e29b-41d4-a716-446655440000')
+ */
+function generateUUID() {
+  // Use native crypto.randomUUID() if available (modern browsers)
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  
+  // Fallback for older browsers: manual UUID v4 generation
+  // Format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+  // Where x is any hex digit and y is one of 8, 9, a, or b
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+/**
+ * Get the device ID for this browser/device.
+ * If no device ID exists in localStorage, generates a new one and stores it.
+ * The device ID persists across sessions and is used to identify this device
+ * when joining BYOD games.
+ * 
+ * @returns {string} - Device UUID
+ */
+function getDeviceId() {
+  let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+  
+  if (!deviceId) {
+    deviceId = generateUUID();
+    localStorage.setItem(DEVICE_ID_KEY, deviceId);
+    console.log('[StorageProvider] Generated new device ID:', deviceId);
+  }
+  
+  return deviceId;
+}
 
 /**
  * StorageProvider Component
@@ -233,6 +276,9 @@ export function StorageProvider({ children }) {
     clearCurrentGameCode,
     getCurrentGameCodeForType,
     setCurrentGameCodeForType,
+    
+    // BYOD: Device identification
+    getDeviceId,
     
     // BYOD: Player seat management
     getPlayerSeat,
