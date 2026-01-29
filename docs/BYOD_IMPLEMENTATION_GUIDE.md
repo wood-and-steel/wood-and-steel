@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide helps future agents implement BYOD (bring your own device) multiplayer mode for Wood and Steel. BYOD mode allows each player to use their own device, connecting via game codes, as opposed to the current hotseat mode where all players share one device.
+This guide helps an agent implement BYOD (bring your own device) multiplayer mode for Wood and Steel. BYOD mode allows each player to use their own device, connecting via game codes, as opposed to the current hotseat mode where all players share one device.
 
 ### Current State: Hotseat Mode
 
@@ -87,7 +87,15 @@ const metadata = {
 **Changes**:
 - Add new phase: `'waiting_for_players'`
 - Phase should be before `'setup'`
-- End condition: All player seats filled (`ctx.numPlayers` players joined)
+- Game host immediately moves to this screen after starting the game
+- Has its own screen that with:
+  - The game code prominently displayed
+  - A text box for this player to enter their name
+  - A list of other players in the game, or "Open seat" as placeholders for the players who have not joined
+  - A Start Game button that is disabled until all seats are filled
+  - Cancel button that returns players to lobby
+  - If the host clicks Cancel, all players are returned to the lobby and the game is deleted
+- End condition: When all player seats filled (`ctx.numPlayers` players joined), the host clicks the Start Game button
 - Transition: `'waiting_for_players'` → `'setup'` when all seats filled
 
 **Phase Configuration**:
@@ -114,14 +122,14 @@ const metadata = {
 - Host might have special permissions (e.g., kick players, start game)
 
 **Implementation**:
-- Store `hostDeviceId` or `hostPlayerID` in game metadata
-- Or use first player seat (playerID '0') as host
+- Store `hostDeviceId` in game metadata
+- Use first player seat (playerID '0') as host
 - Add UI indicators for host vs regular players
 
 ### 5. Device ID Tracking (Optional)
 
 **Considerations**:
-- May need unique device IDs to prevent duplicate joins
+- Use unique device IDs to prevent duplicate joins and support re-joining
 - Could use browser fingerprinting or generate UUID stored in localStorage
 - Store device ID with player seat assignment
 
@@ -212,7 +220,7 @@ import { useStorage } from '../providers/StorageProvider';
 
 function MyComponent() {
   const storage = useStorage();
-  const gameCode = 'ABCDE';
+  const gameCode = 'BCDFG';
   
   // Get this device's player seat
   const myPlayerID = storage.getPlayerSeat(gameCode);
@@ -371,26 +379,16 @@ const code = await createNewGame('cloud', { gameMode: 'byod', numPlayers: 4 });
 
 ## Questions to Resolve
 
-1. **Player Names**: How do players set their names in BYOD mode?
-   - Prompt on join?
-   - Use device name?
-   - Allow change later?
-
-2. **Reconnection**: What happens if a player disconnects?
+1. **Reconnection**: What happens if a player disconnects?
    - Can they rejoin with same seat?
    - Or is seat released for others?
 
-3. **Host Permissions**: What can host do that others can't?
+2. **Host Permissions**: What can host do that others can't?
    - Kick players?
    - Start game early?
    - Change game settings?
 
-4. **Game Code Display**: Where does host see game code?
-   - In lobby after creation?
-   - In game board?
-   - Both?
-
-5. **Seat Selection**: Can players choose their seat, or is it automatic?
+3. **Seat Selection**: Can players choose their seat, or is it automatic?
    - First-come-first-served?
    - Host assigns?
    - Players choose from available?
