@@ -120,7 +120,6 @@
 @media (min-width: 768px) {
   .lobbyScreen {
     padding: var(--spacing-lg);
-    justify-content: center;
   }
 
   .lobbyScreen__content {
