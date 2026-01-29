@@ -1,0 +1,315 @@
+/* ========================================
+   WAITING FOR PLAYERS SCREEN
+   ======================================== */
+
+/* Mobile Layout (default, < 768px) */
+.waitingScreen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-light);
+}
+
+.waitingScreen__content {
+  width: 100%;
+  max-width: 30rem;
+  padding: var(--spacing-md);
+}
+
+.waitingScreen__title {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: 1.5rem;
+  text-align: center;
+  color: var(--color-text);
+}
+
+/* Game Code Section */
+.waitingScreen__codeSection {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  border: var(--border-width-md) solid var(--color-border-light);
+}
+
+.waitingScreen__codeLabel {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.waitingScreen__codeDisplay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.waitingScreen__code {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: 0.25rem;
+  color: var(--color-text);
+  user-select: all;
+}
+
+.waitingScreen__copyButton {
+  font-size: 0.75rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* Error Display */
+.waitingScreen__error {
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  background-color: #fce4ec;
+  color: #c62828;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+[data-theme="dark"] .waitingScreen__error {
+  background-color: #4a1c1c;
+  color: #ef9a9a;
+}
+
+/* Name Input Section */
+.waitingScreen__nameSection {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  border: var(--border-width-md) solid var(--color-border-light);
+}
+
+.waitingScreen__nameLabel {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.waitingScreen__nameInput {
+  width: 100%;
+  padding: var(--spacing-sm);
+  font-size: 1rem;
+  border: var(--border-width-md) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-white);
+  color: var(--color-text);
+  box-sizing: border-box;
+}
+
+.waitingScreen__nameInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.waitingScreen__nameInput:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.waitingScreen__savingIndicator {
+  display: inline-block;
+  margin-top: var(--spacing-xs);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* Players Section */
+.waitingScreen__playersSection {
+  margin-bottom: var(--spacing-lg);
+}
+
+.waitingScreen__playersTitle {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.waitingScreen__playersList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: var(--border-width-md) solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.waitingScreen__playerItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-bg-white);
+  border-bottom: var(--border-width-md) solid var(--color-border-subtle);
+}
+
+.waitingScreen__playerItem:last-child {
+  border-bottom: none;
+}
+
+.waitingScreen__playerItem--me {
+  background-color: var(--color-bg-active);
+}
+
+.waitingScreen__playerItem--open {
+  background-color: var(--color-bg-light);
+}
+
+.waitingScreen__playerStatus {
+  width: 1.25rem;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.waitingScreen__playerStatus--joined {
+  color: #4caf50;
+}
+
+.waitingScreen__playerStatus--open {
+  color: var(--color-text-muted);
+}
+
+.waitingScreen__playerName {
+  flex: 1;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+}
+
+.waitingScreen__playerName--open {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.waitingScreen__playerTag {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: normal;
+}
+
+/* Action Buttons */
+.waitingScreen__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.waitingScreen__startButton {
+  background-color: #4caf50;
+  color: white;
+  border-color: #4caf50;
+  font-weight: 600;
+}
+
+.waitingScreen__startButton:hover:not(:disabled) {
+  background-color: #43a047;
+  border-color: #43a047;
+}
+
+.waitingScreen__startButton:disabled {
+  background-color: #a5d6a7;
+  border-color: #a5d6a7;
+  color: white;
+  cursor: not-allowed;
+}
+
+.waitingScreen__cancelButton {
+  background-color: transparent;
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.waitingScreen__cancelButton:hover:not(:disabled) {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Status Message */
+.waitingScreen__statusMessage {
+  text-align: center;
+  padding: var(--spacing-md);
+}
+
+.waitingScreen__statusMessage p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* Tablet Layout (768px - 1023px) */
+@media (min-width: 768px) {
+  .waitingScreen {
+    padding: var(--spacing-lg);
+  }
+
+  .waitingScreen__content {
+    max-width: 32rem;
+    padding: var(--spacing-lg);
+  }
+
+  .waitingScreen__title {
+    font-size: 1.75rem;
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .waitingScreen__code {
+    font-size: 2.5rem;
+  }
+
+  .waitingScreen__codeSection {
+    padding: var(--spacing-lg);
+  }
+
+  .waitingScreen__nameSection {
+    padding: var(--spacing-lg);
+  }
+
+  .waitingScreen__playersTitle {
+    font-size: 1.125rem;
+  }
+
+  .waitingScreen__playerItem {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .waitingScreen__actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .waitingScreen__startButton,
+  .waitingScreen__cancelButton {
+    min-width: 10rem;
+  }
+}
+
+/* Desktop Layout (>= 1024px) */
+@media (min-width: 1024px) {
+  .waitingScreen {
+    padding: var(--spacing-xl);
+  }
+
+  .waitingScreen__content {
+    max-width: 36rem;
+    padding: var(--spacing-xl);
+  }
+
+  .waitingScreen__title {
+    font-size: 2rem;
+  }
+
+  .waitingScreen__code {
+    font-size: 3rem;
+  }
+}
