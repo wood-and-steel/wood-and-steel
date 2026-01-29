@@ -187,7 +187,7 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
             />
           )}
           {activeTab === 'commodities' && <CommoditiesPage />}
-          {activeTab === 'cities' && <CitiesPage G={G} ctx={ctx} />}
+          {activeTab === 'cities' && <CitiesPage G={G} ctx={ctx} playerID={playerID} />}
           {activeTab === 'indies' && <IndependentRailroadsPage />}
         </div>
       </form>
