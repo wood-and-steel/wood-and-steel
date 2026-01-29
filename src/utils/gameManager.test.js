@@ -314,9 +314,9 @@ describe('Persistence Tests', () => {
   });
 
   describe('4. Game switching - State persists when switching between games', () => {
-    test('can create and switch between multiple games', () => {
+    test('can create and switch between multiple games', async () => {
       // Create first game
-      const gameCode1 = createNewGame();
+      const gameCode1 = await createNewGame();
       useGameStore.setState({
         G: {
           ...useGameStore.getState().G,
@@ -327,10 +327,10 @@ describe('Persistence Tests', () => {
           turn: 5,
         }
       });
-      saveGameState(gameCode1, useGameStore.getState().G, useGameStore.getState().ctx);
+      await saveGameState(gameCode1, useGameStore.getState().G, useGameStore.getState().ctx);
 
       // Create second game
-      const gameCode2 = createNewGame();
+      const gameCode2 = await createNewGame();
       useGameStore.setState({
         G: {
           ...useGameStore.getState().G,
@@ -341,23 +341,23 @@ describe('Persistence Tests', () => {
           turn: 10,
         }
       });
-      saveGameState(gameCode2, useGameStore.getState().G, useGameStore.getState().ctx);
+      await saveGameState(gameCode2, useGameStore.getState().G, useGameStore.getState().ctx);
 
       // Verify both games exist
       expect(await gameExists(gameCode1, 'local')).toBe(true);
       expect(await gameExists(gameCode2, 'local')).toBe(true);
 
       // Switch to first game and verify state
-      switchToGame(gameCode1);
-      const state1 = loadGameState(gameCode1);
+      await switchToGame(gameCode1);
+      const state1 = await loadGameState(gameCode1);
       expect(state1).not.toBeNull();
       expect(state1.G.contracts.length).toBe(1);
       expect(state1.G.contracts[0].id).toBe('c1');
       expect(state1.ctx.turn).toBe(5);
 
       // Switch to second game and verify state
-      switchToGame(gameCode2);
-      const state2 = loadGameState(gameCode2);
+      await switchToGame(gameCode2);
+      const state2 = await loadGameState(gameCode2);
       expect(state2).not.toBeNull();
       expect(state2.G.contracts.length).toBe(1);
       expect(state2.G.contracts[0].id).toBe('c2');
@@ -652,6 +652,60 @@ describe('Persistence Tests', () => {
       const reloadedState = loadGameState(gameCode);
       expect(reloadedState).not.toBeNull();
       expect(reloadedState.ctx._internalProp).toBeUndefined();
+    });
+  });
+
+  describe('7. Game Mode support', () => {
+    test('createNewGame defaults to hotseat mode', async () => {
+      const gameCode = await createNewGame('local');
+      
+      // Verify game was created
+      expect(await gameExists(gameCode, 'local')).toBe(true);
+      
+      // Check metadata includes gameMode
+      const metadataMap = JSON.parse(localStorage.getItem('game_metadata') || '[]');
+      const metadata = new Map(metadataMap).get(gameCode);
+      expect(metadata).toBeDefined();
+      expect(metadata.gameMode).toBe('hotseat');
+    });
+
+    test('createNewGame accepts gameMode option', async () => {
+      const gameCode = await createNewGame('local', { gameMode: 'byod' });
+      
+      // Verify game was created
+      expect(await gameExists(gameCode, 'local')).toBe(true);
+      
+      // Check metadata includes correct gameMode
+      const metadataMap = JSON.parse(localStorage.getItem('game_metadata') || '[]');
+      const metadata = new Map(metadataMap).get(gameCode);
+      expect(metadata).toBeDefined();
+      expect(metadata.gameMode).toBe('byod');
+    });
+
+    test('createNewGame rejects invalid gameMode', async () => {
+      await expect(createNewGame('local', { gameMode: 'invalid' }))
+        .rejects.toThrow("Invalid gameMode: invalid. Must be 'hotseat' or 'byod'.");
+    });
+
+    test('createNewGame preserves other options with default gameMode', async () => {
+      const gameCode = await createNewGame('local');
+      
+      // Check metadata has required fields
+      const metadataMap = JSON.parse(localStorage.getItem('game_metadata') || '[]');
+      const metadata = new Map(metadataMap).get(gameCode);
+      expect(metadata).toBeDefined();
+      expect(metadata.gameMode).toBe('hotseat');
+      expect(metadata.lastModified).toBeDefined();
+    });
+
+    test('createNewGame with explicit hotseat mode', async () => {
+      const gameCode = await createNewGame('local', { gameMode: 'hotseat' });
+      
+      // Check metadata includes correct gameMode
+      const metadataMap = JSON.parse(localStorage.getItem('game_metadata') || '[]');
+      const metadata = new Map(metadataMap).get(gameCode);
+      expect(metadata).toBeDefined();
+      expect(metadata.gameMode).toBe('hotseat');
     });
   });
 });

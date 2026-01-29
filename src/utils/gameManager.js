@@ -275,20 +275,31 @@ export async function listGames(storageType = 'local') {
  * Create a new game with a unique code
  * Sets initial lastModified timestamp in metadata
  * @param {string} [storageType] - Optional storage type ('local' or 'cloud'). Defaults to 'local'.
+ * @param {Object} [options] - Optional configuration for the new game
+ * @param {string} [options.gameMode='hotseat'] - Game mode: 'hotseat' (default) or 'byod'
  * @returns {Promise<string>} - The generated game code
  * @throws {Error} If code generation or storage fails
  */
-export async function createNewGame(storageType = 'local') {
+export async function createNewGame(storageType = 'local', options = {}) {
   const operation = 'createNewGame';
+  
+  // Extract options with defaults
+  const { gameMode = 'hotseat' } = options;
+  
+  // Validate gameMode
+  if (gameMode !== 'hotseat' && gameMode !== 'byod') {
+    throw new Error(`Invalid gameMode: ${gameMode}. Must be 'hotseat' or 'byod'.`);
+  }
   
   try {
     const adapter = getAdapter(storageType);
     const code = await generateUniqueGameCode();
     setCurrentGameCode(code, storageType);
     
-    // Initialize metadata with lastModified timestamp
+    // Initialize metadata with lastModified timestamp and gameMode
     const metadata = {
-      lastModified: new Date().toISOString() // ISO 8601 format for cloud compatibility
+      lastModified: new Date().toISOString(), // ISO 8601 format for cloud compatibility
+      gameMode: gameMode
     };
     
     // Save empty initial state to create the game record
@@ -302,7 +313,7 @@ export async function createNewGame(storageType = 'local') {
     
     await adapter.saveGame(code, initialState, metadata);
     
-    console.info(`[${operation}] Created new game with code:`, code, `(storage: ${storageType})`);
+    console.info(`[${operation}] Created new game with code:`, code, `(storage: ${storageType}, mode: ${gameMode})`);
     return code;
   } catch (e) {
     console.error(`[${operation}] Failed to create new game:`, e.message);

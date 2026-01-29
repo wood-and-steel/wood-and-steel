@@ -165,18 +165,33 @@ export function StorageProvider({ children }) {
 
   /**
    * Get the game mode for a game.
-   * 
-   * TODO: Implement when BYOD mode is added.
-   * This should read from game metadata: metadata.gameMode
+   * Reads from game metadata: metadata.gameMode
    * 
    * @param {string} gameCode - Game code
    * @returns {Promise<'hotseat'|'byod'>} - Game mode, defaults to 'hotseat'
    */
   const getGameMode = useCallback(async (gameCode) => {
-    // TODO: Load game metadata and check metadata.gameMode
-    // For now, all games are hotseat
-    return 'hotseat';
-  }, []);
+    if (!isValidGameCode(gameCode)) {
+      return 'hotseat';
+    }
+    
+    try {
+      // List games to get metadata (includes gameMode)
+      const games = await adapter.listGames();
+      const normalizedCode = normalizeGameCode(gameCode);
+      const game = games.find(g => g.code === normalizedCode);
+      
+      if (game && game.metadata && game.metadata.gameMode) {
+        return game.metadata.gameMode;
+      }
+      
+      // Default to hotseat for games without gameMode metadata (backward compatibility)
+      return 'hotseat';
+    } catch (e) {
+      console.error('[StorageProvider] Error getting game mode:', e.message);
+      return 'hotseat';
+    }
+  }, [adapter]);
 
   /**
    * Check if a game is in BYOD mode.
