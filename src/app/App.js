@@ -18,6 +18,7 @@ import {
   updateLastModifiedCache
 } from '../utils/gameManager';
 import { checkPhaseTransition } from '../stores/phaseManager';
+import { initializeIndependentRailroads } from '../independentRailroads';
 // Import test utilities in development
 if (!import.meta.env.PROD) {
   import('../utils/storage/testMigration');
@@ -269,9 +270,14 @@ const AppContent = () => {
         // Initialize game state to initial values with specified number of players
         useGameStore.getState().resetState(validNumPlayers);
         
-        // Save the properly initialized state to storage
+        // Initialize independent railroads
         const { G, ctx } = useGameStore.getState();
-        await saveGameState(newCode, G, ctx, storage.storageType);
+        const independentRailroads = initializeIndependentRailroads();
+        const initializedG = { ...G, independentRailroads };
+        useGameStore.setState({ G: initializedG });
+        
+        // Save the properly initialized state to storage
+        await saveGameState(newCode, initializedG, ctx, storage.storageType);
       } else {
         // For BYOD, load the state that was created by createNewGame
         const savedState = await loadGameState(newCode, storage.storageType);
@@ -332,10 +338,17 @@ const AppContent = () => {
         console.info('[App] Initialized players for BYOD game:', players);
       }
       
+      // Initialize independent railroads if not already initialized
+      // This is done by the host when starting the BYOD game
+      const independentRailroads = (G.independentRailroads && Object.keys(G.independentRailroads).length > 0)
+        ? G.independentRailroads
+        : initializeIndependentRailroads();
+      
       // Set the byodGameStarted flag to trigger phase transition
       const updatedG = {
         ...G,
         players,
+        independentRailroads,
         byodGameStarted: true
       };
       

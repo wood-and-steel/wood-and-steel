@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { initializeIndependentRailroads } from '../independentRailroads';
 
 /**
  * @typedef {Object} Contract
@@ -54,12 +53,12 @@ import { initializeIndependentRailroads } from '../independentRailroads';
 
 /**
  * Initial state factory
+ * Returns empty state structure. Game-specific initialization (like independent railroads)
+ * is handled by App.js when creating/starting games.
  * @param {number} numPlayers - Number of players (default: 3)
  * @returns {{G: GameState, ctx: GameContext}}
  */
 function getInitialState(numPlayers = 3) {
-  const independentRailroads = initializeIndependentRailroads();
-
   return {
     G: {
       contracts: [],
@@ -67,7 +66,7 @@ function getInitialState(numPlayers = 3) {
         String(i),
         { name: `Player ${i}`, activeCities: [] }
       ]),
-      independentRailroads: independentRailroads,
+      independentRailroads: {},
     },
     ctx: {
       phase: 'setup',
