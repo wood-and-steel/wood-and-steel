@@ -47,11 +47,80 @@ function useIsDesktop() {
  *   onTabChange={(tabId) => setActiveTab(tabId)}
  * />
  */
-export function NavBar({ input, setInput, startingContractExists, currentPhase, G, gameManager, onNavigateToLobby, onOpenEditPlaytest, activeTab, onTabChange }) {
+export function NavBar({ input, setInput, startingContractExists, currentPhase, G, gameManager, onNavigateToLobby, onOpenEditPlaytest, activeTab, onTabChange, showRailroadHint, onDismissHint }) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const menuButtonRef = React.useRef(null);
   const menuButtonDesktopRef = React.useRef(null);
+  const contractsTabRef = React.useRef(null);
+  const contractsTabMobileRef = React.useRef(null);
+  const [hintPosition, setHintPosition] = React.useState(null);
   const isDesktop = useIsDesktop();
+
+  // Calculate hint callout position based on Contracts tab location
+  React.useEffect(() => {
+    if (!showRailroadHint) {
+      setHintPosition(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const tabRef = isDesktop ? contractsTabRef.current : contractsTabMobileRef.current;
+      if (!tabRef) return;
+
+      const rect = tabRef.getBoundingClientRect();
+      const tabCenterX = rect.left + rect.width / 2;
+
+      if (isDesktop) {
+        // Desktop: callout below nav, arrow points up at tab bottom
+        // Position content so arrow appears to come from its center-ish area
+        const contentLeft = Math.max(8, tabCenterX - 80); // 80px offset so arrow is near left side of bubble
+        setHintPosition({
+          contentTop: rect.bottom + 12, // content starts 12px below the tab (8px gap + 4px for arrow)
+          contentLeft: contentLeft,
+          arrowLeft: tabCenterX,
+          arrowTop: rect.bottom + 4, // arrow tip 4px below the tab
+        });
+      } else {
+        // Mobile/Tablet: callout above nav, arrow points down at tab top
+        setHintPosition({
+          contentBottom: window.innerHeight - rect.top + 12, // content starts 12px above the tab
+          arrowLeft: tabCenterX,
+          arrowBottom: window.innerHeight - rect.top + 4, // arrow tip 4px above the tab
+        });
+      }
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [showRailroadHint, isDesktop]);
+
+  // Dismiss hint on click anywhere or Escape key
+  React.useEffect(() => {
+    if (!showRailroadHint || !onDismissHint) return;
+
+    const handleClick = () => {
+      onDismissHint();
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onDismissHint();
+      }
+    };
+
+    // Use a small delay to avoid immediately dismissing on the same click that might have triggered the hint
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClick);
+      document.addEventListener('keydown', handleKeyDown);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showRailroadHint, onDismissHint]);
 
   const placement = React.useMemo(
     () => (isDesktop ? { side: "bottom", align: "start" } : { side: "top", align: "end" }),
@@ -134,6 +203,7 @@ export function NavBar({ input, setInput, startingContractExists, currentPhase, 
           {tabs.map(tab => (
             <button
               key={tab.id}
+              ref={tab.id === 'board' ? contractsTabRef : null}
               type="button"
               className={`navBar__tab ${activeTab === tab.id ? 'navBar__tab--active' : ''}`}
               onClick={() => onTabChange(tab.id)}
@@ -149,6 +219,7 @@ export function NavBar({ input, setInput, startingContractExists, currentPhase, 
           {tabs.map(tab => (
             <button
               key={tab.id}
+              ref={tab.id === 'board' ? contractsTabMobileRef : null}
               type="button"
               className={`navBar__tab--mobile ${activeTab === tab.id ? 'navBar__tab--mobile--active' : ''}`}
               onClick={() => onTabChange(tab.id)}
@@ -158,6 +229,30 @@ export function NavBar({ input, setInput, startingContractExists, currentPhase, 
             </button>
           ))}
         </div>
+
+        {/* Railroad hint callout - shown when transitioning from setup to play */}
+        {showRailroadHint && hintPosition && (
+          <>
+            <div 
+              className={`navBar__hintCallout ${isDesktop ? 'navBar__hintCallout--desktop' : ''}`}
+              style={isDesktop 
+                ? { top: hintPosition.contentTop, left: hintPosition.contentLeft } 
+                : { bottom: hintPosition.contentBottom }
+              }
+            >
+              <div className="navBar__hintCallout__content">
+                Mark the independent railroads on your map, then switch to Contracts to start taking turns.
+              </div>
+            </div>
+            <div 
+              className={`navBar__hintCallout__arrow ${isDesktop ? 'navBar__hintCallout__arrow--desktop' : ''}`}
+              style={isDesktop
+                ? { left: hintPosition.arrowLeft, top: hintPosition.arrowTop }
+                : { left: hintPosition.arrowLeft, bottom: hintPosition.arrowBottom }
+              }
+            />
+          </>
+        )}
       </nav>
     </>
   );

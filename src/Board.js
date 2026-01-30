@@ -17,6 +17,33 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
   const [input, setInput] = React.useState('');
   const [isEditPlaytestDialogOpen, setIsEditPlaytestDialogOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('board');
+  const [showRailroadHint, setShowRailroadHint] = React.useState(false);
+  const prevPhaseRef = React.useRef(ctx.phase);
+  
+  // Detect setup→play phase transition and show railroad hint
+  React.useEffect(() => {
+    const prevPhase = prevPhaseRef.current;
+    const currentPhase = ctx.phase;
+    
+    if (prevPhase === 'setup' && currentPhase === 'play') {
+      // Transition from setup to play: switch to Railroads tab and show hint
+      setActiveTab('indies');
+      setShowRailroadHint(true);
+    }
+    
+    prevPhaseRef.current = currentPhase;
+  }, [ctx.phase]);
+  
+  // Handle tab change: also dismiss the railroad hint
+  const handleTabChange = React.useCallback((tabId) => {
+    setActiveTab(tabId);
+    setShowRailroadHint(false);
+  }, []);
+  
+  // Dismiss the railroad hint (without changing tabs)
+  const handleDismissHint = React.useCallback(() => {
+    setShowRailroadHint(false);
+  }, []);
   
   // Handler to navigate to lobby
   const handleNavigateToLobby = React.useCallback(() => {
@@ -132,7 +159,9 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
+            showRailroadHint={showRailroadHint}
+            onDismissHint={handleDismissHint}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
@@ -164,7 +193,9 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
+            showRailroadHint={showRailroadHint}
+            onDismissHint={handleDismissHint}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
