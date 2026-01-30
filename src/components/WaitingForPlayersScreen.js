@@ -24,6 +24,9 @@ export function WaitingForPlayersScreen({
   const [error, setError] = React.useState(null);
   const deviceId = storage.getDeviceId();
 
+  // Track whether this is the first data refresh (to initialize player name only once)
+  const isFirstRefresh = React.useRef(true);
+
   // Load player seats and check host status
   const refreshData = React.useCallback(async () => {
     if (!gameCode) return;
@@ -39,10 +42,12 @@ export function WaitingForPlayersScreen({
       setIsHost(hostStatus);
       setMySeat(seat);
       
-      // Initialize player name input from seat data
-      if (seat && seat.playerName) {
+      // Initialize player name input from seat data - ONLY on first load
+      // This prevents polling from overwriting user input while they're typing
+      if (isFirstRefresh.current && seat && seat.playerName) {
         setPlayerName(seat.playerName);
       }
+      isFirstRefresh.current = false;
       
       setError(null);
     } catch (e) {
