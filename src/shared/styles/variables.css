@@ -1,27 +1,27 @@
   :root {
-  /* Colors - Light Mode */
-  --color-primary: #404040;
-  --color-primary-dark: #606060;
-  --color-secondary: #f0f2ff;
-  --color-accent: #e6f3ff;
+  /* Colors - Light Mode (Iron & Smoke) */
+  --color-primary: #2d3436;
+  --color-primary-dark: #636e72;
+  --color-secondary: #f5f6fa;
+  --color-accent: #ffeaa7;
   
-  --color-text: #000000;
-  --color-text-subtle: #404040;
-  --color-text-muted: #a0a0a0;
+  --color-text: #2d3436;
+  --color-text-subtle: #636e72;
+  --color-text-muted: #b2bec3;
   --color-text-light: #ffffff;
   
-  --color-border: #808080;
-  --color-border-light: #c0c0c0;
-  --color-border-subtle: #eee;
-  --color-border-medium: #ccc;
+  --color-border: #636e72;
+  --color-border-light: #b2bec3;
+  --color-border-subtle: #dfe6e9;
+  --color-border-medium: #b2bec3;
   
   --color-bg-white: #ffffff;
-  --color-bg-light: #f0f0f0;
-  --color-bg-active:  #f0f2ff;
-  --color-bg-hover: rgb(220, 220, 230);
+  --color-bg-light: #ecf0f1;
+  --color-bg-active: #fff3e0;
+  --color-bg-hover: rgb(245, 238, 220);
   --color-bg-overlay: rgba(0, 0, 0, 0.5);
   
-  --color-contract-market: #0775CF;
+  --color-contract-market: #a65c2e;
   --color-contract-private: black;
   
   /* Spacing */
@@ -68,30 +68,30 @@
   --mq-desktop: 1024px;
 }
 
-/* Dark Mode */
+/* Dark Mode (Iron & Smoke) */
 [data-theme="dark"] {
   /* Colors - Dark Mode */
-  --color-primary: #505050;
-  --color-primary-dark: #303030;
-  --color-secondary: #1a1a2e;
-  --color-accent: #16213e;
+  --color-primary: #b2bec3;
+  --color-primary-dark: #dfe6e9;
+  --color-secondary: #1e272e;
+  --color-accent: #2d3436;
   
-  --color-text: #e0e0e0;
-  --color-text-subtle: #b0b0b0;
-  --color-text-muted: #808080;
+  --color-text: #dfe6e9;
+  --color-text-subtle: #b2bec3;
+  --color-text-muted: #636e72;
   --color-text-light: #ffffff;
   
-  --color-border: #404040;
-  --color-border-light: #505050;
-  --color-border-subtle: #333;
-  --color-border-medium: #444;
+  --color-border: #2d3436;
+  --color-border-light: #636e72;
+  --color-border-subtle: #2d3436;
+  --color-border-medium: #636e72;
   
-  --color-bg-white: #1a1a1a;
-  --color-bg-light: #252525;
-  --color-bg-active: #252535;
-  --color-bg-hover: rgb(55, 55, 65);
+  --color-bg-white: #0c0e10;
+  --color-bg-light: #1e272e;
+  --color-bg-active: #2d3436;
+  --color-bg-hover: rgb(55, 62, 66);
   --color-bg-overlay: rgba(0, 0, 0, 0.7);
   
-  --color-contract-market: #64b5f6;
-  --color-contract-private: #e0e0e0;
+  --color-contract-market: #f0b898;
+  --color-contract-private: #dfe6e9;
 }
