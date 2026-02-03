@@ -32,6 +32,7 @@
 
 .playerBoard__name {
   margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-body);
 }
 
 .playerBoard__name--active {

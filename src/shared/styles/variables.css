@@ -1,10 +1,11 @@
   :root {
   /* Typography */
   --font-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --font-body: Lora, Georgia, 'Times New Roman', serif;
+  --font-body: Judson, Georgia, 'Times New Roman', serif;
 
   /* Body and heading sizes (rem; h4/h5/h6 match body; rounded per CSS_ARCHITECTURE) */
-  --font-size-body: 0.875rem;
+  --font-size-body: 1rem;
+  --font-weight-body: 400;
   --font-size-h1: 1.5rem;
   --font-size-h2: 1.25rem;
   --font-size-h3: 1rem;
