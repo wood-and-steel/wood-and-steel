@@ -26,11 +26,6 @@
 }
 
 .playerBoard__turnIndicator {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  margin-bottom: var(--spacing-sm);
-  background-color: var(--color-bg-white);
-  border: var(--border-width-md) solid var(--color-border-light);
-  border-radius: var(--radius-sm);
   font-size: 0.875rem;
   color: var(--color-text-subtle);
 }
