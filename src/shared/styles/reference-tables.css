@@ -73,14 +73,11 @@
 }
 
 .commoditySection__title {
-  font-weight: 500;
-  font-size: 0.875rem;
   color: var(--color-text-subtle);
   margin: 0;
   padding: 0;
   padding-top: var(--spacing-md);
   padding-bottom: var(--spacing-sm);
-  border-top: var(--border-width-md) solid var(--color-border-light);
 }
 
 .commodityTable > div:first-child > .commoditySection__title {

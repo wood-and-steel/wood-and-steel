@@ -21,7 +21,6 @@
 
 .waitingScreen__title {
   margin: 0 0 var(--spacing-lg) 0;
-  font-size: 1.5rem;
   text-align: center;
   color: var(--color-text);
 }
@@ -131,8 +130,6 @@
 
 .waitingScreen__playersTitle {
   margin: 0 0 var(--spacing-sm) 0;
-  font-size: 1rem;
-  font-weight: 600;
   color: var(--color-text);
 }
 
@@ -259,7 +256,6 @@
   }
 
   .waitingScreen__title {
-    font-size: 1.75rem;
     margin-bottom: var(--spacing-xl);
   }
 
@@ -275,9 +271,6 @@
     padding: var(--spacing-lg);
   }
 
-  .waitingScreen__playersTitle {
-    font-size: 1.125rem;
-  }
 
   .waitingScreen__playerItem {
     padding: var(--spacing-md) var(--spacing-lg);
@@ -305,9 +298,6 @@
     padding: var(--spacing-xl);
   }
 
-  .waitingScreen__title {
-    font-size: 2rem;
-  }
 
   .waitingScreen__code {
     font-size: 3rem;

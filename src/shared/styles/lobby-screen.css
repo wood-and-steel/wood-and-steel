@@ -20,7 +20,6 @@
 
 .lobbyScreen__title {
   margin: 0 0 var(--spacing-md) 0;
-  font-size: 1.5rem;
   text-align: center;
   color: var(--color-text);
 }
@@ -36,12 +35,13 @@
 }
 
 .lobbyScreen__tab {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
   padding: var(--spacing-xs) var(--spacing-sm);
   background: transparent;
   border: none;
   border-bottom: var(--border-width-md) solid transparent;
   color: var(--color-text-muted);
-  font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -188,7 +188,6 @@
   }
 
   .lobbyScreen__title {
-    font-size: 1.75rem;
     margin-bottom: var(--spacing-lg);
   }
 
@@ -253,7 +252,6 @@
   }
 
   .lobbyScreen__title {
-    font-size: 2rem;
     margin-bottom: var(--spacing-lg);
   }
 

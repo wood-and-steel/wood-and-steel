@@ -1,4 +1,5 @@
 .button {
+  font-family: var(--font-body);
   height: var(--button-height);
   text-align: center;
   padding: 0 var(--spacing-sm);
@@ -47,6 +48,7 @@
 }
 
 .deleteButton {
+  font-family: var(--font-body);
   font-size: 120%;
   background-color: transparent;
   border: none;

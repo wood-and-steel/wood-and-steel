@@ -45,8 +45,6 @@
 }
 
 .playerBoard__contractsTitle {
-  font-weight: 500;
-  font-size: 0.875rem;
   color: var(--color-text-subtle);
   margin: 0;
   padding: 0;

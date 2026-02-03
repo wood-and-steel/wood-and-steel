@@ -63,6 +63,7 @@
 }
 
 .navBar__tabLabel--mobile {
+  font-family: var(--font-body);
   font-size: 0.75rem;
   font-weight: 500;
   opacity: 0.7;
@@ -119,6 +120,7 @@
 
 /* Menu dropdown */
 .navBar__menu {
+  font-family: var(--font-body);
   position: fixed;
   bottom: 7.5rem; /* menu button bottom (3.5rem) + menu button height (3.5rem) + spacing (0.5rem) */
   right: var(--spacing-md);
@@ -142,7 +144,8 @@
   text-align: left;
   cursor: pointer;
   color: var(--color-text);
-  font-size: 0.875rem;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
   transition: background-color 0.2s ease;
 }
 
@@ -191,6 +194,8 @@
 /* Desktop Layout (>= 1024px) */
 @media (min-width: 1024px) {
   .navBar {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body);
     position: fixed;
     top: 0;
     bottom: auto;
@@ -257,7 +262,8 @@
     color: var(--color-text-light);
     border: 0;
     cursor: pointer;
-    font-size: 0.875rem;
+    font-family: var(--font-body);
+    font-size: var(--font-size-body);
     font-weight: 500;
     transition: background-color 0.2s ease, border-color 0.2s ease;
     white-space: nowrap;
@@ -290,7 +296,8 @@
   }
 
   .navBar__tabLabel {
-    font-size: 0.875rem;
+    font-family: var(--font-body);
+    font-size: var(--font-size-body);
   }
 
   /* Desktop menu positioning */

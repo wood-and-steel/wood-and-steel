@@ -14,6 +14,7 @@
 }
 
 .popupMenu {
+  font-family: var(--font-body);
   background-color: var(--color-bg-white);
   border: var(--border-width-md) solid var(--color-border-light);
   border-radius: var(--radius-sm);
@@ -35,7 +36,8 @@
   text-align: left;
   cursor: pointer;
   color: var(--color-text);
-  font-size: 0.875rem;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
   transition: background-color 0.2s ease;
 }
 
