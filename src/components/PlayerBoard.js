@@ -1,4 +1,5 @@
 import React from "react";
+import { railroadTieValue } from "../Contract";
 import { ContractsList } from "./ContractsList";
 
 // Available starting city pairs
@@ -47,6 +48,9 @@ export function PlayerBoard({ G, ctx, playerID, isBYODMode = false, startingCont
   if (!activePlayer) return null;
 
   const [key, { name }] = activePlayer;
+  const playerScore = G.contracts
+    .filter((contract) => contract.playerID === key && contract.fulfilled)
+    .reduce((sum, contract) => sum + railroadTieValue(contract), 0);
 
   // Determine which pairs are disabled (already chosen by any player)
   const getChosenCities = () => {
@@ -70,7 +74,7 @@ export function PlayerBoard({ G, ctx, playerID, isBYODMode = false, startingCont
       <div className="playerBoard__player">
         <div className="playerBoard__info playerBoard__info--active">
           <div className="playerBoard__name playerBoard__name--active">
-            {name}
+            {name} <span className="playerBoard__score">(Score: {playerScore})</span>
           </div>
           {showTurnIndicator ? (
             <div className="playerBoard__turnIndicator">

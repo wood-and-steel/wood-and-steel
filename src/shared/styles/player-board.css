@@ -39,6 +39,11 @@
   font-weight: bold;
 }
 
+.playerBoard__score {
+  font-weight: normal;
+  color: var(--color-text-subtle);
+}
+
 .playerBoard__contracts {
   display: flex;
   flex-direction: column;
