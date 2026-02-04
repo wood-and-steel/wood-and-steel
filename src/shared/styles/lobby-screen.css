@@ -94,7 +94,7 @@
   padding: var(--spacing-sm);
   background-color: var(--color-bg-light);
   border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--radius-md);
 }
 
 .lobbyScreen__joinForm {
@@ -115,7 +115,7 @@
   padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 0.875rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-sm);
+  border-radius: var(--radius-sm);
   width: 7rem;
   text-transform: uppercase;
   text-align: center;
@@ -143,8 +143,8 @@
   font-size: 0.8125rem;
   color: var(--color-danger);
   text-align: center;
-  background-color: var(--color-danger-bg, rgba(220, 53, 69, 0.1));
-  border-radius: var(--border-radius-sm);
+  background-color: var(--color-danger-bg);
+  border-radius: var(--radius-sm);
 }
 
 .lobbyScreen__emptyState {
