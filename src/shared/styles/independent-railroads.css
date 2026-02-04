@@ -11,7 +11,7 @@
 
 .independentRailroads__item {
   padding: var(--spacing-xs);
-  background-color: var(--color-bg-white);
+  background-color: var(--color-bg-primary);
   border-radius: var(--radius-sm);
   border: var(--border-width-md) solid var(--color-border-light);
   width: 100%;
@@ -34,7 +34,7 @@
 
 .independentRailroads__button {
   margin-right: 0;
-  background-color: var(--color-bg-white);
+  background-color: var(--color-bg-primary);
 }
 
 .independentRailroads__body {

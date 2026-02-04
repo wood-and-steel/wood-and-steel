@@ -125,7 +125,7 @@
 .lobbyScreen__joinInput:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-alpha);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .lobbyScreen__joinInput:disabled {

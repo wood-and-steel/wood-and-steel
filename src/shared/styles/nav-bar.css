@@ -8,7 +8,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-primary-dark);
+  background-color: var(--color-bg-light);
   padding: var(--spacing-sm) var(--spacing-xs);
   position: fixed;
   bottom: 0;
@@ -92,7 +92,7 @@
   width: 3.5rem;
   height: 3.5rem;
   border-radius: 50%;
-  background-color: var(--color-primary-dark);
+  background-color: var(--color-bg-light);
   border: var(--border-width-md) solid var(--color-border-light);
   cursor: pointer;
   display: flex;
@@ -124,7 +124,7 @@
   position: fixed;
   bottom: 7.5rem; /* menu button bottom (3.5rem) + menu button height (3.5rem) + spacing (0.5rem) */
   right: var(--spacing-md);
-  background-color: var(--color-bg-white);
+  background-color: var(--color-bg-primary);
   border: var(--border-width-md) solid var(--color-border-light);
   border-radius: var(--radius-sm);
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
@@ -274,14 +274,14 @@
   }
 
   .navBar__tab--active {
-    background-color: var(--color-bg-white);
+    background-color: var(--color-bg-primary);
     color: var(--color-text);
     border-color: var(--color-text);
     font-weight: 600;
   }
 
   .navBar__tab--active:hover {
-    background-color: var(--color-bg-white);
+    background-color: var(--color-bg-primary);
   }
 
   .navBar__tabIcon {
@@ -324,7 +324,7 @@
 }
 
 .navBar__hintCallout__content {
-  background-color: var(--color-bg-white);
+  background-color: var(--color-bg-primary);
   border: var(--border-width-md) solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm) var(--spacing-md);
@@ -358,7 +358,7 @@
   height: 0;
   border-left: 0.4375rem solid transparent;
   border-right: 0.4375rem solid transparent;
-  border-top: 0.4375rem solid var(--color-bg-white);
+  border-top: 0.4375rem solid var(--color-bg-primary);
 }
 
 /* Desktop: Callout below top nav - left position set by JS */
@@ -380,5 +380,5 @@
   top: auto;
   bottom: -0.625rem;
   border-top: none;
-  border-bottom: 0.4375rem solid var(--color-bg-white);
+  border-bottom: 0.4375rem solid var(--color-bg-primary);
 }

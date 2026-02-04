@@ -45,9 +45,7 @@
   
   /* Colors - Light Mode */
   --color-primary: #2d3436;
-  --color-primary-dark: #636e72;
   --color-primary-light: #b2bec3;
-  --color-primary-alpha: rgba(45, 52, 54, 0.25);
   --color-accent: #e5d6fa;
   
   --color-text: #2d3436;
@@ -60,7 +58,7 @@
   --color-border-subtle: #dfe6e9;
   --color-border-medium: #b2bec3;
   
-  --color-bg-white: #ffffff;
+  --color-bg-primary: #ffffff;
   --color-bg-light: #ecf0f1;
   --color-bg-active: #dbd9f1;
   --color-bg-hover: rgb(245, 238, 220);
@@ -77,9 +75,7 @@
 /* Colors - Dark Mode */
   [data-theme="dark"] {
   --color-primary: #b2bec3;
-  --color-primary-dark: #dfe6e9;
   --color-primary-light: #636e72;
-  --color-primary-alpha: rgba(178, 190, 195, 0.3);
   --color-accent: #2d3436;
   
   --color-text: #dfe6e9;
@@ -92,7 +88,7 @@
   --color-border-subtle: #2d3436;
   --color-border-medium: #636e72;
   
-  --color-bg-white: #0c0e10;
+  --color-bg-primary: #0c0e10;
   --color-bg-light: #1e272e;
   --color-bg-active: #2d3436;
   --color-bg-hover: rgb(55, 62, 66);

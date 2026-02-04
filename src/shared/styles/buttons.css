@@ -22,7 +22,7 @@
 .button:disabled {
   color: var(--color-text-muted);
   border: solid var(--border-width-md) var(--color-border-light);
-  background-color: var(--color-bg-white);
+  background-color: var(--color-bg-primary);
 }
 
 .button--hidden {
