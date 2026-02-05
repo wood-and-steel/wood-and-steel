@@ -86,19 +86,19 @@ export function PlayerBoard({ G, ctx, playerID, isBYODMode = false, startingCont
                 name="privateContract2"
                 className={`button ${startingContractExists && isPlayerTurn ? '' : 'button--hidden'}`}
               >
-                +2 P
+                +2P
               </button>
               <button
                 name="privateContract3"
                 className={`button ${startingContractExists && isPlayerTurn ? '' : 'button--hidden'}`}
               >
-                +3 P
+                +3P
               </button>
               <button
                 name="marketContract"
                 className={`button ${currentPhase === 'play' && isPlayerTurn ? '' : 'button--hidden'}`}
               >
-                +1 M
+                +1M
               </button>
               {/* End turn button - not shown during setup (auto-advances) */}
               <button 
