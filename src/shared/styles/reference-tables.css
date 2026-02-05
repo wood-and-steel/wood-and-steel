@@ -25,23 +25,21 @@
 
 .cityCell {
   width: 7.5rem;
-  opacity: var(--opacity-subtle);
+  color: var(--color-text-subtle);
 }
 
 .cityCell:hover {
   background-color: var(--color-bg-hover);
-  opacity: 1.0;
 }
 
 .cityCell__name {
-  opacity: var(--opacity-muted);
   padding-right: 0.375rem;
   cursor: default;
 }
 
 .cityCell__name--active {
+  color: var(--color-primary);
   font-weight: bold;
-  opacity: 1.0;
 }
 
 .cityCell__value {
@@ -69,7 +67,7 @@
 }
 
 .commodityRow__cities {
-  opacity: var(--opacity-disabled);
+  color: var(--color-text-subtle);
 }
 
 .commoditySection__title {
@@ -86,7 +84,7 @@
 }
 
 .commoditySection__empty {
-  opacity: var(--opacity-muted);
+  color: var(--color-text-muted);
   font-style: italic;
   padding: var(--spacing-sm) 0;
 }
