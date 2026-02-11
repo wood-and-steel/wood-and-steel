@@ -4,11 +4,11 @@ import { ContractsList } from "./ContractsList";
 
 // Available starting city pairs
 const STARTING_CITY_PAIRS = [
-  ["Quebec City", "Montreal"],
+  ["Montreal", "Quebec City"],
   ["Boston", "Portland ME"],
-  ["Philadelphia", "New York"],
-  ["Washington", "Philadelphia"],
-  ["Raleigh", "Norfolk"],
+  ["New York", "Philadelphia"],
+  ["Philadelphia", "Washington"],
+  ["Norfolk", "Raleigh"],
   ["Charleston", "Savannah"]
 ];
 
@@ -48,7 +48,9 @@ export function PlayerBoard({ G, ctx, playerID, isBYODMode = false, startingCont
   if (!activePlayer) return null;
 
   const [key, { name }] = activePlayer;
-  const playerScore = G.contracts
+  /** @type {import("../Contract").Contract[]} */
+  const contracts = G.contracts;
+  const playerScore = contracts
     .filter((contract) => contract.playerID === key && contract.fulfilled)
     .reduce((sum, contract) => sum + railroadTieValue(contract), 0);
 
