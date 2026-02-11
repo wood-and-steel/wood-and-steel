@@ -123,7 +123,7 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
       case "manualContract":
         // This case is kept for backwards compatibility but should not be used
         // Manual contracts are now created via EditPlaytestDialog
-        moves.addManualContract(inputParameters[0], inputParameters[1], inputParameters[2]);
+        moves.addContract(inputParameters[0], inputParameters[1], inputParameters[2]);
         break;
       case "acquireIndependentRailroad":
         const railroadName = e.nativeEvent.submitter.id;

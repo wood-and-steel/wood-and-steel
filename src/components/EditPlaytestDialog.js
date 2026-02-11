@@ -10,7 +10,7 @@ import { commodities, cities } from "../data";
  * @param {function} props.onClose - Callback function called when the dialog should be closed.
  * @param {object} props.G - The game state object.
  * @param {object} props.ctx - The game context.
- * @param {object} props.moves - Object containing game move functions (addManualContract, addCityToPlayer).
+ * @param {object} props.moves - Object containing game move functions (addContract, addCityToPlayer).
  * 
  * @example
  * <EditPlaytestDialog
@@ -58,7 +58,7 @@ export function EditPlaytestDialog({ isOpen, onClose, G, ctx, moves }) {
     }
     
     const type = selectedType.toLowerCase(); // "Private" -> "private", "Market" -> "market"
-    moves.addManualContract(selectedCommodity, selectedDestination, type);
+    moves.addContract(selectedCommodity, selectedDestination, type);
     onClose();
   };
 

@@ -195,7 +195,7 @@ All moves receive:
 #### Play Phase
 - `generatePrivateContract()` - Creates a private contract for current player
 - `generateMarketContract()` - Creates a market contract available to all
-- `addManualContract(commodity, destinationKey, type)` - Manually add a contract
+- `addContract(commodity, destinationKey, type)` - Manually add a contract
 - `toggleContractFulfilled(contractID)` - Toggle fulfillment status of a contract
 - `deleteContract(contractID)` - Remove an unfulfilled contract
 - `acquireIndependentRailroad(railroadName)` - Player acquires an independent railroad

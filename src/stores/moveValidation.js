@@ -14,7 +14,7 @@ const MOVES_BY_PHASE = {
   play: [
     'generatePrivateContract',
     'generateMarketContract',
-    'addManualContract',
+    'addContract',
     'toggleContractFulfilled',
     'deleteContract',
     'acquireIndependentRailroad',

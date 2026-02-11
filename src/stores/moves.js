@@ -2,7 +2,7 @@ import {
   generateStartingContract,
   generatePrivateContract,
   generateMarketContract,
-  addManualContract,
+  addContract,
   toggleContractFulfilled,
   deleteContract,
   acquireIndependentRailroad,
@@ -28,8 +28,8 @@ export const createMoves = (store) => ({
   generateMarketContract: () => 
     generateMarketContract(),
   
-  addManualContract: (commodity, destinationKey, type) => 
-    addManualContract(commodity, destinationKey, type),
+  addContract: (commodity, destinationKey, type) => 
+    addContract(commodity, destinationKey, type),
   
   toggleContractFulfilled: (contractID) => 
     toggleContractFulfilled(contractID),

@@ -175,29 +175,29 @@ export function generateMarketContract() {
  * @param {string} type - Contract type ('private' or 'market')
  * @returns {void}
  */
-export function addManualContract(commodity, destinationKey, type) {
+export function addContract(commodity, destinationKey, type) {
   // Get current state from store
   const { ctx } = useGameStore.getState();
 
   // Validate move is allowed in current phase
-  if (!isMoveAllowed('addManualContract', ctx)) {
-    console.warn('[addManualContract] Move not allowed in current phase');
+  if (!isMoveAllowed('addContract', ctx)) {
+    console.warn('[addContract] Move not allowed in current phase');
     return;
   }
 
   // Validate parameters
   if (typeof commodity !== 'string' || !commodity) {
-    console.error('[addManualContract] commodity must be a non-empty string');
+    console.error('[addContract] commodity must be a non-empty string');
     return;
   }
 
   if (typeof destinationKey !== 'string' || !destinationKey) {
-    console.error('[addManualContract] destinationKey must be a non-empty string');
+    console.error('[addContract] destinationKey must be a non-empty string');
     return;
   }
 
   if (!['private', 'market'].includes(type)) {
-    console.error('[addManualContract] type must be "private" or "market"');
+    console.error('[addContract] type must be "private" or "market"');
     return;
   }
 
@@ -209,7 +209,7 @@ export function addManualContract(commodity, destinationKey, type) {
   });
   
   if (!contract) {
-    console.error('[addManualContract] Contract creation failed');
+    console.error('[addContract] Contract creation failed');
     return;
   }
 
