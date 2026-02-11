@@ -59,6 +59,8 @@ To be the player with the most railroad ties. Railroad ties are awarded these wa
 - **Commodity bonuses** are granted based on the breadth and depth of a railroad. The breadth bonus is based on the number of different commodities a railroad has delivered. The first eight are worth 1 railroad tie each, the second four are worth 2 ties, and all additional commodities are worth 3 railroad ties. The depth bonus is for the number of times beyond the first delivery a railroad delivers a particular commodity. This is a cumulative railroad tie bonus equal to one plus the number of times you have delivered your most delivered commodity.  
 - **Monopoly bonuses** are granted when a player connects track to all cities that provide a monopoly-eligible commodity. The bonus grants either 1 or 2 railroad ties.
 
+The app currently shows the total railroad ties earned from contract fulfillment, but not any of the bonuses.
+
 ### End of game scoring
 
 When a player collects 30 railroad ties or more, the game is over. In addition to railroad ties scored during the game, these bonuses are awarded:
