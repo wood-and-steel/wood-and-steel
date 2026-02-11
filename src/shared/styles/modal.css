@@ -70,3 +70,57 @@
   grid-column: 1 / -1;
   margin-top: var(--spacing-sm);
 }
+
+/* ========================================
+   PRIVATE CONTRACT OFFER MODAL
+   ======================================== */
+.privateContractOfferModal__content {
+  max-width: 48rem;
+}
+
+.privateContractOfferModal__instruction {
+  margin: 0 0 var(--spacing-md);
+  color: var(--color-text-secondary, inherit);
+}
+
+.privateContractOfferModal__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+@media (max-width: 767px) {
+  .privateContractOfferModal__content {
+    text-align: center;
+  }
+
+  .privateContractOfferModal__instruction {
+    text-align: center;
+  }
+
+  .privateContractOfferModal__grid {
+    justify-items: center;
+  }
+
+  .privateContractOfferModal__card {
+    text-align: center;
+  }
+}
+
+.privateContractOfferModal__card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  /* Reset button defaults: inherit font, remove padding so header/body span full width */
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+}
+
+.privateContractOfferModal__card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

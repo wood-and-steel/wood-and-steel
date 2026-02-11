@@ -1,6 +1,7 @@
 import React from "react";
 import { NavBar } from "./components/NavBar";
 import { PlayerBoard } from "./components/PlayerBoard";
+import { PrivateContractOfferModal } from "./components/PrivateContractOfferModal";
 import { CommoditiesPage } from "./components/CommoditiesPage";
 import { CitiesPage } from "./components/CitiesPage";
 import { IndependentRailroadsPage } from "./components/IndependentRailroadsPage";
@@ -16,6 +17,7 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
   // React hooks must be at the top of the component
   const [input, setInput] = React.useState('');
   const [isEditPlaytestDialogOpen, setIsEditPlaytestDialogOpen] = React.useState(false);
+  const [privateContractModal, setPrivateContractModal] = React.useState({ open: false, count: 2 });
   const [activeTab, setActiveTab] = React.useState('board');
   const [showRailroadHint, setShowRailroadHint] = React.useState(false);
   const prevPhaseRef = React.useRef(ctx.phase);
@@ -108,15 +110,6 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
         moves.generateStartingContract(inputParameters, playerID);
         setInput("");
         break;
-      case "privateContract2":
-        moves.generatePrivateContract();
-        moves.generatePrivateContract();
-        break;
-      case "privateContract3":
-        moves.generatePrivateContract();
-        moves.generatePrivateContract();
-        moves.generatePrivateContract();
-        break;
       case "marketContract":
         moves.generateMarketContract();
         break;
@@ -204,6 +197,17 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
             ctx={ctx}
             moves={moves}
           />
+          <PrivateContractOfferModal
+            isOpen={privateContractModal.open}
+            onClose={() => setPrivateContractModal({ open: false, count: 2 })}
+            offerCount={privateContractModal.count}
+            G={G}
+            ctx={ctx}
+            onSelect={(commodity, destinationKey) => {
+              moves.addContract(commodity, destinationKey, 'private');
+              setPrivateContractModal({ open: false, count: 2 });
+            }}
+          />
           {activeTab === 'board' && (
             <PlayerBoard
               G={G}
@@ -213,6 +217,7 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
               startingContractExists={startingContractExists}
               currentPhase={currentPhase}
               onStartingPairSelect={handleStartingPairSelect}
+              onOpenPrivateContractModal={(count) => setPrivateContractModal({ open: true, count })}
               onToggleFulfilled={handleToggleFulfilled}
               onDelete={handleDelete}
             />

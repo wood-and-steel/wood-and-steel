@@ -25,6 +25,7 @@ const STARTING_CITY_PAIRS = [
  * @param {boolean} props.startingContractExists - Whether the current player has a starting contract (controls visibility of +2P and +3P buttons).
  * @param {'setup'|'play'|'scoring'} props.currentPhase - The current game phase (affects which UI elements are shown).
  * @param {function} props.onStartingPairSelect - Called when a starting city pair is selected during setup phase. Receives the pair array as argument.
+ * @param {function} props.onOpenPrivateContractModal - Called when +2P or +3P is clicked. Receives the offer count (2 or 3).
  * @param {function} props.onToggleFulfilled - Called when a contract's fulfilled state should be toggled. Receives the contract ID.
  * @param {function} props.onDelete - Called when a contract should be deleted. Receives the contract ID.
  * 
@@ -39,7 +40,7 @@ const STARTING_CITY_PAIRS = [
  *   onDelete={(id) => handleDelete(id)}
  * />
  */
-export function PlayerBoard({ G, ctx, playerID, isBYODMode = false, startingContractExists, currentPhase, onStartingPairSelect, onToggleFulfilled, onDelete }) {
+export function PlayerBoard({ G, ctx, playerID, isBYODMode = false, startingContractExists, currentPhase, onStartingPairSelect, onOpenPrivateContractModal, onToggleFulfilled, onDelete }) {
   const effectivePlayerID = isBYODMode && playerID != null ? playerID : ctx.currentPlayer;
   const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
   const isPlayerTurn = !isBYODMode || playerID === ctx.currentPlayer;
@@ -90,14 +91,18 @@ export function PlayerBoard({ G, ctx, playerID, isBYODMode = false, startingCont
           ) : (
             <div className="playerBoard__buttonGroup">
               <button
+                type="button"
                 name="privateContract2"
                 className={`button ${startingContractExists && isPlayerTurn ? '' : 'button--hidden'}`}
+                onClick={() => onOpenPrivateContractModal?.(2)}
               >
                 +2P
               </button>
               <button
+                type="button"
                 name="privateContract3"
                 className={`button ${startingContractExists && isPlayerTurn ? '' : 'button--hidden'}`}
+                onClick={() => onOpenPrivateContractModal?.(3)}
               >
                 +3P
               </button>
