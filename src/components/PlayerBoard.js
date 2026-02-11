@@ -3,6 +3,7 @@ import { railroadTieValue } from "../Contract";
 import { ContractsList } from "./ContractsList";
 
 // Available starting city pairs
+/** @type {[string, string][]} */
 const STARTING_CITY_PAIRS = [
   ["Montreal", "Quebec City"],
   ["Boston", "Portland ME"],
@@ -58,14 +59,18 @@ export function PlayerBoard({ G, ctx, playerID, isBYODMode = false, startingCont
   const getChosenCities = () => {
     const chosenCities = new Set();
     G.players.forEach(([id, player]) => {
-      player.activeCities.forEach(city => chosenCities.add(city));
+      /** @type {string[]} */
+      const cities = player.activeCities;
+      cities.forEach((city) => chosenCities.add(city));
     });
     return chosenCities;
   };
 
   const chosenCities = currentPhase === 'setup' ? getChosenCities() : new Set();
+  /** @param {[string, string]} pair */
   const isPairChosen = (pair) => chosenCities.has(pair[0]) || chosenCities.has(pair[1]);
 
+  /** @param {[string, string]} pair */
   const handlePairClick = (pair) => {
     if (isPairChosen(pair) || !isPlayerTurn) return;
     onStartingPairSelect(pair);
