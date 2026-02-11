@@ -92,24 +92,22 @@ export function generateStartingContract(G, activeCitiesKeys, playerID) {
 
 
 /**
- * Create a private contract from the given active cities and the starting city
+ * Pure generation of a private contract spec (commodity + destination). No newContract, no playerID.
  *
  * @param {*} G - Game state object
- * @param {string[]} activeCitiesKeys - Keys of all active cities
- * @param {string} currentCityKey - Key of the city to determine direction from
- * @returns {Contract}
+ * @param {*} ctx - Game context
+ * @returns {{ commodity: string, destinationKey: string }|undefined}
  */
-export function generatePrivateContract(G, ctx) {  
+export function generatePrivateContractSpec(G, ctx) {
   const player = G.players.find(([id, props]) => id === ctx.currentPlayer);
   if (!player) {
-    console.error(`generatePrivateContract: player ${ctx.currentPlayer} not found`);
+    console.error(`generatePrivateContractSpec: player ${ctx.currentPlayer} not found`);
     return undefined;
   }
   const activeCitiesKeys = Array.from(player[1].activeCities);
   const currentCityKey = activeCitiesKeys.at(-1);
 
   // Set odds for direction from currentCityKey, biased away from creating coastal connections
-
   const weightedDirections = new Map([ ["north", 3], ["south", 3] ]);
   if (cities.get(currentCityKey).nearEastCoast) {
     weightedDirections.set("east", 3).set("west", 11);
@@ -121,11 +119,11 @@ export function generatePrivateContract(G, ctx) {
 
   // Get all cities within 2 hops of active cities, split by direction
   const candidatesByDirection = citiesByDirection( [ currentCityKey ], citiesConnectedTo(activeCitiesKeys, { distance: 2 }) );
-  
+
   // Pick a direction and a city
   const candidatesInChosenDirection = Array.from(candidatesByDirection.get(weightedRandom(weightedDirections)));
   if (candidatesInChosenDirection.length === 0) {
-    console.error(`generatePrivateContract: no candidates found in chosen direction`);
+    console.error(`generatePrivateContractSpec: no candidates found in chosen direction`);
     return undefined;
   }
   const contractCity = weightedRandomCity(G, candidatesInChosenDirection);
@@ -143,8 +141,53 @@ export function generatePrivateContract(G, ctx) {
 
   // Pick a commodity for the contract
   const contractCommodity = randomSetItem(availableCommodities);
+  if (!contractCommodity) {
+    return undefined;
+  }
 
-  return newContract(contractCity, contractCommodity, { type: "private", playerID: ctx.currentPlayer });
+  return { commodity: contractCommodity, destinationKey: contractCity };
+}
+
+
+/**
+ * Returns an array of `count` unique private contract specs. Deduplicates by commodity|destinationKey;
+ * retries generation until count unique offers are collected, with a retry limit.
+ *
+ * @param {*} G - Game state object
+ * @param {*} ctx - Game context
+ * @param {number} count - Number of unique offers to generate (2, 3, or 4)
+ * @returns {{ commodity: string, destinationKey: string }[]}
+ */
+export function generatePrivateContractOffers(G, ctx, count) {
+  const seen = new Set();
+  const offers = [];
+  const maxAttempts = 50;
+
+  for (let attempts = 0; attempts < maxAttempts && offers.length < count; attempts++) {
+    const spec = generatePrivateContractSpec(G, ctx);
+    if (!spec) continue;
+
+    const key = `${spec.commodity}|${spec.destinationKey}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    offers.push(spec);
+  }
+
+  return offers;
+}
+
+
+/**
+ * Create a private contract from the given active cities and the starting city
+ *
+ * @param {*} G - Game state object
+ * @param {*} ctx - Game context
+ * @returns {Contract}
+ */
+export function generatePrivateContract(G, ctx) {
+  const spec = generatePrivateContractSpec(G, ctx);
+  if (!spec) return undefined;
+  return newContract(spec.destinationKey, spec.commodity, { type: "private", playerID: ctx.currentPlayer });
 };
 
 
