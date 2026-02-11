@@ -168,7 +168,7 @@ const results = await window.testMigration.importFromJSON(jsonString, { overwrit
 - Verify Supabase credentials are correct
 - Check browser console for specific error messages
 - Ensure database schema is created correctly
-- Check RLS policies allow anonymous access
+- Check RLS policies allow anon role access
 
 ### Conflicts Not Detected
 - Check that `updated_at` timestamps are being tracked

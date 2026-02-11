@@ -5,7 +5,7 @@
  * This adapter provides cloud storage with real-time synchronization for multiplayer games.
  * 
  * Features:
- * - Anonymous authentication (no user accounts required)
+ * - Anon key only (no auth); game code-based access
  * - PostgreSQL database storage
  * - Real-time subscriptions via Supabase Realtime
  * - Game code-based access (5-letter codes)
@@ -28,10 +28,10 @@ import { createClient } from '@supabase/supabase-js';
  */
 export class SupabaseAdapter extends StorageAdapter {
   /**
-   * Initialize Supabase client and authenticate anonymously
+   * Initialize Supabase client with anon key
    * 
    * @param {string} supabaseUrl - Supabase project URL
-   * @param {string} supabaseAnonKey - Supabase anonymous key
+   * @param {string} supabaseAnonKey - Supabase anon key
    */
   constructor(supabaseUrl, supabaseAnonKey) {
     super();
@@ -41,72 +41,7 @@ export class SupabaseAdapter extends StorageAdapter {
     }
     
     this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-    this.initialized = false;
-    this.initializationPromise = null;
     this.activeSubscriptions = new Map(); // Map of code -> channel
-  }
-
-  /**
-   * Initialize anonymous authentication
-   * This is called lazily on first use to avoid blocking constructor
-   * 
-   * @returns {Promise<void>}
-   */
-  async _ensureInitialized() {
-    if (this.initialized) {
-      return;
-    }
-    
-    // If initialization is already in progress, wait for it
-    if (this.initializationPromise) {
-      return this.initializationPromise;
-    }
-    
-    // Start initialization
-    this.initializationPromise = this._initialize();
-    try {
-      await this.initializationPromise;
-      this.initialized = true;
-    } catch (error) {
-      this.initializationPromise = null;
-      throw error;
-    }
-  }
-
-  /**
-   * Perform anonymous authentication
-   * Checks for existing session first to avoid unnecessary authentication calls
-   * 
-   * @returns {Promise<void>}
-   */
-  async _initialize() {
-    try {
-      // Check if there's already a valid session
-      const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
-      
-      if (session && session.user) {
-        // We already have a valid session, no need to authenticate again
-        console.info('[SupabaseAdapter] Using existing anonymous session');
-        return;
-      }
-      
-      // No valid session found, sign in anonymously
-      const { data, error } = await this.supabase.auth.signInAnonymously();
-      
-      if (error) {
-        // If already signed in, that's okay
-        if (error.message.includes('already signed in') || error.message.includes('User already registered')) {
-          console.info('[SupabaseAdapter] Already authenticated anonymously');
-          return;
-        }
-        throw new Error(`SupabaseAdapter: Failed to authenticate anonymously: ${error.message}`);
-      }
-      
-      console.info('[SupabaseAdapter] Successfully authenticated anonymously');
-    } catch (error) {
-      console.error('[SupabaseAdapter] Initialization error:', error);
-      throw error;
-    }
   }
 
   /**
@@ -152,8 +87,6 @@ export class SupabaseAdapter extends StorageAdapter {
     const normalizedCode = this._normalizeCode(code);
     
     try {
-      await this._ensureInitialized();
-      
       // Validate input state
       if (!state || typeof state !== 'object') {
         console.error(`[SupabaseAdapter.${operation}] Invalid state parameter for game "${normalizedCode}": expected object, got ${typeof state}`);
@@ -290,8 +223,6 @@ export class SupabaseAdapter extends StorageAdapter {
     const normalizedCode = this._normalizeCode(code);
     
     try {
-      await this._ensureInitialized();
-      
       const { data, error } = await this.supabase
         .from('games')
         .select('last_modified')
@@ -326,8 +257,6 @@ export class SupabaseAdapter extends StorageAdapter {
     const normalizedCode = this._normalizeCode(code);
     
     try {
-      await this._ensureInitialized();
-      
       const { data, error } = await this.supabase
         .from('games')
         .select('state')
@@ -388,8 +317,6 @@ export class SupabaseAdapter extends StorageAdapter {
     const normalizedCode = this._normalizeCode(code);
     
     try {
-      await this._ensureInitialized();
-      
       // Unsubscribe from real-time updates if active
       if (this.activeSubscriptions.has(normalizedCode)) {
         this._unsubscribeFromGame(normalizedCode);
@@ -428,8 +355,6 @@ export class SupabaseAdapter extends StorageAdapter {
     const operation = 'listGames';
     
     try {
-      await this._ensureInitialized();
-      
       const { data, error } = await this.supabase
         .from('games')
         .select('code, state, metadata, last_modified')
@@ -514,49 +439,44 @@ export class SupabaseAdapter extends StorageAdapter {
       this._unsubscribeFromGame(normalizedCode);
     }
     
-    // Ensure initialized before subscribing
-    this._ensureInitialized().then(() => {
-      const channel = this.supabase
-        .channel(`game:${normalizedCode}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'games',
-            filter: `code=eq.${normalizedCode}`
-          },
-          (payload) => {
-            try {
-              const newData = payload.new;
-              if (newData && newData.state) {
-                // Validate state before calling callback
-                if (isValidSerializedState(newData.state)) {
-                  const state = deserializeState(newData.state);
-                  const metadata = newData.metadata || {};
-                  const lastModified = newData.last_modified || null;
-                  callback(state, metadata, lastModified);
-                } else {
-                  console.warn(`[SupabaseAdapter.${operation}] Received invalid state update for game "${normalizedCode}"`);
-                }
+    const channel = this.supabase
+      .channel(`game:${normalizedCode}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'games',
+          filter: `code=eq.${normalizedCode}`
+        },
+        (payload) => {
+          try {
+            const newData = payload.new;
+            if (newData && newData.state) {
+              // Validate state before calling callback
+              if (isValidSerializedState(newData.state)) {
+                const state = deserializeState(newData.state);
+                const metadata = newData.metadata || {};
+                const lastModified = newData.last_modified || null;
+                callback(state, metadata, lastModified);
+              } else {
+                console.warn(`[SupabaseAdapter.${operation}] Received invalid state update for game "${normalizedCode}"`);
               }
-            } catch (error) {
-              console.error(`[SupabaseAdapter.${operation}] Error processing real-time update for game "${normalizedCode}":`, error.message);
             }
+          } catch (error) {
+            console.error(`[SupabaseAdapter.${operation}] Error processing real-time update for game "${normalizedCode}":`, error.message);
           }
-        )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.info(`[SupabaseAdapter.${operation}] Subscribed to real-time updates for game "${normalizedCode}"`);
-          } else if (status === 'CHANNEL_ERROR') {
-            console.error(`[SupabaseAdapter.${operation}] Error subscribing to game "${normalizedCode}"`);
-          }
-        });
-      
-      this.activeSubscriptions.set(normalizedCode, channel);
-    }).catch((error) => {
-      console.error(`[SupabaseAdapter.${operation}] Failed to initialize before subscribing:`, error.message);
-    });
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.info(`[SupabaseAdapter.${operation}] Subscribed to real-time updates for game "${normalizedCode}"`);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`[SupabaseAdapter.${operation}] Error subscribing to game "${normalizedCode}"`);
+        }
+      });
+    
+    this.activeSubscriptions.set(normalizedCode, channel);
     
     // Return unsubscribe function
     return () => {
@@ -610,8 +530,6 @@ export class SupabaseAdapter extends StorageAdapter {
     const normalizedCode = this._normalizeCode(code);
     
     try {
-      await this._ensureInitialized();
-      
       const { data, error } = await this.supabase
         .from('games')
         .select('metadata')
@@ -654,8 +572,6 @@ export class SupabaseAdapter extends StorageAdapter {
     const normalizedCode = this._normalizeCode(code);
     
     try {
-      await this._ensureInitialized();
-      
       // Get existing metadata
       const { data: existingGame, error: fetchError } = await this.supabase
         .from('games')
