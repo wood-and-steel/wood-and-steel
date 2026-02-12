@@ -251,11 +251,7 @@ The roundhouse allows you to combine the movement of engines so that you can rea
 
 #### Employment Office – $10,000 (mid)
 
-Build three segments of track with the Build Track action.
-
-#### Track Maintenance – $10,000 (mid)
-
-By maintaining ther tracks, a railroad ensures they can operate their engines with fewer delays. When one player purchases Track Maintenance, all other players without it move one segment fewer with each of their Run Trains actions. An engine’s distance cannot be reduced below 1.
+Build three segments of track instead of two with the Build Track action.
 
 #### Railyard - $10,000 (mid)
 
@@ -278,21 +274,17 @@ In the app, discard your current private contract and get a new one from among t
 
 ## End of round
 
-After all players have taken a turn, the round is over. Tap the End Round button in the app.
+After all players have taken a turn, the round is over.
 
 ### Independent railroads expand
 
-The app will tell you how each of the independent railroads are expanding. Put the corresponding track segments on the central map.
-
-Independent railroads give you the chance to rapidly expand your company through mergers.
-
-In the early stages of railroads in North America, there were thousands of small railroads. The New York Central, for example, was one of the most important railroads in the early stage of the Steam Age, and it came from the merger of twelve smaller railroads.
+The app determines how each of the independent railroads are expanding. Players add the corresponding track segments on the central map board.
 
 ### Monopolies
 
 Railroads were often built around transporting certain commodities. If the commodities were delivered in large enough quantities, they became part of the financial backbone of a railroad. (Designer note: To reflect this in gameplay, we've decided to include monopolies as part of how you build your railroad. The intention is that not all players will have monopolies at game end.)
 
-A player gets a monopoly when their track connects to all cities providing a commodity available in 4, 5, or 6 cities and they have a Commodities Exchange Office dedicated to that commodity. Having a monopoly immediately awards that player 1 or 2 railroad ties. It also increases the chance that the monopolized commodity will be in the private contracts offered to a player after they make a delivery to a city within one hop of a city with that commodity. (The probability distribution for the other commodities is the same, within the remaining odds.)
+A player gets a monopoly when their track connects to all cities providing a commodity available in 4, 5, or 6 cities and they have a Commodities Exchange Office dedicated to that commodity. Having a monopoly immediately awards that player 1 or 2 railroad ties. It also increases the chance that the monopolized commodity will be in the private contracts offered to a player after they make a delivery to a city within one segment of a city with that commodity. The probability distribution for the other commodities is the same, within the remaining odds.
 
 Only the first player who fulfills the requirement can have a monopoly in a commodity.
 
@@ -308,8 +300,8 @@ Design idea: Consider adding a **Terminal Building** upgrade to increase the val
 
 ## Bankruptcy
 
-If a player can’t pay debt service when it needs to, they enter bankruptcy. Immediately after finishing their Run a Train action, the player must do the following.
+If a player can’t pay debt service when fulfilling a contract, they enter bankruptcy. Immediately after finishing their Run a Train action, the player must do the following.
 
-1. Return 5 railroad ties to the supply.  
+1. Lose 5 railroad ties. (Not yet implemented)
 2. Sell track segments to the bank equal to the shortfall plus a penalty of $5,000 more for the bank to continue to handle their remaining debt. The track sells at the same prices which it cost to build them. The player chooses what pieces are to be sold.  
-3. Said track is then available for auction to the other players starting at normal rates and raising by a minimum of $1,000 for each bid. The various pieces of track are sold off one at a time. The first player to the left chooses one of the pieces and makes a bid if they so choose (second track piece auction starts with the second player to the left and so on). If a player passes, they may not reenter the bidding. The highest bidder wins the auction. Players can only bid if they have enough cash on hand to make a bid. As each piece is auctioned, the segment of railroad is changed to the color of the new owner. If any pieces of track are not purchased, they become part of any independent railroad that is connected. If there are no connected independent railroads, the track is removed from the board.
+3. The sold segments are put up for auction one at a time. The other players can bid starting at the segment's normal price and can raise by a minimum of $1000. The first player to the left chooses one of the pieces and makes a bid if they so choose (second track piece auction starts with the second player to the left and so on). If a player passes, they may not reenter the bidding. The highest bidder wins the auction. Players can only bid if they have enough cash on hand to make a bid. As each piece is auctioned, the segment of railroad is changed to the color of the new owner. If any pieces of track are not purchased, they become part of any independent railroad that is connected. If there are no connected independent railroads, the track is removed from the board.
