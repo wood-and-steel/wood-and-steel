@@ -34,7 +34,7 @@ export function generateStartingContract(G, activeCitiesKeys, playerID) {
     distance: 2, 
     routeTestFn: (r => !r.mountainous),
   }); 
-  const candidatesByDirection = citiesByDirection(activeCitiesKeys, candidates);
+  const candidatesByDirection = citiesByDirection(activeCitiesKeys, Array.from(candidates));
   
   // If only two of the directions have cities, choose between those two directions 50/50
   // If all four directions have cities, choose one of them by these odds: N 15%, S 15%, E 35%, or W 35%
@@ -92,7 +92,8 @@ export function generateStartingContract(G, activeCitiesKeys, playerID) {
 
 
 /**
- * Pure generation of a private contract spec (commodity + destination). No newContract, no playerID.
+ * Pure generation of a private contract spec (commodity + destination) for the current player. 
+ * No newContract, no playerID assigned to the contract.
  *
  * @param {*} G - Game state object
  * @param {*} ctx - Game context
@@ -118,7 +119,10 @@ export function generatePrivateContractSpec(G, ctx) {
   }
 
   // Get all cities within 2 hops of active cities, split by direction
-  const candidatesByDirection = citiesByDirection( [ currentCityKey ], citiesConnectedTo(activeCitiesKeys, { distance: 2 }) );
+  const candidatesByDirection = citiesByDirection(
+    [ currentCityKey ], 
+    Array.from(citiesConnectedTo(activeCitiesKeys, { distance: 2 }))
+  );
 
   // Pick a direction and a city
   const candidatesInChosenDirection = Array.from(candidatesByDirection.get(weightedRandom(weightedDirections)));
@@ -365,15 +369,15 @@ export function valueOfCity(G, cityKey) {
 
   G.contracts.forEach(contract => {
     if (contract.fulfilled) {
-      contractsFulfilledHere += (contract.destinationKey === cityKey);
-      contractsWithCommoditiesFromHere += (city.commodities.includes(contract.commodity));
+      contractsFulfilledHere += (contract.destinationKey === cityKey) ? 1 : 0;
+      contractsWithCommoditiesFromHere += (city.commodities.includes(contract.commodity)) ? 1 : 0;
     }
   });
 
   const value = 2 * (1 + 
-    (city.commodities.length > 0) + 
-    city.large + 
-    (3 * city.westCoast)) +
+    (city.commodities.length > 0 ? 1 : 0) + 
+    (city.large ? 1 : 0) + 
+    (3 * (city.westCoast ? 1 : 0))) +
     (2 * contractsFulfilledHere) +
     contractsWithCommoditiesFromHere;
   
@@ -384,8 +388,8 @@ export function valueOfCity(G, cityKey) {
 /**
  * Dollar value of this contract if fulfilled
  *
- * @param {Contract}
- * @type {number}
+ * @param {Contract} contract
+ * @returns {number}
  */
 export function rewardValue(contract) {
   // $3,000 per segment of the distance between the destination city and the closest city that provides the commodity
@@ -397,7 +401,7 @@ export function rewardValue(contract) {
  * Railroad tie value of this contract if fulfilled
  *
  * @param {Contract}
- * @type {number}
+ * @returns {number}
  */
 export function railroadTieValue(contract) {
 
