@@ -292,7 +292,7 @@ Only the first player who fulfills the requirement can have a monopoly in a comm
 
 | \# cities with the commodity | Commodities | Railroad ties awarded | Chance of commodity in a private contract |
 | :---- | :---- | :---- | :---- |
-| 4 | iron ore, lead, textiles | 2 | 40% |
+| 4 | cattle, copper, iron ore, lead, textiles | 2 | 40% |
 | 5 | grain, imports | 3 | 50% |
 | 6 | coal, machinery, wood | 4 | 60% |
 
