@@ -1,39 +1,99 @@
 # Contract generation
 
-This document is a summary of the contract generation routines implemented in [Contracts.js](..\src\Contract.js).
+This document summarizes the contract generation routines implemented in [Contract.js](../src/Contract.js).
 
-## Private Contract
+## Dollar value (rewardValue)
 
-Private contracts are offered to a player just after they fulfill a prior private contract.
+For all contract types, the cash reward when fulfilled is:
 
-1. From the city where the private contract was just fulfilled, choose one of the four cardinal directions using the odds below. If there are no cities in the selected direction, choose the opposite direction instead.
-  - Eastern cities near the coast (Quebec CIty, Albany, Cleveland, Pittsburgh, Atlanta, Tallahassee): N 20%, S 20%, E 20%, or W 40%
-  - Western cities near the coast (Spokane, Boise, Reno, Flagstaff, Phoenix): N 20%, S 20%, E 40%, or W 20%
-  - All other cities: N 20%, S 20%, E 30%, or W 30%
-2. Select a destination city within 2 segments of one of their active cities, but not the place where a contract was just fulfilled (the current city). The higher value a city has, the more likely it will get a contract.
-3. Select a commodity available within 1 city of where the player has fulfilled contracts (or their two starting cities), excepting commodities generated in the destination city.
-4. Price of a contract is $3,000 times the shortest number of segments from a city with that commodity to the destination.
+**$3,000 × (shortest number of segments from a city that provides the commodity to the destination city)**
 
-## Starting Private Contract
+The distance is computed by breadth-first search on the route graph.
 
-Starting contracts are a special kind of Private Contract. They are given to players during the setup phase.
+## Railroad tie value (railroadTieValue)
 
-1. Make a list of candidate destination cities.
-  - Given the two starting cities, make a list of all cities within one hop (where those hops are not mountains). This helps keep players from spreading too fast and getting in each other’s business too early, and also keeping the cost of the track for the first private contract reasonable. Unit test: make sure this does not generate empty lists.
-  - Group the candidate cities into their cardinal directions (N, S, E, or W) from either starting city—meaning some candidates might end up in more than one group.
-  - If all four lists have cities, choose one of the four cardinal directions according to these odds: N 20%, S 20%, E 30%, or W 30%. If only two of the lists have cities, choose between those two directions 50/50. If there are no cities in the selected direction, choose the opposite direction instead.
-2. Choose a commodity.
-  - Make a list of all commodities in the two starting cities that are not also available in all of the destination cities. Unit test: make sure this does not lead to no commodities being possible to deliver.
-  - Choose one of those commodities at random, equal chance for all.
-3. Choose the destination city.
-  - Remove all destination cities from the candidate list that supply the chosen commodity.
-  - Choose one of the remaining candidate cities at random, linear proportional chance based on the value of the cities.
-4. Price of a contract is $3,000 times the shortest number of segments from a city with that commodity to the destination.
+When a contract is fulfilled, the player also earns 1–4 railroad ties based on the destination region and the region(s) where the commodity is produced. There are 6 regions: "NW", "NC", "NE", "SW", "SC", "SE". On the map, these form a 3-column, 2-row grid. The first character of the region indicates the North or South row; the second indicates the West, Central, or East column.
+
+Cities have a single `region`. Commodities have a `regions` array (e.g., coal has `["NC", "NE", "NW", "SC", "SE"]`). This array is pre-generated in the commodities data and is the union of the regions of the cities that provide that commodity.
+
+The railroad tie value comes from a 6×6 matrix of destination region (row) vs. commodity source region (column):
+
+| Destination \ Commodity | NW | NC | NE | SW | SC | SE |
+|-------------------------|----|----|----|----|----|----|
+| **NW**                  | 1  | 2  | 3  | 2  | 3  | 4  |
+| **NC**                  | 2  | 1  | 2  | 3  | 2  | 3  |
+| **NE**                  | 3  | 2  | 1  | 4  | 3  | 2  |
+| **SW**                  | 2  | 3  | 4  | 1  | 2  | 3  |
+| **SC**                  | 3  | 2  | 3  | 2  | 1  | 2  |
+| **SE**                  | 4  | 3  | 2  | 3  | 2  | 1  |
+
+- Same region (e.g., NW→NW): 1 railroad tie  
+- Adjacent regions: 2 railroad ties
+- Two regions away: 3 railroad ties
+- Distant regions (e.g., NW→SE): 4 railroad ties  
+
+If a commodity is produced in multiple regions, the **minimum** value across those regions is used (representing the closest viable source region).
+
+---
+
+## City value (valueOfCity)
+
+City value is used to weight destination selection. Higher-value cities are more likely to be chosen. Formula:
+
+- Base: `2 × (1 + hasCommodities + large + (3 × westCoast))`  
+  - `hasCommodities`: 1 if the city has any commodities, else 0  
+  - `large`: 1 if the city is large, else 0  
+  - `westCoast`: 1 if the city is on the West Coast, else 0  
+- Plus `2 × contractsFulfilledHere` (fulfilled contracts with this city as destination)  
+- Plus `contractsWithCommoditiesFromHere` (fulfilled contracts whose commodity is produced in this city)
+
+---
+
+## Private contract
+
+Private contracts are offered to a player just after they fulfill a prior private contract. The logic uses the **current city** (the city where the private contract was just fulfilled, i.e. the last city in their active cities) as the origin for direction selection.
+
+1. **Choose direction** from the current city using these odds. If there are no cities in the selected direction, the opposite direction is used instead.
+   - Cities near the **east** coast (city.nearEastCoast == true): N 15%, S 15%, E 15%, W 55%
+   - Cities near the **west** coast (city.nearWestCoast == true): N 15%, S 15%, E 55%, W 15%
+   - All other cities: N 15%, S 15%, E 35%, W 35%
+
+2. **Select destination city**: Within 2 segments of any of the player’s active cities, in the chosen direction. Excludes the origin cities (active cities). Selection is weighted by city value (higher value = higher chance).
+
+3. **Select commodity**: Available within 1 segment of the player’s active cities. Excludes commodities produced in the destination city. Chosen at random with equal probability.
+
+---
+
+## Starting private contract
+
+Starting contracts are a special kind of private contract given to players during setup.
+
+1. **Candidate destination cities**
+   - From the two starting cities, collect all cities within **2 segments**, where those segments are **not** mountainous routes.
+   - Group candidates by cardinal direction (N, S, E, W) from either starting city; a candidate may appear in multiple directions.
+   - Choose direction:
+     - If **no candidates are to the north or south**: choose between east and west, 50/50.
+     - If **no candidates are to the east or west**: choose between north and south, 50/50.
+     - If **all four directions** have cities: N 15%, S 15%, E 35%, W 35%.
+   - If there are no cities in the chosen direction, use the opposite direction instead.
+
+2. **Choose commodity**
+   - Commodities present in either starting city that are **not** available in every candidate destination city.
+   - One chosen at random, equal probability.
+
+3. **Choose destination city**
+   - Remove candidates that produce the chosen commodity.
+   - From the remaining candidates, choose one weighted by city value (higher value = higher chance).
+
+---
 
 ## Market contract
 
-To generate a market contract: 
+1. **Select destination city**: Within 2 segments of any active city (of any player), but **not** an active city itself. Selection weighted by city value.
 
-1. Select a city within 2 segments of any active city (but not one of the active ones), weighted by their value.
-2. Select a commodity available within 1 city of any activated city, excepting commodities generated in the destination city.
-3. Price of a contract is $3,000 times the shortest number of segments from a city with that commodity to the destination.s
+2. **Select commodity**
+   - Must be available in active cities or cities within 1 segment of active cities (including the active cities).
+   - Must **not** be produced in the destination city.
+   - Must have **distance ≥ 2** from the destination (shortest path to any city that produces the commodity). This ensures a minimum cash reward of $6,000 (2 segments × $3,000).
+
+3. Chosen at random with equal probability among valid commodities.

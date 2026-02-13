@@ -32,7 +32,7 @@ export function generateStartingContract(G, activeCitiesKeys, playerID) {
   // Get all cities within 2 hops of active (starting) cities without crossing mountains
   const candidates = citiesConnectedTo(activeCitiesKeys, {
     distance: 2, 
-    routeTestFn: (r => !r.mountainous),
+    routeTestFn: (route => !route.mountainous),
   }); 
   const candidatesByDirection = citiesByDirection(activeCitiesKeys, Array.from(candidates));
   
@@ -136,8 +136,9 @@ export function generatePrivateContractSpec(G, ctx) {
   //  - available within 1 hop of active cities
   //  - not available in destination city
   const availableCommodities = new Set();
-  activeCitiesKeys.forEach(activeCity => {
-    cities.get(activeCity).commodities.forEach(commodity => {
+  const citiesWithinOneHop = Array.from(citiesConnectedTo(activeCitiesKeys, { distance: 1 }));
+  citiesWithinOneHop.forEach(city => {
+    cities.get(city).commodities.forEach(commodity => {
       availableCommodities.add(commodity);
     })
   })
@@ -266,11 +267,11 @@ function weightedRandomCity(G, cities) {
 
 /**
  * Groups candidates into a Map of cardinal direction buckets. Candidates can appear in more than one bucket if there's 
- * more than one origin (from) city.
+ * more than one origin (from) city. If there are no cities in a direction, the opposite direction's list is copied into it.
  * 
  * @param {string[]} fromCitiesKeys 
- * @param {string[]} candidateCitiesKeys 
- * @returns {Map}
+ * @param {string[]} candidateCitiesKeys
+ * @returns {Map<string, Set<string>>} Map of cardinal direction buckets (e.g. "north") to sets of candidate city keys
  */
 function citiesByDirection(fromCitiesKeys, candidateCitiesKeys) 
 {
