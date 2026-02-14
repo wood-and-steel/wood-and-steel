@@ -5,15 +5,17 @@ import { useStorage } from "../providers/StorageProvider";
 /**
  * User-friendly error messages for seat assignment errors
  */
+const NOT_PLAYING_MESSAGE = 'This device is not playing this game.';
+
 const JOIN_ERROR_MESSAGES = {
   INVALID_CODE: 'Invalid game code format. Please check and try again.',
   GAME_NOT_FOUND: 'Game not found. Please check the code and try again.',
   WRONG_GAME_MODE: 'This game is not accepting join requests (hotseat mode).',
   GAME_FULL: 'This game is full. No more players can join.',
   ALREADY_JOINED: 'You have already joined this game.',
-  GAME_STARTED: 'This game has already started.',
+  GAME_STARTED: NOT_PLAYING_MESSAGE,
   UPDATE_FAILED: 'Unable to join game. Please try again.',
-  NOT_JOINED: 'You have not joined this game.',
+  NOT_JOINED: NOT_PLAYING_MESSAGE,
 };
 
 /**
@@ -49,8 +51,18 @@ export function LobbyScreen({ gameManager, onEnterGame, onNewGame }) {
   const [games, setGames] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [showLoadingIndicator, setShowLoadingIndicator] = React.useState(false);
-  const { selectedGameCode } = useLobbyStore();
+  const { selectedGameCode, joinFormPrefill, clearJoinFormPrefill, setJoinFormPrefill } = useLobbyStore();
   const storage = useStorage();
+
+  // Apply join form prefill when returning from "device not playing" error
+  React.useEffect(() => {
+    if (joinFormPrefill?.code && joinFormPrefill?.error) {
+      setJoinGameCode(joinFormPrefill.code);
+      setJoinError(joinFormPrefill.error);
+      setActiveTab(TAB_CLOUD_BYOD);
+      clearJoinFormPrefill();
+    }
+  }, [joinFormPrefill]); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Active tab state - tracks which tab is selected (separate from storage type since
   // both Cloud tabs use the same storage type)
@@ -144,9 +156,40 @@ export function LobbyScreen({ gameManager, onEnterGame, onNewGame }) {
     // since both tabs show the same games
   }, [activeTab, storage]);
 
-  const handleRowClick = (gameCode) => {
-    if (gameCode !== selectedGameCode && onEnterGame) {
-      onEnterGame(gameCode);
+  const handleRowClick = async (game) => {
+    const gameCode = game.code;
+    if (gameCode === selectedGameCode) return;
+
+    const isBYODWaiting = game.metadata?.gameMode === 'byod' && game.phase === 'waiting_for_players';
+    if (isBYODWaiting) {
+      // Must join first - clicking row should behave like Join form for BYOD waiting games
+      if (storage.storageType !== 'cloud') {
+        storage.setStorageType('cloud');
+      }
+      setActiveTab(TAB_CLOUD_BYOD);
+      setIsJoining(true);
+      setJoinError('');
+      try {
+        const result = await storage.joinGame(gameCode);
+        if (!result.success) {
+          const errorMessage = JOIN_ERROR_MESSAGES[result.error] || 'Unable to join game. Please try again.';
+          setJoinGameCode(gameCode);
+          setJoinError(errorMessage);
+          setIsJoining(false);
+          return;
+        }
+      } catch (error) {
+        console.error('[LobbyScreen] Error joining game:', error);
+        setJoinGameCode(gameCode);
+        setJoinError('An unexpected error occurred. Please try again.');
+        setIsJoining(false);
+        return;
+      }
+      setIsJoining(false);
+    }
+
+    if (onEnterGame) {
+      await onEnterGame(gameCode, isBYODWaiting ? { storageType: 'cloud' } : undefined);
     }
   };
 
@@ -211,9 +254,9 @@ export function LobbyScreen({ gameManager, onEnterGame, onNewGame }) {
       }
       setActiveTab(TAB_CLOUD_BYOD);
       
-      // Enter the game (this will load the game and show WaitingForPlayersScreen)
+      // Enter the game (force cloud - we just joined a cloud game, storageType may not have updated yet)
       if (onEnterGame) {
-        await onEnterGame(code);
+        await onEnterGame(code, { storageType: 'cloud' });
       }
       
       // Clear the form
@@ -352,7 +395,7 @@ export function LobbyScreen({ gameManager, onEnterGame, onNewGame }) {
                   <tr 
                     key={game.code} 
                     className={`table__row ${game.code === selectedGameCode ? 'table__row--current' : ''}`}
-                    onClick={() => handleRowClick(game.code)}
+                    onClick={() => handleRowClick(game)}
                   >
                     <td className={`table__cell ${game.code === selectedGameCode ? 'table__cell--bold' : ''}`}>
                       {game.code}

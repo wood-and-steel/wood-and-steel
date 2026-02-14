@@ -6,6 +6,8 @@ import { LobbyScreen } from '../components/LobbyScreen';
 import { WaitingForPlayersScreen } from '../components/WaitingForPlayersScreen';
 import { useGameStore } from '../stores/gameStore';
 import { useLobbyStore } from '../stores/lobbyStore';
+
+const NOT_PLAYING_MESSAGE = 'This device is not playing this game.';
 import { 
   createNewGame,
   gameExists,
@@ -25,7 +27,7 @@ if (!import.meta.env.PROD) {
 }
 
 const AppContent = () => {
-  const { isLobbyMode, setLobbyMode, setSelectedGame } = useLobbyStore();
+  const { isLobbyMode, setLobbyMode, setSelectedGame, setJoinFormPrefill } = useLobbyStore();
   const storage = useStorage();
   const [currentGameCode, setCurrentGameCodeState] = React.useState(null);
   // Get number of players and phase from game store (must be at top level, before conditional returns)
@@ -73,6 +75,26 @@ const AppContent = () => {
         // Game exists, load it and exit lobby mode
         const savedState = await loadGameState(code, storage.storageType);
         if (savedState && savedState.G && savedState.ctx) {
+          // Check BYOD "device not playing" before loading state (avoids flash of Loading screen)
+          const isBYOD = await storage.isBYODGame(code);
+          const phase = savedState.ctx?.phase;
+          const isPastWaiting = phase && phase !== 'waiting_for_players';
+
+          if (isBYOD && isPastWaiting) {
+            const playerID = await storage.getMyPlayerID(code);
+            if (playerID == null) {
+            storage.clearCurrentGameCode();
+              setLobbyMode(true);
+              setSelectedGame(null);
+              setCurrentGameCodeState(null);
+              setIsBYODGame(false);
+              setMyPlayerID(null);
+              setJoinFormPrefill(code, NOT_PLAYING_MESSAGE);
+              console.info('[App] Device not playing BYOD game, returning to lobby with code:', code);
+              return;
+            }
+          }
+
           // Load state into Zustand store
           useGameStore.setState({
             G: savedState.G,
@@ -81,19 +103,17 @@ const AppContent = () => {
           setSelectedGame(code);
           setLobbyMode(false);
           setCurrentGameCodeState(code);
-          
-          // Check if this is a BYOD game and get player ID
-          const isBYOD = await storage.isBYODGame(code);
-          setIsBYODGame(isBYOD);
-          
+
           if (isBYOD) {
             const playerID = await storage.getMyPlayerID(code);
             setMyPlayerID(playerID);
+            setIsBYODGame(true);
             console.info('[App] BYOD game detected, myPlayerID:', playerID);
           } else {
             setMyPlayerID(null);
+            setIsBYODGame(false);
           }
-          
+
           console.info('[App] Successfully loaded game state for:', code);
         } else {
           // Invalid state, go to lobby
@@ -195,39 +215,55 @@ const AppContent = () => {
   }, [isBYODGame, currentGameCode, currentPhase, myPlayerID, storage]);
 
   // Handler to enter a game
-  const handleEnterGame = React.useCallback(async (code) => {
+  const handleEnterGame = React.useCallback(async (code, options = {}) => {
     try {
       const normalizedCode = normalizeGameCode(code);
-      
+      const storageType = options.storageType ?? storage.storageType;
+
       if (!isValidGameCode(normalizedCode)) {
         alert(`Invalid game code: "${code}"`);
         return;
       }
-      
-      const exists = await gameExists(normalizedCode, storage.storageType);
+
+      const exists = await gameExists(normalizedCode, storageType);
       if (!exists) {
         alert(`Game "${normalizedCode}" not found.`);
         return;
       }
-      
+
       // Load game state
-      const savedState = await loadGameState(normalizedCode, storage.storageType);
+      const savedState = await loadGameState(normalizedCode, storageType);
       if (savedState && savedState.G && savedState.ctx) {
+        // For BYOD games in play/setup, verify this device is a player before entering
+        const isBYOD = await storage.isBYODGame(normalizedCode);
+        const phase = savedState.ctx?.phase;
+        const isPastWaiting = phase && phase !== 'waiting_for_players';
+
+        if (isBYOD && isPastWaiting) {
+          const playerID = await storage.getMyPlayerID(normalizedCode);
+          if (playerID == null) {
+            // Device is not playing - stay in lobby, show error in Join form (LobbyScreen effect will apply prefill)
+            setJoinFormPrefill(normalizedCode, NOT_PLAYING_MESSAGE);
+            console.info('[App] Device not playing BYOD game, staying in lobby with code:', normalizedCode);
+            return;
+          }
+        }
+
         // Load state into Zustand store
         useGameStore.setState({
           G: savedState.G,
           ctx: savedState.ctx
         });
-        // Set as current game
-        storage.setCurrentGameCode(normalizedCode);
+        // Set as current game (use explicit storageType when provided to avoid race with setStorageType)
+        if (storage.storageType !== storageType) {
+          storage.setStorageType(storageType);
+        }
+        storage.setCurrentGameCodeForType(storageType, normalizedCode);
         setSelectedGame(normalizedCode);
         setLobbyMode(false);
         setCurrentGameCodeState(normalizedCode);
-        
-        // Check if this is a BYOD game and get player ID
-        const isBYOD = await storage.isBYODGame(normalizedCode);
         setIsBYODGame(isBYOD);
-        
+
         if (isBYOD) {
           const playerID = await storage.getMyPlayerID(normalizedCode);
           setMyPlayerID(playerID);
@@ -236,7 +272,7 @@ const AppContent = () => {
           setMyPlayerID(null);
           console.info('[App] Entered hotseat game:', normalizedCode);
         }
-        
+
         // Real-time subscription will be set up by the useEffect hook
       } else {
         alert(`Unable to load game "${normalizedCode}". The game state may be corrupted.`);
@@ -245,7 +281,7 @@ const AppContent = () => {
       console.error('[App] Error entering game:', error.message);
       alert(`Unable to enter game "${code}". ${error.message || 'Please try again.'}`);
     }
-  }, [setSelectedGame, setLobbyMode, storage]);
+  }, [setSelectedGame, setLobbyMode, setJoinFormPrefill, storage]);
 
   // Handler to create a new game
   const handleNewGame = React.useCallback(async (numPlayers = 2, gameMode = 'hotseat') => {
@@ -507,7 +543,7 @@ const AppContent = () => {
     );
   }
 
-  // BYOD game but no playerID yet (edge case - might be loading)
+  // BYOD game but no playerID yet (should not reach here after fix - device not playing now returns to lobby)
   if (isBYODGame && myPlayerID === null && currentPhase !== 'waiting_for_players') {
     return (
       <div className="waitingScreen">

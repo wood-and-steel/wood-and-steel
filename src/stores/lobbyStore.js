@@ -9,6 +9,8 @@ export const useLobbyStore = create((set) => ({
   isLobbyMode: true, // Default to lobby mode (entry point)
   selectedGameCode: null, // Currently selected/active game code
   lobbyState: {}, // Placeholder for future lobby UI state (filters, sort preferences, etc.)
+  // Prefill for Join form when returning from "device not playing" error
+  joinFormPrefill: { code: null, error: null },
 
   // Actions
   /**
@@ -38,6 +40,22 @@ export const useLobbyStore = create((set) => ({
       selectedGameCode: null,
       isLobbyMode: true
     });
+  },
+
+  /**
+   * Prefill Join form with code and error (e.g. when device is not playing a BYOD game)
+   * @param {string|null} code - Game code to show in input
+   * @param {string|null} error - Error message to show
+   */
+  setJoinFormPrefill: (code, error) => {
+    set({ joinFormPrefill: { code: code || null, error: error || null } });
+  },
+
+  /**
+   * Clear Join form prefill
+   */
+  clearJoinFormPrefill: () => {
+    set({ joinFormPrefill: { code: null, error: null } });
   },
 }));
 
