@@ -38,7 +38,9 @@ If a commodity is produced in multiple regions, the **minimum** value across tho
 
 ## City value (valueOfCity)
 
-City value is used to weight destination selection. Higher-value cities are more likely to be chosen. Formula:
+City value is used to weight destination selection. Higher-value cities are more likely to be chosen. Values are small integers that are not exposed to players. At the start of the game, the cities start with different values to reflect the major cities that grew historically, but gameplay increases the value of cities.
+
+Formula:
 
 - Base: `2 × (1 + hasCommodities + large + (3 × westCoast))`  
   - `hasCommodities`: 1 if the city has any commodities, else 0  
