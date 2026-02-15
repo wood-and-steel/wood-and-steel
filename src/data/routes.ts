@@ -1,15 +1,13 @@
-/*
- * routes
- * 
- * key:           string - keys of connected cities, dash-separated and in alphabetical order
- * value: {
- *  length          number - integer in the range [1, 5]
- *  mountainous     boolean
- *  cities          string[] - keys of connected cities
- * }
+/**
+ * Route record: length (1–5), mountainous flag, and connected city keys.
  */
+export interface Route {
+  length: number;
+  mountainous: boolean;
+  cities: string[];
+}
 
-export const routes = new Map([
+export const routes = new Map<string, Route>([
 [ "Atlanta-Birmingham", { "length": 1, "mountainous": false, cities: ["Atlanta", "Birmingham"] } ],
 [ "Atlanta-Cincinnati", { "length": 3, "mountainous": false, cities: ["Atlanta", "Cincinnati"] } ],
 [ "Atlanta-Raleigh", { "length": 4, "mountainous": false, cities: ["Atlanta", "Raleigh"] } ],

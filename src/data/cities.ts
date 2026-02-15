@@ -1,25 +1,23 @@
-/*
- * cities
- * 
- * key:           string - name of city
- * value: {
- *  id              string
- *  state           string
- *  country         string
- *  region          ["Eastern", "Central", "Western"]
- *  label           string (can be null) - prettier version of key, or null if the key is already pretty to humans
- *  latitude        number
- *  longitude       number
- *  large           boolean
- *  westCoast       boolean
- *  nearWestCoast   boolean
- *  nearEastCoast   boolean
- *  commodities     string[]
- *  routes          string[] - keys for routes Map
- * }
+/**
+ * City record: id, region, label (or null), coordinates, coast flags, commodities, route keys.
  */
+export interface City {
+  id: string;
+  state: string;
+  country: string;
+  region: string;
+  label: string | null;
+  latitude: number;
+  longitude: number;
+  large: boolean;
+  westCoast: boolean;
+  nearWestCoast: boolean;
+  nearEastCoast: boolean;
+  commodities: string[];
+  routes: string[];
+}
 
-export const cities = new Map([
+export const cities = new Map<string, City>([
   [ "Atlanta", { "id": "atl", "state": "GA", "country": "US", "region": "SE", "label": null, "latitude": 33.7491, "longitude": -84.3902, "large": true, "westCoast": false, "nearWestCoast": false, "nearEastCoast": true, "commodities": ["coal", "cotton", "textiles"], "routes": ["Atlanta-Birmingham", "Atlanta-Cincinnati", "Atlanta-Raleigh", "Atlanta-Savannah", "Atlanta-Tallahassee"]} ],
   [ "Birmingham", { "id": "bir", "state": "AL", "country": "US", "region": "SE", "label": null, "latitude": 33.5207, "longitude": -86.8024, "large": false, "westCoast": false, "nearWestCoast": false, "nearEastCoast": false, "commodities": ["steel"], "routes": ["Atlanta-Birmingham", "Birmingham-Memphis"]} ],
   [ "Bismarck", { "id": "bis", "state": "ND", "country": "US", "region": "NW", "label": null, "latitude": 46.8083, "longitude": -100.7837, "large": false, "westCoast": false, "nearWestCoast": false, "nearEastCoast": false, "commodities": [], "routes": ["Bismarck-Butte", "Bismarck-Fargo", "Bismarck-Regina"]} ],

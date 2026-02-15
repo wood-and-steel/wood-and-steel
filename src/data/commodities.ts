@@ -1,13 +1,12 @@
-/*
- * commodities
- * 
- * key:           name of commodity
- * value: {
- *  regions       [String] - regions with cities that supply the commodity
- *  cities        [String] - cities that supply the commodity
- * }
+/**
+ * Commodity record: regions and cities that supply the commodity.
  */
-export const commodities = new Map([
+export interface Commodity {
+  regions: string[];
+  cities: string[];
+}
+
+export const commodities = new Map<string, Commodity>([
   [ "aluminum", { "regions": ["NE"], "cities": ["Portland ME"] } ],
   [ "bauxite", { "regions": ["SC"], "cities": ["Memphis"] } ],
   [ "cattle", { "regions": ["NC", "NW", "SC"], "cities": ["Kansas City", "Omaha", "Thunder Bay", "Winnipeg"] } ],
