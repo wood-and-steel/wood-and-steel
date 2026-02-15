@@ -155,7 +155,7 @@ export function PopupMenu({
  * @param {object} props
  * @param {function} [props.onClick] - Called when the menu item is clicked.
  * @param {React.ReactNode} props.children - The content to display in the menu item.
- * @param {...any} props.rest - Additional props are spread to the underlying button element.
+ * @param {any} [props.rest] - Additional props are spread to the underlying button element.
  * 
  * @example
  * <PopupMenuItem onClick={() => handleAction()}>
