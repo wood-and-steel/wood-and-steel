@@ -1,409 +1,282 @@
-# BYOD (Bring Your Own Device) Implementation Guide
+# BYOD (Bring Your Own Device) — Agent Implementation Guide
 
-## Overview
+**Audience:** AI agents writing production or test code for BYOD multiplayer functionality.  
+**Purpose:** Reference for modifying or testing BYOD mode: each player uses their own device, joining via game codes.
 
-This guide helps an agent implement BYOD (bring your own device) multiplayer mode for Wood and Steel. BYOD mode allows each player to use their own device, connecting via game codes, as opposed to the current hotseat mode where all players share one device.
+---
 
-### Current State: Hotseat Mode
+## For Agents: How to Use This Guide
 
-- All players use the same device
-- Game state stored in localStorage (local) or Supabase (cloud)
-- All player boards rendered simultaneously
-- No player seat assignment needed
+1. **Before editing BYOD code:** Read the [Behavioral Contracts](#behavioral-contracts) and [File Reference](#file-reference) so you understand invariants and where logic lives.
+2. **Writing production code:** Use [Production Code Reference](#production-code-reference) for API contracts, metadata structure, and flow.
+3. **Writing tests:** Use [Test Code Reference](#test-code-reference) for test structure, mocks, and required coverage.
+4. **Implementing new features:** Follow the [Implementation Order](#implementation-order) for correct dependencies.
 
-### Future State: BYOD Mode
+---
 
-- Each player uses their own device
-- Game state stored in cloud (Supabase only)
-- Each device renders only one player's board
-- Players join via game code entry
-- Each device tracks its assigned player seat
-- "Waiting for players" phase before game starts
+## Behavioral Contracts
 
-## What's Already Prepared
+These invariants must hold. Code and tests must respect them.
 
-### StorageProvider Context
+| Invariant | Description |
+|-----------|-------------|
+| **BYOD = cloud only** | BYOD games require cloud storage. `createNewGame` with `gameMode: 'byod'` throws if storage is not cloud. |
+| **Host creates game** | Host (first player) creates the game; `hostDeviceId` is stored in metadata. Host automatically joins as first seat. |
+| **Waiting phase** | BYOD games start in `waiting_for_players` phase. Host sees game code; others join via code. |
+| **Seat assignment** | Seats are assigned by device ID. First-come-first-served until game starts. |
+| **Player IDs at start** | `playerID` per seat is assigned only when host calls `assignRandomPlayerIDs` after all players have joined. |
+| **Single board in BYOD** | When in BYOD mode, each device renders only its own player's board (unlike how all players' boards are rendered in hotseat mode). |
+| **Device not playing** | If device is not in a BYOD game's `playerSeats` (e.g., refreshed mid-game), return to lobby with join form prefill. |
 
-The `StorageProvider` (`src/providers/StorageProvider.js`) already includes:
+---
 
-1. **Player Seat Management Functions** (implemented, ready to use):
-   - `getPlayerSeat(gameCode)` - Returns playerID assigned to this device
-   - `setPlayerSeat(gameCode, playerID)` - Assigns player seat to this device
-   - `clearPlayerSeat(gameCode)` - Removes player seat assignment
-   - Stored in localStorage: `byod_player_seat_${gameCode}`
+## File Reference
 
-2. **Game Mode Utilities** (stubbed, need implementation):
-   - `getGameMode(gameCode)` - Returns 'hotseat' or 'byod' (currently always returns 'hotseat')
-   - `isBYODGame(gameCode)` - Checks if game is BYOD mode
-   - `getMyPlayerID(gameCode)` - Returns player seat for BYOD, null for hotseat
+| Path | Role |
+|------|------|
+| `src/utils/gameManager.js` | `createNewGame`, `assignPlayerSeat`, `updatePlayerName`, `assignRandomPlayerIDs`, `getDevicePlayerID`, `getDeviceSeat`, `getPlayerSeats`, `isHost`, `allPlayersJoined`, `getNumPlayersJoined`, `SeatAssignmentError` |
+| `src/providers/StorageProvider.js` | `joinGame`, `updateMyPlayerName`, `getMyPlayerID`, `isBYODGame`, `getPlayerSeatsForGame`, `getMySeat`, `amIHost`, `startBYODGame`, `getDeviceId` |
+| `src/components/WaitingForPlayersScreen.js` | BYOD waiting phase UI: game code, player list, name input, Start Game (host), Cancel |
+| `src/components/LobbyScreen.js` | Join form on Cloud (BYOD) tab; row click on `waiting_for_players` BYOD game triggers join first |
+| `src/stores/lobbyStore.js` | `joinFormPrefill` and `setJoinFormPrefill` used for device-not-playing return flow |
+| `src/app/App.js` | BYOD vs hotseat render logic; device-not-playing check; `WaitingForPlayersScreen` when phase is `waiting_for_players` |
+| `src/stores/phaseConfig.js` | Phase definitions including `waiting_for_players` |
+| `src/utils/storage/supabaseAdapter.js` | Cloud storage; real-time subscriptions for BYOD |
 
-### Storage Infrastructure
+---
 
-- Separate current game tracking: `current_game_local` and `current_game_cloud`
-- StorageProvider manages active storage type ('local' | 'cloud')
-- Supabase adapter supports real-time subscriptions (already used for hotseat cloud games)
+## Production Code Reference
 
-## Architecture Changes Needed
+### 1. Game Creation
 
-### 1. Game Mode Metadata
+**`createNewGame(storageType, options)`**
 
-**Location**: Game metadata in storage adapters
+- `options.gameMode`: `'hotseat' | 'byod'` (default `'hotseat'`)
+- `options.hostDeviceId`: Required when `gameMode === 'byod'`
+- `options.numPlayers`: Number of players (default 3)
 
-**Changes**:
-- Add `gameMode: 'hotseat' | 'byod'` field to game metadata
-- Update `createNewGame()` to accept `gameMode` parameter
-- Update `StorageProvider.getGameMode()` to read from metadata
-
-**Example**:
-```javascript
-const metadata = {
-  lastModified: new Date().toISOString(),
-  gameMode: 'byod', // or 'hotseat'
-  // Future: playerSeats, hostDeviceId, etc.
-};
+**BYOD creation:**
+```js
+const code = await createNewGame('cloud', {
+  gameMode: 'byod',
+  hostDeviceId: deviceId,  // from storage.getDeviceId()
+  numPlayers: 4
+});
+// Game starts in phase 'waiting_for_players'
+// metadata.playerSeats[hostDeviceId] = { joinedAt, playerName: 'Host' }
 ```
 
-### 2. Player Seat Assignment Flow
+**Constraints:**
+- BYOD requires `hostDeviceId`; throws if missing
+- BYOD requires cloud storage; throws if `storageType !== 'cloud'`
 
-**When a player joins a BYOD game**:
+### 2. Seat Assignment (gameManager)
 
-1. Player enters game code in lobby
-2. Check if game exists and is in BYOD mode
-3. Check available player seats (from game metadata or state)
-4. Assign next available seat to this device
-5. Store assignment: `storage.setPlayerSeat(gameCode, playerID)`
-6. Update game metadata/state with new player seat assignment
-7. Load game and enter "waiting for players" phase
+**`assignPlayerSeat(code, deviceId, storageType = 'cloud')`**
 
-**Implementation Points**:
-- Add `playerSeats` to game metadata: `{ '0': { deviceId?, joinedAt? }, '1': {...}, ... }`
-- Or track in game state (G.players array already exists)
-- Need to determine "next available seat" logic
+Returns: `{ success: boolean, error?: string, seat?: { joinedAt, playerName } }`
 
-### 3. "Waiting for Players" Phase
+**Error codes (`SeatAssignmentError`):**
+- `INVALID_CODE` — Bad game code or deviceId
+- `GAME_NOT_FOUND` — Game doesn't exist
+- `WRONG_GAME_MODE` — Game is hotseat, not BYOD
+- `GAME_FULL` — All seats filled
+- `GAME_STARTED` — Past `waiting_for_players`, playerIDs already assigned
+- `UPDATE_FAILED` — Metadata update failed or unexpected storage error
+- `NOT_JOINED` / `NOT_HOST` — Used by related BYOD operations (`updatePlayerName`, `assignRandomPlayerIDs`)
 
-**Location**: `src/stores/phaseConfig.js`
+**Reconnection behavior:**
+- If the device already has a seat, `assignPlayerSeat` returns `{ success: true, seat }` (does not return `ALREADY_JOINED`).
 
-**Changes**:
-- Add new phase: `'waiting_for_players'`
-- Phase should be before `'setup'`
-- Game host immediately moves to this screen after starting the game
-- Has its own screen that with:
-  - The game code prominently displayed
-  - A text box for this player to enter their name
-  - A list of other players in the game, or "Open seat" as placeholders for the players who have not joined
-  - A Start Game button that is disabled until all seats are filled
-  - Cancel button that returns players to lobby
-  - If the host clicks Cancel, all players are returned to the lobby and the game is deleted
-- End condition: When all player seats filled (`ctx.numPlayers` players joined), the host clicks the Start Game button
-- Transition: `'waiting_for_players'` → `'setup'` when all seats filled
+**Other exports:**
+- `updatePlayerName(code, deviceId, playerName, storageType)` → `{ success, error }`
+- `isHost(code, deviceId, storageType)` → boolean
+- `getNumPlayersJoined(code, storageType)` → `{ joined, total }` or null
+- `allPlayersJoined(code, storageType)` → boolean
+- `assignRandomPlayerIDs(code, deviceId, storageType)` → `{ success, error?, assignments? }` — host only; assigns playerIDs to all joined devices
+- `getDevicePlayerID(code, deviceId, storageType)` → `'0' | '1' | ... | null`
+- `getDeviceSeat(code, deviceId, storageType)` → `{ joinedAt, playerName, playerID? } | null`
+- `getPlayerSeats(code, storageType)` → `{ [deviceId]: seat } | null`
 
-**Phase Configuration**:
-```javascript
+### 3. StorageProvider BYOD API
+
+**Join flow:**
+```js
+const result = await storage.joinGame(gameCode);
+// Calls assignPlayerSeat internally with storage.getDeviceId()
+if (result.success) { /* enter game */ }
+else { /* show result.error */ }
+```
+
+**Other methods:**
+- `updateMyPlayerName(gameCode, playerName)` — Update this device's name
+- `getMyPlayerID(gameCode)` — This device's playerID (null until game started)
+- `isBYODGame(gameCode)` — boolean
+- `getPlayerSeatsForGame(gameCode)` — `{ [deviceId]: seat }`
+- `getMySeat(gameCode)` — This device's seat
+- `amIHost(gameCode)` — boolean
+- `getDeviceId()` — UUID from localStorage or generated
+- `startBYODGame(gameCode)` — Calls `assignRandomPlayerIDs` only; phase transition is handled in `App.js` by setting `G.byodGameStarted` and running `checkPhaseTransition`
+
+### 4. Metadata Structure (BYOD)
+
+```js
 {
-  name: 'waiting_for_players',
-  next: 'setup',
-  endIf: ({ G, ctx }) => {
-    // Check if all seats are filled
-    // This might check metadata.playerSeats or G.players
-    return allSeatsFilled(G, ctx);
-  },
-  // No moves allowed in this phase
-  moves: {},
-}
-```
-
-### 4. Host vs Player Distinction
-
-**Considerations**:
-- Host is the player who creates the game
-- Host sees game code immediately
-- Other players enter game code to join
-- Host might have special permissions (e.g., kick players, start game)
-
-**Implementation**:
-- Store `hostDeviceId` in game metadata
-- Use first player seat (playerID '0') as host
-- Add UI indicators for host vs regular players
-
-### 5. Device ID Tracking (Optional)
-
-**Considerations**:
-- Use unique device IDs to prevent duplicate joins and support re-joining
-- Could use browser fingerprinting or generate UUID stored in localStorage
-- Store device ID with player seat assignment
-
-**Implementation**:
-- Generate device ID on first use: `localStorage.getItem('device_id') || generateUUID()`
-- Store with player seat: `metadata.playerSeats[playerID].deviceId = deviceId`
-
-### 6. Join Flow UI
-
-**Location**: `src/components/LobbyScreen.js`
-
-**Changes**:
-- Add "Join Game" section in lobby
-- Text input for game code entry
-- "Join" button
-- Show error if game not found, already full, etc.
-- After joining, transition to game board
-
-**UI Flow**:
-```
-Lobby Screen
-  ├─ Tab Bar (Local/Cloud) - existing
-  ├─ Games List (existing)
-  └─ Join Game Section (NEW)
-      ├─ Text input: "Enter game code"
-      └─ Button: "Join Game"
-```
-
-### 7. Rendering Logic Changes
-
-**Location**: `src/app/App.js`
-
-**Current**: Renders all player boards for hotseat mode
-```javascript
-{Array.from({ length: numPlayers }, (_, i) => (
-  <GameProvider key={i} playerID={String(i)}>
-    <WoodAndSteelState gameManager={gameManager} />
-  </GameProvider>
-))}
-```
-
-**Future**: Render single player board for BYOD mode
-```javascript
-const myPlayerID = await storage.getMyPlayerID(currentGameCode);
-const isBYOD = await storage.isBYODGame(currentGameCode);
-
-if (isBYOD && myPlayerID) {
-  // BYOD mode: render only this player's board
-  return (
-    <GameProvider playerID={myPlayerID}>
-      <WoodAndSteelState gameManager={gameManager} />
-    </GameProvider>
-  );
-} else {
-  // Hotseat mode: render all player boards
-  return (
-    <>
-      {Array.from({ length: numPlayers }, (_, i) => (
-        <GameProvider key={i} playerID={String(i)}>
-          <WoodAndSteelState gameManager={gameManager} />
-        </GameProvider>
-      ))}
-    </>
-  );
-}
-```
-
-### 8. Real-time Sync for BYOD
-
-**Already Implemented**: Supabase adapter has `subscribeToGame()` method
-
-**Usage**: Already used in `App.js` for hotseat cloud games
-
-**For BYOD**:
-- Same real-time subscription mechanism
-- All devices subscribe to the same game code
-- When any player makes a move, all devices receive update
-- Zustand store updates trigger re-renders
-
-**No changes needed** - existing implementation works for BYOD.
-
-## StorageProvider Usage
-
-### Getting Player Seat
-
-```javascript
-import { useStorage } from '../providers/StorageProvider';
-
-function MyComponent() {
-  const storage = useStorage();
-  const gameCode = 'BCDFG';
-  
-  // Get this device's player seat
-  const myPlayerID = storage.getPlayerSeat(gameCode);
-  // Returns: '0', '1', '2', etc. or null if not assigned
-}
-```
-
-### Setting Player Seat
-
-```javascript
-// When player joins game
-storage.setPlayerSeat(gameCode, '0'); // Assign player 0 to this device
-```
-
-### Checking Game Mode
-
-```javascript
-const isBYOD = await storage.isBYODGame(gameCode);
-const gameMode = await storage.getGameMode(gameCode);
-const myPlayerID = await storage.getMyPlayerID(gameCode);
-```
-
-## Game Creation
-
-### Hotseat Game (Current)
-
-```javascript
-const code = await createNewGame('local'); // or 'cloud'
-// Game mode defaults to 'hotseat'
-```
-
-### BYOD Game (Future)
-
-```javascript
-// Need to update createNewGame() to accept gameMode parameter
-const code = await createNewGame('cloud', { gameMode: 'byod', numPlayers: 4 });
-// Game starts in 'waiting_for_players' phase
-```
-
-## Join Flow
-
-### Step-by-Step
-
-1. **Player enters game code** in lobby UI
-2. **Validate game code**: Check format, existence
-3. **Check game mode**: Must be BYOD game
-4. **Check available seats**: Find next available playerID
-5. **Assign seat**: `storage.setPlayerSeat(gameCode, playerID)`
-6. **Update game metadata**: Add player to `playerSeats` or update game state
-7. **Load game**: `loadGameState(gameCode, 'cloud')`
-8. **Set current game**: `storage.setCurrentGameCode(gameCode)`
-9. **Enter game**: Transition to game board (or waiting phase)
-
-### Error Cases
-
-- Game not found
-- Game is hotseat mode (can't join)
-- Game already full (all seats taken)
-- Player already joined (device already has seat assignment)
-- Game already started (past 'waiting_for_players' phase)
-
-## Metadata Structure
-
-### Current Metadata
-
-```javascript
-{
-  lastModified: '2026-01-28T12:00:00.000Z',
-  playerNames: ['Player 0', 'Player 1', ...],
-}
-```
-
-### Future BYOD Metadata
-
-```javascript
-{
-  lastModified: '2026-01-28T12:00:00.000Z',
-  gameMode: 'byod', // or 'hotseat'
-  hostPlayerID: '0', // Player who created the game
+  lastModified: string,       // ISO 8601
+  gameMode: 'byod',
+  hostDeviceId: string,       // Device ID of creator
   playerSeats: {
-    '0': {
-      deviceId: 'uuid-here',
-      joinedAt: '2026-01-28T12:00:00.000Z',
-      playerName: 'Player 0',
-    },
-    '1': {
-      deviceId: 'uuid-here',
-      joinedAt: '2026-01-28T12:01:00.000Z',
-      playerName: 'Player 1',
-    },
-    // ... more players
-  },
+    [deviceId: string]: {
+      joinedAt: string,       // ISO 8601
+      playerName: string | null,
+      playerID?: string       // Assigned when host starts game
+    }
+  }
 }
 ```
 
-## Testing Strategy
+### 5. WaitingForPlayersScreen
 
-### Local Testing
+**Props:**
+- `gameCode` — Game code
+- `numPlayers` — Total players
+- `onStartGame` — Host clicks Start; calls `storage.startBYODGame(gameCode)`
+- `onCancel` — Cancel/delete game
+- `onReturnToLobby` — Navigate back to lobby
 
-1. **Multiple Browser Windows/Tabs**:
-   - Open app in multiple tabs
-   - Create BYOD game in one tab
-   - Join from other tabs using game code
-   - Verify each tab shows correct player board
+**Behavior:**
+- Polls `getPlayerSeatsForGame`, `amIHost`, `getMySeat` (e.g. every 2s)
+- Host: Start Game disabled until `allPlayersJoined`
+- Host Cancel: deletes game; host returns to lobby immediately. Other clients detect missing game/state through refresh/subscription paths and then return to lobby flow.
+- Players: set name via `updateMyPlayerName`, see others as "Open seat" or name
 
-2. **Device ID Simulation**:
-   - Use different localStorage contexts
-   - Or manually set `device_id` in localStorage
+### 6. App.js BYOD Rendering
 
-3. **Real-time Sync Testing**:
-   - Make moves in one tab
-   - Verify updates appear in other tabs
-   - Check for conflicts/race conditions
+**Render logic:**
+- If `phase === 'waiting_for_players'` and BYOD → `<WaitingForPlayersScreen />`
+- Else if BYOD and `myPlayerID` set → single `<GameProvider playerID={myPlayerID}>` with board
+- Else (hotseat) → all player boards
 
-### Cloud Testing
+**Device not playing:**
+- On load, if BYOD game and `getMyPlayerID` returns null (game past waiting) → lobby with `setJoinFormPrefill(code, NOT_PLAYING_MESSAGE)`
 
-1. **Multiple Devices**:
-   - Deploy to staging environment
-   - Test on actual devices (phones, tablets, computers)
-   - Verify Supabase real-time subscriptions work
+### 7. LobbyScreen Join Flow
 
-2. **Network Conditions**:
-   - Test with slow/unreliable connections
-   - Test reconnection scenarios
-   - Test conflict resolution
+- Join form visible on Cloud (BYOD) tab only
+- Submit: `storage.joinGame(code)` → on success, `onEnterGame(code, { storageType: 'cloud' })`
+- Row click on BYOD `waiting_for_players` game: same join flow, then enter
+- Error mapping: `JOIN_ERROR_MESSAGES[result.error]` for user-facing text
 
-## Migration Considerations
+---
 
-### Existing Games
+## Test Code Reference
 
-- All existing games are hotseat mode
-- `getGameMode()` defaults to 'hotseat' if metadata missing
-- No migration needed for existing games
+### Test File Locations
 
-### Backward Compatibility
+| Component / Area | Test File |
+|------------------|-----------|
+| gameManager BYOD APIs | `src/utils/gameManager.test.js` |
+| WaitingForPlayersScreen | `src/components/WaitingForPlayersScreen.test.js` (create if needed) |
+| StorageProvider joinGame | Integrate in App or E2E tests |
+| BYOD flow E2E | Manual or integration tests |
 
-- Hotseat games continue to work as before
-- BYOD games are new, don't affect hotseat
-- StorageProvider handles both modes
+### Test Stack
 
-## Implementation Checklist
+- **Framework:** Vitest
+- **React testing:** `@testing-library/react`
+- **Mocks:** `vi.fn()`, `vi.mock()`, localStorage mock
 
-- [ ] Implement `getGameMode()` to read from metadata
-- [ ] Add `gameMode` parameter to `createNewGame()`
-- [ ] Add "waiting_for_players" phase to phaseConfig
-- [ ] Implement join game UI in LobbyScreen
-- [ ] Implement player seat assignment logic
-- [ ] Update App.js rendering logic for BYOD
-- [ ] Add device ID generation/tracking
-- [ ] Add host vs player distinction
-- [ ] Update game metadata structure
-- [ ] Add error handling for join flow
-- [ ] Test local multi-tab scenario
-- [ ] Test cloud multi-device scenario
-- [ ] Document API changes
+### Mocking Patterns for BYOD
 
-## Questions to Resolve
+**localStorage (required for gameManager):**
+```js
+beforeAll(() => { global.localStorage = localStorageMock; });
+beforeEach(() => {
+  localStorageMock.clear();
+  useGameStore.getState().resetState();
+  vi.clearAllMocks();
+});
+```
 
-1. **Reconnection**: What happens if a player disconnects?
-   - Can they rejoin with same seat?
-   - Or is seat released for others?
+**BYOD metadata setup (gameManager tests):**
+```js
+// Create hotseat game, then overwrite metadata for BYOD
+const gameCode = await createNewGame('local');
+const metadataMap = JSON.parse(localStorage.getItem('game_metadata') || '[]');
+const metadataMapObj = new Map(metadataMap);
+metadataMapObj.set(gameCode, {
+  gameMode: 'byod',
+  hostDeviceId: testDeviceId,
+  playerSeats: {
+    [testDeviceId]: { joinedAt: new Date().toISOString(), playerName: 'Host' }
+  },
+  lastModified: new Date().toISOString(),
+});
+localStorage.setItem('game_metadata', JSON.stringify(Array.from(metadataMapObj.entries())));
+```
 
-2. **Host Permissions**: What can host do that others can't?
-   - Kick players?
-   - Start game early?
-   - Change game settings?
+### Required Test Coverage for BYOD
 
-3. **Seat Selection**: Can players choose their seat, or is it automatic?
-   - First-come-first-served?
-   - Host assigns?
-   - Players choose from available?
+**gameManager (already in gameManager.test.js):**
+- [ ] `createNewGame` BYOD requires hostDeviceId
+- [ ] `createNewGame` BYOD requires cloud storage
+- [ ] `assignPlayerSeat` — success, reconnection, GAME_NOT_FOUND, WRONG_GAME_MODE, GAME_FULL, GAME_STARTED
+- [ ] `updatePlayerName` — success, NOT_JOINED, GAME_NOT_FOUND
+- [ ] `isHost` — true for host, false for others
+- [ ] `getNumPlayersJoined`, `allPlayersJoined`
+- [ ] `assignRandomPlayerIDs` — success, NOT_HOST, GAME_STARTED (already assigned), INVALID_CODE, GAME_NOT_FOUND, WRONG_GAME_MODE, GAME_FULL (not all joined), UPDATE_FAILED
+- [ ] `getDevicePlayerID`, `getDeviceSeat`, `getPlayerSeats`
 
-## Related Files
+**WaitingForPlayersScreen unit:**
+- [ ] Host sees Start Game disabled until all joined
+- [ ] Host Start Game calls onStartGame
+- [ ] Player can update name
+- [ ] Cancel/Return to lobby behavior
 
-- `src/providers/StorageProvider.js` - Storage and BYOD utilities
-- `src/utils/gameManager.js` - Game creation and management
-- `src/stores/phaseConfig.js` - Phase definitions
-- `src/components/LobbyScreen.js` - Lobby UI
-- `src/app/App.js` - Main app and rendering logic
-- `src/utils/storage/supabaseAdapter.js` - Cloud storage adapter
+**Integration / E2E:**
+- [ ] Create BYOD → waiting screen → join from second tab → host starts → both see board
 
-## Additional Resources
+### Edge Cases to Test
 
-- Supabase Realtime documentation: https://supabase.com/docs/guides/realtime
-- Zustand store documentation: https://github.com/pmndrs/zustand
-- React Context API: https://react.dev/reference/react/createContext
+- Hotseat game: `assignPlayerSeat` returns WRONG_GAME_MODE
+- Game full: `assignPlayerSeat` returns GAME_FULL
+- Game started: `assignPlayerSeat` returns GAME_STARTED
+- Reconnection: same device joins again → success with existing seat
+- Non-host calls `assignRandomPlayerIDs` → NOT_HOST
+- Invalid code/device ID handling for BYOD operations
+
+---
+
+## Implementation Order (When Adding or Changing Features)
+
+1. **gameManager** — Metadata, seat assignment, host logic
+2. **StorageProvider** — joinGame, getMyPlayerID, etc. (delegates to gameManager)
+3. **Phase config** — `waiting_for_players` phase
+4. **WaitingForPlayersScreen** — UI for waiting phase
+5. **App.js** — BYOD render logic, device-not-playing handling
+6. **LobbyScreen** — Join form, BYOD tab
+7. **Tests** — Unit and integration
+
+---
+
+## Migration and Compatibility
+
+- Existing games default to `gameMode: 'hotseat'` if metadata missing.
+- Hotseat games unchanged by BYOD code.
+- No migration needed for existing games.
+
+---
+
+## Out of Scope / Open Questions
+
+- **Reconnection:** Can a disconnected player rejoin with same seat? (Current: ALREADY_JOINED returns success for same device.)
+- **Host permissions:** Kick players? Start early? Change settings? (Not implemented.)
+- **Seat selection:** Currently first-come-first-served; no seat picking.
+
+---
+
+## Related Files and Resources
+
+- `docs/LOBBY_AGENT_GUIDE.md` — Lobby screen, join form, tabs
+- `docs/CLOUD_STORAGE_TESTING.md` — Cloud and Supabase testing
+- Supabase Realtime: https://supabase.com/docs/guides/realtime
