@@ -36,7 +36,7 @@
   background-color: transparent;
   border: none;
   cursor: pointer;
-  color: var(--color-text-light);
+  color: var(--color-text);
   transition: opacity 0.2s ease;
   flex: 1;
   max-width: 5rem;
@@ -54,7 +54,6 @@
   width: 1.5rem;
   height: 1.5rem;
   opacity: 0.7;
-  filter: brightness(0) invert(1);
   transition: opacity 0.2s ease;
 }
 
@@ -115,7 +114,6 @@
 .navBar__menuIcon {
   width: 1.5rem;
   height: 1.5rem;
-  filter: brightness(0) invert(1);
 }
 
 /* Menu dropdown */
@@ -258,8 +256,8 @@
     align-items: center;
     gap: var(--spacing-xs);
     padding: var(--spacing-sm);
-    background-color: var(--color-primary);
-    color: var(--color-text-light);
+    background-color: var(--color-bg-light);
+    color: var(--color-text);
     border: 0;
     cursor: pointer;
     font-family: var(--font-body);
@@ -270,11 +268,11 @@
   }
 
   .navBar__tab:hover {
-    background-color: var(--color-primary-light);
+    background-color: var(--color-bg-hover);
   }
 
   .navBar__tab--active {
-    background-color: var(--color-bg-primary);
+    background-color: var(--color-bg-active);
     color: var(--color-text);
     border-color: var(--color-text);
     font-weight: 600;
@@ -287,12 +285,7 @@
   .navBar__tabIcon {
     width: 1.25rem;
     height: 1.25rem;
-    filter: brightness(0);
     flex-shrink: 0;
-  }
-
-  .navBar__tab--active .navBar__tabIcon {
-    filter: none;
   }
 
   .navBar__tabLabel {
