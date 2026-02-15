@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  resolve: {
+    // Prefer .ts/.tsx so JS imports like '../Contract' resolve to Contract.ts
+    extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
+  },
   plugins: [
     react({
       include: '**/*.{jsx,js,tsx,ts}',
