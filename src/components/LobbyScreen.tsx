@@ -1,7 +1,7 @@
 import React from "react";
 import { useLobbyStore } from "../stores/lobbyStore";
 import { useStorage } from "../providers/StorageProvider";
-import type { GameListItem } from "../utils/gameManager";
+import type { GameListItem } from "../utils/storage/storageAdapter";
 
 const NOT_PLAYING_MESSAGE = "This device is not playing this game.";
 

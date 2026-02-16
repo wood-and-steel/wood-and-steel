@@ -5,7 +5,7 @@
  */
 
 import { getStorageAdapter } from './storage/index';
-import type { StorageAdapter, StoredGameState } from './storage/storageAdapter';
+import type { StorageAdapter, StoredGameState, GameListItem } from './storage/storageAdapter';
 import { shuffleArray } from './random';
 import type { GameState, GameContext } from '../stores/gameStore';
 
@@ -27,17 +27,6 @@ export interface PlayerSeat {
   joinedAt: string;
   playerName: string;
   playerID?: string;
-}
-
-/** Game list item from listGames(). */
-export interface GameListItem {
-  code: string;
-  phase: string;
-  turn: number;
-  numPlayers: number;
-  lastModified: string;
-  playerNames: string[];
-  metadata: Record<string, unknown>;
 }
 
 /** Result of assignPlayerSeat / updatePlayerName. */
