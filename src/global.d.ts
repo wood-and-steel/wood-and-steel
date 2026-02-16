@@ -18,6 +18,24 @@ declare module 'react/jsx-runtime' {
   export const Fragment: unknown;
 }
 
+/* Shim so TS resolves 'react-dom' and 'react-dom/client' when @types resolution fails (e.g. with types array). */
+declare module 'react-dom' {
+  import type { ReactNode } from 'react';
+  export function createPortal(
+    children: ReactNode,
+    container: Element | DocumentFragment,
+    key?: string | null
+  ): ReactNode;
+}
+
+declare module 'react-dom/client' {
+  interface Root {
+    render(children: React.ReactNode): void;
+    unmount(): void;
+  }
+  export function createRoot(container: Element | DocumentFragment): Root;
+}
+
 declare global {
   namespace JSX {
     type Element = unknown;

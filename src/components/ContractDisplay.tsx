@@ -1,44 +1,35 @@
 import React from "react";
-import { rewardValue, railroadTieValue } from "../Contract.ts";
+import { rewardValue, railroadTieValue } from "../Contract";
 import { CommodityRichName } from "./CommodityRichName";
 import { contractTieIcons } from "../shared/assets/icons";
 import { PopupMenu, PopupMenuItem } from "./PopupMenu";
+import type { Contract } from "../Contract";
 
-function formatContractTieValue(contract) {
+function formatContractTieValue(contract: { destinationKey: string; commodity: string }): React.ReactElement {
   const ties = railroadTieValue(contract);
+  const tieIcons = contractTieIcons as Record<string, string>;
   return (
     <img
       className="contract__tieIcon"
-      src={contractTieIcons[ties]}
+      src={tieIcons[String(ties)]}
       alt={`${ties} ${ties > 1 ? "railroad ties" : "railroad tie"}`}
     />
   );
 }
 
+export interface ContractDisplayProps {
+  contract: Contract;
+  isMenuOpen: boolean;
+  onCardClick: (() => void) | null;
+  onClose: () => void;
+  onCloseOutside: () => void;
+  onToggleFulfilled: (contractID: string) => void;
+  onDelete: (contractID: string) => void;
+}
+
 /**
  * Displays a single contract card with commodity, destination, reward value, and railroad ties.
  * Clicking the card opens a popup menu for fulfilling or deleting the contract.
- * 
- * @component
- * @param {object} props
- * @param {object} props.contract - The contract object to display.
- * @param {boolean} props.isMenuOpen - Whether the popup menu is currently open.
- * @param {function} props.onCardClick - Called when the contract card is clicked (toggles menu).
- * @param {function} props.onClose - Called when the menu should be closed.
- * @param {function} props.onCloseOutside - Called when clicking outside the menu (used to prevent immediate reopening).
- * @param {function} props.onToggleFulfilled - Called when the contract's fulfilled state should be toggled. Receives the contract ID.
- * @param {function} props.onDelete - Called when the contract should be deleted. Receives the contract ID.
- * 
- * @example
- * <ContractDisplay
- *   contract={contract}
- *   isMenuOpen={openId === contract.id}
- *   onCardClick={() => handleClick(contract.id)}
- *   onClose={() => setOpenId(null)}
- *   onCloseOutside={handleCloseOutside}
- *   onToggleFulfilled={(id) => toggleFulfilled(id)}
- *   onDelete={(id) => deleteContract(id)}
- * />
  */
 export function ContractDisplay({
   contract,
@@ -48,8 +39,8 @@ export function ContractDisplay({
   onCloseOutside,
   onToggleFulfilled,
   onDelete,
-}) {
-  const cardRef = React.useRef(null);
+}: ContractDisplayProps): React.ReactElement {
+  const cardRef = React.useRef<HTMLDivElement>(null);
   const isClickable = typeof onCardClick === "function";
   const classes = [
     "contract",
@@ -79,7 +70,7 @@ export function ContractDisplay({
               role: "button",
               tabIndex: 0,
               onClick: onCardClick,
-              onKeyDown: (e) => {
+              onKeyDown: (e: React.KeyboardEvent) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   onCardClick();

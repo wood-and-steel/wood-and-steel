@@ -1,46 +1,40 @@
 import React from "react";
 import { commodities, cities } from "../data";
+import type { GameState, GameContext } from "../stores/gameStore";
+import type { Moves } from "../stores/moves";
+
+export interface EditPlaytestDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  G: GameState;
+  ctx: GameContext;
+  moves: Moves;
+}
 
 /**
  * Dialog component for playtest editing. Allows creating manual contracts and adding cities to players.
- * 
- * @component
- * @param {object} props
- * @param {boolean} props.isOpen - Whether the dialog is currently open.
- * @param {function} props.onClose - Callback function called when the dialog should be closed.
- * @param {object} props.G - The game state object.
- * @param {object} props.ctx - The game context.
- * @param {object} props.moves - Object containing game move functions (addContract, addCityToPlayer).
- * 
- * @example
- * <EditPlaytestDialog
- *   isOpen={isDialogOpen}
- *   onClose={() => setIsDialogOpen(false)}
- *   G={G}
- *   ctx={ctx}
- *   moves={moves}
- * />
  */
-export function EditPlaytestDialog({ isOpen, onClose, G, ctx, moves }) {
+export function EditPlaytestDialog({
+  isOpen,
+  onClose,
+  G,
+  ctx,
+  moves,
+}: EditPlaytestDialogProps): React.ReactElement | null {
   const [selectedCommodity, setSelectedCommodity] = React.useState("");
   const [selectedDestination, setSelectedDestination] = React.useState("");
   const [selectedType, setSelectedType] = React.useState("Private");
   const [selectedCity, setSelectedCity] = React.useState("");
 
-  // Get all commodity names
   const commodityNames = Array.from(commodities.keys()).sort();
-
-  // Get all city names
   const cityNames = Array.from(cities.keys()).sort();
 
-  // Get inactive cities (cities not in any player's activeCities)
-  const activeCitiesSet = new Set();
-  G.players.forEach(([id, player]) => {
-    player.activeCities.forEach(city => activeCitiesSet.add(city));
+  const activeCitiesSet = new Set<string>();
+  G.players.forEach(([, player]) => {
+    player.activeCities.forEach((city) => activeCitiesSet.add(city));
   });
-  const inactiveCities = cityNames.filter(city => !activeCitiesSet.has(city));
+  const inactiveCities = cityNames.filter((city) => !activeCitiesSet.has(city));
 
-  // Reset form when dialog opens/closes
   React.useEffect(() => {
     if (isOpen) {
       setSelectedCommodity("");
@@ -53,25 +47,19 @@ export function EditPlaytestDialog({ isOpen, onClose, G, ctx, moves }) {
   if (!isOpen) return null;
 
   const handleCreateContract = () => {
-    if (!selectedCommodity || !selectedDestination) {
-      return;
-    }
-    
-    const type = selectedType.toLowerCase(); // "Private" -> "private", "Market" -> "market"
+    if (!selectedCommodity || !selectedDestination) return;
+    const type = selectedType.toLowerCase() as "private" | "market";
     moves.addContract(selectedCommodity, selectedDestination, type);
     onClose();
   };
 
   const handleAddCity = () => {
-    if (!selectedCity) {
-      return;
-    }
-
+    if (!selectedCity) return;
     moves.addCityToPlayer(selectedCity);
     onClose();
   };
 
-  const handleBackdropClick = (e) => {
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -81,7 +69,7 @@ export function EditPlaytestDialog({ isOpen, onClose, G, ctx, moves }) {
     <div className="modal" onClick={handleBackdropClick}>
       <div className="modal__content" onClick={(e) => e.stopPropagation()}>
         <h2 className="modal__title">Edit Playtest</h2>
-        
+
         <div className="editPlaytestDialog__form">
           <div className="editPlaytestDialog__row">
             <label htmlFor="commodity" className="editPlaytestDialog__label">
@@ -137,9 +125,9 @@ export function EditPlaytestDialog({ isOpen, onClose, G, ctx, moves }) {
           </div>
 
           <div className="modal__actions editPlaytestDialog__actions">
-            <button 
-              type="button" 
-              className="button" 
+            <button
+              type="button"
+              className="button"
               onClick={handleCreateContract}
               disabled={!selectedCommodity || !selectedDestination}
             >
@@ -169,9 +157,9 @@ export function EditPlaytestDialog({ isOpen, onClose, G, ctx, moves }) {
           </div>
 
           <div className="modal__actions editPlaytestDialog__actions">
-            <button 
-              type="button" 
-              className="button" 
+            <button
+              type="button"
+              className="button"
               onClick={handleAddCity}
               disabled={!selectedCity}
             >

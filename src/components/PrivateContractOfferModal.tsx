@@ -1,37 +1,46 @@
 import React from "react";
-import { rewardValue, railroadTieValue, generatePrivateContractOffers } from "../Contract.ts";
+import { rewardValue, railroadTieValue, generatePrivateContractOffers } from "../Contract";
 import { CommodityRichName } from "./CommodityRichName";
 import { contractTieIcons } from "../shared/assets/icons";
+import type { GameState, GameContext } from "../stores/gameStore";
+import type { PrivateContractSpec } from "../Contract";
 
-function formatContractTieValue(spec) {
+function formatContractTieValue(spec: PrivateContractSpec): React.ReactElement {
   const ties = railroadTieValue(spec);
+  const tieIcons = contractTieIcons as Record<string, string>;
   return (
     <img
       className="contract__tieIcon"
-      src={contractTieIcons[ties]}
+      src={tieIcons[String(ties)]}
       alt={`${ties} ${ties > 1 ? "railroad ties" : "railroad tie"}`}
     />
   );
+}
+
+export interface PrivateContractOfferModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  offerCount?: number;
+  G: GameState;
+  ctx: GameContext;
+  onSelect: (commodity: string, destinationKey: string) => void;
 }
 
 /**
  * Modal for selecting a private contract from generated offers.
  * Displays 2, 3, or 4 contract options as selectable cards.
  * Backdrop click or Escape closes without selecting.
- *
- * @component
- * @param {object} props
- * @param {boolean} props.isOpen - Whether the modal is currently open
- * @param {function} props.onClose - Called when the modal should close (e.g., backdrop click, Escape)
- * @param {number} props.offerCount - Number of offers to display (2, 3, or 4)
- * @param {object} props.G - The game state object
- * @param {object} props.ctx - The game context
- * @param {function} props.onSelect - Called when an offer is selected. Receives (commodity, destinationKey)
  */
-export function PrivateContractOfferModal({ isOpen, onClose, offerCount, G, ctx, onSelect }) {
-  const [offers, setOffers] = React.useState([]);
+export function PrivateContractOfferModal({
+  isOpen,
+  onClose,
+  offerCount,
+  G,
+  ctx,
+  onSelect,
+}: PrivateContractOfferModalProps): React.ReactElement | null {
+  const [offers, setOffers] = React.useState<PrivateContractSpec[]>([]);
 
-  // Generate offers when modal opens
   React.useEffect(() => {
     if (isOpen && G && ctx) {
       const generated = generatePrivateContractOffers(G, ctx, offerCount ?? 2);
@@ -40,7 +49,7 @@ export function PrivateContractOfferModal({ isOpen, onClose, offerCount, G, ctx,
   }, [isOpen, G, ctx, offerCount]);
 
   const handleOfferClick = React.useCallback(
-    (commodity, destinationKey) => {
+    (commodity: string, destinationKey: string) => {
       onSelect(commodity, destinationKey);
       onClose();
     },
@@ -48,7 +57,7 @@ export function PrivateContractOfferModal({ isOpen, onClose, offerCount, G, ctx,
   );
 
   const handleBackdropClick = React.useCallback(
-    (e) => {
+    (e: React.MouseEvent<HTMLDivElement>) => {
       if (e.target === e.currentTarget) {
         onClose();
       }
@@ -57,7 +66,7 @@ export function PrivateContractOfferModal({ isOpen, onClose, offerCount, G, ctx,
   );
 
   const handleKeyDown = React.useCallback(
-    (e) => {
+    (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
         onClose();
@@ -78,12 +87,18 @@ export function PrivateContractOfferModal({ isOpen, onClose, offerCount, G, ctx,
       aria-labelledby="private-contract-offer-title"
       tabIndex={-1}
     >
-      <div className="modal__content privateContractOfferModal__content" onClick={(e) => e.stopPropagation()}>
-        <h2 className="privateContractOfferModal__instruction" id="private-contract-offer-title">
+      <div
+        className="modal__content privateContractOfferModal__content"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2
+          className="privateContractOfferModal__instruction"
+          id="private-contract-offer-title"
+        >
           Choose a new contract
         </h2>
         <div className="privateContractOfferModal__grid">
-          {offers.map((spec, index) => {
+          {offers.map((spec: PrivateContractSpec, index: number) => {
             const specKey = `${spec.commodity}|${spec.destinationKey}|${index}`;
             const reward = rewardValue(spec);
             return (

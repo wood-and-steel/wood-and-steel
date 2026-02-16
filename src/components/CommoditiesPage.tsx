@@ -3,44 +3,31 @@ import { commodities } from "../data";
 import { useGame } from "../hooks/useGame";
 import { CommodityRichName } from "./CommodityRichName";
 
-// Helper function
-function formatCommodityCityList(items) {
-  return items.toString().replaceAll(',', ', ');
+function formatCommodityCityList(items: string[]): string {
+  return items.toString().replace(/,/g, ", ");
 }
 
 /**
  * Page component displaying all commodities, split into two sections:
  * commodities that appear in active contracts, and all other commodities.
- * 
- * @component
- * 
- * @example
- * <CommoditiesPage />
  */
-export function CommoditiesPage() {
+export function CommoditiesPage(): React.ReactElement {
   const { G, ctx } = useGame();
 
-  // Get commodities that are in contracts
-  // 1. Active player's not-fulfilled private contracts
-  // 2. Active market contracts (not fulfilled)
-  const commoditiesInContracts = new Set();
-  
-  G.contracts.forEach(contract => {
+  const commoditiesInContracts = new Set<string>();
+  G.contracts.forEach((contract) => {
     if (
-      // Active player's not-fulfilled private contracts
-      (contract.playerID === ctx.currentPlayer && 
-       contract.type === 'private' && 
-       !contract.fulfilled) ||
-      // Active market contracts
-      (contract.type === 'market' && !contract.fulfilled)
+      (contract.playerID === ctx.currentPlayer &&
+        contract.type === "private" &&
+        !contract.fulfilled) ||
+      (contract.type === "market" && !contract.fulfilled)
     ) {
       commoditiesInContracts.add(contract.commodity);
     }
   });
 
-  // Split commodities into two lists
-  const inContractsList = [];
-  const othersList = [];
+  const inContractsList: React.ReactElement[] = [];
+  const othersList: React.ReactElement[] = [];
 
   [...commodities].forEach(([key, value]) => {
     const commodityRow = (

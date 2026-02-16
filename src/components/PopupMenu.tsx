@@ -1,9 +1,11 @@
 import React from "react";
-import { createPortal } from "react-dom";
+import ReactDOM from "react-dom";
 
 const GAP = 4;
 
-function getAnchorRect(anchorRef) {
+function getAnchorRect(
+  anchorRef: React.RefObject<HTMLElement | null> | React.RefObject<HTMLElement | null>[]
+): DOMRect | null {
   const refs = Array.isArray(anchorRef) ? anchorRef : [anchorRef];
   for (const r of refs) {
     const el = r?.current;
@@ -14,8 +16,18 @@ function getAnchorRect(anchorRef) {
   return null;
 }
 
-function useMenuPosition(anchorRef, placement, menuRef, isOpen) {
-  const [position, setPosition] = React.useState(null);
+export interface PopupMenuPlacement {
+  side?: "top" | "bottom";
+  align?: "start" | "center" | "end";
+}
+
+function useMenuPosition(
+  anchorRef: React.RefObject<HTMLElement | null> | React.RefObject<HTMLElement | null>[],
+  placement: PopupMenuPlacement | undefined,
+  menuRef: React.RefObject<HTMLDivElement | null>,
+  isOpen: boolean
+): { top: number; left: number } | null {
+  const [position, setPosition] = React.useState<{ top: number; left: number } | null>(null);
 
   const side = placement?.side ?? "bottom";
   const align = placement?.align ?? "center";
@@ -33,8 +45,8 @@ function useMenuPosition(anchorRef, placement, menuRef, isOpen) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
-    let top;
-    let left;
+    let top: number;
+    let left: number;
 
     if (side === "bottom") {
       top = anchorRect.bottom + GAP;
@@ -60,37 +72,23 @@ function useMenuPosition(anchorRef, placement, menuRef, isOpen) {
     if (top < 0) top = 0;
 
     setPosition({ top, left });
-  }, [isOpen, anchorRef, side, align]);
+  }, [isOpen, anchorRef, side, align, menuRef]);
 
   return position;
+}
+
+export interface PopupMenuProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCloseOutside?: () => void;
+  anchorRef: React.RefObject<HTMLElement | null> | React.RefObject<HTMLElement | null>[];
+  placement?: PopupMenuPlacement;
+  children: React.ReactNode;
 }
 
 /**
  * Popup menu component that positions itself relative to an anchor element.
  * Supports keyboard navigation (Escape to close) and click-outside-to-close behavior.
- * 
- * @component
- * @param {object} props
- * @param {boolean} props.isOpen - Whether the menu is currently open.
- * @param {function} props.onClose - Called when the menu should be closed.
- * @param {function} [props.onCloseOutside] - Optional callback called when clicking outside the menu (before onClose).
- * @param {React.RefObject|Array<React.RefObject>} props.anchorRef - Reference(s) to the anchor element(s) that the menu positions relative to.
- * @param {object} [props.placement] - Placement configuration object.
- * @param {'top'|'bottom'} [props.placement.side='bottom'] - Which side of the anchor to place the menu.
- * @param {'start'|'center'|'end'} [props.placement.align='center'] - How to align the menu relative to the anchor.
- * @param {React.ReactNode} props.children - Menu items to render (typically PopupMenuItem components).
- * 
- * @example
- * <PopupMenu
- *   isOpen={isOpen}
- *   onClose={() => setIsOpen(false)}
- *   onCloseOutside={handleCloseOutside}
- *   anchorRef={buttonRef}
- *   placement={{ side: "bottom", align: "start" }}
- * >
- *   <PopupMenuItem onClick={handleAction1}>Action 1</PopupMenuItem>
- *   <PopupMenuItem onClick={handleAction2}>Action 2</PopupMenuItem>
- * </PopupMenu>
  */
 export function PopupMenu({
   isOpen,
@@ -99,13 +97,13 @@ export function PopupMenu({
   anchorRef,
   placement = { side: "bottom", align: "center" },
   children,
-}) {
-  const menuRef = React.useRef(null);
+}: PopupMenuProps): React.ReactElement | null {
+  const menuRef = React.useRef<HTMLDivElement>(null);
   const position = useMenuPosition(anchorRef, placement, menuRef, isOpen);
 
   React.useEffect(() => {
     if (!isOpen) return;
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -114,8 +112,8 @@ export function PopupMenu({
 
   React.useEffect(() => {
     if (!isOpen) return;
-    const handleMouseDown = (e) => {
-      const target = e.target;
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as Node;
       const inMenu = menuRef.current?.contains(target);
       const refs = Array.isArray(anchorRef) ? anchorRef : [anchorRef];
       const inAnchor = refs.some((r) => r?.current?.contains(target));
@@ -145,30 +143,31 @@ export function PopupMenu({
     </div>
   );
 
-  return createPortal(menu, document.body);
+  return ReactDOM.createPortal(menu, document.body);
+}
+
+export interface PopupMenuItemProps {
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  children: React.ReactNode;
+  [key: string]: unknown;
 }
 
 /**
  * Individual menu item within a PopupMenu.
- * 
- * @component
- * @param {object} props
- * @param {function} [props.onClick] - Called when the menu item is clicked.
- * @param {React.ReactNode} props.children - The content to display in the menu item.
- * @param {any} [props.rest] - Additional props are spread to the underlying button element.
- * 
- * @example
- * <PopupMenuItem onClick={() => handleAction()}>
- *   Delete Item
- * </PopupMenuItem>
  */
-export function PopupMenuItem({ onClick, children, ...rest }) {
-  const handleClick = (e) => {
+export function PopupMenuItem({ onClick, children, ...rest }: PopupMenuItemProps): React.ReactElement {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     onClick?.(e);
   };
   return (
-    <button type="button" className="popupMenu__item" role="menuitem" onClick={handleClick} {...rest}>
+    <button
+      type="button"
+      className="popupMenu__item"
+      role="menuitem"
+      onClick={handleClick}
+      {...rest}
+    >
       {children}
     </button>
   );
