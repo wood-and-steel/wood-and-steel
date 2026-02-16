@@ -42,7 +42,7 @@ export function isCorrectPlayerTurn(playerID: string, currentPlayer: string): bo
 }
 
 /** Minimal ctx shape needed for move validation. */
-export interface CtxForValidation {
+interface CtxForValidation {
   phase: string;
   currentPlayer?: string;
 }

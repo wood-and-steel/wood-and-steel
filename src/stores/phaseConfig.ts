@@ -18,7 +18,7 @@ interface PhaseTurnConfig {
 }
 
 /** Single phase config: next phase, endIf, onEnd, turn. */
-export interface PhaseConfigEntry {
+interface PhaseConfigEntry {
   next: string;
   endIf?: (params: PhaseParams) => boolean;
   onEnd?: ((params: PhaseParams) => void) | null;

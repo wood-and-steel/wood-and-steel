@@ -20,7 +20,7 @@ import {
 import type { ExportedGame, ImportOptions, MigrateOptions } from './migration';
 
 /** Migration test results. */
-export interface MigrateTestResult {
+interface MigrateTestResult {
   exported: number;
   imported: { success: number; failed: number; skipped: number; errors: Array<{ code: string; error: string }> };
 }

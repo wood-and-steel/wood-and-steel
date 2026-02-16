@@ -241,7 +241,7 @@ export async function listGames(storageType: StorageType = 'local'): Promise<Gam
   }
 }
 
-export interface CreateNewGameOptions {
+interface CreateNewGameOptions {
   gameMode?: 'hotseat' | 'byod';
   hostDeviceId?: string | null;
   numPlayers?: number;

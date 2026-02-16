@@ -1,5 +1,5 @@
 import { useGameStore } from './gameStore';
-import { getPhaseConfig, executePhaseOnEnd,PhaseConfigEntry } from './phaseConfig';
+import { getPhaseConfig, executePhaseOnEnd } from './phaseConfig';
 import { getCurrentGameCode, saveGameState } from '../utils/gameManager';
 import type { GameState, GameContext } from './gameStore';
 
@@ -9,7 +9,7 @@ import type { GameState, GameContext } from './gameStore';
  * @returns true if a phase transition occurred, false otherwise.
  */
 export function checkPhaseTransition(G: GameState, ctx: GameContext): boolean {
-  const currentPhaseConfig: PhaseConfigEntry | undefined = getPhaseConfig(ctx.phase);
+  const currentPhaseConfig = getPhaseConfig(ctx.phase);
 
   if (!currentPhaseConfig) {
     console.warn(`[checkPhaseTransition] Unknown phase: ${ctx.phase}`);
