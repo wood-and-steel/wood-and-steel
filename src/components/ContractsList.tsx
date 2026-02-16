@@ -17,12 +17,8 @@ export interface ContractsListProps {
   onClaimContract?: (contractID: string) => void;
 }
 
-function compareContractsFn(a: Contract, b: Contract): number {
-  const aValue = (a.type === "market" ? 10 : 0) + (a.fulfilled ? 100 : 0);
-  const bValue = (b.type === "market" ? 10 : 0) + (b.fulfilled ? 100 : 0);
-  if (aValue < bValue) return -1;
-  if (aValue > bValue) return 1;
-  return 0;
+function compareContractsByCreation(a: Contract, b: Contract): number {
+  return a.creationTime - b.creationTime;
 }
 
 /**
@@ -71,7 +67,7 @@ export function ContractsList({
 
   return (
     <div className="contractsList">
-      {[...filteredContracts].sort(compareContractsFn).map((contract: Contract) => (
+      {[...filteredContracts].sort(compareContractsByCreation).map((contract: Contract) => (
         <ContractDisplay
           key={contract.id}
           contract={contract}

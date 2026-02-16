@@ -191,7 +191,7 @@ export function claimMarketContract(contractID: string): void {
 
   useGameStore.setState((state) => {
     const updatedContracts = state.G.contracts.map((c) =>
-      c.id === contractID ? { ...c, playerID: ctx.currentPlayer } as Contract : c
+      c.id === contractID ? { ...c, playerID: ctx.currentPlayer, turnsHeld: 1 } as Contract : c
     );
 
     const activeContractKeys = new Set(

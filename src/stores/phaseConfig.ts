@@ -57,14 +57,20 @@ export const phaseConfig: Record<PhaseName, PhaseConfigEntry> = {
     turn: { onEnd: null },
   },
 
-  // Phase 2: Play. Main game with all normal actions.
+  // Phase 2: Play. Main game with all normal actions
   play: {
     next: 'scoring',
     endIf: () => false,
     onEnd: null,
     turn: {
-      // End-of-round actions (e.g. grow independent railroads) when last player's turn ends.
+      // Increment turnsHeld for unfulfilled market contracts held by current player
       onEnd: ({ G, ctx }) => {
+        G.contracts = G.contracts.map((c) =>
+          c.type === 'market' && !c.fulfilled && c.playerID === ctx.currentPlayer
+            ? { ...c, turnsHeld: (c.turnsHeld ?? 0) + 1 }
+            : c
+        );
+        // End-of-round actions when last player's turn ends
         if (ctx.playOrderPos === ctx.playOrder.length - 1) {
           console.log(growIndependentRailroads(G));
         }

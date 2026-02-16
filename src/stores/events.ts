@@ -1,5 +1,4 @@
 /**
- * Events API for Phase 3 (Turn Management)
  * Provides event functions for managing turns and phase transitions.
  */
 
@@ -22,17 +21,11 @@ export function endTurn(): void {
   const state = useGameStore.getState();
   const { G, ctx } = state;
 
-  // Execute phase-specific turn onEnd hook before advancing
-  // This runs at the end of the current player's turn, before moving to next player
-  // For play phase, this calls growIndependentRailroads at end of round
-  // The hook receives the current G and ctx, and may mutate G (e.g., growIndependentRailroads)
   executeTurnOnEnd(ctx.phase, G, ctx);
 
-  // Calculate next player position
   const nextPlayOrderPos = (ctx.playOrderPos + 1) % ctx.playOrder.length;
   const nextPlayer = ctx.playOrder[nextPlayOrderPos];
 
-  // Increment turn when wrapping to player 0 (completing a full round)
   const nextTurn = nextPlayOrderPos === 0 ? ctx.turn + 1 : ctx.turn;
 
   // Update state immutably

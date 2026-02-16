@@ -11,6 +11,9 @@ export interface Contract {
   type: "market" | "private";
   fulfilled: boolean;
   playerID: string | null;
+  creationTime: number;
+  /** Number of turns the current holder has held it, or null if unassigned. Must be null when playerID is null; may be a non-negative integer when playerID is set. */
+  turnsHeld: number | null;
 }
 
 /** Spec for a private contract before it is assigned to a player. */
@@ -417,13 +420,16 @@ export function newContract(
   }
 
   const city = cities.get(destinationKey)!;
+  const now = Date.now();
   return {
-    id: `${commodity.substring(0, 3)}-${city.id}-${Date.now().toString(16)}`,
+    id: `${commodity.substring(0, 3)}-${city.id}-${now.toString(16)}`,
     destinationKey,
     commodity,
     type,
     fulfilled,
     playerID,
+    creationTime: now,
+    turnsHeld: null,
   };
 }
 
