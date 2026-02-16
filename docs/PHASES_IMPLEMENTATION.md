@@ -13,9 +13,11 @@
 | Turn end (e.g. grow indies) | `src/stores/events.js` | Calls `executeTurnOnEnd(ctx.phase, G, ctx)` |
 | Which moves are allowed in which phase | `src/stores/moveValidation.js` | `MOVES_BY_PHASE` |
 | Move implementation + phase checks + `checkPhaseTransition` | `src/stores/gameActions.js` | Per-move `ctx.phase` checks; call `checkPhaseTransition` after state-changing moves |
+| Moves wiring consumed by UI | `src/stores/moves.js` | Ensure new/changed moves are exposed via `createMoves` |
 | Initial phase (hotseat/BYOD) | `src/stores/gameStore.ts` (initial ctx), `src/utils/gameManager.js` (BYOD initial phase) | Default `ctx.phase` |
+| Phase-dependent app routing (lobby/waiting/game board) | `src/app/App.js` | `waiting_for_players` branch and BYOD transitions |
+| Provider path from UI to moves/state | `src/providers/GameProvider.js`, `src/hooks/useGame.js` | Verify phase/move changes are reachable by components |
 | Phase in UI (tabs, scoring stub, setup→play hint) | `src/Board.tsx` | `currentPhase`, scoring branch, `prevPhaseRef` effect |
-| Phase label and phase-specific controls | `src/components/NavBar.js` | `currentPhase` prop |
 | Setup: starting city pairs + “Choose Starting Cities” | `src/components/PlayerBoard.js` | `STARTING_CITY_PAIRS`, setup-only UI |
 | BYOD waiting screen and start-game transition | `src/app/App.js`, `src/components/WaitingForPlayersScreen.js` | `waiting_for_players` handling |
 | Phase in serialization/persistence | `src/utils/stateSerialization.js`, storage adapters | Ensure `ctx.phase` is read/written |
@@ -32,7 +34,7 @@ Phases are defined in `src/stores/phaseConfig.ts`. Each phase has:
 - **`onEnd`**: Optional hook run when the phase ends (before switching to `next`).
 - **`turn.onEnd`**: Optional hook run at the end of each turn (e.g. end-of-round logic).
 
-Phase transitions are triggered by **`checkPhaseTransition(G, ctx)`** in `src/stores/phaseManager.ts`. Game actions that change state (e.g. adding a contract, ending turn) call it after updating state so setup→play (and future play→scoring) can happen automatically.
+Phase transitions are triggered by **`checkPhaseTransition(G, ctx)`** in `src/stores/phaseManager.ts`. In current code, most state-changing actions call it after updates, but `endTurn` currently does not. If you add a transition condition that depends on turn progression (rather than contract/city updates), add a transition check in `gameActions.endTurn` or in `events.endTurn`.
 
 ---
 
@@ -59,8 +61,8 @@ Phase transitions are triggered by **`checkPhaseTransition(G, ctx)`** in `src/st
   5. Norfolk & Raleigh  
   6. Charleston & Savannah  
 
-  Defined in `src/components/PlayerBoard.js` as `STARTING_CITY_PAIRS`. Filter out already-chosen pairs in the same component (or parent) when rendering options.
-- **UI:** “Phase: Setup”; starting-city selector and “Choose Starting Cities” (no manual “End Turn”); market contracts and independent railroads hidden. NavBar and PlayerBoard use `currentPhase === 'setup'`.
+  Defined in `src/components/PlayerBoard.js` as `STARTING_CITY_PAIRS`. Current behavior keeps all six buttons visible and disables already-chosen pairs.
+- **UI:** “Phase: Setup”; starting-city selector and “Choose Starting Cities” (no manual “End Turn” and no market contract button). Independent railroads tab/page can still be viewed, but railroad actions are blocked by move validation outside `play`.
 - **Moves allowed:** Only `generateStartingContract` (see `MOVES_BY_PHASE` in `moveValidation.js`).
 
 ### 3. Play phase (`play`)
@@ -102,14 +104,14 @@ Use this when adding phases, changing transitions, or updating phase-specific lo
 
 4. **Phase-specific UI**
    - **Board layout / scoring stub:** `src/Board.tsx` — use `currentPhase` (from `ctx.phase`) to branch (e.g. scoring view) and pass `currentPhase` to NavBar and PlayerBoard.
-   - **Nav bar:** `src/components/NavBar.js` — use `currentPhase` for labels and which controls show.
-   - **Starting cities / setup-only UI:** `src/components/PlayerBoard.js` — use `currentPhase === 'setup'` and `STARTING_CITY_PAIRS`; filter out already-chosen pairs when rendering.
+   - **Starting cities / setup-only UI:** `src/components/PlayerBoard.js` — use `currentPhase === 'setup'` and `STARTING_CITY_PAIRS`; current behavior disables chosen pairs (does not remove them).
 
 5. **New phase in types**
-   - If you add a new phase ID, update any TypeScript or JSDoc types that enumerate phases (e.g. `'play' | 'setup' | 'scoring'` in `Board.tsx` or `NavBar.d.ts`) to include the new phase.
+   - If you add a new phase ID, update any TypeScript or JSDoc types that enumerate phases (e.g. `'play' | 'setup' | 'scoring'` in `Board.tsx`, `NavBar.d.ts`, and JSDoc in JS components) to include the new phase where applicable.
 
 6. **Tests**
    - In `src/utils/gameManager.test.js`: adjust or add tests for phase transitions and for `ctx.phase` in saved state when you change transition logic or add phases.
+   - If transition checks move (for example into turn-end flow), add/adjust tests for that path too.
 
 7. **Docs**
    - Update this file: add the phase to “Phase definitions,” update “Quick reference” if new files or responsibilities appear.
@@ -146,5 +148,5 @@ play: {
 - **Single source of phase structure:** `src/stores/phaseConfig.ts`.
 - **Transitions:** `phaseManager.checkPhaseTransition`; called from `gameActions.js` after relevant moves.
 - **Moves per phase:** `moveValidation.js` → `MOVES_BY_PHASE`; enforce in `gameActions.js`.
-- **UI:** `Board.tsx` (routing/scoring), `NavBar.js` (phase label/controls), `PlayerBoard.js` (setup city pairs and setup-only UI).
+- **UI:** `Board.tsx` (phase branching/scoring), `NavBar.js` (tabs/menu/hints), `PlayerBoard.js` (setup city pairs and setup-only controls).
 - When in doubt, search for `ctx.phase`, `currentPhase`, and phase names (`'setup'`, `'play'`, `'scoring'`, `'waiting_for_players'`) to find all call sites.
