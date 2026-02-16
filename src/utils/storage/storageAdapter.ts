@@ -5,13 +5,11 @@
  * All storage implementations (localStorage, Supabase, etc.) must implement this interface.
  * This abstraction allows the game manager to work with different storage backends
  * without changing its core logic.
+ *
+ * Stored state is the serialized shape (SerializedState from stateSerialization).
  */
 
-/** Game state shape as stored/loaded by adapters. */
-export interface StoredGameState {
-  G: Record<string, unknown>;
-  ctx: Record<string, unknown>;
-}
+import type { SerializedState } from '../stateSerialization';
 
 /** Game list item returned by listGames(). */
 export interface GameListItem {
@@ -35,7 +33,7 @@ export type SaveGameResult = boolean | SaveGameResultObject;
 
 /** Callback for subscribeToGame: (state, metadata, lastModified) => void */
 export type SubscribeCallback = (
-  state: StoredGameState | null,
+  state: SerializedState | null,
   metadata: Record<string, unknown>,
   lastModified: string | null
 ) => void;
@@ -48,14 +46,14 @@ export type SubscribeCallback = (
 export class StorageAdapter {
   async saveGame(
     _code: string,
-    _state: StoredGameState,
+    _state: SerializedState,
     _metadata: Record<string, unknown>,
     _expectedLastModified?: string | null
   ): Promise<SaveGameResult> {
     throw new Error('saveGame must be implemented by storage adapter');
   }
 
-  async loadGame(_code: string): Promise<StoredGameState | null> {
+  async loadGame(_code: string): Promise<SerializedState | null> {
     throw new Error('loadGame must be implemented by storage adapter');
   }
 

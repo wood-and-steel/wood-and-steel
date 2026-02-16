@@ -5,7 +5,9 @@
  */
 
 import { getStorageAdapter } from './storage/index';
-import type { StorageAdapter, StoredGameState, GameListItem } from './storage/storageAdapter';
+import type { StorageAdapter, GameListItem } from './storage/storageAdapter';
+import { serializeState } from './stateSerialization';
+import type { SerializedState } from './stateSerialization';
 import { shuffleArray } from './random';
 import type { GameState, GameContext } from '../stores/gameStore';
 
@@ -289,8 +291,8 @@ export async function createNewGame(
 
     // BYOD: initial phase is waiting_for_players; hotseat: setup
     const initialPhase = gameMode === 'byod' ? 'waiting_for_players' : 'setup';
-    const initialState: StoredGameState = {
-      G: { contracts: [], players: [], independentRailroads: [] },
+    const initialState: SerializedState = {
+      G: { contracts: [], players: [], independentRailroads: {} },
       ctx: {
         phase: initialPhase,
         currentPlayer: '0',
@@ -350,7 +352,10 @@ export async function saveGameState(
       return false;
     }
 
-    const state: StoredGameState = { G: G as unknown as Record<string, unknown>, ctx: ctx as unknown as Record<string, unknown> };
+    const state: SerializedState = serializeState(
+      G as unknown as Record<string, unknown>,
+      ctx as unknown as Record<string, unknown>
+    );
 
     // Resolve adapter: use storageType, or which current-game key matches this code
     let adapterStorageType: StorageType = storageType ?? 'local';

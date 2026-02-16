@@ -21,12 +21,12 @@
 
 import {
   StorageAdapter,
-  type StoredGameState,
   type GameListItem,
   type SaveGameResultObject,
   type SubscribeCallback,
 } from './storageAdapter';
 import { serializeState, deserializeState, isValidSerializedState } from '../stateSerialization';
+import type { SerializedState } from '../stateSerialization';
 import { createClient, type SupabaseClient, type RealtimeChannel } from '@supabase/supabase-js';
 
 /** Row shape from games table (state is serialized). */
@@ -71,7 +71,7 @@ export class SupabaseAdapter extends StorageAdapter {
   /** Save with optimistic locking: if expectedLastModified provided and server is >10s newer, flag conflict (last-write-wins). */
   async saveGame(
     code: string,
-    state: StoredGameState,
+    state: SerializedState,
     metadata: Record<string, unknown> = {},
     expectedLastModified: string | null = null
   ): Promise<boolean | SaveGameResultObject> {
@@ -241,7 +241,7 @@ export class SupabaseAdapter extends StorageAdapter {
     }
   }
 
-  async loadGame(code: string): Promise<StoredGameState | null> {
+  async loadGame(code: string): Promise<SerializedState | null> {
     const operation = 'loadGame';
 
     if (!this._isValidCode(code)) {
@@ -284,7 +284,7 @@ export class SupabaseAdapter extends StorageAdapter {
       }
 
       try {
-        return deserializeState(stateData) as StoredGameState;
+        return deserializeState(stateData);
       } catch (deserializeError) {
         const err = deserializeError as Error;
         console.error(
@@ -443,7 +443,7 @@ export class SupabaseAdapter extends StorageAdapter {
             const newData = payload.new;
             if (newData?.state) {
               if (isValidSerializedState(newData.state)) {
-                const state = deserializeState(newData.state) as StoredGameState;
+                const state = deserializeState(newData.state);
                 const metadata = (newData.metadata ?? {}) as Record<string, unknown>;
                 const lastModified = newData.last_modified ?? null;
                 callback(state, metadata, lastModified);

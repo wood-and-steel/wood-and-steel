@@ -8,13 +8,13 @@
 import { LocalStorageAdapter } from './localStorageAdapter';
 import { SupabaseAdapter } from './supabaseAdapter';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../config/storage';
-import type { StoredGameState } from './storageAdapter';
+import type { SerializedState } from '../stateSerialization';
 import type { GameListItem } from './storageAdapter';
 
 /** Single exported game for migration. */
 export interface ExportedGame {
   code: string;
-  state: StoredGameState;
+  state: SerializedState;
   metadata: Record<string, unknown>;
 }
 

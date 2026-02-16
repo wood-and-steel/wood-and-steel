@@ -11,7 +11,7 @@
  */
 
 import { StorageAdapter } from './storageAdapter';
-import type { StoredGameState, GameListItem } from './storageAdapter';
+import type { GameListItem } from './storageAdapter';
 import { serializeState, deserializeState, isValidSerializedState } from '../stateSerialization';
 import type { SerializedState } from '../stateSerialization';
 
@@ -92,7 +92,7 @@ export class LocalStorageAdapter extends StorageAdapter {
 
   async saveGame(
     code: string,
-    state: StoredGameState,
+    state: SerializedState,
     metadata: Record<string, unknown> = {}
   ): Promise<boolean> {
     const operation = 'saveGame';
@@ -154,7 +154,7 @@ export class LocalStorageAdapter extends StorageAdapter {
     }
   }
 
-  async loadGame(code: string): Promise<StoredGameState | null> {
+  async loadGame(code: string): Promise<SerializedState | null> {
     const operation = 'loadGame';
 
     if (!this._isValidCode(code)) {
@@ -184,7 +184,7 @@ export class LocalStorageAdapter extends StorageAdapter {
       }
 
       try {
-        return deserializeState(stateData) as StoredGameState;
+        return deserializeState(stateData);
       } catch (deserializeError) {
         console.error(`[LocalStorageAdapter.${operation}] Deserialization failed for game "${normalizedCode}":`, deserializeError);
         try {
