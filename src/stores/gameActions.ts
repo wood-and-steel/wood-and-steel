@@ -116,10 +116,32 @@ export function generateMarketContract(): void {
     return;
   }
 
-  const contract = generateMarketContractContract(G);
+  const activeContractKeys = new Set(
+    G.contracts
+      .filter((c) => !c.fulfilled)
+      .map((c) => `${c.commodity}|${c.destinationKey}`)
+  );
+
+  const maxAttempts = 50;
+  let contract: Contract | undefined;
+
+  for (let attempts = 0; attempts < maxAttempts; attempts++) {
+    const candidate = generateMarketContractContract(G);
+    if (!candidate) {
+      console.error('[generateMarketContract] Contract generation failed');
+      return;
+    }
+    const key = `${candidate.commodity}|${candidate.destinationKey}`;
+    if (!activeContractKeys.has(key)) {
+      contract = candidate;
+      break;
+    }
+  }
 
   if (!contract) {
-    console.error('[generateMarketContract] Contract generation failed');
+    console.error(
+      '[generateMarketContract] Failed to generate a market contract that does not duplicate an active contract after 50 attempts'
+    );
     return;
   }
 
