@@ -167,11 +167,6 @@ export function WoodAndSteelState({
       <div className={`boardPage ${isHidden ? 'boardPage--hidden' : ''}`}>
         <form className="form" method="post" onSubmit={handleSubmit}>
           <NavBar
-            input={input}
-            setInput={setInput}
-            startingContractExists={startingContractExists}
-            currentPhase={currentPhase}
-            G={G}
             gameManager={gameManager ?? {}}
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
@@ -201,11 +196,6 @@ export function WoodAndSteelState({
       <form className="form" method="post" onSubmit={handleSubmit}>
         <div>
           <NavBar
-            input={input}
-            setInput={setInput}
-            startingContractExists={startingContractExists}
-            currentPhase={currentPhase}
-            G={G}
             gameManager={gameManager ?? {}}
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}

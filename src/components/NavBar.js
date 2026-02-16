@@ -19,35 +19,29 @@ function useIsDesktop() {
 /**
  * Navigation bar component with responsive design. Shows tabs for different views on desktop and mobile,
  * and includes a hamburger menu for game management actions.
- * 
+ *
  * @component
  * @param {object} props
- * @param {string} props.input - Search input value (currently unused but kept for compatibility).
- * @param {function} props.setInput - Setter for search input (currently unused but kept for compatibility).
- * @param {boolean} props.startingContractExists - Whether starting contract exists (currently unused but kept for compatibility).
- * @param {'setup'|'play'|'scoring'} props.currentPhase - The current game phase.
- * @param {object} props.G - The game state object.
  * @param {object} props.gameManager - Game manager instance with currentGameCode property.
  * @param {function} props.onNavigateToLobby - Called when user wants to navigate to the lobby.
  * @param {function} props.onOpenEditPlaytest - Called when user wants to open the edit playtest dialog.
  * @param {'board'|'commodities'|'indies'|'cities'} props.activeTab - The currently active tab ID.
  * @param {function} props.onTabChange - Called when a tab is clicked. Receives the tab ID.
- * 
+ * @param {boolean} [props.showRailroadHint] - Whether to show the railroad hint callout.
+ * @param {function} [props.onDismissHint] - Called when the railroad hint is dismissed.
+ *
  * @example
  * <NavBar
- *   input={searchInput}
- *   setInput={setSearchInput}
- *   startingContractExists={true}
- *   currentPhase="play"
- *   G={G}
  *   gameManager={gameManager}
  *   onNavigateToLobby={() => navigateToLobby()}
  *   onOpenEditPlaytest={() => openEditDialog()}
  *   activeTab="board"
  *   onTabChange={(tabId) => setActiveTab(tabId)}
+ *   showRailroadHint={showRailroadHint}
+ *   onDismissHint={onDismissHint}
  * />
  */
-export function NavBar({ input, setInput, startingContractExists, currentPhase, G, gameManager, onNavigateToLobby, onOpenEditPlaytest, activeTab, onTabChange, showRailroadHint, onDismissHint }) {
+export function NavBar({ gameManager, onNavigateToLobby, onOpenEditPlaytest, activeTab, onTabChange, showRailroadHint, onDismissHint }) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const menuButtonRef = React.useRef(null);
   const menuButtonDesktopRef = React.useRef(null);

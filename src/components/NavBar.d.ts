@@ -1,13 +1,7 @@
-/** Type declarations for NavBar.js so TS consumers (e.g. Board.tsx) get full props including showRailroadHint/onDismissHint. */
+/** Type declarations for NavBar.js so TS consumers (e.g. Board.tsx) get full props. */
 import type * as React from 'react';
-import type { GameState } from '../stores/gameStore';
 
 export interface NavBarProps {
-  input: string;
-  setInput: (value: string) => void;
-  startingContractExists: boolean;
-  currentPhase: 'play' | 'setup' | 'scoring';
-  G: GameState;
   gameManager: { currentGameCode?: string };
   onNavigateToLobby: () => void;
   onOpenEditPlaytest: () => void;
