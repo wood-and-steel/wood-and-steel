@@ -7,13 +7,13 @@ import type { GameState, GameContext } from './gameStore';
  */
 
 /** Params passed to phase endIf/onEnd and turn onEnd hooks. */
-export interface PhaseParams {
+interface PhaseParams {
   G: GameState;
   ctx: GameContext;
 }
 
 /** Turn config for a phase. */
-export interface PhaseTurnConfig {
+interface PhaseTurnConfig {
   onEnd: ((params: PhaseParams) => void) | null;
 }
 
