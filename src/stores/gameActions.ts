@@ -159,6 +159,78 @@ export function generateMarketContract(): void {
   saveCurrentGameState();
 }
 
+export function claimMarketContract(contractID: string): void {
+  const { G, ctx } = useGameStore.getState();
+
+  if (!isMoveAllowed('claimMarketContract', ctx)) {
+    console.warn('[claimMarketContract] Move not allowed in current phase');
+    return;
+  }
+
+  if (typeof contractID !== 'string' || !contractID) {
+    console.error('[claimMarketContract] contractID must be a non-empty string');
+    return;
+  }
+
+  const contractIndex = G.contracts.findIndex((c) => c.id === contractID);
+  if (contractIndex === -1) {
+    console.error(`[claimMarketContract] Contract with ID "${contractID}" not found`);
+    return;
+  }
+
+  const contract = G.contracts[contractIndex];
+  if (contract.type !== 'market') {
+    console.error(`[claimMarketContract] Contract "${contractID}" is not a market contract`);
+    return;
+  }
+
+  if (contract.playerID !== null) {
+    console.error(`[claimMarketContract] Contract "${contractID}" is already claimed`);
+    return;
+  }
+
+  useGameStore.setState((state) => {
+    const updatedContracts = state.G.contracts.map((c) =>
+      c.id === contractID ? { ...c, playerID: ctx.currentPlayer } as Contract : c
+    );
+
+    const activeContractKeys = new Set(
+      updatedContracts
+        .filter((c) => !c.fulfilled)
+        .map((c) => `${c.commodity}|${c.destinationKey}`)
+    );
+
+    const maxAttempts = 50;
+    let newMarketContract: Contract | undefined;
+
+    for (let attempts = 0; attempts < maxAttempts; attempts++) {
+      const candidate = generateMarketContractContract(state.G);
+      if (!candidate) break;
+      const key = `${candidate.commodity}|${candidate.destinationKey}`;
+      if (!activeContractKeys.has(key)) {
+        newMarketContract = candidate;
+        break;
+      }
+    }
+
+    const contracts = newMarketContract
+      ? [newMarketContract, ...updatedContracts]
+      : updatedContracts;
+
+    return {
+      G: {
+        ...state.G,
+        contracts,
+      },
+    } as Partial<GameStoreState>;
+  });
+
+  const updatedState = useGameStore.getState();
+  checkPhaseTransition(updatedState.G, updatedState.ctx);
+
+  saveCurrentGameState();
+}
+
 export function addContract(
   commodity: string,
   destinationKey: string,

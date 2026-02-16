@@ -4,6 +4,7 @@ import {
   generateStartingContract,
   generatePrivateContract,
   generateMarketContract,
+  claimMarketContract,
   addContract,
   toggleContractFulfilled,
   deleteContract,
@@ -20,6 +21,7 @@ export interface Moves {
   generateStartingContract: (activeCities: string[], playerID?: string) => void;
   generatePrivateContract: () => void;
   generateMarketContract: () => void;
+  claimMarketContract: (contractID: string) => void;
   addContract: (commodity: string, destinationKey: string, type: 'private' | 'market') => void;
   toggleContractFulfilled: (contractID: string) => void;
   deleteContract: (contractID: string) => void;
@@ -44,6 +46,8 @@ export function createMoves(
     generatePrivateContract: () => generatePrivateContract(),
 
     generateMarketContract: () => generateMarketContract(),
+
+    claimMarketContract: (contractID: string) => claimMarketContract(contractID),
 
     addContract: (commodity: string, destinationKey: string, type: 'private' | 'market') =>
       addContract(commodity, destinationKey, type),
