@@ -91,7 +91,7 @@ const storeImpl = (
 
   getMarketContracts: () => {
     const { G } = get();
-    return G.contracts.filter((c) => c.type === 'market');
+    return G.contracts.filter((c) => c.type === 'market' && c.playerID === null);
   },
 
   getCurrentPlayer: () => {

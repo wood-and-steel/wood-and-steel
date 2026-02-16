@@ -25,6 +25,7 @@ export interface ContractDisplayProps {
   onCloseOutside: () => void;
   onToggleFulfilled: (contractID: string) => void;
   onDelete: (contractID: string) => void;
+  onClaimContract?: (contractID: string) => void;
 }
 
 /**
@@ -39,6 +40,7 @@ export function ContractDisplay({
   onCloseOutside,
   onToggleFulfilled,
   onDelete,
+  onClaimContract,
 }: ContractDisplayProps): React.ReactElement {
   const cardRef = React.useRef<HTMLDivElement>(null);
   const isClickable = typeof onCardClick === "function";
@@ -57,6 +59,11 @@ export function ContractDisplay({
 
   const handleDelete = () => {
     onDelete(contract.id);
+    onClose();
+  };
+
+  const handleClaim = () => {
+    onClaimContract?.(contract.id);
     onClose();
   };
 
@@ -101,6 +108,11 @@ export function ContractDisplay({
           <PopupMenuItem onClick={handleToggle}>
             {contract.fulfilled ? "Unfulfill Contract" : "Fulfill Contract"}
           </PopupMenuItem>
+          {contract.type === "market" &&
+            contract.playerID == null &&
+            onClaimContract != null && (
+              <PopupMenuItem onClick={handleClaim}>Claim Contract</PopupMenuItem>
+            )}
           {!contract.fulfilled && (
             <PopupMenuItem onClick={handleDelete}>Delete</PopupMenuItem>
           )}

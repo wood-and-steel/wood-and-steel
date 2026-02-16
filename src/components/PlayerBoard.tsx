@@ -25,6 +25,7 @@ export interface PlayerBoardProps {
   onOpenPrivateContractModal?: (offerCount: number) => void;
   onToggleFulfilled: (contractID: string) => void;
   onDelete: (contractID: string) => void;
+  onClaimContract?: (contractID: string) => void;
 }
 
 /**
@@ -41,6 +42,7 @@ export function PlayerBoard({
   onOpenPrivateContractModal,
   onToggleFulfilled,
   onDelete,
+  onClaimContract,
 }: PlayerBoardProps): React.ReactElement | null {
   const effectivePlayerID = isBYODMode && playerID != null ? playerID : ctx.currentPlayer;
   const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
@@ -148,6 +150,7 @@ export function PlayerBoard({
             playerID={key}
             onToggleFulfilled={onToggleFulfilled}
             onDelete={onDelete}
+            onClaimContract={onClaimContract}
           />
           <h3 className="playerBoard__contractsTitle">Market</h3>
           <ContractsList
@@ -157,6 +160,7 @@ export function PlayerBoard({
             playerID={key}
             onToggleFulfilled={onToggleFulfilled}
             onDelete={onDelete}
+            onClaimContract={onClaimContract}
           />
           <h3 className="playerBoard__contractsTitle">Fulfilled</h3>
           <ContractsList
@@ -166,6 +170,7 @@ export function PlayerBoard({
             playerID={key}
             onToggleFulfilled={onToggleFulfilled}
             onDelete={onDelete}
+            onClaimContract={onClaimContract}
           />
         </div>
       </div>

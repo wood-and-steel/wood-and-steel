@@ -14,6 +14,7 @@ export interface ContractsListProps {
   playerID?: string | null;
   onToggleFulfilled: (contractID: string) => void;
   onDelete: (contractID: string) => void;
+  onClaimContract?: (contractID: string) => void;
 }
 
 function compareContractsFn(a: Contract, b: Contract): number {
@@ -34,6 +35,7 @@ export function ContractsList({
   playerID = null,
   onToggleFulfilled,
   onDelete,
+  onClaimContract,
 }: ContractsListProps): React.ReactElement {
   const [openContractId, setOpenContractId] = React.useState<string | null>(null);
   const [skipNextContractOpenUntil, setSkipNextContractOpenUntil] = React.useState(0);
@@ -62,7 +64,7 @@ export function ContractsList({
 
   const filteredContracts =
     type === "market"
-      ? G.contracts.filter((c) => c.type === "market" && !c.fulfilled)
+      ? G.contracts.filter((c) => c.type === "market" && c.playerID == null)
       : type === "private"
         ? G.contracts.filter((c) => c.playerID === playerID && !c.fulfilled)
         : G.contracts.filter((c) => c.playerID === playerID && c.fulfilled);
@@ -79,6 +81,7 @@ export function ContractsList({
           onCloseOutside={handleMenuCloseOutside}
           onToggleFulfilled={onToggleFulfilled}
           onDelete={onDelete}
+          onClaimContract={onClaimContract}
         />
       ))}
     </div>

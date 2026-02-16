@@ -111,6 +111,11 @@ export function WoodAndSteelState({
     [G.contracts, moves]
   );
 
+  const handleClaimContract = React.useCallback(
+    (contractId: string) => moves.claimMarketContract(contractId),
+    [moves]
+  );
+
   // Form submit: action determined by the clicked button's name
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -236,6 +241,7 @@ export function WoodAndSteelState({
               }
               onToggleFulfilled={handleToggleFulfilled}
               onDelete={handleDelete}
+              onClaimContract={handleClaimContract}
             />
           )}
           {activeTab === 'commodities' && <CommoditiesPage />}
