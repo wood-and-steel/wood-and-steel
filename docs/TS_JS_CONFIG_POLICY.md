@@ -40,12 +40,14 @@ With `checkJs: true`, `npm run typecheck` will report errors in remaining `.js` 
 
 ## Build and module resolution (avoid "file does not exist" errors)
 
-When converting files from `.js` to `.ts`/`.tsx`, **delete the old `.js` file** so only the new file exists. To avoid Vite/build errors like "Failed to resolve import … from … .js. Does the file exist?":
+When converting files from `.js` to `.ts`/`.tsx`, **delete the old `.js` file** so only the new file exists. To avoid Vite/build errors like "Failed to resolve import … from … .js. Does the file exist?" or "Failed to load url /src/…/file.js … Does the file exist?":
 
-1. **Vite resolve order** — In `vite.config.js`, set `resolve.extensions` so TypeScript is tried before JavaScript, e.g. `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json']`. Then bare imports like `'./app/App'` resolve to `App.tsx` when `App.js` is gone.
+1. **Use extensionless imports only** — In **all** files (both `.js` and `.ts`/`.tsx`), use imports **without** file extensions, e.g. `from './stores/events'` or `from '../Contract'`. Do **not** write `from './stores/events.js'`, `from './stores/events.ts'`, or `from '../Contract.ts'`. Extensionless imports let the bundler and TypeScript resolve to the correct file (e.g. `events.ts` after conversion) without changing every consumer. Explicit `.js` causes "file does not exist" after the file is converted; explicit `.ts` is only valid with `allowImportingTsExtensions` and is unnecessary with correct resolution.
 
-2. **TypeScript entry point** — Use a TS entry for the app (e.g. `src/index.tsx`) and point `index.html` at it (e.g. `src="/src/index.tsx"`). Entering from a `.tsx` entry keeps resolution consistent and avoids the bundler requesting deleted `.js` files.
+2. **Vite resolve order** — In `vite.config.js`, set `resolve.extensions` so TypeScript is tried before JavaScript, e.g. `['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json']`. Then bare imports like `'./app/App'` resolve to `App.tsx` when `App.js` is gone.
 
-3. **After converting the app entry** — When the root becomes TypeScript, create `index.tsx` (or `main.tsx`), update `index.html` to reference it, and remove the old `index.js` (or leave it unused). Do not leave the HTML script tag pointing at a removed `.js` file.
+3. **TypeScript entry point** — Use a TS entry for the app (e.g. `src/index.tsx`) and point `index.html` at it (e.g. `src="/src/index.tsx"`). Entering from a `.tsx` entry keeps resolution consistent and avoids the bundler requesting deleted `.js` files.
 
-4. **Restart dev server** — After changing the entry or resolve config, restart `npm start` so Vite picks up the new entry and clears cached resolution.
+4. **After converting the app entry** — When the root becomes TypeScript, create `index.tsx` (or `main.tsx`), update `index.html` to reference it, and remove the old `index.js` (or leave it unused). Do not leave the HTML script tag pointing at a removed `.js` file.
+
+5. **Restart dev server after converting modules** — After converting any `.js`/`.jsx` file to `.ts`/`.tsx` and deleting the old file, **restart the dev server** (`npm start` again). Vite’s module graph and HMR can keep requesting the old `.js` URLs until the server is restarted; restarting clears the graph and resolves extensionless imports to the new `.ts`/`.tsx` files. If "Failed to load url … .js" still appears, clear Vite’s cache and restart (e.g. remove `node_modules/.vite` then run `npm start`).

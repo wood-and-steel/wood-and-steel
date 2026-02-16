@@ -3,14 +3,12 @@
  * Validates that moves are allowed in the current phase and turn
  */
 
-/**
- * Map of moves allowed in each phase
- * @type {Object<string, Array<string>>}
- */
-const MOVES_BY_PHASE = {
-  setup: [
-    'generateStartingContract'
-  ],
+/** Phase names. */
+export type PhaseName = 'setup' | 'play' | 'scoring';
+
+/** Map of moves allowed in each phase. */
+const MOVES_BY_PHASE: Record<PhaseName, readonly string[]> = {
+  setup: ['generateStartingContract'],
   play: [
     'generatePrivateContract',
     'generateMarketContract',
@@ -19,45 +17,40 @@ const MOVES_BY_PHASE = {
     'deleteContract',
     'acquireIndependentRailroad',
     'addCityToPlayer',
-    'endTurn'
+    'endTurn',
   ],
-  scoring: [
-    // No moves allowed in scoring phase (stub)
-  ]
+  scoring: [],
 };
 
 /**
  * Check if a move is allowed in the current phase
- * @param {string} moveName - Name of the move to validate
- * @param {string} phase - Current phase name ('setup', 'play', 'scoring')
- * @returns {boolean} True if move is allowed in this phase
  */
-export function isMoveAllowedInPhase(moveName, phase) {
-  const allowedMoves = MOVES_BY_PHASE[phase];
+export function isMoveAllowedInPhase(moveName: string, phase: string): boolean {
+  const allowedMoves = MOVES_BY_PHASE[phase as PhaseName];
   if (!allowedMoves) {
     console.warn(`[moveValidation] Unknown phase: ${phase}`);
     return false;
   }
-  return allowedMoves.includes(moveName);
+  return (allowedMoves as readonly string[]).includes(moveName);
 }
 
 /**
  * Check if it's the correct player's turn
- * @param {string} playerID - Player ID attempting the move
- * @param {string} currentPlayer - Current player ID from ctx
- * @returns {boolean} True if it's the correct player's turn
  */
-export function isCorrectPlayerTurn(playerID, currentPlayer) {
+export function isCorrectPlayerTurn(playerID: string, currentPlayer: string): boolean {
   return playerID === currentPlayer;
+}
+
+/** Minimal ctx shape needed for move validation. */
+export interface CtxForValidation {
+  phase: string;
+  currentPlayer?: string;
 }
 
 /**
  * Validate that a move is allowed in the current phase
- * @param {string} moveName - Name of the move to validate
- * @param {Object} ctx - Game context object
- * @returns {boolean} True if move is allowed
  */
-export function isMoveAllowed(moveName, ctx) {
+export function isMoveAllowed(moveName: string, ctx: CtxForValidation | null | undefined): boolean {
   if (!ctx) {
     console.error('[moveValidation] ctx is required');
     return false;
@@ -86,12 +79,12 @@ export function isMoveAllowed(moveName, ctx) {
 
 /**
  * Validate that a move is allowed and it's the correct player's turn
- * @param {string} moveName - Name of the move to validate
- * @param {string} playerID - Player ID attempting the move
- * @param {Object} ctx - Game context object
- * @returns {boolean} True if move is allowed and it's the correct turn
  */
-export function isMoveAllowedForPlayer(moveName, playerID, ctx) {
+export function isMoveAllowedForPlayer(
+  moveName: string,
+  playerID: string,
+  ctx: CtxForValidation | null | undefined
+): boolean {
   if (!isMoveAllowed(moveName, ctx)) {
     return false;
   }
@@ -101,7 +94,7 @@ export function isMoveAllowedForPlayer(moveName, playerID, ctx) {
     return false;
   }
 
-  if (!ctx.currentPlayer) {
+  if (ctx?.currentPlayer == null || ctx.currentPlayer === '') {
     console.error('[moveValidation] ctx.currentPlayer is required');
     return false;
   }

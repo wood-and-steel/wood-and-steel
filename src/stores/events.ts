@@ -3,24 +3,22 @@
  * Provides event functions for managing turns and phase transitions.
  */
 
-import { useGameStore } from './gameStore.ts';
-import { executeTurnOnEnd } from './phaseConfig.ts';
+import { useGameStore } from './gameStore';
+import { executeTurnOnEnd } from './phaseConfig';
 import { getCurrentGameCode, saveGameState } from '../utils/gameManager';
 
 /**
  * End the current player's turn.
  * Advances to the next player, handles round detection, and executes turn hooks.
- * 
+ *
  * Implementation:
  * - Executes phase-specific turn onEnd hook before advancing (e.g., growIndependentRailroads)
  *   The hook itself checks if it's the end of a round
  * - Advances ctx.currentPlayer to next player
  * - Updates ctx.playOrderPos
  * - Increments ctx.turn when wrapping to player 0 (completing a full round)
- * 
- * @returns {void}
  */
-export function endTurn() {
+export function endTurn(): void {
   const state = useGameStore.getState();
   const { G, ctx } = state;
 
@@ -44,22 +42,25 @@ export function endTurn() {
     G: {
       ...currentState.G,
       // Ensure independentRailroads is a new object reference if it was mutated
-      independentRailroads: { ...currentState.G.independentRailroads }
+      independentRailroads: { ...currentState.G.independentRailroads },
     },
     ctx: {
       ...ctx,
       currentPlayer: nextPlayer,
       playOrderPos: nextPlayOrderPos,
-      turn: nextTurn
-    }
+      turn: nextTurn,
+    },
   }));
 
   // Save state after turn change
   const gameCode = getCurrentGameCode();
   if (gameCode) {
     const updatedState = useGameStore.getState();
-    saveGameState(gameCode, updatedState.G, updatedState.ctx).catch((error) => {
-      console.error('[endTurn] Failed to save game state:', error.message);
+    saveGameState(gameCode, updatedState.G, updatedState.ctx).catch((error: unknown) => {
+      console.error(
+        '[endTurn] Failed to save game state:',
+        error instanceof Error ? error.message : String(error)
+      );
     });
   }
 }
