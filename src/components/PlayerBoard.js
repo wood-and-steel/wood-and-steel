@@ -1,5 +1,5 @@
 import React from "react";
-import { railroadTieValue } from "../Contract";
+import { railroadTieValue } from "../Contract.ts";
 import { ContractsList } from "./ContractsList";
 
 // Available starting city pairs

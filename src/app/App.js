@@ -1,10 +1,10 @@
 import React from 'react';
 import { GameProvider } from '../providers/GameProvider';
 import { StorageProvider, useStorage } from '../providers/StorageProvider';
-import { WoodAndSteelState } from '../Board';
+import { WoodAndSteelState } from '../Board.tsx';
 import { LobbyScreen } from '../components/LobbyScreen';
 import { WaitingForPlayersScreen } from '../components/WaitingForPlayersScreen';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore } from '../stores/gameStore.ts';
 import { useLobbyStore } from '../stores/lobbyStore';
 
 const NOT_PLAYING_MESSAGE = 'This device is not playing this game.';
@@ -19,8 +19,8 @@ import {
   saveGameState,
   updateLastModifiedCache
 } from '../utils/gameManager';
-import { checkPhaseTransition } from '../stores/phaseManager';
-import { initializeIndependentRailroads } from '../independentRailroads';
+import { checkPhaseTransition } from '../stores/phaseManager.ts';
+import { initializeIndependentRailroads } from '../independentRailroads.ts';
 // Import test utilities in development
 if (!import.meta.env.PROD) {
   import('../utils/storage/testMigration');

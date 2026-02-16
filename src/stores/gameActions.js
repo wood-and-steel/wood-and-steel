@@ -6,16 +6,16 @@
  * according to game rules and move validation.
  */
 
-import { useGameStore } from './gameStore';
+import { useGameStore } from './gameStore.ts';
 import { isMoveAllowed, isMoveAllowedForPlayer } from './moveValidation';
 import { 
   generateStartingContract as generateStartingContractContract,
   generatePrivateContract as generatePrivateContractContract,
   generateMarketContract as generateMarketContractContract,
   newContract
-} from '../Contract';
+} from '../Contract.ts';
 import { endTurn as endTurnEvent } from './events';
-import { checkPhaseTransition } from './phaseManager';
+import { checkPhaseTransition } from './phaseManager.ts';
 import { routes, cities } from '../data';
 import { getCurrentGameCode, saveGameState } from '../utils/gameManager';
 

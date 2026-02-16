@@ -4,7 +4,7 @@ import {
   newContract,
   generatePrivateContractSpec,
   generatePrivateContractOffers,
-} from './Contract';
+} from './Contract.ts';
 import { cities, commodities } from './data';
 
 describe('generatePrivateContractSpec', () => {

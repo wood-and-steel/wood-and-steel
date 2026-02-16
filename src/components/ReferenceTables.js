@@ -1,6 +1,6 @@
 import React from "react";
 import { cities, commodities } from "../data";
-import { valueOfCity } from "../Contract";
+import { valueOfCity } from "../Contract.ts";
 import { commodityIcons } from "../shared/assets/icons";
 
 // Helper functions

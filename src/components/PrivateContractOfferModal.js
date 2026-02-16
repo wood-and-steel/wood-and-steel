@@ -1,8 +1,7 @@
 import React from "react";
-import { rewardValue, railroadTieValue } from "../Contract";
+import { rewardValue, railroadTieValue, generatePrivateContractOffers } from "../Contract.ts";
 import { CommodityRichName } from "./CommodityRichName";
 import { contractTieIcons } from "../shared/assets/icons";
-import { generatePrivateContractOffers } from "../Contract";
 
 function formatContractTieValue(spec) {
   const ties = railroadTieValue(spec);

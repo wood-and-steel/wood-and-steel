@@ -1,131 +1,157 @@
-import React from "react";
-import { NavBar } from "./components/NavBar";
-import { PlayerBoard } from "./components/PlayerBoard";
-import { PrivateContractOfferModal } from "./components/PrivateContractOfferModal";
-import { CommoditiesPage } from "./components/CommoditiesPage";
-import { CitiesPage } from "./components/CitiesPage";
-import { IndependentRailroadsPage } from "./components/IndependentRailroadsPage";
-import { EditPlaytestDialog } from "./components/EditPlaytestDialog";
-import { useGame } from "./hooks/useGame";
-import { useLobbyStore } from "./stores/lobbyStore";
+import React from 'react';
+import { NavBar } from './components/NavBar';
+import { PlayerBoard } from './components/PlayerBoard';
+import { PrivateContractOfferModal } from './components/PrivateContractOfferModal';
+import { CommoditiesPage } from './components/CommoditiesPage';
+import { CitiesPage } from './components/CitiesPage';
+import { IndependentRailroadsPage } from './components/IndependentRailroadsPage';
+import { EditPlaytestDialog } from './components/EditPlaytestDialog';
+import type { Contract } from './Contract';
+import { useGame } from './hooks/useGame';
+import { useLobbyStore } from './stores/lobbyStore';
 
-// Main Component
-export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
-  // Get game state and moves from useGame hook instead of props
+/** Minimal game manager shape passed from App (currentGameCode for NavBar). */
+export interface GameManagerProps {
+  currentGameCode?: string;
+}
+
+export interface WoodAndSteelStateProps {
+  gameManager?: GameManagerProps;
+  isBYODMode?: boolean;
+}
+
+type TabId = 'board' | 'commodities' | 'cities' | 'indies';
+
+/** Main game board: tabs (Contracts, Commodities, Cities, Independent Railroads), NavBar, and form-driven moves. */
+export function WoodAndSteelState({
+  gameManager,
+  isBYODMode = false,
+}: WoodAndSteelStateProps) {
   const { G, ctx, moves, playerID } = useGame();
   const { clearSelection, setLobbyMode } = useLobbyStore();
-  // React hooks must be at the top of the component
   const [input, setInput] = React.useState('');
-  const [isEditPlaytestDialogOpen, setIsEditPlaytestDialogOpen] = React.useState(false);
-  const [privateContractModal, setPrivateContractModal] = React.useState({ open: false, count: 2 });
-  const [activeTab, setActiveTab] = React.useState('board');
+  const [isEditPlaytestDialogOpen, setIsEditPlaytestDialogOpen] =
+    React.useState(false);
+  const [privateContractModal, setPrivateContractModal] = React.useState({
+    open: false,
+    count: 2,
+  });
+  const [activeTab, setActiveTab] = React.useState<TabId>('board');
   const [showRailroadHint, setShowRailroadHint] = React.useState(false);
   const prevPhaseRef = React.useRef(ctx.phase);
-  
-  // Detect setup→play phase transition and show railroad hint
+
+  // On transition setup → play, switch to Independent Railroads tab and show hint
   React.useEffect(() => {
     const prevPhase = prevPhaseRef.current;
     const currentPhase = ctx.phase;
-    
+
     if (prevPhase === 'setup' && currentPhase === 'play') {
-      // Transition from setup to play: switch to Railroads tab and show hint
       setActiveTab('indies');
       setShowRailroadHint(true);
     }
-    
+
     prevPhaseRef.current = currentPhase;
   }, [ctx.phase]);
-  
-  // Handle tab change: also dismiss the railroad hint
-  const handleTabChange = React.useCallback((tabId) => {
+
+  const handleTabChange = React.useCallback((tabId: TabId) => {
     setActiveTab(tabId);
     setShowRailroadHint(false);
   }, []);
-  
-  // Dismiss the railroad hint (without changing tabs)
+
   const handleDismissHint = React.useCallback(() => {
     setShowRailroadHint(false);
   }, []);
-  
-  // Handler to navigate to lobby
+
   const handleNavigateToLobby = React.useCallback(() => {
     clearSelection();
     setLobbyMode(true);
   }, [clearSelection, setLobbyMode]);
-  
-  // Theme management - use system preference
+
+  // Sync document data-theme with system preference
   React.useEffect(() => {
-    // Update theme based on system preference
-    const updateTheme = (e) => {
+    const updateTheme = (e: MediaQueryListEvent) => {
       const systemTheme = e.matches ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', systemTheme);
     };
 
-    // Set initial theme based on system preference
     const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const initialTheme = darkModeQuery.matches ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', initialTheme);
 
-    // Listen for changes to system preference
     darkModeQuery.addEventListener('change', updateTheme);
-
-    // Cleanup listener on unmount
     return () => darkModeQuery.removeEventListener('change', updateTheme);
   }, []);
 
-  const startingContractExists = G.contracts.filter(contract => contract.playerID === playerID).length > 0;
-  const currentPhase = ctx.phase;
+  const startingContractExists =
+    G.contracts.filter((contract: Contract) => contract.playerID === playerID).length > 0;
+  const currentPhase = ctx.phase as 'play' | 'setup' | 'scoring';
 
-  // Handler for starting city pair selection
-  const handleStartingPairSelect = React.useCallback((pair) => {
-    const inputParameters = pair;
-    moves.generateStartingContract(inputParameters, playerID);
-    setInput("");
-  }, [moves, playerID, ctx.currentPlayer, ctx.phase, isBYODMode]);
+  const handleStartingPairSelect = React.useCallback(
+    (pair: [string, string]) => {
+      moves.generateStartingContract(pair, playerID ?? '');
+      setInput('');
+    },
+    [moves, playerID]
+  );
 
   const handleToggleFulfilled = React.useCallback(
-    (contractId) => moves.toggleContractFulfilled(contractId),
+    (contractId: string) => moves.toggleContractFulfilled(contractId),
     [moves]
   );
 
   const handleDelete = React.useCallback(
-    (contractId) => {
-      const c = G.contracts.find((x) => x.id === contractId);
+    (contractId: string) => {
+      const c = G.contracts.find((x: Contract) => x.id === contractId);
       if (!c) return;
-      if (!window.confirm(`Delete "${c.commodity} to ${c.destinationKey}"?`)) return;
+      if (!window.confirm(`Delete "${c.commodity} to ${c.destinationKey}"?`))
+        return;
       setInput(`${c.commodity}, ${c.destinationKey}, ${c.type}`);
       moves.deleteContract(contractId);
     },
     [G.contracts, moves]
   );
 
-  function handleSubmit(e) {
-    // Prevent the browser from reloading the page
+  // Form submit: action determined by the clicked button's name
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const inputParameters = input.split(',').map(i => i.trim());
+    const inputParameters = input.split(',').map((i: string) => i.trim());
+    const submitter = (e.nativeEvent as SubmitEvent).submitter as
+      | HTMLButtonElement
+      | null;
+    const name = submitter?.name ?? '';
+    const id = submitter?.id ?? '';
 
-    switch (e.nativeEvent.submitter.name) {
-      case "startingContract":
-        moves.generateStartingContract(inputParameters, playerID);
-        setInput("");
+    switch (name) {
+      case 'startingContract':
+        moves.generateStartingContract(
+          inputParameters as [string, string],
+          playerID ?? ''
+        );
+        setInput('');
         break;
-      case "marketContract":
+      case 'marketContract':
         moves.generateMarketContract();
         break;
-      case "manualContract":
-        // This case is kept for backwards compatibility but should not be used
-        // Manual contracts are now created via EditPlaytestDialog
-        moves.addContract(inputParameters[0], inputParameters[1], inputParameters[2]);
+      case 'manualContract':
+        moves.addContract(
+          inputParameters[0],
+          inputParameters[1],
+          inputParameters[2]
+        );
         break;
-      case "acquireIndependentRailroad":
-        const railroadName = e.nativeEvent.submitter.id;
+      case 'acquireIndependentRailroad': {
+        const railroadName = id;
         const railroad = G.independentRailroads[railroadName];
-        if (railroad && window.confirm(`Is the current player buying ${railroad.name}?`)) {
+        if (
+          railroad &&
+          window.confirm(`Is the current player buying ${railroad.name}?`)
+        ) {
           moves.acquireIndependentRailroad(railroadName);
         }
         break;
-      case "endTurn":
+      }
+      case 'endTurn':
         moves.endTurn();
         break;
       default:
@@ -133,22 +159,20 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
     }
   }
 
-  // In BYOD mode, always show the board (each device shows one player's board)
-  // In hotseat mode, only show the current player's board
+  // In hotseat, hide board when it's not this player's turn
   const isHidden = !isBYODMode && ctx.currentPlayer !== playerID;
-  
-  // Render different UI based on phase
+
   if (currentPhase === 'scoring') {
     return (
       <div className={`boardPage ${isHidden ? 'boardPage--hidden' : ''}`}>
         <form className="form" method="post" onSubmit={handleSubmit}>
-          <NavBar 
-            input={input} 
+          <NavBar
+            input={input}
             setInput={setInput}
             startingContractExists={startingContractExists}
             currentPhase={currentPhase}
             G={G}
-            gameManager={gameManager}
+            gameManager={gameManager ?? {}}
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
             activeTab={activeTab}
@@ -176,13 +200,13 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
     <div className={`boardPage ${isHidden ? 'boardPage--hidden' : ''}`}>
       <form className="form" method="post" onSubmit={handleSubmit}>
         <div>
-          <NavBar 
-            input={input} 
+          <NavBar
+            input={input}
             setInput={setInput}
             startingContractExists={startingContractExists}
             currentPhase={currentPhase}
             G={G}
-            gameManager={gameManager}
+            gameManager={gameManager ?? {}}
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
             activeTab={activeTab}
@@ -203,7 +227,7 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
             offerCount={privateContractModal.count}
             G={G}
             ctx={ctx}
-            onSelect={(commodity, destinationKey) => {
+            onSelect={(commodity: string, destinationKey: string) => {
               moves.addContract(commodity, destinationKey, 'private');
               setPrivateContractModal({ open: false, count: 2 });
             }}
@@ -212,18 +236,22 @@ export function WoodAndSteelState({ gameManager, isBYODMode = false }) {
             <PlayerBoard
               G={G}
               ctx={ctx}
-              playerID={playerID}
+              playerID={playerID ?? ''}
               isBYODMode={isBYODMode}
               startingContractExists={startingContractExists}
               currentPhase={currentPhase}
               onStartingPairSelect={handleStartingPairSelect}
-              onOpenPrivateContractModal={(count) => setPrivateContractModal({ open: true, count })}
+              onOpenPrivateContractModal={(count: number) =>
+                setPrivateContractModal({ open: true, count })
+              }
               onToggleFulfilled={handleToggleFulfilled}
               onDelete={handleDelete}
             />
           )}
           {activeTab === 'commodities' && <CommoditiesPage />}
-          {activeTab === 'cities' && <CitiesPage G={G} ctx={ctx} playerID={playerID} />}
+          {activeTab === 'cities' && (
+            <CitiesPage G={G} ctx={ctx} playerID={playerID ?? ''} />
+          )}
           {activeTab === 'indies' && <IndependentRailroadsPage />}
         </div>
       </form>

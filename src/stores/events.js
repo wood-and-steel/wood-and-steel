@@ -3,8 +3,8 @@
  * Provides event functions for managing turns and phase transitions.
  */
 
-import { useGameStore } from './gameStore';
-import { executeTurnOnEnd } from './phaseConfig';
+import { useGameStore } from './gameStore.ts';
+import { executeTurnOnEnd } from './phaseConfig.ts';
 import { getCurrentGameCode, saveGameState } from '../utils/gameManager';
 
 /**

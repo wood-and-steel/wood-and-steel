@@ -15,10 +15,8 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "paths": {
-      "*": ["src/*", "node_modules/*"]
-    },
-    "types": ["vite/client", "node"]
+    "paths": { "*": ["src/*", "node_modules/*"] },
+    "types": ["vite/client", "node", "react", "react-dom"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore } from '../stores/gameStore.ts';
 import { createMoves } from '../stores/moves';
 
 /**

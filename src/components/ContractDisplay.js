@@ -1,5 +1,5 @@
 import React from "react";
-import { rewardValue, railroadTieValue } from "../Contract";
+import { rewardValue, railroadTieValue } from "../Contract.ts";
 import { CommodityRichName } from "./CommodityRichName";
 import { contractTieIcons } from "../shared/assets/icons";
 import { PopupMenu, PopupMenuItem } from "./PopupMenu";

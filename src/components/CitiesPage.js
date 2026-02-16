@@ -1,6 +1,6 @@
 import React from "react";
 import { cities } from "../data";
-import { valueOfCity } from "../Contract";
+import { valueOfCity } from "../Contract.ts";
 
 // Helper function
 function formatCommodityList(items) {

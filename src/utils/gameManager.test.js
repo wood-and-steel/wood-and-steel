@@ -31,10 +31,10 @@ import {
   getDeviceSeat,
   getPlayerSeats,
 } from './gameManager';
-import { useGameStore } from '../stores/gameStore';
+import { useGameStore } from '../stores/gameStore.ts';
 import { generateStartingContract, generatePrivateContract, toggleContractFulfilled, endTurn } from '../stores/gameActions';
 import { endTurn as endTurnEvent } from '../stores/events';
-import { checkPhaseTransition } from '../stores/phaseManager';
+import { checkPhaseTransition } from '../stores/phaseManager.ts';
 
 // Mock localStorage
 const localStorageMock = (() => {
