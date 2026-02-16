@@ -35,6 +35,17 @@
   border: var(--border-width-md) solid var(--color-border-light);
 }
 
+.waitingScreen__qrWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.waitingScreen__qrWrapper svg {
+  max-width: 100%;
+  height: auto;
+}
+
 .waitingScreen__codeLabel {
   margin: 0 0 var(--spacing-sm) 0;
   font-size: 0.875rem;

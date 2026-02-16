@@ -1,4 +1,5 @@
 import React from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { useStorage } from "../providers/StorageProvider";
 
 export interface PlayerSeatDisplay {
@@ -211,6 +212,15 @@ export function WaitingForPlayersScreen({
         <h1 className="waitingScreen__title">Waiting for Players</h1>
 
         <div className="waitingScreen__codeSection">
+          {typeof window !== "undefined" && (
+            <div className="waitingScreen__qrWrapper">
+              <QRCodeSVG
+                value={`${window.location.origin}/g/${gameCode}`}
+                size={160}
+                level="M"
+              />
+            </div>
+          )}
           <p className="waitingScreen__codeLabel">Share this code with other players:</p>
           <div className="waitingScreen__codeDisplay">
             <span className="waitingScreen__code">{gameCode}</span>
