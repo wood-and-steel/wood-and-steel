@@ -137,7 +137,7 @@ export function WoodAndSteelState({
         moves.addContract(
           inputParameters[0],
           inputParameters[1],
-          inputParameters[2]
+          inputParameters[2] as 'private' | 'market'
         );
         break;
       case 'acquireIndependentRailroad': {

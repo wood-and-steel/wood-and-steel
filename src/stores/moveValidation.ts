@@ -4,10 +4,11 @@
  */
 
 /** Phase names. */
-export type PhaseName = 'setup' | 'play' | 'scoring';
+export type PhaseName = 'waiting_for_players' | 'setup' | 'play' | 'scoring';
 
 /** Map of moves allowed in each phase. */
 const MOVES_BY_PHASE: Record<PhaseName, readonly string[]> = {
+  waiting_for_players: [],
   setup: ['generateStartingContract'],
   play: [
     'generatePrivateContract',

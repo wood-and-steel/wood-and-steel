@@ -1,4 +1,5 @@
 import { growIndependentRailroads } from '../independentRailroads';
+import type { PhaseName } from './moveValidation';
 import type { GameState, GameContext } from './gameStore';
 
 /**
@@ -25,7 +26,7 @@ interface PhaseConfigEntry {
   turn: PhaseTurnConfig;
 }
 
-export const phaseConfig: Record<string, PhaseConfigEntry> = {
+export const phaseConfig: Record<PhaseName, PhaseConfigEntry> = {
   // Phase 0: Waiting for Players (BYOD only). Players join; host starts the game. Hotseat skips this and starts in 'setup'.
   waiting_for_players: {
     next: 'setup',
@@ -86,8 +87,8 @@ export const phaseConfig: Record<string, PhaseConfigEntry> = {
  * @param phaseName - Phase name ('waiting_for_players', 'setup', 'play', 'scoring')
  * @returns Phase config or undefined
  */
-export function getPhaseConfig(phaseName: string): PhaseConfigEntry | undefined {
-  return phaseConfig[phaseName];
+export function getPhaseConfig(phaseName: PhaseName | string): PhaseConfigEntry | undefined {
+  return phaseConfig[phaseName as PhaseName];
 }
 
 /**
