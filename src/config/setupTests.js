@@ -5,16 +5,18 @@
 import '@testing-library/jest-dom';
 
 // jsdom does not implement matchMedia; mock it for theme/dark-mode logic.
+/** @type {(query: string) => MediaQueryList} */
+const matchMediaMock = (query) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addListener: () => {},
+  removeListener: () => {},
+  addEventListener: () => {},
+  removeEventListener: () => {},
+  dispatchEvent: () => false,
+});
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: (query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => false,
-  }),
+  value: matchMediaMock,
 });

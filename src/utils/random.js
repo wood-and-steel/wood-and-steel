@@ -84,7 +84,7 @@ function _gaussianRandomInternal(iterations) {
  * Chooses a random item from an array
  *
  * @export
- * @param {Array} arr - Array of length 1+ 
+ * @param {Array<unknown>} arr - Array of length 1+ 
  * @returns {*} - A random item from that array, or undefined if array is empty
  */
 export function randomArrayItem(arr) {
@@ -100,7 +100,7 @@ export function randomArrayItem(arr) {
  * Chooses a random item from a Set
  *
  * @export
- * @param {Set} set - Set to select from
+ * @param {Set<unknown>} set - Set to select from
  * @returns {*} - Randomly selected element, or undefined if set is empty
  */
 export function randomSetItem(set) {
@@ -116,8 +116,8 @@ export function randomSetItem(set) {
  * Shuffles an array in place using the Fisher-Yates algorithm
  * 
  * @export
- * @param {Array} array - Array to shuffle
- * @returns {Array} - The same array, shuffled in place
+ * @param {Array<unknown>} array - Array to shuffle
+ * @returns {Array<unknown>} - The same array, shuffled in place
  */
 export function shuffleArray(array) {
   if (!array || array.length <= 1) {

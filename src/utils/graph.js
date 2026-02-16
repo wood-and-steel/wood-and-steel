@@ -4,12 +4,12 @@ import { cities, routes } from "../data";
  * Returns all cities connected to one or more cities within a number of segments
  * 
  * @export
- * @param {string[]|Set} fromCitiesKeys - Keys of cities from which to traverse the map
+ * @param {string[]|Set<string>} fromCitiesKeys - Keys of cities from which to traverse the map
  * @param {Object} options
  * @param {number} [options.distance=1] - Maximum number of segments to traverse
  * @param {function} [options.routeTestFn] - Function to filter routes, receives route object (e.g. r => !r.mountainous)
  * @param {boolean} [options.includeFromCities=false] - Whether to include fromCitiesKeys in return value
- * @returns {Set} Set of matching city keys
+ * @returns {Set<string>} Set of matching city keys
  */
 export function citiesConnectedTo(fromCitiesKeys, options = {}) {
   const {
