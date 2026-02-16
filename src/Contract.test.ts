@@ -1,28 +1,37 @@
+import { describe, test, expect } from 'vitest';
 import {
+  type Contract,
   generateMarketContract,
   rewardValue,
   newContract,
   generatePrivateContractSpec,
   generatePrivateContractOffers,
-} from './Contract.ts';
+} from './Contract';
 import { cities, commodities } from './data';
 
-describe('generatePrivateContractSpec', () => {
-  function makeGameState(activeCities, currentPlayer = '0') {
-    return {
-      G: {
-        contracts: [],
-        players: [
-          ['0', { activeCities: new Set(activeCities) }],
-          ['1', { activeCities: new Set(['Chicago', 'Detroit']) }],
-        ],
-      },
-      ctx: {
-        currentPlayer,
-      },
-    };
-  }
+/** Minimal game state shape for contract tests (matches Contract's expected shape). */
+function makeGameState(
+  activeCities: string[],
+  currentPlayer: string = '0'
+): {
+  G: { contracts: Contract[]; players: [string, { name: string; activeCities: string[] }][] };
+  ctx: { currentPlayer: string };
+} {
+  return {
+    G: {
+      contracts: [],
+      players: [
+        ['0', { name: 'P0', activeCities }],
+        ['1', { name: 'P1', activeCities: ['Chicago', 'Detroit'] }],
+      ],
+    },
+    ctx: {
+      currentPlayer,
+    },
+  };
+}
 
+describe('generatePrivateContractSpec', () => {
   test('returns valid spec with commodity and destinationKey when given valid G and ctx', () => {
     const { G, ctx } = makeGameState(['New York', 'Philadelphia']);
     for (let i = 0; i < 30; i++) {
@@ -33,7 +42,7 @@ describe('generatePrivateContractSpec', () => {
       expect(commodities.has(spec.commodity)).toBe(true);
       expect(cities.has(spec.destinationKey)).toBe(true);
       const destCity = cities.get(spec.destinationKey);
-      expect(destCity.commodities).not.toContain(spec.commodity);
+      expect(destCity!.commodities.includes(spec.commodity)).toBe(false);
     }
   });
 
@@ -45,7 +54,10 @@ describe('generatePrivateContractSpec', () => {
   });
 
   test('returns undefined when players array is empty', () => {
-    const G = { contracts: [], players: [] };
+    const G = {
+      contracts: [] as Contract[],
+      players: [] as [string, { name: string; activeCities: string[] }][],
+    };
     const ctx = { currentPlayer: '0' };
     const spec = generatePrivateContractSpec(G, ctx);
     expect(spec).toBeUndefined();
@@ -53,21 +65,6 @@ describe('generatePrivateContractSpec', () => {
 });
 
 describe('generatePrivateContractOffers', () => {
-  function makeGameState(activeCities, currentPlayer = '0') {
-    return {
-      G: {
-        contracts: [],
-        players: [
-          ['0', { activeCities: new Set(activeCities) }],
-          ['1', { activeCities: new Set(['Chicago', 'Detroit']) }],
-        ],
-      },
-      ctx: {
-        currentPlayer,
-      },
-    };
-  }
-
   test('returns array of specs, each with commodity and destinationKey', () => {
     const { G, ctx } = makeGameState(['New York', 'Philadelphia', 'Pittsburgh']);
     for (let i = 0; i < 20; i++) {
@@ -81,7 +78,13 @@ describe('generatePrivateContractOffers', () => {
   });
 
   test('returns no duplicate offers (uniqueness by commodity|destinationKey)', () => {
-    const { G, ctx } = makeGameState(['New York', 'Philadelphia', 'Pittsburgh', 'Chicago', 'Cincinnati']);
+    const { G, ctx } = makeGameState([
+      'New York',
+      'Philadelphia',
+      'Pittsburgh',
+      'Chicago',
+      'Cincinnati',
+    ]);
     for (let i = 0; i < 50; i++) {
       const offers = generatePrivateContractOffers(G, ctx, 3);
       const keys = new Set(offers.map((o) => `${o.commodity}|${o.destinationKey}`));
@@ -106,30 +109,27 @@ describe('generatePrivateContractOffers', () => {
       expect(commodities.has(offer.commodity)).toBe(true);
       expect(cities.has(offer.destinationKey)).toBe(true);
       const destCity = cities.get(offer.destinationKey);
-      expect(destCity.commodities).not.toContain(offer.commodity);
+      expect(destCity!.commodities.includes(offer.commodity)).toBe(false);
     });
   });
 });
 
 describe('generateMarketContract', () => {
   test('generates market contracts with value of at least $6000', () => {
-    // Create a minimal game state for testing with valid city names
     const G = {
-      contracts: [],
+      contracts: [] as Contract[],
       players: [
-        ['0', { activeCities: ['New York', 'Philadelphia', 'Pittsburgh'] }],
-        ['1', { activeCities: ['Raleigh', 'Norfolk'] }],
-      ],
+        ['0', { name: 'P0', activeCities: ['New York', 'Philadelphia', 'Pittsburgh'] }],
+        ['1', { name: 'P1', activeCities: ['Raleigh', 'Norfolk'] }],
+      ] as [string, { name: string; activeCities: string[] }][],
     };
 
-    // Generate multiple contracts to test the constraint
     for (let i = 0; i < 20; i++) {
       const contract = generateMarketContract(G);
-      
+
       if (contract) {
         const value = rewardValue(contract);
-        
-        // All market contracts should be worth at least $6000 (distance >= 2)
+
         expect(value).toBeGreaterThanOrEqual(6000);
       }
     }
@@ -138,14 +138,12 @@ describe('generateMarketContract', () => {
 
 describe('rewardValue', () => {
   test('calculates correct dollar value based on distance', () => {
-    // Create a valid contract using newContract with a valid commodity
     const contract = newContract('Chicago', 'coal', { type: 'market' });
-    
+
     if (contract) {
       const value = rewardValue(contract);
-      // Value should be distance × $3000
       expect(value).toBeGreaterThanOrEqual(0);
-      expect(value % 3000).toBe(0); // Should be a multiple of 3000
+      expect(value % 3000).toBe(0);
     }
   });
 });
