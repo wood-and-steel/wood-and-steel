@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 /** Join form prefill for error/return flows. */
-export interface JoinFormPrefill {
+interface JoinFormPrefill {
   code: string | null;
   error: string | null;
 }

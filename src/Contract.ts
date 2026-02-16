@@ -464,9 +464,6 @@ export function valueOfCity(G: GameStateForContract, cityKey: string): number | 
   return value;
 }
 
-/** Minimal contract shape needed for reward/railroad-tie calculation (Contract or PrivateContractSpec). */
-export type ContractSpecForValue = Pick<Contract, "destinationKey" | "commodity">;
-
 /**
  * Dollar value of this contract if fulfilled.
  * $3,000 per segment of the distance between the destination city and the closest city that provides the commodity.
@@ -474,7 +471,7 @@ export type ContractSpecForValue = Pick<Contract, "destinationKey" | "commodity"
  * @param contract - The contract or spec (needs destinationKey and commodity)
  * @returns Dollar value
  */
-export function rewardValue(contract: ContractSpecForValue): number {
+export function rewardValue(contract: Pick<Contract, "destinationKey" | "commodity">): number {
   return (
     shortestDistance(contract.destinationKey, (c: string) =>
       cities.get(c)?.commodities.includes(contract.commodity) ?? false
@@ -489,7 +486,7 @@ export function rewardValue(contract: ContractSpecForValue): number {
  * @param contract - The contract or spec (needs destinationKey and commodity)
  * @returns Railroad tie value (1–4)
  */
-export function railroadTieValue(contract: ContractSpecForValue): number {
+export function railroadTieValue(contract: Pick<Contract, "destinationKey" | "commodity">): number {
   const destCity = cities.get(contract.destinationKey);
   const commodityRec = commodities.get(contract.commodity);
   if (!destCity || !commodityRec) return 0;
