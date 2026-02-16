@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 
-/** Join form prefill for error/return flows. */
+/** Join form prefill for error/return flows and URL-based auto-join. */
 interface JoinFormPrefill {
   code: string | null;
   error: string | null;
+  /** When true and code is set with no error, LobbyScreen should attempt join (e.g. from /g/:code URL). */
+  autoJoin?: boolean;
 }
 
 /** Lobby store state. */
@@ -15,7 +17,7 @@ export interface LobbyStoreState {
   setLobbyMode: (isLobby: boolean) => void;
   setSelectedGame: (code: string | null) => void;
   clearSelection: () => void;
-  setJoinFormPrefill: (code: string | null, error: string | null) => void;
+  setJoinFormPrefill: (code: string | null, error: string | null, autoJoin?: boolean) => void;
   clearJoinFormPrefill: () => void;
 }
 
@@ -27,7 +29,7 @@ export const useLobbyStore = create<LobbyStoreState>((set) => ({
   isLobbyMode: true,
   selectedGameCode: null,
   lobbyState: {},
-  joinFormPrefill: { code: null, error: null },
+  joinFormPrefill: { code: null, error: null, autoJoin: false },
 
   setLobbyMode: (isLobby) => {
     set({ isLobbyMode: isLobby });
@@ -47,12 +49,18 @@ export const useLobbyStore = create<LobbyStoreState>((set) => ({
     });
   },
 
-  setJoinFormPrefill: (code, error) => {
-    set({ joinFormPrefill: { code: code || null, error: error || null } });
+  setJoinFormPrefill: (code, error, autoJoin = false) => {
+    set({
+      joinFormPrefill: {
+        code: code || null,
+        error: error || null,
+        autoJoin: autoJoin === true,
+      },
+    });
   },
 
   clearJoinFormPrefill: () => {
-    set({ joinFormPrefill: { code: null, error: null } });
+    set({ joinFormPrefill: { code: null, error: null, autoJoin: false } });
   },
 }));
 

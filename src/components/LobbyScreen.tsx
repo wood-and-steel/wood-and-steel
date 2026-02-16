@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useLobbyStore } from "../stores/lobbyStore";
 import { useStorage } from "../providers/StorageProvider";
 import type { GameListItem } from "../utils/storage/storageAdapter";
@@ -56,15 +57,56 @@ export function LobbyScreen({
   const { selectedGameCode, joinFormPrefill, clearJoinFormPrefill, setJoinFormPrefill } =
     useLobbyStore();
   const storage = useStorage();
+  const navigate = useNavigate();
+
+  const doJoinGame = React.useCallback(
+    async (code: string): Promise<void> => {
+      setJoinError("");
+      setIsJoining(true);
+      try {
+        const result = await storage.joinGame(code);
+        if (!result.success) {
+          const errorMessage =
+            JOIN_ERROR_MESSAGES[result.error ?? ""] ?? "Unable to join game. Please try again.";
+          setJoinFormPrefill(code, errorMessage);
+          return;
+        }
+        if (storage.storageType !== "cloud") {
+          storage.setStorageType("cloud");
+        }
+        setActiveTab(TAB_CLOUD_BYOD);
+        if (onEnterGame) {
+          await onEnterGame(code, { storageType: "cloud" });
+          navigate("/", { replace: true });
+        }
+      } catch (error) {
+        console.error("[LobbyScreen] Error joining game:", error);
+        setJoinFormPrefill(code, "An unexpected error occurred. Please try again.");
+      } finally {
+        setIsJoining(false);
+      }
+    },
+    [storage, onEnterGame, setJoinFormPrefill, navigate]
+  );
 
   React.useEffect(() => {
-    if (joinFormPrefill?.code && joinFormPrefill?.error) {
+    if (!joinFormPrefill?.code) return;
+
+    if (joinFormPrefill.error) {
       setJoinGameCode(joinFormPrefill.code);
       setJoinError(joinFormPrefill.error);
       setActiveTab(TAB_CLOUD_BYOD);
       clearJoinFormPrefill();
+      return;
     }
-  }, [joinFormPrefill, clearJoinFormPrefill, setJoinFormPrefill]);
+
+    if (joinFormPrefill.autoJoin) {
+      const code = joinFormPrefill.code;
+      clearJoinFormPrefill();
+      setActiveTab(TAB_CLOUD_BYOD);
+      doJoinGame(code);
+    }
+  }, [joinFormPrefill, clearJoinFormPrefill, setJoinFormPrefill, doJoinGame]);
 
   const [activeTab, setActiveTab] = React.useState<LobbyTab>(() =>
     storage.storageType === "local" ? TAB_LOCAL : TAB_CLOUD_HOTSEAT
@@ -212,36 +254,8 @@ export function LobbyScreen({
       return;
     }
 
-    setJoinError("");
-    setIsJoining(true);
-
-    try {
-      const result = await storage.joinGame(code);
-
-      if (!result.success) {
-        const errorMessage =
-          JOIN_ERROR_MESSAGES[result.error ?? ""] ?? "Unable to join game. Please try again.";
-        setJoinError(errorMessage);
-        setIsJoining(false);
-        return;
-      }
-
-      if (storage.storageType !== "cloud") {
-        storage.setStorageType("cloud");
-      }
-      setActiveTab(TAB_CLOUD_BYOD);
-
-      if (onEnterGame) {
-        await onEnterGame(code, { storageType: "cloud" });
-      }
-
-      setJoinGameCode("");
-    } catch (error) {
-      console.error("[LobbyScreen] Error joining game:", error);
-      setJoinError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsJoining(false);
-    }
+    await doJoinGame(code);
+    setJoinGameCode("");
   };
 
   const handleJoinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {

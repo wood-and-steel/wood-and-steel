@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { GameProvider } from '../providers/GameProvider';
 import { StorageProvider, useStorage } from '../providers/StorageProvider';
 import { WoodAndSteelState } from '../Board';
@@ -39,9 +40,13 @@ export interface AppGameManager {
   normalizeGameCode: (code: string) => string;
 }
 
+const GAME_CODE_PATH_REGEX = /^\/g\/([^/]+)$/;
+const INVALID_CODE_MESSAGE = 'Invalid game code format. Please check and try again.';
+
 const AppContent = (): React.ReactElement => {
   const { isLobbyMode, setLobbyMode, setSelectedGame, setJoinFormPrefill } = useLobbyStore();
   const storage = useStorage();
+  const location = useLocation();
   const [currentGameCode, setCurrentGameCodeState] = React.useState<string | null>(null);
   // Get number of players and phase from game store (must be at top level, before conditional returns)
   const numPlayers = useGameStore((state) => state.ctx?.numPlayers ?? 2);
@@ -55,10 +60,27 @@ const AppContent = (): React.ReactElement => {
   // This ref is shared between the subscription handler and local save operations.
   const lastAppliedTimestampRef = React.useRef<string | null>(null);
 
-  // Initialize lobby mode on mount only. Do NOT re-run when storage type changes:
-  // switching Local/Cloud tabs in the lobby must stay in lobby and show the list,
-  // not load the current game for the new type and exit lobby.
+  // URL /g/:code takes precedence: parse on mount and when location changes.
   React.useEffect(() => {
+    const pathname = location.pathname;
+    const match = pathname.match(GAME_CODE_PATH_REGEX);
+    if (match) {
+      const rawCode = match[1];
+      const normalizedCode = normalizeGameCode(rawCode);
+      setLobbyMode(true);
+      setSelectedGame(null);
+      setCurrentGameCodeState(null);
+      setIsBYODGame(false);
+      setMyPlayerID(null);
+      if (isValidGameCode(normalizedCode)) {
+        setJoinFormPrefill(normalizedCode, null, true);
+      } else {
+        setJoinFormPrefill(rawCode, INVALID_CODE_MESSAGE);
+      }
+      return;
+    }
+
+    // No URL join path: run normal restore current game.
     const initializeApp = async (): Promise<void> => {
       const code = storage.getCurrentGameCode();
 
@@ -151,7 +173,7 @@ const AppContent = (): React.ReactElement => {
 
     initializeApp();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Mount only: tab switches must not re-initialize and exit lobby
+  }, [location.pathname]); // Re-run when pathname changes (e.g. /g/CODE vs /); tab switches don't change pathname
 
   // Real-time subscription for multiplayer sync
   React.useEffect(() => {
