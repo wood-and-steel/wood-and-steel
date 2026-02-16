@@ -357,9 +357,11 @@ export async function saveGameState(
       ctx as unknown as Record<string, unknown>
     );
 
-    // Resolve adapter: use storageType, or which current-game key matches this code
-    let adapterStorageType: StorageType = storageType ?? 'local';
-    if (!adapterStorageType) {
+    // Resolve adapter: use storageType when provided; otherwise which current-game key has this code (BYOD saves must go to cloud)
+    let adapterStorageType: StorageType;
+    if (storageType === 'local' || storageType === 'cloud') {
+      adapterStorageType = storageType;
+    } else {
       const localCode = localStorage.getItem(CURRENT_GAME_LOCAL_KEY);
       const cloudCode = localStorage.getItem(CURRENT_GAME_CLOUD_KEY);
       if (cloudCode === normalizedCode) {
