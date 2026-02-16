@@ -1,3 +1,5 @@
+# Redirect g/XXXXX game codes to index.html (SPA fallback)
+# Needed for Dreamhost static site hosting
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
