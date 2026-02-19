@@ -9,13 +9,6 @@ import { getCurrentGameCode, saveGameState } from '../utils/gameManager';
 /**
  * End the current player's turn.
  * Advances to the next player, handles round detection, and executes turn hooks.
- *
- * Implementation:
- * - Executes phase-specific turn onEnd hook before advancing (e.g., growIndependentRailroads)
- *   The hook itself checks if it's the end of a round
- * - Advances ctx.currentPlayer to next player
- * - Updates ctx.playOrderPos
- * - Increments ctx.turn when wrapping to player 0 (completing a full round)
  */
 export function endTurn(): void {
   const state = useGameStore.getState();
@@ -29,12 +22,11 @@ export function endTurn(): void {
   const nextTurn = nextPlayOrderPos === 0 ? ctx.turn + 1 : ctx.turn;
 
   // Update state immutably
-  // Note: If turn.onEnd hook mutated G (e.g., growIndependentRailroads), we need to update G as well
-  // Since growIndependentRailroads mutates G in place, we create a new reference to trigger re-render
+  // Note: If turn.onEnd hook mutated G, we need to update G as well
   useGameStore.setState((currentState) => ({
     G: {
       ...currentState.G,
-      // Ensure independentRailroads is a new object reference if it was mutated
+      // Ensure independentRailroads is a new object reference if it was mutated by growIndependentRailroads
       independentRailroads: { ...currentState.G.independentRailroads },
     },
     ctx: {
