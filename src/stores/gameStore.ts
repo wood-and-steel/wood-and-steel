@@ -10,13 +10,11 @@ export interface GameState {
   contracts: Contract[];
   players: [string, PlayerProps][];
   independentRailroads: Record<string, { name: string; routes: string[] }>;
-  /** Set when host starts a BYOD game (all players joined). */
   byodGameStarted?: boolean;
 }
 
 /** Game context (ctx): phase, player, turn info. All player references are by ID. */
 export interface GameContext {
-  /** Current phase name (e.g. 'setup', 'play', 'scoring'). */
   phase: string;
   currentPlayer: string;
   numPlayers: number;
