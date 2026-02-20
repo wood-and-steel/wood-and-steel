@@ -1,13 +1,11 @@
 import { create } from 'zustand';
 import type { Contract } from '../Contract';
 
-/** Player data in game state. */
 export interface PlayerProps {
   name: string;
   activeCities: string[];
 }
 
-/** Game state (G) structure. */
 export interface GameState {
   contracts: Contract[];
   players: [string, PlayerProps][];
@@ -16,21 +14,15 @@ export interface GameState {
   byodGameStarted?: boolean;
 }
 
-/** Game context (ctx): phase, current player, turn info. */
+/** Game context (ctx): phase, player, turn info. All player references are by ID. */
 export interface GameContext {
   /** Current phase name (e.g. 'setup', 'play', 'scoring'). */
   phase: string;
-  /** ID of player whose turn it is ('0', '1', etc.). */
   currentPlayer: string;
-  /** Total number of players. */
   numPlayers: number;
-  /** Player IDs in turn order. */
   playOrder: string[];
-  /** Index in playOrder for the current player. */
   playOrderPos: number;
-  /** Current turn number. */
   turn: number;
-  /** Number of moves made in the current turn (optional). */
   numMoves?: number;
 }
 
