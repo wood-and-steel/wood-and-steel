@@ -65,6 +65,10 @@ export function ContractsList({
         ? G.contracts.filter((c) => c.playerID === playerID && !c.fulfilled)
         : G.contracts.filter((c) => c.playerID === playerID && c.fulfilled);
 
+  const currentPlayerHasUnfulfilledMarketContract = G.contracts.some(
+    (c) => c.type === "market" && !c.fulfilled && c.playerID === ctx.currentPlayer
+  );
+
   return (
     <div className="contractsList">
       {[...filteredContracts].sort(compareContractsByCreation).map((contract: Contract) => (
@@ -78,6 +82,7 @@ export function ContractsList({
           onToggleFulfilled={onToggleFulfilled}
           onDelete={onDelete}
           onClaimContract={onClaimContract}
+          claimMarketDisabled={currentPlayerHasUnfulfilledMarketContract}
         />
       ))}
     </div>

@@ -148,6 +148,7 @@ export function PopupMenu({
 
 export interface PopupMenuItemProps {
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  disabled?: boolean;
   children: React.ReactNode;
   [key: string]: unknown;
 }
@@ -155,9 +156,10 @@ export interface PopupMenuItemProps {
 /**
  * Individual menu item within a PopupMenu.
  */
-export function PopupMenuItem({ onClick, children, ...rest }: PopupMenuItemProps): React.ReactElement {
+export function PopupMenuItem({ onClick, disabled, children, ...rest }: PopupMenuItemProps): React.ReactElement {
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    if (disabled) return;
     onClick?.(e);
   };
   return (
@@ -165,6 +167,7 @@ export function PopupMenuItem({ onClick, children, ...rest }: PopupMenuItemProps
       type="button"
       className="popupMenu__item"
       role="menuitem"
+      disabled={disabled}
       onClick={handleClick}
       {...rest}
     >

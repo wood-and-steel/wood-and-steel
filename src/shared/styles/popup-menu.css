@@ -48,3 +48,12 @@
 .popupMenu__item:active {
   background-color: var(--color-bg-active);
 }
+
+.popupMenu__item:disabled {
+  opacity: var(--opacity-disabled);
+}
+
+.popupMenu__item:disabled:hover,
+.popupMenu__item:disabled:active {
+  background-color: transparent;
+}
