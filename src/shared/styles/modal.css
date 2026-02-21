@@ -109,18 +109,8 @@
 }
 
 .privateContractOfferModal__card {
-  display: flex;
-  flex-direction: column;
   text-align: left;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  /* Reset button defaults: inherit font, remove padding so header/body span full width */
+  /* Padding, transition, hover lift/shadow live on .contract */
   font-family: inherit;
   font-size: inherit;
-  padding: 0;
-}
-
-.privateContractOfferModal__card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }

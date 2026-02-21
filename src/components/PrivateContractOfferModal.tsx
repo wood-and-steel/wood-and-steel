@@ -1,21 +1,8 @@
 import React from "react";
-import { rewardValue, railroadTieValue, generatePrivateContractOffers } from "../Contract";
-import { CommodityRichName } from "./CommodityRichName";
-import { contractTieIcons } from "../shared/assets/icons";
+import { generatePrivateContractOffers } from "../Contract";
+import { ContractCard } from "./ContractCard";
 import type { GameState, GameContext } from "../stores/gameStore";
 import type { PrivateContractSpec } from "../Contract";
-
-function formatContractTieValue(spec: PrivateContractSpec): React.ReactElement {
-  const ties = railroadTieValue(spec);
-  const tieIcons = contractTieIcons as Record<string, string>;
-  return (
-    <img
-      className="contract__tieIcon"
-      src={tieIcons[String(ties)]}
-      alt={`${ties} ${ties > 1 ? "railroad ties" : "railroad tie"}`}
-    />
-  );
-}
 
 export interface PrivateContractOfferModalProps {
   isOpen: boolean;
@@ -100,23 +87,15 @@ export function PrivateContractOfferModal({
         <div className="privateContractOfferModal__grid">
           {offers.map((spec: PrivateContractSpec, index: number) => {
             const specKey = `${spec.commodity}|${spec.destinationKey}|${index}`;
-            const reward = rewardValue(spec);
             return (
-              <button
+              <ContractCard
                 key={specKey}
-                type="button"
-                className="contract contract--private privateContractOfferModal__card"
+                commodity={spec.commodity}
+                destinationKey={spec.destinationKey}
+                variant="private"
+                className="privateContractOfferModal__card"
                 onClick={() => handleOfferClick(spec.commodity, spec.destinationKey)}
-              >
-                <div className="contract__header">
-                  {formatContractTieValue(spec)}
-                  <div className="contract__rewardValue">${reward / 1000}K</div>
-                </div>
-                <div className="contract__body">
-                  <CommodityRichName commodity={spec.commodity} />
-                  <div className="contract__destination">to {spec.destinationKey}</div>
-                </div>
-              </button>
+              />
             );
           })}
         </div>

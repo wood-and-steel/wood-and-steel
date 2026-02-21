@@ -1,21 +1,7 @@
 import React from "react";
-import { rewardValue, railroadTieValue } from "../Contract";
-import { CommodityRichName } from "./CommodityRichName";
-import { contractTieIcons } from "../shared/assets/icons";
 import { PopupMenu, PopupMenuItem } from "./PopupMenu";
+import { ContractCard } from "./ContractCard";
 import type { Contract } from "../Contract";
-
-function formatContractTieValue(contract: { destinationKey: string; commodity: string }): React.ReactElement {
-  const ties = railroadTieValue(contract);
-  const tieIcons = contractTieIcons as Record<string, string>;
-  return (
-    <img
-      className="contract__tieIcon"
-      src={tieIcons[String(ties)]}
-      alt={`${ties} ${ties > 1 ? "railroad ties" : "railroad tie"}`}
-    />
-  );
-}
 
 export interface ContractDisplayProps {
   contract: Contract;
@@ -44,15 +30,8 @@ export function ContractDisplay({
   onClaimContract,
   claimMarketDisabled,
 }: ContractDisplayProps): React.ReactElement {
-  const cardRef = React.useRef<HTMLDivElement>(null);
+  const cardRef = React.useRef<HTMLButtonElement>(null);
   const isClickable = typeof onCardClick === "function";
-  const classes = [
-    "contract",
-    contract.type === "market" ? "contract--market" : "contract--private",
-    contract.fulfilled ? "contract--fulfilled" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
 
   const handleToggle = () => {
     onToggleFulfilled(contract.id);
@@ -71,34 +50,27 @@ export function ContractDisplay({
 
   return (
     <>
-      <div
+      <ContractCard
         ref={cardRef}
-        className={classes}
-        {...(isClickable
-          ? {
-              role: "button",
-              tabIndex: 0,
-              onClick: onCardClick,
-              onKeyDown: (e: React.KeyboardEvent) => {
+        commodity={contract.commodity}
+        destinationKey={contract.destinationKey}
+        variant={contract.type === "market" ? "market" : "private"}
+        fulfilled={contract.fulfilled}
+        disabled={!isClickable}
+        onClick={isClickable ? onCardClick : undefined}
+        onKeyDown={
+          isClickable
+            ? (e: React.KeyboardEvent<HTMLButtonElement>) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
                   onCardClick();
                 }
-              },
-              "aria-haspopup": "menu",
-              "aria-expanded": isMenuOpen,
-            }
-          : {})}
-      >
-        <div className="contract__header">
-          {formatContractTieValue(contract)}
-          <div className="contract__rewardValue">${rewardValue(contract) / 1000}K</div>
-        </div>
-        <div className="contract__body">
-          <CommodityRichName commodity={contract.commodity} />
-          <div className="contract__destination">to {contract.destinationKey}</div>
-        </div>
-      </div>
+              }
+            : undefined
+        }
+        aria-haspopup={isClickable ? "menu" : undefined}
+        aria-expanded={isClickable ? isMenuOpen : undefined}
+      />
       {isClickable && (
         <PopupMenu
           isOpen={isMenuOpen}
