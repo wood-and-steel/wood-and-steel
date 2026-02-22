@@ -434,7 +434,7 @@ const AppContent = (): React.ReactElement => {
             const seat = deviceId ? playerSeats[deviceId] : null;
             const playerName = seat?.playerName ?? `Player ${i}`;
 
-            return [playerID, { name: playerName, activeCities: [] as string[] }];
+            return [playerID, { name: playerName, activeCities: [] as string[], hubCity: null, regionalOffice: null }];
           });
 
           console.info('[App] Initialized players for BYOD game:', players);

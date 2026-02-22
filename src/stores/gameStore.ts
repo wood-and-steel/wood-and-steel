@@ -1,9 +1,13 @@
 import { create } from 'zustand';
 import type { Contract } from '../Contract';
 
+export type RegionCode = 'NW' | 'NC' | 'NE' | 'SW' | 'SC' | 'SE';
+
 export interface PlayerProps {
   name: string;
   activeCities: string[];
+  hubCity: string | null;
+  regionalOffice: RegionCode | null;
 }
 
 export interface GameState {
@@ -49,7 +53,7 @@ function getInitialState(numPlayers: number = 2): { G: GameState; ctx: GameConte
       contracts: [],
       players: Array.from({ length: numPlayers }, (_, i) => [
         String(i),
-        { name: `Player ${i}`, activeCities: [] },
+        { name: `Player ${i}`, activeCities: [], hubCity: null, regionalOffice: null },
       ]),
       independentRailroads: {},
     },

@@ -7,7 +7,7 @@
  */
 
 import { useGameStore } from './gameStore';
-import type { GameStoreState, GameState, GameContext, PlayerProps } from './gameStore';
+import type { GameStoreState, GameState, GameContext, PlayerProps, RegionCode } from './gameStore';
 import { isMoveAllowed, isMoveAllowedForPlayer } from './moveValidation';
 import {
   generateStartingContract as generateStartingContractContract,
@@ -489,6 +489,123 @@ export function acquireIndependentRailroad(railroadName: string): void {
       },
     };
   });
+
+  const updatedState = useGameStore.getState();
+  checkPhaseTransition(updatedState.G, updatedState.ctx);
+
+  saveCurrentGameState();
+}
+
+const VALID_REGION_CODES: readonly RegionCode[] = [
+  'NW',
+  'NC',
+  'NE',
+  'SW',
+  'SC',
+  'SE',
+];
+
+export function claimHubCity(cityKey: string): void {
+  const { G, ctx } = useGameStore.getState();
+
+  if (!isMoveAllowed('claimHubCity', ctx)) {
+    console.warn('[claimHubCity] Move not allowed in current phase');
+    return;
+  }
+
+  if (typeof cityKey !== 'string' || !cityKey) {
+    console.error('[claimHubCity] cityKey must be a non-empty string');
+    return;
+  }
+
+  if (!cities.get(cityKey)) {
+    console.error(`[claimHubCity] City "${cityKey}" not found`);
+    return;
+  }
+
+  const currentPlayerEntry = G.players.find(([id]) => id === ctx.currentPlayer);
+  if (!currentPlayerEntry) {
+    console.error(`[claimHubCity] Current player "${ctx.currentPlayer}" not found`);
+    return;
+  }
+
+  const [, playerProps] = currentPlayerEntry;
+  if (playerProps.hubCity != null) {
+    return; // no-op: already has a hub city
+  }
+
+  const updatedActiveCities = playerProps.activeCities.includes(cityKey)
+    ? playerProps.activeCities
+    : [...playerProps.activeCities, cityKey];
+
+  useGameStore.setState((state) => ({
+    G: {
+      ...state.G,
+      players: state.G.players.map(([id, props]) =>
+        id === ctx.currentPlayer
+          ? [id, { ...props, hubCity: cityKey, activeCities: updatedActiveCities }]
+          : [id, props]
+      ),
+    },
+  }));
+
+  const updatedState = useGameStore.getState();
+  checkPhaseTransition(updatedState.G, updatedState.ctx);
+
+  saveCurrentGameState();
+}
+
+export function claimRegionalOffice(regionCode: string): void {
+  const { G, ctx } = useGameStore.getState();
+
+  if (!isMoveAllowed('claimRegionalOffice', ctx)) {
+    console.warn('[claimRegionalOffice] Move not allowed in current phase');
+    return;
+  }
+
+  if (
+    typeof regionCode !== 'string' ||
+    !(VALID_REGION_CODES as readonly string[]).includes(regionCode)
+  ) {
+    console.error(
+      '[claimRegionalOffice] regionCode must be one of: NW, NC, NE, SW, SC, SE'
+    );
+    return;
+  }
+
+  const currentPlayerEntry = G.players.find(([id]) => id === ctx.currentPlayer);
+  if (!currentPlayerEntry) {
+    console.error(
+      `[claimRegionalOffice] Current player "${ctx.currentPlayer}" not found`
+    );
+    return;
+  }
+
+  const [, playerProps] = currentPlayerEntry;
+  if (playerProps.regionalOffice != null) {
+    return; // no-op: already has a regional office
+  }
+
+  const regionTaken = G.players.some(
+    ([id, p]) => id !== ctx.currentPlayer && p.regionalOffice === regionCode
+  );
+  if (regionTaken) {
+    console.warn(
+      `[claimRegionalOffice] Region "${regionCode}" is already claimed by another player`
+    );
+    return;
+  }
+
+  useGameStore.setState((state) => ({
+    G: {
+      ...state.G,
+      players: state.G.players.map(([id, props]) =>
+        id === ctx.currentPlayer
+          ? [id, { ...props, regionalOffice: regionCode as RegionCode }]
+          : [id, props]
+      ),
+    },
+  }));
 
   const updatedState = useGameStore.getState();
   checkPhaseTransition(updatedState.G, updatedState.ctx);

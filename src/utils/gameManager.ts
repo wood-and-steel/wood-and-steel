@@ -9,7 +9,7 @@ import type { StorageAdapter, GameListItem } from './storage/storageAdapter';
 import { serializeState } from './stateSerialization';
 import type { SerializedState } from './stateSerialization';
 import { shuffleArray } from './random';
-import type { GameState, GameContext } from '../stores/gameStore';
+import type { GameState, GameContext, PlayerProps, RegionCode } from '../stores/gameStore';
 
 export type StorageType = 'local' | 'cloud';
 
@@ -445,6 +445,29 @@ export function updateLastModifiedCache(code: string, lastModified: string): voi
   }
 }
 
+/** Ensure each player has hubCity and regionalOffice (for backward compatibility with old saves). */
+function normalizeLoadedPlayers(players: unknown[]): [string, PlayerProps][] {
+  return players.map((entry) => {
+    if (!Array.isArray(entry) || entry.length < 2) {
+      return [String(entry?.[0] ?? ''), { name: '', activeCities: [], hubCity: null, regionalOffice: null }];
+    }
+    const [id, raw] = entry as [string, Record<string, unknown>];
+    const p = raw && typeof raw === 'object' ? raw : {};
+    return [
+      String(id),
+      {
+        name: typeof p.name === 'string' ? p.name : '',
+        activeCities: Array.isArray(p.activeCities) ? (p.activeCities as string[]) : [],
+        hubCity: p.hubCity != null ? String(p.hubCity) : null,
+        regionalOffice: (p.regionalOffice != null && typeof p.regionalOffice === 'string' &&
+          ['NW', 'NC', 'NE', 'SW', 'SC', 'SE'].includes(p.regionalOffice))
+          ? (p.regionalOffice as RegionCode)
+          : null,
+      },
+    ];
+  });
+}
+
 export async function loadGameState(
   code: string,
   storageType: StorageType | null = null
@@ -470,6 +493,9 @@ export async function loadGameState(
         }
       }
 
+      if (state?.G?.players) {
+        state.G.players = normalizeLoadedPlayers(state.G.players as unknown[]);
+      }
       return state as { G: GameState; ctx: GameContext } | null;
     } else {
       // No storageType: try cloud first, then local
@@ -487,10 +513,16 @@ export async function loadGameState(
             lastModifiedCache.set(normalizedCode, lastModified);
           }
         }
+        if (state?.G?.players) {
+          state.G.players = normalizeLoadedPlayers(state.G.players as unknown[]);
+        }
         return state as unknown as { G: GameState; ctx: GameContext };
       }
 
       state = await localAdapter.loadGame(normalizedCode);
+      if (state?.G?.players) {
+        state.G.players = normalizeLoadedPlayers(state.G.players as unknown[]);
+      }
       return state as unknown as { G: GameState; ctx: GameContext } | null;
     }
   } catch (e) {

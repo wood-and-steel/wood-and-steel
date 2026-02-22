@@ -10,6 +10,8 @@ import {
   deleteContract,
   acquireIndependentRailroad,
   addCityToPlayer,
+  claimHubCity,
+  claimRegionalOffice,
   endTurn,
 } from './gameActions';
 
@@ -27,6 +29,8 @@ export interface Moves {
   deleteContract: (contractID: string) => void;
   acquireIndependentRailroad: (railroadName: string) => void;
   addCityToPlayer: (cityKey: string) => void;
+  claimHubCity: (cityKey: string) => void;
+  claimRegionalOffice: (regionCode: string) => void;
   endTurn: () => void;
 }
 
@@ -60,6 +64,10 @@ export function createMoves(
       acquireIndependentRailroad(railroadName),
 
     addCityToPlayer: (cityKey: string) => addCityToPlayer(cityKey),
+
+    claimHubCity: (cityKey: string) => claimHubCity(cityKey),
+
+    claimRegionalOffice: (regionCode: string) => claimRegionalOffice(regionCode),
 
     endTurn: () => endTurn(),
   };
