@@ -213,21 +213,20 @@ export function generatePrivateContractSpec(
 }
 
 /**
- * Returns an array of `count` unique private contract specs. Deduplicates by commodity|destinationKey;
- * retries generation until count unique offers are collected, with a retry limit.
+ * Returns 2 unique private contract specs. Deduplicates by commodity|destinationKey;
+ * retries generation until 2 unique offers are collected or max attempts reached.
  *
  * @param G - Game state object
  * @param ctx - Game context
- * @param count - Number of unique offers to generate (2, 3, or 4)
  */
 export function generatePrivateContractOffers(
   G: GameStateForContract,
-  ctx: GameContextForContract,
-  count: number
+  ctx: GameContextForContract
 ): PrivateContractSpec[] {
   const seen = new Set<string>();
   const offers: PrivateContractSpec[] = [];
   const maxAttempts = 50;
+  const count = 2;
 
   for (let attempts = 0; attempts < maxAttempts && offers.length < count; attempts++) {
     const spec = generatePrivateContractSpec(G, ctx);

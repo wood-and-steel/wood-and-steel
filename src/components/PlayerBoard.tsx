@@ -22,7 +22,7 @@ export interface PlayerBoardProps {
   startingContractExists: boolean;
   currentPhase: GamePhase;
   onStartingPairSelect: (pair: [string, string]) => void;
-  onOpenPrivateContractModal?: (offerCount: number) => void;
+  onOpenPrivateContractModal?: () => void;
   onToggleFulfilled: (contractID: string) => void;
   onDelete: (contractID: string) => void;
   onClaimContract?: (contractID: string) => void;
@@ -92,25 +92,17 @@ export function PlayerBoard({
             <div className="playerBoard__buttonGroup">
               <button
                 type="button"
-                name="privateContract2"
+                name="privateContract"
                 className={`button ${startingContractExists && isPlayerTurn ? "" : "button--hidden"}`}
-                onClick={() => onOpenPrivateContractModal?.(2)}
+                onClick={() => onOpenPrivateContractModal?.()}
               >
-                +2P
-              </button>
-              <button
-                type="button"
-                name="privateContract3"
-                className={`button ${startingContractExists && isPlayerTurn ? "" : "button--hidden"}`}
-                onClick={() => onOpenPrivateContractModal?.(3)}
-              >
-                +3P
+                +P
               </button>
               <button
                 name="marketContract"
                 className={`button ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
               >
-                +1M
+                +M
               </button>
               <button
                 name="endTurn"

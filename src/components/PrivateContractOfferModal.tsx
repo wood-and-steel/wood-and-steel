@@ -7,7 +7,6 @@ import type { PrivateContractSpec } from "../Contract";
 export interface PrivateContractOfferModalProps {
   isOpen: boolean;
   onClose: () => void;
-  offerCount?: number;
   G: GameState;
   ctx: GameContext;
   onSelect: (commodity: string, destinationKey: string) => void;
@@ -21,7 +20,6 @@ export interface PrivateContractOfferModalProps {
 export function PrivateContractOfferModal({
   isOpen,
   onClose,
-  offerCount,
   G,
   ctx,
   onSelect,
@@ -30,10 +28,10 @@ export function PrivateContractOfferModal({
 
   React.useEffect(() => {
     if (isOpen && G && ctx) {
-      const generated = generatePrivateContractOffers(G, ctx, offerCount ?? 2);
+      const generated = generatePrivateContractOffers(G, ctx);
       setOffers(generated);
     }
-  }, [isOpen, G, ctx, offerCount]);
+  }, [isOpen, G, ctx]);
 
   const handleOfferClick = React.useCallback(
     (commodity: string, destinationKey: string) => {

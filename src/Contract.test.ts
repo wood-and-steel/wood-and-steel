@@ -68,7 +68,7 @@ describe('generatePrivateContractOffers', () => {
   test('returns array of specs, each with commodity and destinationKey', () => {
     const { G, ctx } = makeGameState(['New York', 'Philadelphia', 'Pittsburgh']);
     for (let i = 0; i < 20; i++) {
-      const offers = generatePrivateContractOffers(G, ctx, 2);
+      const offers = generatePrivateContractOffers(G, ctx);
       expect(Array.isArray(offers)).toBe(true);
       offers.forEach((offer) => {
         expect(offer).toHaveProperty('commodity');
@@ -86,25 +86,23 @@ describe('generatePrivateContractOffers', () => {
       'Cincinnati',
     ]);
     for (let i = 0; i < 50; i++) {
-      const offers = generatePrivateContractOffers(G, ctx, 3);
+      const offers = generatePrivateContractOffers(G, ctx);
       const keys = new Set(offers.map((o) => `${o.commodity}|${o.destinationKey}`));
       expect(keys.size).toBe(offers.length);
     }
   });
 
-  test('returns at most count offers', () => {
+  test('returns exactly 2 offers', () => {
     const { G, ctx } = makeGameState(['New York', 'Philadelphia']);
-    for (const count of [2, 3, 4]) {
-      for (let i = 0; i < 20; i++) {
-        const offers = generatePrivateContractOffers(G, ctx, count);
-        expect(offers.length).toBeLessThanOrEqual(count);
-      }
+    for (let i = 0; i < 20; i++) {
+      const offers = generatePrivateContractOffers(G, ctx);
+      expect(offers.length).toEqual(2);
     }
   });
 
   test('each offer has valid commodity and destinationKey', () => {
     const { G, ctx } = makeGameState(['New York', 'Philadelphia']);
-    const offers = generatePrivateContractOffers(G, ctx, 2);
+    const offers = generatePrivateContractOffers(G, ctx);
     offers.forEach((offer) => {
       expect(commodities.has(offer.commodity)).toBe(true);
       expect(cities.has(offer.destinationKey)).toBe(true);

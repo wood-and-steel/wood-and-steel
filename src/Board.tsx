@@ -32,10 +32,8 @@ export function WoodAndSteelState({
   const [input, setInput] = React.useState('');
   const [isEditPlaytestDialogOpen, setIsEditPlaytestDialogOpen] =
     React.useState(false);
-  const [privateContractModal, setPrivateContractModal] = React.useState({
-    open: false,
-    count: 2,
-  });
+  const [isPrivateContractModalOpen, setIsPrivateContractModalOpen] =
+    React.useState(false);
   const [activeTab, setActiveTab] = React.useState<TabId>('board');
   const [showRailroadHint, setShowRailroadHint] = React.useState(false);
   const prevPhaseRef = React.useRef(ctx.phase);
@@ -217,14 +215,13 @@ export function WoodAndSteelState({
             moves={moves}
           />
           <PrivateContractOfferModal
-            isOpen={privateContractModal.open}
-            onClose={() => setPrivateContractModal({ open: false, count: 2 })}
-            offerCount={privateContractModal.count}
+            isOpen={isPrivateContractModalOpen}
+            onClose={() => setIsPrivateContractModalOpen(false)}
             G={G}
             ctx={ctx}
             onSelect={(commodity: string, destinationKey: string) => {
               moves.addContract(commodity, destinationKey, 'private');
-              setPrivateContractModal({ open: false, count: 2 });
+              setIsPrivateContractModalOpen(false);
             }}
           />
           {activeTab === 'board' && (
@@ -236,8 +233,8 @@ export function WoodAndSteelState({
               startingContractExists={startingContractExists}
               currentPhase={currentPhase}
               onStartingPairSelect={handleStartingPairSelect}
-              onOpenPrivateContractModal={(count: number) =>
-                setPrivateContractModal({ open: true, count })
+              onOpenPrivateContractModal={() =>
+                setIsPrivateContractModalOpen(true)
               }
               onToggleFulfilled={handleToggleFulfilled}
               onDelete={handleDelete}
