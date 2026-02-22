@@ -36,6 +36,8 @@ import {
   generateStartingContract,
   generatePrivateContract,
   toggleContractFulfilled,
+  claimHubCity,
+  claimRegionalOffice,
   endTurn,
 } from '../stores/gameActions';
 import { endTurn as endTurnEvent } from '../stores/events';
@@ -89,8 +91,8 @@ describe('Persistence Tests', () => {
         G: {
           ...useGameStore.getState().G,
           players: [
-            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia'] }],
-            ['1', { name: 'Player 1', activeCities: [] }],
+            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia'], hubCity: null, regionalOffice: null }],
+            ['1', { name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: {
@@ -152,8 +154,8 @@ describe('Persistence Tests', () => {
         G: {
           ...useGameStore.getState().G,
           players: [
-            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia', 'Pittsburgh'] }],
-            ['1', { name: 'Player 1', activeCities: [] }],
+            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia', 'Pittsburgh'], hubCity: null, regionalOffice: null }],
+            ['1', { name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: {
@@ -172,6 +174,91 @@ describe('Persistence Tests', () => {
       expect(savedState != null).toBe(true);
       // At least 2 of 3 generatePrivateContract calls typically succeed (one may fail due to randomness)
       expect(savedState!.G.contracts.length).toBeGreaterThanOrEqual(2);
+    });
+
+    test('state persists after claimHubCity', async () => {
+      const gameCode = await createNewGame();
+
+      useGameStore.setState({
+        G: {
+          ...useGameStore.getState().G,
+          players: [
+            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia'], hubCity: null, regionalOffice: null }],
+            ['1', { name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
+          ],
+        },
+        ctx: {
+          ...useGameStore.getState().ctx,
+          phase: 'play',
+          currentPlayer: '0',
+        },
+      });
+      await saveGameState(gameCode, useGameStore.getState().G, useGameStore.getState().ctx);
+
+      claimHubCity('Chicago');
+
+      const savedState = await loadGameState(gameCode);
+      expect(savedState != null).toBe(true);
+      const player0 = savedState!.G.players.find(([id]) => id === '0');
+      expect(player0).toBeDefined();
+      expect(player0![1].hubCity).toBe('Chicago');
+      expect(savedState!.G.players[0][1].activeCities).toContain('Chicago');
+    });
+
+    test('state persists after claimRegionalOffice', async () => {
+      const gameCode = await createNewGame();
+
+      useGameStore.setState({
+        G: {
+          ...useGameStore.getState().G,
+          players: [
+            ['0', { name: 'Player 0', activeCities: ['New York'], hubCity: null, regionalOffice: null }],
+            ['1', { name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
+          ],
+        },
+        ctx: {
+          ...useGameStore.getState().ctx,
+          phase: 'play',
+          currentPlayer: '0',
+        },
+      });
+      await saveGameState(gameCode, useGameStore.getState().G, useGameStore.getState().ctx);
+
+      claimRegionalOffice('NW');
+
+      const savedState = await loadGameState(gameCode);
+      expect(savedState != null).toBe(true);
+      const player0 = savedState!.G.players.find(([id]) => id === '0');
+      expect(player0).toBeDefined();
+      expect(player0![1].regionalOffice).toBe('NW');
+    });
+
+    test('second player cannot claim same regional office', async () => {
+      const gameCode = await createNewGame();
+
+      useGameStore.setState({
+        G: {
+          ...useGameStore.getState().G,
+          players: [
+            ['0', { name: 'Player 0', activeCities: ['New York'], hubCity: null, regionalOffice: 'NW' as const }],
+            ['1', { name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
+          ],
+        },
+        ctx: {
+          ...useGameStore.getState().ctx,
+          phase: 'play',
+          currentPlayer: '1',
+        },
+      });
+      await saveGameState(gameCode, useGameStore.getState().G, useGameStore.getState().ctx);
+
+      claimRegionalOffice('NW'); // Player 1 tries to claim NW (already claimed by Player 0)
+
+      const savedState = await loadGameState(gameCode);
+      expect(savedState != null).toBe(true);
+      const player1 = savedState!.G.players.find(([id]) => id === '1');
+      expect(player1).toBeDefined();
+      expect(player1![1].regionalOffice).toBeNull();
     });
   });
 
@@ -553,8 +640,8 @@ describe('Persistence Tests', () => {
         G: {
           ...useGameStore.getState().G,
           players: [
-            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia'] }],
-            ['1', { name: 'Player 1', activeCities: ['Chicago', 'Detroit'] }],
+            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia'], hubCity: null, regionalOffice: null }],
+            ['1', { name: 'Player 1', activeCities: ['Chicago', 'Detroit'], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: { ...useGameStore.getState().ctx, phase: 'play', currentPlayer: '0' },
@@ -606,9 +693,11 @@ describe('Persistence Tests', () => {
               {
                 name: 'Player 0',
                 activeCities: ['New York', 'Philadelphia', 'Chicago'],
+                hubCity: null,
+                regionalOffice: null,
               },
             ],
-            ['1', { name: 'Player 1', activeCities: ['Boston', 'Detroit'] }],
+            ['1', { name: 'Player 1', activeCities: ['Boston', 'Detroit'], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: {

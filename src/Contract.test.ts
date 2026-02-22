@@ -14,15 +14,15 @@ function makeGameState(
   activeCities: string[],
   currentPlayer: string = '0'
 ): {
-  G: { contracts: Contract[]; players: [string, { name: string; activeCities: string[] }][] };
+  G: { contracts: Contract[]; players: [string, { name: string; activeCities: string[]; hubCity: string | null; regionalOffice: string | null }][] };
   ctx: { currentPlayer: string };
 } {
   return {
     G: {
       contracts: [],
       players: [
-        ['0', { name: 'P0', activeCities }],
-        ['1', { name: 'P1', activeCities: ['Chicago', 'Detroit'] }],
+        ['0', { name: 'P0', activeCities, hubCity: null, regionalOffice: null }],
+        ['1', { name: 'P1', activeCities: ['Chicago', 'Detroit'], hubCity: null, regionalOffice: null }],
       ],
     },
     ctx: {
@@ -56,7 +56,7 @@ describe('generatePrivateContractSpec', () => {
   test('returns undefined when players array is empty', () => {
     const G = {
       contracts: [] as Contract[],
-      players: [] as [string, { name: string; activeCities: string[] }][],
+      players: [] as [string, { name: string; activeCities: string[]; hubCity: string | null; regionalOffice: string | null }][],
     };
     const ctx = { currentPlayer: '0' };
     const spec = generatePrivateContractSpec(G, ctx);
@@ -117,9 +117,9 @@ describe('generateMarketContract', () => {
     const G = {
       contracts: [] as Contract[],
       players: [
-        ['0', { name: 'P0', activeCities: ['New York', 'Philadelphia', 'Pittsburgh'] }],
-        ['1', { name: 'P1', activeCities: ['Raleigh', 'Norfolk'] }],
-      ] as [string, { name: string; activeCities: string[] }][],
+        ['0', { name: 'P0', activeCities: ['New York', 'Philadelphia', 'Pittsburgh'], hubCity: null, regionalOffice: null }],
+        ['1', { name: 'P1', activeCities: ['Raleigh', 'Norfolk'], hubCity: null, regionalOffice: null }],
+      ] as [string, { name: string; activeCities: string[]; hubCity: string | null; regionalOffice: string | null }][],
     };
 
     for (let i = 0; i < 20; i++) {
