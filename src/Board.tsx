@@ -223,6 +223,7 @@ export function WoodAndSteelState({
               moves.addContract(commodity, destinationKey, 'private');
               setIsPrivateContractModalOpen(false);
             }}
+            moves={moves}
           />
           {activeTab === 'board' && (
             <PlayerBoard
