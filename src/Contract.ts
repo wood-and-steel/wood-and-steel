@@ -437,9 +437,16 @@ export function newContract(
  *
  * @param G - Game state object
  * @param cityKey - Key of the city
+ * @param options
+ * @param options.isHubCity - If true, include the value of each city within 1 hop (default false)
  * @returns Numeric value, or undefined if city not found
  */
-export function valueOfCity(G: GameStateForContract, cityKey: string): number | undefined {
+export function valueOfCity(
+  G: GameStateForContract,
+  cityKey: string,
+  options: { isHubCity?: boolean } = {}
+): number | undefined {
+  const { isHubCity = false } = options;
   const city = cities.get(cityKey);
 
   if (city === undefined) {
@@ -457,7 +464,7 @@ export function valueOfCity(G: GameStateForContract, cityKey: string): number | 
     }
   });
 
-  const value =
+  let value =
     2 *
       (1 +
         (city.commodities.length > 0 ? 1 : 0) +
@@ -465,6 +472,13 @@ export function valueOfCity(G: GameStateForContract, cityKey: string): number | 
         3 * (city.westCoast ? 1 : 0)) +
     (2 * contractsFulfilledHere) +
     contractsWithCommoditiesFromHere;
+
+  if (isHubCity) {
+    const connected = citiesConnectedTo([cityKey], {});
+    for (const key of connected) {
+      value += valueOfCity(G, key) ?? 0;
+    }
+  }
 
   return value;
 }
