@@ -542,14 +542,6 @@ export function claimHubCity(cityKey: string): void {
     return;
   }
 
-  const otherPlayerHasInActive = G.players.some(
-    ([id, props]) => id !== ctx.currentPlayer && props.activeCities.includes(cityKey)
-  );
-  if (otherPlayerHasInActive) {
-    console.error(`[claimHubCity] City "${cityKey}" is in another player's active cities`);
-    return;
-  }
-
   const updatedActiveCities = playerProps.activeCities.includes(cityKey)
     ? playerProps.activeCities
     : [...playerProps.activeCities, cityKey];

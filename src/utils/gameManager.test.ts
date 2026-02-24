@@ -235,35 +235,6 @@ describe('Persistence Tests', () => {
       expect(player0![1].hubCity).toBe('Chicago');
     });
 
-    test('player cannot claim hub city that is in another player\'s activeCities', async () => {
-      const gameCode = await createNewGame();
-
-      useGameStore.setState({
-        G: {
-          ...useGameStore.getState().G,
-          players: [
-            ['0', { name: 'Player 0', activeCities: ['New York', 'Chicago', 'Philadelphia'], hubCity: null, regionalOffice: null }],
-            ['1', { name: 'Player 1', activeCities: ['Boston', 'Detroit'], hubCity: null, regionalOffice: null }],
-          ],
-        },
-        ctx: {
-          ...useGameStore.getState().ctx,
-          phase: 'play',
-          currentPlayer: '1',
-        },
-      });
-      await saveGameState(gameCode, useGameStore.getState().G, useGameStore.getState().ctx);
-
-      claimHubCity('Chicago'); // Player 1 tries to claim Chicago (in Player 0's activeCities)
-
-      const savedState = await loadGameState(gameCode);
-      expect(savedState != null).toBe(true);
-      const player1 = savedState!.G.players.find(([id]) => id === '1');
-      expect(player1).toBeDefined();
-      expect(player1![1].hubCity).toBeNull();
-      expect(savedState!.G.players[0][1].activeCities).toContain('Chicago');
-    });
-
     test('state persists after claimRegionalOffice', async () => {
       const gameCode = await createNewGame();
 
