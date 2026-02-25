@@ -1,4 +1,5 @@
 import { cities, commodities } from "./data";
+import type { GameState, GameContext } from "./stores/gameStore";
 import { shortestDistance, citiesConnectedTo } from "./utils/graph";
 import { cardinalDirection } from "./utils/geo";
 import { weightedRandom, randomSetItem } from "./utils/random";
@@ -22,23 +23,6 @@ export interface PrivateContractSpec {
   destinationKey: string;
 }
 
-/**
- * Minimal game state shape used by contract generation.
- * TODO: Replace with canonical GameState (G) type when game state is migrated to TS (e.g. gameStore).
- */
-interface GameStateForContract {
-  contracts: Contract[];
-  players: [string, { name: string; activeCities: string[] }][];
-}
-
-/**
- * Minimal game context used by contract generation.
- * TODO: Replace with canonical GameContext (ctx) type when game state is migrated to TS.
- */
-interface GameContextForContract {
-  currentPlayer: string;
-}
-
 /** Valid region codes for commodity filtering. */
 const COMMODITY_REGION_CODES = ["NW", "NC", "NE", "SW", "SC", "SE"] as const;
 export type CommodityRegionCode = (typeof COMMODITY_REGION_CODES)[number];
@@ -59,7 +43,7 @@ interface NewContractOptions {
  * @returns A contract, or undefined if generation fails
  */
 export function generateStartingContract(
-  G: GameStateForContract,
+  G: GameState,
   activeCitiesKeys: [string, string],
   playerID: string
 ): Contract | undefined {
@@ -155,8 +139,8 @@ export function generateStartingContract(
  * @returns A spec with commodity and destinationKey, or undefined
  */
 export function generatePrivateContractSpec(
-  G: GameStateForContract,
-  ctx: GameContextForContract,
+  G: GameState,
+  ctx: GameContext,
   commodityRegion?: CommodityRegionCode
 ): PrivateContractSpec | undefined {
   const player = G.players.find(([id]) => id === ctx.currentPlayer);
@@ -233,15 +217,27 @@ export function generatePrivateContractSpec(
  * @param count - Number of offers to generate (default 2)
  */
 export function generatePrivateContractOffers(
-  G: GameStateForContract,
-  ctx: GameContextForContract,
-  count: number = 2
+  G: GameState,
+  ctx: GameContext
 ): PrivateContractSpec[] {
   const seen = new Set<string>();
   const offers: PrivateContractSpec[] = [];
   const maxAttempts = 50;
+  const currentPlayer = G.players.find(([id]) => id === ctx.currentPlayer)?.[1];
 
-  for (let attempts = 0; attempts < maxAttempts && offers.length < count; attempts++) {
+  // If player has a regional office, generate a contract spec for it first
+  if (currentPlayer?.regionalOffice != null) {
+    const spec = generatePrivateContractSpec(G, ctx, currentPlayer.regionalOffice);
+    if (spec) {
+      offers.push(spec);
+      seen.add(`${spec.commodity}|${spec.destinationKey}`);
+    }
+  }
+
+  // Generate remaining specs while avoiding duplicates
+  const offerCount = 2 + (currentPlayer?.hubCity != null ? 1 : 0);
+
+  for (let attempts = 0; attempts < maxAttempts && offers.length < offerCount; attempts++) {
     const spec = generatePrivateContractSpec(G, ctx);
     if (!spec) continue;
 
@@ -262,8 +258,8 @@ export function generatePrivateContractOffers(
  * @returns A contract, or undefined if generation fails
  */
 export function generatePrivateContract(
-  G: GameStateForContract,
-  ctx: GameContextForContract
+  G: GameState,
+  ctx: GameContext
 ): Contract | undefined {
   const spec = generatePrivateContractSpec(G, ctx);
   if (!spec) return undefined;
@@ -279,7 +275,7 @@ export function generatePrivateContract(
  * @param G - Game state object
  * @returns A contract, or undefined if generation fails
  */
-export function generateMarketContract(G: GameStateForContract): Contract | undefined {
+export function generateMarketContract(G: GameState): Contract | undefined {
   // Collect keys of all active cities
   const activeCitiesSet = new Set<string>();
   G.players.forEach(([, value]) => {
@@ -346,7 +342,7 @@ export function generateMarketContract(G: GameStateForContract): Contract | unde
  * @returns Key of randomly selected city, or undefined if none
  */
 function weightedRandomCity(
-  G: GameStateForContract,
+  G: GameState,
   cityKeys: Iterable<string>
 ): string | undefined {
   const citiesArr = [...cityKeys];
@@ -455,7 +451,7 @@ export function newContract(
  * @returns Numeric value, or undefined if city not found
  */
 export function valueOfCity(
-  G: GameStateForContract,
+  G: GameState,
   cityKey: string,
   options: { isHubCity?: boolean } = {}
 ): number | undefined {
