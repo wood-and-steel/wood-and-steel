@@ -505,33 +505,33 @@ const VALID_REGION_CODES: readonly RegionCode[] = [
   'SE',
 ];
 
-export function claimHubCity(cityKey: string): void {
+export function claimHubCity(cityKey: string): boolean {
   const { G, ctx } = useGameStore.getState();
 
   if (!isMoveAllowed('claimHubCity', ctx)) {
     console.warn('[claimHubCity] Move not allowed in current phase');
-    return;
+    return false;
   }
 
   if (typeof cityKey !== 'string' || !cityKey) {
     console.error('[claimHubCity] cityKey must be a non-empty string');
-    return;
+    return false;
   }
 
   if (!cities.get(cityKey)) {
     console.error(`[claimHubCity] City "${cityKey}" not found`);
-    return;
+    return false;
   }
 
   const currentPlayerEntry = G.players.find(([id]) => id === ctx.currentPlayer);
   if (!currentPlayerEntry) {
     console.error(`[claimHubCity] Current player "${ctx.currentPlayer}" not found`);
-    return;
+    return false;
   }
 
   const [, playerProps] = currentPlayerEntry;
   if (playerProps.hubCity != null) {
-    return; // no-op: already has a hub city
+    return false; // no-op: already has a hub city
   }
 
   const otherPlayerHasHub = G.players.some(
@@ -539,7 +539,7 @@ export function claimHubCity(cityKey: string): void {
   );
   if (otherPlayerHasHub) {
     console.error(`[claimHubCity] City "${cityKey}" is already another player's hub city`);
-    return;
+    return false;
   }
 
   const updatedActiveCities = playerProps.activeCities.includes(cityKey)
@@ -561,6 +561,7 @@ export function claimHubCity(cityKey: string): void {
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
   saveCurrentGameState();
+  return true;
 }
 
 export function claimRegionalOffice(regionCode: string): void {

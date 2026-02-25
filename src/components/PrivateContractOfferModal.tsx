@@ -6,7 +6,7 @@ import type { PrivateContractSpec } from "../Contract";
 
 /** Moves used by the modal for upgrade cards. */
 export interface PrivateContractOfferModalMoves {
-  claimHubCity: (cityKey: string) => void;
+  claimHubCity: (cityKey: string) => boolean;
   claimRegionalOffice: (regionCode: string) => void;
 }
 

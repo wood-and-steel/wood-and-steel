@@ -29,7 +29,7 @@ export interface Moves {
   deleteContract: (contractID: string) => void;
   acquireIndependentRailroad: (railroadName: string) => void;
   addCityToPlayer: (cityKey: string) => void;
-  claimHubCity: (cityKey: string) => void;
+  claimHubCity: (cityKey: string) => boolean;
   claimRegionalOffice: (regionCode: string) => void;
   endTurn: () => void;
 }
