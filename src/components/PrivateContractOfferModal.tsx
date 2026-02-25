@@ -62,7 +62,10 @@ export function PrivateContractOfferModal({
     const justOpened = isOpen && !prevIsOpenRef.current;
     prevIsOpenRef.current = isOpen;
     if (justOpened && G && ctx) {
-      const generated = generatePrivateContractOffers(G, ctx);
+      let offerCount = 2;
+      offerCount += currentPlayer?.hubCity != null ? 1 : 0;
+      offerCount += currentPlayer?.regionalOffice != null ? 1 : 0;
+      const generated = generatePrivateContractOffers(G, ctx, offerCount);
       setOffers(generated);
       setView("offers");
     }
