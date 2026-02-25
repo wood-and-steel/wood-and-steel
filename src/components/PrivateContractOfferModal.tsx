@@ -157,7 +157,7 @@ export function PrivateContractOfferModal({
               className="privateContractOfferModal__instruction"
               id="private-contract-offer-title"
             >
-              Choose your hub city
+              Where did you place your hub city?
             </h2>
             <div
               className="privateContractOfferModal__cityList"
@@ -209,7 +209,7 @@ export function PrivateContractOfferModal({
               className="privateContractOfferModal__instruction"
               id="private-contract-offer-title"
             >
-              Choose a Regional Office
+              What regional office did you buy?
             </h2>
             <div
               className="privateContractOfferModal__regionGrid"
@@ -300,9 +300,9 @@ export function PrivateContractOfferModal({
                 >
                   <div className="contract__header" aria-hidden="true">
                     <span style={{ visibility: "hidden" }}>0</span>
-                    <div className="contract__moneyValue">Costs $15K</div>
+                    <div className="contract__moneyValue">Spent $15K</div>
                   </div>
-                  <div className="contract__body privateContractOfferModal__cardBody">Buy a Hub</div>
+                  <div className="contract__body privateContractOfferModal__cardBody">Bought a Hub</div>
                 </button>
               )}
               {showBuyRegionalOffice && (
@@ -313,9 +313,9 @@ export function PrivateContractOfferModal({
                 >
                   <div className="contract__header" aria-hidden="true">
                     <span style={{ visibility: "hidden" }}>0</span>
-                    <div className="contract__moneyValue">Costs $20K</div>
+                    <div className="contract__moneyValue">Spent $20K</div>
                   </div>
-                  <div className="contract__body privateContractOfferModal__cardBody">Buy a Regional Office</div>
+                  <div className="contract__body privateContractOfferModal__cardBody">Bought a Regional Office</div>
                 </button>
               )}
             </div>

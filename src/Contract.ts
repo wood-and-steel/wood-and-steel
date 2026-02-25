@@ -224,9 +224,11 @@ export function generatePrivateContractOffers(
   const offers: PrivateContractSpec[] = [];
   const maxAttempts = 50;
   const currentPlayer = G.players.find(([id]) => id === ctx.currentPlayer)?.[1];
+  let offerCount: number = 2 + (currentPlayer?.hubCity != null ? 1 : 0);
 
   // If player has a regional office, generate a contract spec for it first
   if (currentPlayer?.regionalOffice != null) {
+    offerCount += 1;
     const spec = generatePrivateContractSpec(G, ctx, currentPlayer.regionalOffice);
     if (spec) {
       offers.push(spec);
@@ -235,8 +237,6 @@ export function generatePrivateContractOffers(
   }
 
   // Generate remaining specs while avoiding duplicates
-  const offerCount = 2 + (currentPlayer?.hubCity != null ? 1 : 0);
-
   for (let attempts = 0; attempts < maxAttempts && offers.length < offerCount; attempts++) {
     const spec = generatePrivateContractSpec(G, ctx);
     if (!spec) continue;
