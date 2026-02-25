@@ -39,6 +39,10 @@ interface GameContextForContract {
   currentPlayer: string;
 }
 
+/** Valid region codes for commodity filtering. */
+const COMMODITY_REGION_CODES = ["NW", "NC", "NE", "SW", "SC", "SE"] as const;
+export type CommodityRegionCode = (typeof COMMODITY_REGION_CODES)[number];
+
 /** Options for newContract. */
 interface NewContractOptions {
   type?: "market" | "private";
@@ -147,11 +151,13 @@ export function generateStartingContract(
  *
  * @param G - Game state object
  * @param ctx - Game context
+ * @param commodityRegion - Optional region code (NW, NC, NE, SW, SC, SE). If provided, candidate commodities are those supplied in that region instead of within one hop of active cities.
  * @returns A spec with commodity and destinationKey, or undefined
  */
 export function generatePrivateContractSpec(
   G: GameStateForContract,
-  ctx: GameContextForContract
+  ctx: GameContextForContract,
+  commodityRegion?: CommodityRegionCode
 ): PrivateContractSpec | undefined {
   const player = G.players.find(([id]) => id === ctx.currentPlayer);
   if (!player) {
@@ -194,14 +200,20 @@ export function generatePrivateContractSpec(
   if (!contractCity) return undefined;
 
   // Choose a commodity at random from those that are:
-  //  - available within 1 hop of active cities
+  //  - available within 1 hop of active cities (or all commodities in commodityRegion if provided)
   //  - not available in destination city
   const availableCommodities = new Set<string>();
-  const citiesWithinOneHop = Array.from(citiesConnectedTo(activeCitiesKeys, { distance: 1 }));
-  citiesWithinOneHop.forEach((cityKey) => {
-    const city = cities.get(cityKey);
-    if (city) city.commodities.forEach((c) => availableCommodities.add(c));
-  });
+  if (commodityRegion === undefined) {
+    const citiesWithinOneHop = Array.from(citiesConnectedTo(activeCitiesKeys, { distance: 1 }));
+    citiesWithinOneHop.forEach((cityKey) => {
+      const city = cities.get(cityKey);
+      if (city) city.commodities.forEach((c) => availableCommodities.add(c));
+    });
+  } else {
+    commodities.forEach((data, key) => {
+      if (data.regions.includes(commodityRegion)) availableCommodities.add(key);
+    });
+  }
   const destCity = cities.get(contractCity);
   if (destCity) destCity.commodities.forEach((c) => availableCommodities.delete(c));
 
