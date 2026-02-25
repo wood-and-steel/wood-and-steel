@@ -135,16 +135,6 @@ export function PrivateContractOfferModal({
     [onClose, view, handlePickHubBack, handlePickRegionalOfficeBack]
   );
 
-  const handleKeyDown = React.useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      }
-    },
-    [onClose]
-  );
-
   const showBuyHub = moves && currentPlayer && currentPlayer.hubCity === null;
   const showBuyRegionalOffice =
     moves && currentPlayer && currentPlayer.regionalOffice === null;
@@ -155,7 +145,6 @@ export function PrivateContractOfferModal({
     <div
       className="modal"
       onClick={handleBackdropClick}
-      onKeyDown={handleKeyDown}
       role="dialog"
       aria-modal="true"
       aria-labelledby="private-contract-offer-title"
