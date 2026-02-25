@@ -56,8 +56,11 @@ export function PrivateContractOfferModal({
     [otherPlayersHubCities]
   );
 
+  const prevIsOpenRef = React.useRef(false);
   React.useEffect(() => {
-    if (isOpen && G && ctx) {
+    const justOpened = isOpen && !prevIsOpenRef.current;
+    prevIsOpenRef.current = isOpen;
+    if (justOpened && G && ctx) {
       const generated = generatePrivateContractOffers(G, ctx);
       setOffers(generated);
       setView("offers");
@@ -95,6 +98,10 @@ export function PrivateContractOfferModal({
     setView("pickHubCity");
   }, []);
 
+  const handlePickHubBack = React.useCallback(() => {
+    setView("offers");
+  }, []);
+
   const handleBuyRegionalOffice = React.useCallback(() => {
     if (!moves) return;
     moves.claimRegionalOffice("NE");
@@ -121,51 +128,94 @@ export function PrivateContractOfferModal({
         className="modal__content privateContractOfferModal__content"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2
-          className="privateContractOfferModal__instruction"
-          id="private-contract-offer-title"
-        >
-          Choose a new contract
-        </h2>
-        <div className="privateContractOfferModal__grid">
-          {offers.map((spec: PrivateContractSpec, index: number) => {
-            const specKey = `${spec.commodity}|${spec.destinationKey}|${index}`;
-            return (
-              <ContractCard
-                key={specKey}
-                commodity={spec.commodity}
-                destinationKey={spec.destinationKey}
-                variant="private"
-                className="privateContractOfferModal__card"
-                onClick={() => handleOfferClick(spec.commodity, spec.destinationKey)}
-              />
-            );
-          })}
-          {showBuyHub && (
-            <button
-              type="button"
-              className="contract contract--private privateContractOfferModal__card"
-              onClick={handleBuyHub}
+        {view === "pickHubCity" ? (
+          <>
+            <h2
+              className="privateContractOfferModal__instruction"
+              id="private-contract-offer-title"
             >
-              <div className="contract__header" aria-hidden="true">
-                <span style={{ visibility: "hidden" }}>0</span>
-              </div>
-              <div className="contract__body">Buy a Hub</div>
-            </button>
-          )}
-          {showBuyRegionalOffice && (
-            <button
-              type="button"
-              className="contract contract--private privateContractOfferModal__card"
-              onClick={handleBuyRegionalOffice}
+              Choose your hub city
+            </h2>
+            <div
+              className="privateContractOfferModal__cityList"
+              role="list"
+              aria-label="Pickable cities"
             >
-              <div className="contract__header" aria-hidden="true">
-                <span style={{ visibility: "hidden" }}>0</span>
-              </div>
-              <div className="contract__body">Buy a Regional Office</div>
-            </button>
-          )}
-        </div>
+              {pickableCities.map((cityKey: string) => (
+                <button
+                  key={cityKey}
+                  type="button"
+                  className="privateContractOfferModal__cityItem"
+                  onClick={() => {
+                    if (moves?.claimHubCity(cityKey)) {
+                      setView("offers");
+                    }
+                  }}
+                  role="listitem"
+                >
+                  {cities.get(cityKey)?.label ?? cityKey}
+                </button>
+              ))}
+            </div>
+            <div className="privateContractOfferModal__pickHubActions">
+              <button
+                type="button"
+                className="privateContractOfferModal__backButton"
+                onClick={handlePickHubBack}
+              >
+                Back
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2
+              className="privateContractOfferModal__instruction"
+              id="private-contract-offer-title"
+            >
+              Choose a new contract
+            </h2>
+            <div className="privateContractOfferModal__grid">
+              {offers.map((spec: PrivateContractSpec, index: number) => {
+                const specKey = `${spec.commodity}|${spec.destinationKey}|${index}`;
+                return (
+                  <ContractCard
+                    key={specKey}
+                    commodity={spec.commodity}
+                    destinationKey={spec.destinationKey}
+                    variant="private"
+                    className="privateContractOfferModal__card"
+                    onClick={() => handleOfferClick(spec.commodity, spec.destinationKey)}
+                  />
+                );
+              })}
+              {showBuyHub && (
+                <button
+                  type="button"
+                  className="contract contract--private privateContractOfferModal__card"
+                  onClick={handleBuyHub}
+                >
+                  <div className="contract__header" aria-hidden="true">
+                    <span style={{ visibility: "hidden" }}>0</span>
+                  </div>
+                  <div className="contract__body">Buy a Hub</div>
+                </button>
+              )}
+              {showBuyRegionalOffice && (
+                <button
+                  type="button"
+                  className="contract contract--private privateContractOfferModal__card"
+                  onClick={handleBuyRegionalOffice}
+                >
+                  <div className="contract__header" aria-hidden="true">
+                    <span style={{ visibility: "hidden" }}>0</span>
+                  </div>
+                  <div className="contract__body">Buy a Regional Office</div>
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
