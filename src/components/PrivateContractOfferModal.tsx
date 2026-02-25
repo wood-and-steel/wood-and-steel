@@ -1,9 +1,10 @@
 import React from "react";
-import { generatePrivateContractOffers } from "../Contract";
+import { generatePrivateContractOffers, generatePrivateContractSpec } from "../Contract";
 import { ContractCard } from "./ContractCard";
 import { cities } from "../data";
 import type { GameState, GameContext } from "../stores/gameStore";
 import type { PrivateContractSpec } from "../Contract";
+import { useGameStore } from "../stores/gameStore";
 
 type PrivateContractOfferView = "offers" | "pickHubCity";
 
@@ -147,9 +148,22 @@ export function PrivateContractOfferModal({
                   type="button"
                   className="privateContractOfferModal__cityItem"
                   onClick={() => {
-                    if (moves?.claimHubCity(cityKey)) {
+                    if (!moves?.claimHubCity(cityKey)) return;
+                    const { G: updatedG, ctx: updatedCtx } = useGameStore.getState();
+                    const seen = new Set(
+                      offers.map((s: PrivateContractSpec) => `${s.commodity}|${s.destinationKey}`)
+                    );
+                    const maxAttempts = 20;
+                    for (let i = 0; i < maxAttempts; i++) {
+                      const spec = generatePrivateContractSpec(updatedG, updatedCtx);
+                      if (!spec) continue;
+                      const key = `${spec.commodity}|${spec.destinationKey}`;
+                      if (seen.has(key)) continue;
+                      setOffers((prev: PrivateContractSpec[]) => [...prev, spec]);
                       setView("offers");
+                      return;
                     }
+                    setView("offers");
                   }}
                   role="listitem"
                 >
