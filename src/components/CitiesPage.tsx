@@ -19,10 +19,11 @@ export interface CitiesPageProps {
 export function CitiesPage({ G, ctx, playerID }: CitiesPageProps): React.ReactElement {
   const thisPlayer = G.players.find(([key]) => key === playerID);
   const activeCities = thisPlayer ? new Set(thisPlayer[1].activeCities) : new Set<string>();
+  const hubCity = thisPlayer?.[1].hubCity ?? null;
 
   const cityValues = [...cities].map(([key, value]) => {
     const isActive = activeCities.has(key);
-    const valueNum = valueOfCity(G, key);
+    const valueNum = valueOfCity(G, key, key === hubCity ? { isHubCity: true } : {});
     return (
       <div key={key} className="cityCell">
         <span
