@@ -103,25 +103,6 @@ export function PrivateContractOfferModal({
     [onSelect, onClose]
   );
 
-  const handleBackdropClick = React.useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    },
-    [onClose]
-  );
-
-  const handleKeyDown = React.useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      }
-    },
-    [onClose]
-  );
-
   const handleBuyHub = React.useCallback(() => {
     setView("pickHubCity");
   }, []);
@@ -137,6 +118,32 @@ export function PrivateContractOfferModal({
   const handlePickRegionalOfficeBack = React.useCallback(() => {
     setView("offers");
   }, []);
+
+  const handleBackdropClick = React.useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.target !== e.currentTarget) return;
+      if (view === "pickHubCity") {
+        handlePickHubBack();
+        return;
+      }
+      if (view === "pickRegionalOffice") {
+        handlePickRegionalOfficeBack();
+        return;
+      }
+      onClose();
+    },
+    [onClose, view, handlePickHubBack, handlePickRegionalOfficeBack]
+  );
+
+  const handleKeyDown = React.useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    },
+    [onClose]
+  );
 
   const showBuyHub = moves && currentPlayer && currentPlayer.hubCity === null;
   const showBuyRegionalOffice =
