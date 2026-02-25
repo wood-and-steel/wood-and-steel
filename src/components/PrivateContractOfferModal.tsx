@@ -2,16 +2,32 @@ import React from "react";
 import { generatePrivateContractOffers, generatePrivateContractSpec } from "../Contract";
 import { ContractCard } from "./ContractCard";
 import { cities } from "../data";
-import type { GameState, GameContext } from "../stores/gameStore";
+import type { GameState, GameContext, RegionCode } from "../stores/gameStore";
 import type { PrivateContractSpec } from "../Contract";
 import { useGameStore } from "../stores/gameStore";
 
-type PrivateContractOfferView = "offers" | "pickHubCity";
+type PrivateContractOfferView = "offers" | "pickHubCity" | "pickRegionalOffice";
+
+/** Region grid order: top row NW, NC, NE; bottom row SW, SC, SE */
+const REGION_GRID_ORDER: [string, string, string][] = [
+  ["NW", "NC", "NE"],
+  ["SW", "SC", "SE"],
+];
+
+/** Display labels for region codes */
+const REGION_LABELS: Record<string, string> = {
+  NW: "Northwest",
+  NC: "North Central",
+  NE: "Northeast",
+  SW: "Southwest",
+  SC: "South Central",
+  SE: "Southeast",
+};
 
 /** Moves used by the modal for upgrade cards. */
 export interface PrivateContractOfferModalMoves {
   claimHubCity: (cityKey: string) => boolean;
-  claimRegionalOffice: (regionCode: string) => void;
+  claimRegionalOffice: (regionCode: string) => boolean;
 }
 
 export interface PrivateContractOfferModalProps {
@@ -56,6 +72,14 @@ export function PrivateContractOfferModal({
     () => [...cities.keys()].filter((key) => !otherPlayersHubCities.includes(key)),
     [otherPlayersHubCities]
   );
+
+  const otherPlayersRegionalOffices = React.useMemo(() => {
+    if (!G?.players || ctx?.currentPlayer == null) return [];
+    return G.players
+      .filter(([id]) => id !== ctx.currentPlayer)
+      .map(([, p]) => p.regionalOffice)
+      .filter((region): region is RegionCode => region != null);
+  }, [G?.players, ctx?.currentPlayer]);
 
   const prevIsOpenRef = React.useRef(false);
   React.useEffect(() => {
@@ -107,10 +131,12 @@ export function PrivateContractOfferModal({
   }, []);
 
   const handleBuyRegionalOffice = React.useCallback(() => {
-    if (!moves) return;
-    moves.claimRegionalOffice("NE");
-    onClose();
-  }, [moves, onClose]);
+    setView("pickRegionalOffice");
+  }, []);
+
+  const handlePickRegionalOfficeBack = React.useCallback(() => {
+    setView("offers");
+  }, []);
 
   const showBuyHub = moves && currentPlayer && currentPlayer.hubCity === null;
   const showBuyRegionalOffice =
@@ -179,6 +205,72 @@ export function PrivateContractOfferModal({
                 type="button"
                 className="privateContractOfferModal__backButton"
                 onClick={handlePickHubBack}
+              >
+                Back
+              </button>
+            </div>
+          </>
+        ) : view === "pickRegionalOffice" ? (
+          <>
+            <h2
+              className="privateContractOfferModal__instruction"
+              id="private-contract-offer-title"
+            >
+              Choose a Regional Office
+            </h2>
+            <div
+              className="privateContractOfferModal__regionGrid"
+              role="group"
+              aria-label="Regions"
+            >
+              {REGION_GRID_ORDER.map((row, rowIndex) =>
+                row.map((regionCode) => {
+                  const disabled = otherPlayersRegionalOffices.includes(regionCode);
+                  return (
+                    <button
+                      key={regionCode}
+                      type="button"
+                      className="privateContractOfferModal__regionItem"
+                      disabled={disabled}
+                      onClick={() => {
+                        if (!moves?.claimRegionalOffice(regionCode)) return;
+                        const { G: updatedG, ctx: updatedCtx } = useGameStore.getState();
+                        const seen = new Set(
+                          offers.map(
+                            (s: PrivateContractSpec) =>
+                              `${s.commodity}|${s.destinationKey}`
+                          )
+                        );
+                        const maxAttempts = 20;
+                        for (let i = 0; i < maxAttempts; i++) {
+                          const spec = generatePrivateContractSpec(
+                            updatedG,
+                            updatedCtx
+                          );
+                          if (!spec) continue;
+                          const key = `${spec.commodity}|${spec.destinationKey}`;
+                          if (seen.has(key)) continue;
+                          setOffers((prev: PrivateContractSpec[]) => [
+                            ...prev,
+                            spec,
+                          ]);
+                          setView("offers");
+                          return;
+                        }
+                        setView("offers");
+                      }}
+                    >
+                      {REGION_LABELS[regionCode] ?? regionCode}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+            <div className="privateContractOfferModal__pickHubActions">
+              <button
+                type="button"
+                className="privateContractOfferModal__backButton"
+                onClick={handlePickRegionalOfficeBack}
               >
                 Back
               </button>

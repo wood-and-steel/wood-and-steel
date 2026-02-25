@@ -564,12 +564,12 @@ export function claimHubCity(cityKey: string): boolean {
   return true;
 }
 
-export function claimRegionalOffice(regionCode: string): void {
+export function claimRegionalOffice(regionCode: string): boolean {
   const { G, ctx } = useGameStore.getState();
 
   if (!isMoveAllowed('claimRegionalOffice', ctx)) {
     console.warn('[claimRegionalOffice] Move not allowed in current phase');
-    return;
+    return false;
   }
 
   if (
@@ -579,7 +579,7 @@ export function claimRegionalOffice(regionCode: string): void {
     console.error(
       '[claimRegionalOffice] regionCode must be one of: NW, NC, NE, SW, SC, SE'
     );
-    return;
+    return false;
   }
 
   const currentPlayerEntry = G.players.find(([id]) => id === ctx.currentPlayer);
@@ -587,12 +587,12 @@ export function claimRegionalOffice(regionCode: string): void {
     console.error(
       `[claimRegionalOffice] Current player "${ctx.currentPlayer}" not found`
     );
-    return;
+    return false;
   }
 
   const [, playerProps] = currentPlayerEntry;
   if (playerProps.regionalOffice != null) {
-    return; // no-op: already has a regional office
+    return false; // no-op: already has a regional office
   }
 
   const regionTaken = G.players.some(
@@ -602,7 +602,7 @@ export function claimRegionalOffice(regionCode: string): void {
     console.warn(
       `[claimRegionalOffice] Region "${regionCode}" is already claimed by another player`
     );
-    return;
+    return false;
   }
 
   useGameStore.setState((state) => ({
@@ -620,6 +620,7 @@ export function claimRegionalOffice(regionCode: string): void {
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
   saveCurrentGameState();
+  return true;
 }
 
 export function addCityToPlayer(cityKey: string): void {

@@ -30,7 +30,7 @@ export interface Moves {
   acquireIndependentRailroad: (railroadName: string) => void;
   addCityToPlayer: (cityKey: string) => void;
   claimHubCity: (cityKey: string) => boolean;
-  claimRegionalOffice: (regionCode: string) => void;
+  claimRegionalOffice: (regionCode: string) => boolean;
   endTurn: () => void;
 }
 

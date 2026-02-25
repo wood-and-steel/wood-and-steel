@@ -152,6 +152,8 @@
 
 .privateContractOfferModal__pickHubActions {
   margin-top: var(--spacing-md);
+  display: flex;
+  justify-content: center;
 }
 
 .privateContractOfferModal__backButton {
@@ -167,4 +169,45 @@
 
 .privateContractOfferModal__backButton:hover {
   background-color: var(--color-border-light);
+}
+
+/* Pick regional office sub-step: 2×3 grid of region buttons (fixed height, wider for label space) */
+.privateContractOfferModal__regionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 24rem;
+}
+
+.privateContractOfferModal__regionItem {
+  min-width: 0;
+  min-height: 0;
+  height: 4.5rem;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 500;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text);
+  border: var(--border-width-md) solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.privateContractOfferModal__regionItem:hover:not(:disabled) {
+  background-color: var(--color-bg-secondary, rgba(0, 0, 0, 0.05));
+  border-color: var(--color-border);
+}
+
+.privateContractOfferModal__regionItem:disabled {
+  cursor: default;
+  opacity: var(--opacity-disabled, 0.6);
 }
