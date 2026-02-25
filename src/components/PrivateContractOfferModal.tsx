@@ -238,7 +238,8 @@ export function PrivateContractOfferModal({
                         for (let i = 0; i < maxAttempts; i++) {
                           const spec = generatePrivateContractSpec(
                             updatedG,
-                            updatedCtx
+                            updatedCtx,
+                            regionCode as RegionCode
                           );
                           if (!spec) continue;
                           const key = `${spec.commodity}|${spec.destinationKey}`;
