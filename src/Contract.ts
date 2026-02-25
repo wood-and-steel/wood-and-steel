@@ -180,7 +180,7 @@ export function generatePrivateContractSpec(
     console.error(`generatePrivateContractSpec: no candidates found in chosen direction`);
     return undefined;
   }
-  const contractCity = weightedRandomCity(G, candidatesInChosenDirection);
+  const contractCity = weightedRandomCity(G, candidatesInChosenDirection, player[1].hubCity);
   if (!contractCity) return undefined;
 
   // Choose a commodity at random from those that are:
@@ -339,17 +339,19 @@ export function generateMarketContract(G: GameState): Contract | undefined {
  *
  * @param G - Game state object
  * @param cityKeys - Keys of cities to select from (array or Set)
+ * @param hubCityKey - If provided and a candidate equals this key, value it as the current player's hub (include connected cities)
  * @returns Key of randomly selected city, or undefined if none
  */
 function weightedRandomCity(
   G: GameState,
-  cityKeys: Iterable<string>
+  cityKeys: Iterable<string>,
+  hubCityKey?: string | null
 ): string | undefined {
   const citiesArr = [...cityKeys];
   if (citiesArr.length === 0) return undefined;
   const weightMap = new Map<string, number>();
   citiesArr.forEach((cityKey) => {
-    const v = valueOfCity(G, cityKey);
+    const v = valueOfCity(G, cityKey, cityKey === hubCityKey ? { isHubCity: true } : {});
     if (v !== undefined) weightMap.set(cityKey, v);
   });
   return weightedRandom(weightMap);
