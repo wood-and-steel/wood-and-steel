@@ -1,8 +1,11 @@
 import React from "react";
 import { generatePrivateContractOffers } from "../Contract";
 import { ContractCard } from "./ContractCard";
+import { cities } from "../data";
 import type { GameState, GameContext } from "../stores/gameStore";
 import type { PrivateContractSpec } from "../Contract";
+
+type PrivateContractOfferView = "offers" | "pickHubCity";
 
 /** Moves used by the modal for upgrade cards. */
 export interface PrivateContractOfferModalMoves {
@@ -33,16 +36,31 @@ export function PrivateContractOfferModal({
   moves,
 }: PrivateContractOfferModalProps): React.ReactElement | null {
   const [offers, setOffers] = React.useState<PrivateContractSpec[]>([]);
+  const [view, setView] = React.useState<PrivateContractOfferView>("offers");
 
   const currentPlayer = React.useMemo(
     () => G?.players?.find(([id]) => id === ctx?.currentPlayer)?.[1],
     [G, ctx]
   );
 
+  const otherPlayersHubCities = React.useMemo(() => {
+    if (!G?.players || ctx?.currentPlayer == null) return [];
+    return G.players
+      .filter(([id]) => id !== ctx.currentPlayer)
+      .map(([, p]) => p.hubCity)
+      .filter((hub): hub is string => hub != null);
+  }, [G?.players, ctx?.currentPlayer]);
+
+  const pickableCities = React.useMemo(
+    () => [...cities.keys()].filter((key) => !otherPlayersHubCities.includes(key)),
+    [otherPlayersHubCities]
+  );
+
   React.useEffect(() => {
     if (isOpen && G && ctx) {
       const generated = generatePrivateContractOffers(G, ctx);
       setOffers(generated);
+      setView("offers");
     }
   }, [isOpen, G, ctx]);
 
@@ -74,10 +92,8 @@ export function PrivateContractOfferModal({
   );
 
   const handleBuyHub = React.useCallback(() => {
-    if (!moves || !currentPlayer?.activeCities?.length) return;
-    moves.claimHubCity(currentPlayer.activeCities[0]!);
-    onClose();
-  }, [moves, currentPlayer, onClose]);
+    setView("pickHubCity");
+  }, []);
 
   const handleBuyRegionalOffice = React.useCallback(() => {
     if (!moves) return;
