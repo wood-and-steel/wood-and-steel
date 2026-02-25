@@ -1,5 +1,5 @@
 import React from "react";
-import { rewardValue, railroadTieValue } from "../Contract";
+import { moneyValue, railroadTieValue } from "../Contract";
 import { CommodityRichName } from "./CommodityRichName";
 import { contractTieIcons } from "../shared/assets/icons";
 
@@ -53,7 +53,7 @@ export const ContractCard = React.forwardRef<HTMLButtonElement, ContractCardProp
     ref
   ): React.ReactElement {
     const spec: ContractCardSpec = { commodity, destinationKey };
-    const reward = rewardValue(spec);
+    const reward = moneyValue(spec);
     const classes = [
       "contract",
       variant === "market" ? "contract--market" : "contract--private",
@@ -76,7 +76,7 @@ export const ContractCard = React.forwardRef<HTMLButtonElement, ContractCardProp
       >
         <div className="contract__header">
           {formatContractTieValue(spec)}
-          <div className="contract__rewardValue">${reward / 1000}K</div>
+          <div className="contract__moneyValue">${reward / 1000}K</div>
         </div>
         <div className="contract__body">
           <CommodityRichName commodity={commodity} />

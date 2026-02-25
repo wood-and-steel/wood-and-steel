@@ -214,6 +214,7 @@ export function PrivateContractOfferModal({
                 >
                   <div className="contract__header" aria-hidden="true">
                     <span style={{ visibility: "hidden" }}>0</span>
+                    <div className="contract__moneyValue">Costs $15K</div>
                   </div>
                   <div className="contract__body privateContractOfferModal__cardBody">Buy a Hub</div>
                 </button>
@@ -226,6 +227,7 @@ export function PrivateContractOfferModal({
                 >
                   <div className="contract__header" aria-hidden="true">
                     <span style={{ visibility: "hidden" }}>0</span>
+                    <div className="contract__moneyValue">Costs $20K</div>
                   </div>
                   <div className="contract__body privateContractOfferModal__cardBody">Buy a Regional Office</div>
                 </button>

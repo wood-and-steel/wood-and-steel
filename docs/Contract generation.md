@@ -2,7 +2,7 @@
 
 This document summarizes the contract generation routines implemented in [Contract.js](../src/Contract.js).
 
-## Dollar value (rewardValue)
+## Dollar value (moneyValue)
 
 For all contract types, the cash reward when fulfilled is:
 

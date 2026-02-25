@@ -2,7 +2,7 @@ import { describe, test, expect } from 'vitest';
 import {
   type Contract,
   generateMarketContract,
-  rewardValue,
+  moneyValue,
   newContract,
   generatePrivateContractSpec,
   generatePrivateContractOffers,
@@ -126,7 +126,7 @@ describe('generateMarketContract', () => {
       const contract = generateMarketContract(G);
 
       if (contract) {
-        const value = rewardValue(contract);
+        const value = moneyValue(contract);
 
         expect(value).toBeGreaterThanOrEqual(6000);
       }
@@ -134,12 +134,12 @@ describe('generateMarketContract', () => {
   });
 });
 
-describe('rewardValue', () => {
+describe('moneyValue', () => {
   test('calculates correct dollar value based on distance', () => {
     const contract = newContract('Chicago', 'coal', { type: 'market' });
 
     if (contract) {
-      const value = rewardValue(contract);
+      const value = moneyValue(contract);
       expect(value).toBeGreaterThanOrEqual(0);
       expect(value % 3000).toBe(0);
     }

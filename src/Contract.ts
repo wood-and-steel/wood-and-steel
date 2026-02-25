@@ -491,7 +491,7 @@ export function valueOfCity(
  * @param contract - The contract or spec (needs destinationKey and commodity)
  * @returns Dollar value
  */
-export function rewardValue(contract: Pick<Contract, "destinationKey" | "commodity">): number {
+export function moneyValue(contract: Pick<Contract, "destinationKey" | "commodity">): number {
   return (
     shortestDistance(contract.destinationKey, (c: string) =>
       cities.get(c)?.commodities.includes(contract.commodity) ?? false
