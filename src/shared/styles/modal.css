@@ -110,9 +110,14 @@
 
 .privateContractOfferModal__card {
   text-align: left;
-  /* Padding, transition, hover lift/shadow live on .contract */
   font-family: inherit;
   font-size: inherit;
+}
+
+/* Purchase card bodies: center content like contract offer bodies (single block centered) */
+.privateContractOfferModal__cardBody {
+  justify-content: center;
+  text-align: center;
 }
 
 /* Pick hub city sub-step */

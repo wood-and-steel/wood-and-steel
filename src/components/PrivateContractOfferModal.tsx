@@ -215,7 +215,7 @@ export function PrivateContractOfferModal({
                   <div className="contract__header" aria-hidden="true">
                     <span style={{ visibility: "hidden" }}>0</span>
                   </div>
-                  <div className="contract__body">Buy a Hub</div>
+                  <div className="contract__body privateContractOfferModal__cardBody">Buy a Hub</div>
                 </button>
               )}
               {showBuyRegionalOffice && (
@@ -227,7 +227,7 @@ export function PrivateContractOfferModal({
                   <div className="contract__header" aria-hidden="true">
                     <span style={{ visibility: "hidden" }}>0</span>
                   </div>
-                  <div className="contract__body">Buy a Regional Office</div>
+                  <div className="contract__body privateContractOfferModal__cardBody">Buy a Regional Office</div>
                 </button>
               )}
             </div>

@@ -12,6 +12,7 @@
   align-items: center;
   justify-content: space-between;
   width: 10rem;
+  min-height: 5.5rem;
   padding: 0;
   background-color: transparent;
   border: solid var(--border-width-md) var(--color-border-light);
@@ -79,6 +80,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  height: 100%;
   padding: var(--spacing-sm);
   box-sizing: border-box;
 }
