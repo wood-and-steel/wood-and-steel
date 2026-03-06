@@ -303,7 +303,11 @@ export async function createNewGame(
       },
     };
 
-    await adapter.saveGame(code, initialState, metadata as unknown as Record<string, unknown>);
+    const saveResult = await adapter.saveGame(code, initialState, metadata as unknown as Record<string, unknown>);
+    const saveOk = saveResult === true || (typeof saveResult === 'object' && saveResult !== null && (saveResult as { success?: boolean }).success === true);
+    if (!saveOk) {
+      throw new Error('Failed to save new game to storage. Please check your connection and try again.');
+    }
 
     console.info(
       `[${operation}] Created new game with code:`,
