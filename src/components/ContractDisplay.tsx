@@ -90,7 +90,7 @@ export function ContractDisplay({
               </PopupMenuItem>
             )}
           {!contract.fulfilled && (
-            <PopupMenuItem onClick={handleDelete}>Delete</PopupMenuItem>
+            <PopupMenuItem onClick={handleDelete}>Discard</PopupMenuItem>
           )}
         </PopupMenu>
       )}
