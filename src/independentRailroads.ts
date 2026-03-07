@@ -136,15 +136,7 @@ export function initializeIndependentRailroads(): Record<
 }
 
 /**
- * Called at the end of a round; adds 0 or more segments and 0 or more independent railroad companies.
- *
- * @param G - Game state
- * @returns Set of IDs of added routes, or undefined if none were added
- */
-/**
  * Grows independent railroads at end of round: adds 0 or more route segments.
- * Definitions: "available route" = route an independent could occupy;
- * "occupancy" = percentage of available routes with independent railroads.
  *
  * @param G - Game state
  * @param ctx - Game context (e.g. round)
