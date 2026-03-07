@@ -141,6 +141,15 @@ export function initializeIndependentRailroads(): Record<
  * @param G - Game state
  * @returns Set of IDs of added routes, or undefined if none were added
  */
+/**
+ * Grows independent railroads at end of round: adds 0 or more route segments.
+ * Definitions: "available route" = route an independent could occupy;
+ * "occupancy" = percentage of available routes with independent railroads.
+ *
+ * @param G - Game state
+ * @param ctx - Game context (e.g. round)
+ * @returns Set of IDs of added routes, or undefined if none were added
+ */
 export function growIndependentRailroads(
   G: GameState,
   ctx: GameContext
@@ -174,41 +183,36 @@ export function growIndependentRailroads(
     [45, new Map([[0, 95], [2, 5]])],
   ]);
 
-  // Min and max key values from above
   const smallestMappedOccupancy = Math.min(...growthProbabilities.keys());
   const largestMappedOccupancy = Math.max(...growthProbabilities.keys());
 
   // Collect keys of all active cities and what's adjacent to them
   const activeCities = new Set<string>();
-  G.players.forEach(([, value]) => {
-    value.activeCities.forEach((city) => activeCities.add(city));
-  });
+  for (const [, player] of G.players) {
+    for (const city of player.activeCities) activeCities.add(city);
+  }
   const activeCitiesPlusOneHop = citiesConnectedTo(activeCities, {
     includeFromCities: true,
   });
 
-  /*
-   * Independent railroads can only grow into routes that are not adjacent to player routes.
-   * We can't know all the players' routes, but hopefully everything within 1 of their active
-   * cities will make a decent approximation.
-   */
+  // Indies grow only into routes not adjacent to player routes (approx. via 1-hop from active cities).
   const routesNotNearActiveCities =
     routesWithoutTheseCities(activeCitiesPlusOneHop);
-  const railroadsArray = Object.values(G.independentRailroads);
-  const startingRouteCount = railroadsArray.reduce(
-    (acc, current) => acc + current.routes.length,
+  const startingRouteCount = Object.values(G.independentRailroads).reduce(
+    (acc, rr) => acc + rr.routes.length,
     0
   );
-  let startingOccupancy = Math.round(
+  const startingOccupancy = Math.round(
     (100 * startingRouteCount) / routesNotNearActiveCities.size
   );
 
-  let occupancyLookup = Math.round(startingOccupancy / 5) * 5;
-  if (occupancyLookup < smallestMappedOccupancy)
-    occupancyLookup = smallestMappedOccupancy;
-  else if (occupancyLookup > largestMappedOccupancy)
-    occupancyLookup = largestMappedOccupancy;
-
+  const occupancyLookup = Math.max(
+    smallestMappedOccupancy,
+    Math.min(
+      largestMappedOccupancy,
+      Math.round(startingOccupancy / 5) * 5
+    )
+  );
   const lookupMap = growthProbabilities.get(occupancyLookup);
   const occupancyGrowth = lookupMap ? weightedRandom(lookupMap) : 0;
 
@@ -234,15 +238,16 @@ export function growIndependentRailroads(
   const numberOfRoutesToAdd = newRouteCount - startingRouteCount;
   const addedRoutes = new Set<string>();
 
-  // Now we try to expand, up to 100 times
-  let countOfAttempts = 0;
+  const indieEntries = Object.entries(G.independentRailroads);
+  const maxAttempts = 100;
 
-  while (addedRoutes.size < numberOfRoutesToAdd && countOfAttempts++ < 100) {
-    // Pick an independent RR at random
-    const railroadNames = Object.keys(G.independentRailroads);
-    const randomRailroadName =
-      railroadNames[Math.floor(Math.random() * railroadNames.length)];
-    const railroadToExpand = G.independentRailroads[randomRailroadName];
+  for (
+    let attempt = 0;
+    addedRoutes.size < numberOfRoutesToAdd && attempt < maxAttempts;
+    attempt++
+  ) {
+    const [randomRailroadName, railroadToExpand] =
+      indieEntries[Math.floor(Math.random() * indieEntries.length)] ?? [];
     if (!railroadToExpand) continue;
 
     /*
@@ -251,34 +256,33 @@ export function growIndependentRailroads(
 
     // Get all the cities in this RR
     const citiesInRailroad = new Set<string>();
-    railroadToExpand.routes.forEach((routeEntry) => {
+    for (const routeEntry of railroadToExpand.routes) {
       const route = routes.get(routeEntry.key);
       if (route) {
         const [city1, city2] = route.cities;
         citiesInRailroad.add(city1).add(city2);
       }
-    });
+    }
 
     // Get all the routes attached to those cities
     const routesSuperset = new Set<string>();
-    [...citiesInRailroad].forEach((cityKey) => {
+    for (const cityKey of citiesInRailroad) {
       const city = cities.get(cityKey);
       if (city) {
-        city.routes.forEach((r) => routesSuperset.add(r));
+        for (const r of city.routes) routesSuperset.add(r);
       }
-    });
+    }
 
     // Get all the cities in other independent RRs
     const citiesInOtherRailroads = new Set<string>();
     for (const [name, railroad] of Object.entries(G.independentRailroads)) {
-      if (name !== randomRailroadName) {
-        railroad.routes.forEach((routeEntry) => {
-          const route = routes.get(routeEntry.key);
-          if (route) {
-            const [city1, city2] = route.cities;
-            citiesInOtherRailroads.add(city1).add(city2);
-          }
-        });
+      if (name === randomRailroadName) continue;
+      for (const routeEntry of railroad.routes) {
+        const route = routes.get(routeEntry.key);
+        if (route) {
+          const [city1, city2] = route.cities;
+          citiesInOtherRailroads.add(city1).add(city2);
+        }
       }
     }
 
@@ -299,15 +303,13 @@ export function growIndependentRailroads(
       )
     );
 
-    if (possibleRoutes.size > 0) {
-      const routeToAdd = randomArrayItem([...possibleRoutes]);
-      if (routeToAdd !== undefined) {
-        railroadToExpand.routes.push({
-          key: routeToAdd,
-          addedInRound: ctx.round,
-        });
-        addedRoutes.add(routeToAdd);
-      }
+    const routeToAdd = randomArrayItem([...possibleRoutes]);
+    if (routeToAdd != null) {
+      railroadToExpand.routes.push({
+        key: routeToAdd,
+        addedInRound: ctx.round,
+      });
+      addedRoutes.add(routeToAdd);
     }
   }
 
