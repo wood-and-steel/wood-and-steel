@@ -65,7 +65,8 @@
   
   --color-danger: #dc3545;
   --color-danger-bg: rgba(220, 53, 69, 0.1);
-  
+  --color-notification: #c00;
+
   --color-contract-market: #4510d4;
   --color-contract-private: #101020;
   }
@@ -95,7 +96,8 @@
   
   --color-danger: #e74c3c;
   --color-danger-bg: rgba(231, 76, 60, 0.15);
-  
+  --color-notification: #e74c3c;
+
   --color-contract-market: #cab9f8;
   --color-contract-private: #f1f1f3;
 }

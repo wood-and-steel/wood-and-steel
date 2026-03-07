@@ -35,6 +35,9 @@ export function IndependentRailroadsPage(): React.ReactElement {
                     key={route.key}
                     className="independentRailroads__route"
                   >
+                    {ctx.round >= 2 && route.addedInRound === ctx.round - 1 && (
+                      <span className="independentRailroads__route-dot" aria-hidden />
+                    )}
                     {route.key}
                   </div>
                 ))}

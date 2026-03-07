@@ -47,6 +47,19 @@
 
 .independentRailroads__route {
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
+.independentRailroads__route-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-notification);
+  flex-shrink: 0;
 }
 
 /* Tablet Layout (768px - 1023px) */

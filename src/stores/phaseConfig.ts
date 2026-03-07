@@ -51,7 +51,8 @@ export const phaseConfig: Record<PhaseName, PhaseConfigEntry> = {
       );
       return playersWithContracts.size >= ctx.numPlayers;
     },
-    onEnd: () => {
+    onEnd: ({ ctx }) => {
+      ctx.round = 1;
       console.log('Setup phase complete. Starting main game.');
     },
     turn: { onEnd: null },
