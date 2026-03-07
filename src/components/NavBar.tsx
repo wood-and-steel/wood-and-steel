@@ -31,12 +31,17 @@ export interface NavBarProps {
   onTabChange: (tabId: NavBarTabId) => void;
   showRailroadHint?: boolean;
   onDismissHint?: () => void;
+  routesAddedCount?: number;
+  onDismissRoutesAddedHint?: () => void;
 }
 
 /**
  * Navigation bar component with responsive design. Shows tabs for different views on desktop and mobile,
  * and includes a hamburger menu for game management actions.
  */
+const showRoutesAddedHint = (n: number | undefined): boolean =>
+  n != null && n > 0;
+
 export function NavBar({
   gameManager,
   onNavigateToLobby,
@@ -45,13 +50,20 @@ export function NavBar({
   onTabChange,
   showRailroadHint,
   onDismissHint,
+  routesAddedCount,
+  onDismissRoutesAddedHint,
 }: NavBarProps): React.ReactElement {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
   const menuButtonDesktopRef = React.useRef<HTMLButtonElement>(null);
   const contractsTabRef = React.useRef<HTMLButtonElement>(null);
   const contractsTabMobileRef = React.useRef<HTMLButtonElement>(null);
+  const railroadsTabRef = React.useRef<HTMLButtonElement>(null);
+  const railroadsTabMobileRef = React.useRef<HTMLButtonElement>(null);
   const [hintPosition, setHintPosition] = React.useState<HintPositionDesktop | HintPositionMobile | null>(null);
+  const [routesAddedHintPosition, setRoutesAddedHintPosition] = React.useState<
+    HintPositionDesktop | HintPositionMobile | null
+  >(null);
   const isDesktop = useIsDesktop();
 
   React.useEffect(() => {
@@ -71,14 +83,10 @@ export function NavBar({
         setHintPosition({
           contentTop: rect.bottom + 12,
           contentLeft: Math.max(8, tabCenterX - 80),
-          arrowLeft: tabCenterX,
-          arrowTop: rect.bottom + 4,
         });
       } else {
         setHintPosition({
           contentBottom: window.innerHeight - rect.top + 12,
-          arrowLeft: tabCenterX,
-          arrowBottom: window.innerHeight - rect.top + 4,
         });
       }
     };
@@ -87,6 +95,36 @@ export function NavBar({
     window.addEventListener("resize", updatePosition);
     return () => window.removeEventListener("resize", updatePosition);
   }, [showRailroadHint, isDesktop]);
+
+  React.useEffect(() => {
+    if (!showRoutesAddedHint(routesAddedCount)) {
+      setRoutesAddedHintPosition(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const tabRef = isDesktop ? railroadsTabRef.current : railroadsTabMobileRef.current;
+      if (!tabRef) return;
+
+      const rect = tabRef.getBoundingClientRect();
+      const tabCenterX = rect.left + rect.width / 2;
+
+      if (isDesktop) {
+        setRoutesAddedHintPosition({
+          contentTop: rect.bottom + 12,
+          contentLeft: Math.max(8, tabCenterX - 80),
+        });
+      } else {
+        setRoutesAddedHintPosition({
+          contentBottom: window.innerHeight - rect.top + 12,
+        });
+      }
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    return () => window.removeEventListener("resize", updatePosition);
+  }, [routesAddedCount, isDesktop]);
 
   React.useEffect(() => {
     if (!showRailroadHint || !onDismissHint) return;
@@ -107,6 +145,26 @@ export function NavBar({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [showRailroadHint, onDismissHint]);
+
+  React.useEffect(() => {
+    if (!showRoutesAddedHint(routesAddedCount) || !onDismissRoutesAddedHint) return;
+
+    const handleClick = () => onDismissRoutesAddedHint();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onDismissRoutesAddedHint();
+    };
+
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("click", handleClick);
+      document.addEventListener("keydown", handleKeyDown);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("click", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [routesAddedCount, onDismissRoutesAddedHint]);
 
   const placement = React.useMemo(
     () => (isDesktop ? { side: "bottom" as const, align: "start" as const } : { side: "top" as const, align: "end" as const }),
@@ -186,7 +244,7 @@ export function NavBar({
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              ref={tab.id === "board" ? contractsTabRef : null}
+              ref={tab.id === "board" ? contractsTabRef : tab.id === "indies" ? railroadsTabRef : null}
               type="button"
               className={`navBar__tab ${activeTab === tab.id ? "navBar__tab--active" : ""}`}
               onClick={() => onTabChange(tab.id)}
@@ -201,7 +259,7 @@ export function NavBar({
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              ref={tab.id === "board" ? contractsTabMobileRef : null}
+              ref={tab.id === "board" ? contractsTabMobileRef : tab.id === "indies" ? railroadsTabMobileRef : null}
               type="button"
               className={`navBar__tab--mobile ${activeTab === tab.id ? "navBar__tab--mobile--active" : ""}`}
               onClick={() => onTabChange(tab.id)}
@@ -215,6 +273,11 @@ export function NavBar({
         {showRailroadHint && hintPosition && (
           <NavBarHintCallout isDesktop={isDesktop} hintPosition={hintPosition}>
             Mark the independent railroads on your map, then switch to Contracts to start taking turns.
+          </NavBarHintCallout>
+        )}
+        {showRoutesAddedHint(routesAddedCount) && routesAddedHintPosition && (
+          <NavBarHintCallout isDesktop={isDesktop} hintPosition={routesAddedHintPosition}>
+            Added {routesAddedCount} {routesAddedCount === 1 ? "route" : "routes"}
           </NavBarHintCallout>
         )}
       </nav>

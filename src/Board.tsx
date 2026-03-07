@@ -8,6 +8,7 @@ import { IndependentRailroadsPage } from './components/IndependentRailroadsPage'
 import { EditPlaytestDialog } from './components/EditPlaytestDialog';
 import type { Contract } from './Contract';
 import { useGame } from './hooks/useGame';
+import { useGameStore } from './stores/gameStore';
 import { useLobbyStore } from './stores/lobbyStore';
 
 /** Minimal game manager shape passed from App (currentGameCode for NavBar). */
@@ -58,6 +59,10 @@ export function WoodAndSteelState({
 
   const handleDismissHint = React.useCallback(() => {
     setShowRailroadHint(false);
+  }, []);
+
+  const handleDismissRoutesAddedHint = React.useCallback(() => {
+    useGameStore.setState((s) => ({ G: { ...s.G, lastRoundRoutesAdded: undefined } }));
   }, []);
 
   const handleNavigateToLobby = React.useCallback(() => {
@@ -177,6 +182,8 @@ export function WoodAndSteelState({
             onTabChange={handleTabChange}
             showRailroadHint={showRailroadHint}
             onDismissHint={handleDismissHint}
+            routesAddedCount={G.lastRoundRoutesAdded}
+            onDismissRoutesAddedHint={handleDismissRoutesAddedHint}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
@@ -206,6 +213,8 @@ export function WoodAndSteelState({
             onTabChange={handleTabChange}
             showRailroadHint={showRailroadHint}
             onDismissHint={handleDismissHint}
+            routesAddedCount={G.lastRoundRoutesAdded}
+            onDismissRoutesAddedHint={handleDismissRoutesAddedHint}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}

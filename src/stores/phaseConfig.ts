@@ -74,8 +74,8 @@ export const phaseConfig: Record<PhaseName, PhaseConfigEntry> = {
         if (ctx.playOrderPos === ctx.playOrder.length - 1) {
           if (ctx.round >= 1) {
             const addedRoutes = growIndependentRailroads(G, ctx);
-            if (addedRoutes) {
-              console.log(`[play] Added ${addedRoutes.size} routes to independent railroads.`);
+            if (addedRoutes?.size) {
+              G.lastRoundRoutesAdded = addedRoutes.size;
             }
             ctx.round++;
           } else {

@@ -9,6 +9,7 @@ export interface SerializedState {
     contracts: unknown[];
     players: unknown[];
     independentRailroads: Record<string, unknown>;
+    lastRoundRoutesAdded?: number;
   };
   ctx: Record<string, unknown>;
 }
@@ -32,6 +33,9 @@ export function serializeState(
     contracts: deepClone(G.contracts || []) as unknown[],
     players: deepClone(G.players || []) as unknown[],
     independentRailroads: deepClone(G.independentRailroads || {}) as Record<string, unknown>,
+    ...(typeof (G as { lastRoundRoutesAdded?: number }).lastRoundRoutesAdded === 'number' && {
+      lastRoundRoutesAdded: (G as { lastRoundRoutesAdded: number }).lastRoundRoutesAdded,
+    }),
   };
 
   const serializedCtx: Record<string, unknown> = {};
@@ -84,11 +88,15 @@ export function deserializeState(data: unknown): SerializedState {
       ),
     };
   }
+  const lastRoundRoutesAdded =
+    typeof gObj.lastRoundRoutesAdded === 'number' ? gObj.lastRoundRoutesAdded : undefined;
+
   return {
     G: {
       contracts: deepClone(gObj.contracts || []) as unknown[],
       players: deepClone(gObj.players || []) as unknown[],
       independentRailroads,
+      ...(lastRoundRoutesAdded !== undefined && { lastRoundRoutesAdded }),
     },
     ctx: deepClone(ctx) as Record<string, unknown>,
   };

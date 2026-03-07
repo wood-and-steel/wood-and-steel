@@ -328,50 +328,11 @@
   max-width: 16rem;
 }
 
-/* Arrow pointing down (mobile/tablet - nav at bottom) */
-.navBar__hintCallout__arrow {
-  position: fixed;
-  z-index: 99;
-  width: 0;
-  height: 0;
-  border-left: 0.5rem solid transparent;
-  border-right: 0.5rem solid transparent;
-  border-top: 0.5rem solid var(--color-border);
-  transform: translateX(-50%); /* Center the arrow on its left position */
-  animation: fadeIn 0.3s ease;
-}
-
-/* Arrow inner fill (to create bordered effect) */
-.navBar__hintCallout__arrow::after {
-  content: '';
-  position: absolute;
-  top: -0.625rem;
-  left: -0.4375rem;
-  width: 0;
-  height: 0;
-  border-left: 0.4375rem solid transparent;
-  border-right: 0.4375rem solid transparent;
-  border-top: 0.4375rem solid var(--color-bg-primary);
-}
-
-/* Desktop: Callout below top nav - left position set by JS */
+/* Desktop: callout position set by JS */
 .navBar__hintCallout--desktop {
-  /* left is set dynamically via inline style */
+  /* left/top set dynamically via inline style */
 }
 
 .navBar__hintCallout--desktop .navBar__hintCallout__content {
   max-width: 18rem;
-}
-
-/* Desktop arrow pointing up */
-.navBar__hintCallout__arrow--desktop {
-  border-top: none;
-  border-bottom: 0.5rem solid var(--color-border);
-}
-
-.navBar__hintCallout__arrow--desktop::after {
-  top: auto;
-  bottom: -0.625rem;
-  border-top: none;
-  border-bottom: 0.4375rem solid var(--color-bg-primary);
 }

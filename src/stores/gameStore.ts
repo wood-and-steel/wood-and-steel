@@ -24,6 +24,8 @@ export interface GameState {
     { name: string; routes: IndependentRailroadRoute[] }
   >;
   byodGameStarted?: boolean;
+  /** Set at end-of-round when growIndependentRailroads adds routes; cleared when user dismisses NavBar hint. */
+  lastRoundRoutesAdded?: number;
 }
 
 /** Game context (ctx): phase, player, turn info. All player references are by ID. */

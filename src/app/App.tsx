@@ -209,10 +209,18 @@ const AppContent = (): React.ReactElement => {
             }
           }
 
-          // Update Zustand store with remote state
-          useGameStore.setState({
-            G: state.G as GameState,
-            ctx: state.ctx as GameContext,
+          // Update Zustand store with remote state.
+          // Preserve transient UI fields (e.g. lastRoundRoutesAdded) so subscription doesn't clear the routes-added hint.
+          useGameStore.setState((current) => {
+            const incomingG = state.G as GameState;
+            const preserved =
+              current.G.lastRoundRoutesAdded !== undefined
+                ? { lastRoundRoutesAdded: current.G.lastRoundRoutesAdded }
+                : {};
+            return {
+              G: { ...incomingG, ...preserved },
+              ctx: state.ctx as GameContext,
+            };
           });
 
           // Update last_modified cache and our tracking ref
