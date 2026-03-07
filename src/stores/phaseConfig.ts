@@ -52,7 +52,6 @@ export const phaseConfig: Record<PhaseName, PhaseConfigEntry> = {
       return playersWithContracts.size >= ctx.numPlayers;
     },
     onEnd: ({ ctx }) => {
-      ctx.round = 1;
       console.log('Setup phase complete. Starting main game.');
     },
     turn: { onEnd: null },
@@ -73,11 +72,15 @@ export const phaseConfig: Record<PhaseName, PhaseConfigEntry> = {
         );
         // End-of-round actions when last player's turn ends
         if (ctx.playOrderPos === ctx.playOrder.length - 1) {
-          const addedRoutes = growIndependentRailroads(G, ctx);
-          if (addedRoutes) {
-            console.log(`[play] Added ${addedRoutes.size} routes to independent railroads.`);
+          if (ctx.round >= 1) {
+            const addedRoutes = growIndependentRailroads(G, ctx);
+            if (addedRoutes) {
+              console.log(`[play] Added ${addedRoutes.size} routes to independent railroads.`);
+            }
+            ctx.round++;
+          } else {
+            ctx.round = 1;
           }
-          ctx.round++;
         }
       },
     },
