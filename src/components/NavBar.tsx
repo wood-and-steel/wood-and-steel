@@ -1,6 +1,7 @@
 import React from "react";
 import placeholderIcon from "../shared/assets/images/placeholder-icon.svg";
 import hamburgerIcon from "../shared/assets/images/hamburger-icon.svg";
+import { NavBarHintCallout, type HintPositionDesktop, type HintPositionMobile } from "./NavBarHintCallout";
 import { PopupMenu, PopupMenuItem } from "./PopupMenu";
 
 function useIsDesktop(): boolean {
@@ -20,19 +21,6 @@ export type NavBarTabId = "board" | "commodities" | "indies" | "cities";
 
 export interface NavBarGameManager {
   currentGameCode?: string | null;
-}
-
-interface HintPositionDesktop {
-  contentTop: number;
-  contentLeft: number;
-  arrowLeft: number;
-  arrowTop: number;
-}
-
-interface HintPositionMobile {
-  contentBottom: number;
-  arrowLeft: number;
-  arrowBottom: number;
 }
 
 export interface NavBarProps {
@@ -225,32 +213,9 @@ export function NavBar({
         </div>
 
         {showRailroadHint && hintPosition && (
-          <>
-            <div
-              className={`navBar__hintCallout ${isDesktop ? "navBar__hintCallout--desktop" : ""}`}
-              style={
-                isDesktop && "contentTop" in hintPosition
-                  ? { top: hintPosition.contentTop, left: hintPosition.contentLeft }
-                  : "contentBottom" in hintPosition
-                    ? { bottom: hintPosition.contentBottom }
-                    : undefined
-              }
-            >
-              <div className="navBar__hintCallout__content">
-                Mark the independent railroads on your map, then switch to Contracts to start taking turns.
-              </div>
-            </div>
-            <div
-              className={`navBar__hintCallout__arrow ${isDesktop ? "navBar__hintCallout__arrow--desktop" : ""}`}
-              style={
-                isDesktop && "arrowTop" in hintPosition
-                  ? { left: hintPosition.arrowLeft, top: hintPosition.arrowTop }
-                  : "arrowBottom" in hintPosition
-                    ? { left: hintPosition.arrowLeft, bottom: hintPosition.arrowBottom }
-                    : undefined
-              }
-            />
-          </>
+          <NavBarHintCallout isDesktop={isDesktop} hintPosition={hintPosition}>
+            Mark the independent railroads on your map, then switch to Contracts to start taking turns.
+          </NavBarHintCallout>
         )}
       </nav>
     </>
