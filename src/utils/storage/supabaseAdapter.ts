@@ -196,7 +196,6 @@ export class SupabaseAdapter extends StorageAdapter {
         return { success: true, conflict: true, lastModified: now };
       }
 
-      console.info(`[SupabaseAdapter.${operation}] Successfully saved game "${normalizedCode}"`);
       return { success: true, lastModified: now };
     } catch (e) {
       const err = e as Error;
