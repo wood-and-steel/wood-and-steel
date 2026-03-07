@@ -192,7 +192,6 @@ const AppContent = (): React.ReactElement => {
         lastModified: string | null
       ) => {
         if (state?.G && state?.ctx) {
-          console.info('[App] Received real-time update for game:', currentGameCode);
           // Check if this update is stale (older than what we've already applied).
           // This prevents race conditions where old subscription notifications overwrite newer local state.
           if (lastModified && lastAppliedTimestampRef.current) {
@@ -230,8 +229,6 @@ const AppContent = (): React.ReactElement => {
               console.info('[App] PlayerID assigned via real-time update:', newPlayerID);
             }
           }
-
-          console.info('[App] Updated game state from real-time subscription');
         } else {
           console.warn('[App] Received invalid state from real-time subscription');
         }
