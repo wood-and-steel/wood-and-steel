@@ -290,7 +290,7 @@ export function growIndependentRailroads(
       [...routesSuperset].filter(
         (r) =>
           !routeIdsInRailroad.has(r) &&
-          !routesOneHopAwayFromIndies.has(r) &&
+          routesOneHopAwayFromIndies.has(r) &&
           routesNotNearActiveCities.has(r)
       )
     );
