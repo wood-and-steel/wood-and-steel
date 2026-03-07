@@ -10,10 +10,19 @@ export interface PlayerProps {
   regionalOffice: RegionCode | null;
 }
 
+/** A route owned by an independent railroad, with the round it was added. */
+export interface IndependentRailroadRoute {
+  key: string;
+  addedInRound: number;
+}
+
 export interface GameState {
   contracts: Contract[];
   players: [string, PlayerProps][];
-  independentRailroads: Record<string, { name: string; routes: string[] }>;
+  independentRailroads: Record<
+    string,
+    { name: string; routes: IndependentRailroadRoute[] }
+  >;
   byodGameStarted?: boolean;
 }
 
@@ -25,7 +34,7 @@ export interface GameContext {
   playOrder: string[];
   playOrderPos: number;
   turn: number;
-  numMoves?: number;
+  round: number;
 }
 
 /** Full store state: G, ctx, and methods. */
@@ -64,6 +73,7 @@ function getInitialState(numPlayers: number = 2): { G: GameState; ctx: GameConte
       playOrder: Array.from({ length: numPlayers }, (_, i) => String(i)),
       playOrderPos: 0,
       turn: 0,
+      round: 0,
     },
   };
 }

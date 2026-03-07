@@ -67,11 +67,28 @@ export function deserializeState(data: unknown): SerializedState {
   }
 
   const gObj = G as Record<string, unknown>;
+  const rawRailroads = deepClone(gObj.independentRailroads || {}) as Record<
+    string,
+    { name?: string; routes?: unknown[] }
+  >;
+  const independentRailroads: Record<string, unknown> = {};
+  for (const [key, railroad] of Object.entries(rawRailroads)) {
+    if (!railroad || typeof railroad !== 'object') continue;
+    const routes = Array.isArray(railroad.routes) ? railroad.routes : [];
+    independentRailroads[key] = {
+      name: railroad.name ?? key,
+      routes: routes.map((r) =>
+        typeof r === 'object' && r !== null && 'key' in r && 'addedInRound' in r
+          ? { key: (r as { key: string }).key, addedInRound: (r as { addedInRound: number }).addedInRound }
+          : { key: String(r), addedInRound: 0 }
+      ),
+    };
+  }
   return {
     G: {
       contracts: deepClone(gObj.contracts || []) as unknown[],
       players: deepClone(gObj.players || []) as unknown[],
-      independentRailroads: deepClone(gObj.independentRailroads || {}) as Record<string, unknown>,
+      independentRailroads,
     },
     ctx: deepClone(ctx) as Record<string, unknown>,
   };

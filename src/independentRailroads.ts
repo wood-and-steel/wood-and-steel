@@ -1,7 +1,11 @@
 import { cities, routes } from './data';
 import { citiesConnectedTo } from './utils/graph';
 import { weightedRandom, randomArrayItem } from './utils/random';
-import type { GameState } from './stores/gameStore';
+import type {
+  GameState,
+  GameContext,
+  IndependentRailroadRoute,
+} from './stores/gameStore';
 
 /**
  * Given a set of cities, return a set of all the route keys that do not include those cities.
@@ -30,7 +34,7 @@ function routesWithoutTheseCities(citiesToAvoid: Set<string>): Set<string> {
  */
 export function initializeIndependentRailroads(): Record<
   string,
-  { name: string; routes: string[] }
+  { name: string; routes: IndependentRailroadRoute[] }
 > {
   // Get the set of cities that are valid endpoints for independent railroads: everything not within 2 hops of possible starting cities
   const withinTwoOfStartingCities = citiesConnectedTo(
@@ -72,9 +76,10 @@ export function initializeIndependentRailroads(): Record<
 
   const shuffledRoutes = shuffle([...routeEntries]);
 
-  // Store independent railroads as a plain object
-  const independentRailroads: Record<string, { name: string; routes: string[] }> =
-    {};
+  const independentRailroads: Record<
+    string,
+    { name: string; routes: IndependentRailroadRoute[] }
+  > = {};
   const routeOwnership = new Map<string, string>();
   const cityOwnership = new Map<string, string>();
 
@@ -112,7 +117,7 @@ export function initializeIndependentRailroads(): Record<
       // Create the company and assign the route
       independentRailroads[companyName] = {
         name: companyName,
-        routes: [routeKey],
+        routes: [{ key: routeKey, addedInRound: 0 }],
       };
 
       // Record ownership of route and cities
@@ -137,7 +142,8 @@ export function initializeIndependentRailroads(): Record<
  * @returns Set of IDs of added routes, or undefined if none were added
  */
 export function growIndependentRailroads(
-  G: GameState
+  G: GameState,
+  ctx: GameContext
 ): Set<string> | undefined {
   /*
    * Definitions used throughout this function:
@@ -245,8 +251,8 @@ export function growIndependentRailroads(
 
     // Get all the cities in this RR
     const citiesInRailroad = new Set<string>();
-    [...railroadToExpand.routes].forEach((routeKey) => {
-      const route = routes.get(routeKey);
+    railroadToExpand.routes.forEach((routeEntry) => {
+      const route = routes.get(routeEntry.key);
       if (route) {
         const [city1, city2] = route.cities;
         citiesInRailroad.add(city1).add(city2);
@@ -266,8 +272,8 @@ export function growIndependentRailroads(
     const citiesInOtherRailroads = new Set<string>();
     for (const [name, railroad] of Object.entries(G.independentRailroads)) {
       if (name !== randomRailroadName) {
-        [...railroad.routes].forEach((routeKey) => {
-          const route = routes.get(routeKey);
+        railroad.routes.forEach((routeEntry) => {
+          const route = routes.get(routeEntry.key);
           if (route) {
             const [city1, city2] = route.cities;
             citiesInOtherRailroads.add(city1).add(city2);
@@ -281,10 +287,13 @@ export function growIndependentRailroads(
     );
 
     // Routes that connect to this RR, are not already in it, are not one hop from other indies, and are not near active cities
+    const routeIdsInRailroad = new Set(
+      railroadToExpand.routes.map((re) => re.key)
+    );
     const possibleRoutes = new Set(
       [...routesSuperset].filter(
         (r) =>
-          !railroadToExpand.routes.includes(r) &&
+          !routeIdsInRailroad.has(r) &&
           !routesOneHopAwayFromIndies.has(r) &&
           routesNotNearActiveCities.has(r)
       )
@@ -293,7 +302,10 @@ export function growIndependentRailroads(
     if (possibleRoutes.size > 0) {
       const routeToAdd = randomArrayItem([...possibleRoutes]);
       if (routeToAdd !== undefined) {
-        railroadToExpand.routes.push(routeToAdd);
+        railroadToExpand.routes.push({
+          key: routeToAdd,
+          addedInRound: ctx.round,
+        });
         addedRoutes.add(routeToAdd);
       }
     }
@@ -424,7 +436,7 @@ const stateCharacteristics: Record<
   },
   MT: {
     name: 'Montana',
-    features: ['Mountain', 'Prairie', 'Canyon', 'Big Sky', 'Glocier'],
+    features: ['Mountain', 'Prairie', 'Canyon', 'Big Sky', 'Glacier'],
     industries: ['Mining', 'Cattle', 'Trading'],
   },
   NE: {

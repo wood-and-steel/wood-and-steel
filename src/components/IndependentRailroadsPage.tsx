@@ -30,9 +30,12 @@ export function IndependentRailroadsPage(): React.ReactElement {
                 )}
               </div>
               <div className="independentRailroads__body">
-                {railroad.routes.map((route, routeIndex) => (
-                  <div key={routeIndex} className="independentRailroads__route">
-                    {route}
+                {railroad.routes.map((route) => (
+                  <div
+                    key={route.key}
+                    className="independentRailroads__route"
+                  >
+                    {route.key}
                   </div>
                 ))}
               </div>

@@ -449,8 +449,8 @@ export function acquireIndependentRailroad(railroadName: string): void {
 
   // Collect all cities in this railroad from its routes
   const citiesInRailroad = new Set<string>();
-  railroad.routes.forEach((routeKey) => {
-    const route = routes.get(routeKey);
+  railroad.routes.forEach((routeEntry) => {
+    const route = routes.get(routeEntry.key);
     if (route?.cities) {
       route.cities.forEach((city) => citiesInRailroad.add(city));
     }

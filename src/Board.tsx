@@ -22,7 +22,7 @@ export interface WoodAndSteelStateProps {
 
 type TabId = 'board' | 'commodities' | 'cities' | 'indies';
 
-/** Main game board: tabs (Contracts, Commodities, Cities, Independent Railroads), NavBar, and form-driven moves. */
+/** Main game board: tabs, NavBar, and form-driven moves. */
 export function WoodAndSteelState({
   gameManager,
   isBYODMode = false,
