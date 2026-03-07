@@ -39,7 +39,7 @@ These invariants must hold. Code and tests must respect them.
 | `src/utils/gameManager.js` | `listGames`, `createNewGame`, `deleteGame`, `loadGameState`; uses storage adapter |
 | `src/app/App.js` | Entry point; conditional lobby vs board render; `onEnterGame`, `onNewGame` handlers |
 | `src/components/TopButtonBar.js` | Game code button triggers `onNavigateToLobby` |
-| `src/Board.js` | Board container; passes `onNavigateToLobby` to TopButtonBar |
+| `src/Board.tsx` | Board container; passes `onNavigateToLobby` to TopButtonBar |
 | `src/providers/StorageProvider.js` | Storage type (local/cloud); `joinGame`, `getCurrentGameCode`, etc. |
 
 ---
@@ -207,7 +207,7 @@ beforeEach(() => {
 3. **LobbyScreen** — UI component
 4. **App.js** — Conditional render, `onEnterGame`, `onNewGame`, delete behavior
 5. **TopButtonBar** — `onNavigateToLobby`
-6. **Board.js** — Remove dialog usage, wire lobby navigation
+6. **Board.tsx** — Remove dialog usage, wire lobby navigation
 7. **Tests** — Add/update tests for each layer
 
 ---

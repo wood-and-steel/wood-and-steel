@@ -1,5 +1,7 @@
 # Copilot Instructions for Wood and Steel
 
+**Cursor users:** See also [AGENTS.md](../AGENTS.md) (or agent guides in `docs/`) for state map and anti-patterns.
+
 ## Project Overview
 
 Wood and Steel is a board game web application built with React and Zustand. It's a train game for 1-6 players set in the age of steam engines (1830-1940), where players act as railroad owners expanding their networks across the eastern United States and southern Canada.
@@ -50,16 +52,17 @@ npm run build
 ## Project Structure
 
 ```
-wood-and-steel-bgio/
+wood-and-steel/
 ├── .github/              # GitHub configuration (workflows, templates)
 ├── docs/                 # Project documentation
 │   ├── Game rules.md     # Complete game rules and mechanics
 │   ├── CSS_ARCHITECTURE.md   # CSS styling guidelines (IMPORTANT!)
-│   └── PHASES_IMPLEMENTATION.md  # Game phase system
+│   └── PHASES_AGENT_GUIDE.md # Game phase system (source of truth for agents)
 ├── public/              # Static assets
 ├── src/
 │   ├── app/             # Main App component
-│   ├── components/      # React components (UI elements)
+│   │   └── App.tsx
+│   ├── components/      # React components (UI elements; mix of .js and .tsx)
 │   │   ├── ContractDisplay.js
 │   │   ├── ContractsList.js
 │   │   ├── GameListDialog.js
@@ -71,24 +74,34 @@ wood-and-steel-bgio/
 │   │   └── TopButtonBar.js
 │   ├── config/          # Configuration files
 │   ├── data/            # Game data (cities, routes, etc.)
+│   ├── providers/       # React context providers
+│   │   ├── GameProvider.tsx
+│   │   └── StorageProvider.tsx
 │   ├── shared/          # Shared utilities and styles
 │   │   └── styles/      # Centralized CSS
+│   ├── stores/          # Zustand stores and phase logic
+│   │   ├── gameStore.ts
+│   │   ├── gameActions.js
+│   │   ├── lobbyStore.js
+│   │   ├── phaseConfig.ts
+│   │   ├── phaseManager.ts
+│   │   └── moveValidation.js
 │   ├── utils/           # Utility functions
-│   ├── Board.js         # Main game board component
+│   ├── Board.tsx        # Main game board component
 │   ├── Contract.js      # Contract generation logic
 │   ├── independentRailroads.js  # Independent railroad logic
-│   └── index.js         # Entry point
+│   └── index.tsx        # Entry point
 ├── package.json
 └── README.md
 ```
 
 ## Key Files and Their Purposes
 
-- **Board.js**: Main React component that renders the game UI
+- **Board.tsx**: Main React component that renders the game UI
 - **Contract.js**: Logic for generating different types of contracts (starting, private, market)
 - **independentRailroads.js**: Management of AI-controlled railroad companies
 - **stores/gameActions.js**: Game move implementations that modify game state
-- **stores/phaseConfig.js**: Phase configuration and transition logic
+- **stores/phaseConfig.ts**: Phase definitions; **stores/phaseManager.ts**: Phase transition logic
 - **components/**: Presentational React components for UI elements
 
 ## Coding Conventions
@@ -141,7 +154,7 @@ export function MyComponent({ isActive, onAction }) {
 
 1. **Game state (G)**: Always treat as immutable; use Zustand's setState to update; must be a JSON-serializable object
 2. **Moves**: Define as functions in `stores/gameActions.js` that update the Zustand store
-3. **Phases**: Use for different game stages (setup, play, scoring) - configured in `stores/phaseConfig.js`
+3. **Phases**: Use for different game stages (setup, play, scoring) - configured in `stores/phaseConfig.ts`
 4. **Context (ctx)**: Access game metadata (currentPlayer, phase, turn) from the Zustand store
 
 Example:
@@ -175,7 +188,7 @@ The game uses a custom phase system:
 2. **Play Phase**: Main gameplay with all actions available
 3. **Scoring Phase**: End-game scoring (stub/future implementation)
 
-See `/docs/PHASES_IMPLEMENTATION.md` for detailed flow.
+See `docs/PHASES_AGENT_GUIDE.md` for detailed flow.
 
 ### State Management
 

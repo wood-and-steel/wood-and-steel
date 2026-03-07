@@ -40,7 +40,7 @@ These invariants must hold. Code and tests must respect them.
 | `src/components/LobbyScreen.js` | Join form on Cloud (BYOD) tab; row click on `waiting_for_players` BYOD game triggers join first |
 | `src/stores/lobbyStore.js` | `joinFormPrefill` and `setJoinFormPrefill` used for device-not-playing return flow |
 | `src/app/App.js` | BYOD vs hotseat render logic; device-not-playing check; `WaitingForPlayersScreen` when phase is `waiting_for_players` |
-| `src/stores/phaseConfig.js` | Phase definitions including `waiting_for_players` |
+| `src/stores/phaseConfig.ts` | Phase definitions including `waiting_for_players` |
 | `src/utils/storage/supabaseAdapter.js` | Cloud storage; real-time subscriptions for BYOD |
 
 ---
