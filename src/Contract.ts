@@ -130,8 +130,7 @@ export function generateStartingContract(
 }
 
 /**
- * Pure generation of a private contract spec (commodity + destination) for the current player.
- * No newContract, no playerID assigned to the contract.
+ * Generation of a private contract spec (commodity + destination) for the current player.
  *
  * @param G - Game state object
  * @param ctx - Game context
@@ -188,7 +187,10 @@ export function generatePrivateContractSpec(
   //  - not available in destination city
   const availableCommodities = new Set<string>();
   if (commodityRegion === undefined) {
-    const citiesWithinOneHop = Array.from(citiesConnectedTo(activeCitiesKeys, { distance: 1 }));
+    const citiesWithinOneHop = Array.from(citiesConnectedTo(
+      activeCitiesKeys, 
+      { distance: 1, includeFromCities: true }
+    ));
     citiesWithinOneHop.forEach((cityKey) => {
       const city = cities.get(cityKey);
       if (city) city.commodities.forEach((c) => availableCommodities.add(c));

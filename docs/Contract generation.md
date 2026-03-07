@@ -1,6 +1,6 @@
 # Contract generation
 
-This document summarizes the contract generation routines implemented in [Contract.js](../src/Contract.js).
+This document summarizes the contract generation routines implemented in [Contract.ts](../src/Contract.ts).
 
 ## Dollar value (moneyValue)
 
@@ -49,6 +49,8 @@ Formula:
 - Plus `2 × contractsFulfilledHere` (fulfilled contracts with this city as destination)  
 - Plus `contractsWithCommoditiesFromHere` (fulfilled contracts whose commodity is produced in this city)
 
+When the city is the current player's hub, its selection weight also includes the sum of `valueOfCity` for each city within 1 segment (used when weighting private contract destination choice).
+
 ---
 
 ## Private contract
@@ -60,9 +62,9 @@ Private contracts are offered to a player just after they fulfill a prior privat
    - Cities near the **west** coast (city.nearWestCoast == true): N 15%, S 15%, E 55%, W 15%
    - All other cities: N 15%, S 15%, E 35%, W 35%
 
-2. **Select destination city**: Within 2 segments of any of the player’s active cities, in the chosen direction. Excludes the origin cities (active cities). Selection is weighted by city value (higher value = higher chance).
+2. **Select destination city**: Within 2 segments of any of the player’s active cities, in the chosen direction. The current city (where the prior contract was fulfilled) is excluded from the candidate list; selection is weighted by city value (higher value = higher chance). If the player has a hub city, that city's weight includes the value of cities within 1 segment.
 
-3. **Select commodity**: Available within 1 segment of the player’s active cities. Excludes commodities produced in the destination city. Chosen at random with equal probability.
+3. **Select commodity**: Available in cities that are within 1 segment of the player’s active cities. Excludes commodities produced in the destination city. Chosen at random with equal probability. When generating multiple private contract offers, one offer may be generated with commodity restricted to the player's regional office region (if any).
 
 ---
 
@@ -71,7 +73,7 @@ Private contracts are offered to a player just after they fulfill a prior privat
 Starting contracts are a special kind of private contract given to players during setup.
 
 1. **Candidate destination cities**
-   - From the two starting cities, collect all cities within **2 segments**, where those segments are **not** mountainous routes.
+   - From the two starting cities, collect all cities within **2 segments** (excluding the starting cities themselves), where those segments are **not** mountainous routes.
    - Group candidates by cardinal direction (N, S, E, W) from either starting city; a candidate may appear in multiple directions.
    - Choose direction:
      - If **no candidates are to the north or south**: choose between east and west, 50/50.
