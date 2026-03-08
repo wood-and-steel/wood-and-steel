@@ -2,6 +2,14 @@ import React from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { useStorage } from "../providers/StorageProvider";
 
+const BYOD_PLAYER_NAME_KEY = "byod_player_name";
+
+function isDefaultSeatName(name: string | null | undefined): boolean {
+  if (name == null || name === "") return true;
+  if (name === "Host" || name === "Guest") return true;
+  return /^Guest \d+$/.test(name);
+}
+
 export interface PlayerSeatDisplay {
   playerName?: string | null;
 }
@@ -37,6 +45,7 @@ export function WaitingForPlayersScreen({
   const deviceId = storage.getDeviceId();
 
   const isFirstRefresh = React.useRef(true);
+  const appliedSavedNameRef = React.useRef(false);
 
   const refreshData = React.useCallback(async () => {
     if (!gameCode) return;
@@ -53,7 +62,17 @@ export function WaitingForPlayersScreen({
       setMySeat((seat as PlayerSeatDisplay) ?? null);
 
       if (isFirstRefresh.current && seat && typeof seat === "object" && "playerName" in seat) {
-        setPlayerName(String((seat as PlayerSeatDisplay).playerName ?? ""));
+        const seatDisplay = seat as PlayerSeatDisplay;
+        const currentName = String(seatDisplay.playerName ?? "");
+        const savedName =
+          typeof localStorage !== "undefined"
+            ? (localStorage.getItem(BYOD_PLAYER_NAME_KEY) ?? "").trim()
+            : "";
+        if (savedName && isDefaultSeatName(seatDisplay.playerName)) {
+          setPlayerName(savedName);
+        } else {
+          setPlayerName(currentName);
+        }
       }
       isFirstRefresh.current = false;
 
@@ -78,6 +97,36 @@ export function WaitingForPlayersScreen({
     return () => clearInterval(interval);
   }, [refreshData]);
 
+  // Auto-apply saved name once when seat has default name (Host/Guest)
+  React.useEffect(() => {
+    if (
+      !gameCode ||
+      !mySeat ||
+      appliedSavedNameRef.current ||
+      !isDefaultSeatName(mySeat.playerName)
+    ) {
+      return;
+    }
+    const savedName =
+      typeof localStorage !== "undefined"
+        ? (localStorage.getItem(BYOD_PLAYER_NAME_KEY) ?? "").trim()
+        : "";
+    if (!savedName) return;
+
+    appliedSavedNameRef.current = true;
+    storage
+      .updateMyPlayerName(gameCode, savedName)
+      .then((result) => {
+        if (result.success) {
+          return refreshData();
+        }
+      })
+      .catch((e) => {
+        console.error("[WaitingForPlayersScreen] Error auto-applying saved name:", e);
+        appliedSavedNameRef.current = false;
+      });
+  }, [gameCode, mySeat, storage, refreshData]);
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPlayerName(e.target.value);
   };
@@ -96,6 +145,9 @@ export function WaitingForPlayersScreen({
         console.error("[WaitingForPlayersScreen] Failed to save name:", result.error);
         setError("Failed to save name");
       } else {
+        if (typeof localStorage !== "undefined" && trimmedName) {
+          localStorage.setItem(BYOD_PLAYER_NAME_KEY, trimmedName);
+        }
         await refreshData();
       }
     } catch (e) {

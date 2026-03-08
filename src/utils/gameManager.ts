@@ -247,6 +247,7 @@ interface CreateNewGameOptions {
   gameMode?: 'hotseat' | 'byod';
   hostDeviceId?: string | null;
   numPlayers?: number;
+  hostPlayerName?: string;
 }
 
 export async function createNewGame(
@@ -255,7 +256,7 @@ export async function createNewGame(
 ): Promise<string> {
   const operation = 'createNewGame';
 
-  const { gameMode = 'hotseat', hostDeviceId = null, numPlayers = 3 } = options;
+  const { gameMode = 'hotseat', hostDeviceId = null, numPlayers = 3, hostPlayerName } = options;
 
   if (gameMode !== 'hotseat' && gameMode !== 'byod') {
     throw new Error(`Invalid gameMode: ${gameMode}. Must be 'hotseat' or 'byod'.`);
@@ -281,10 +282,12 @@ export async function createNewGame(
 
     if (gameMode === 'byod' && hostDeviceId) {
       metadata.hostDeviceId = hostDeviceId;
+      const initialHostName =
+        hostPlayerName && hostPlayerName.trim() ? hostPlayerName.trim() : 'Host';
       metadata.playerSeats = {
         [hostDeviceId]: {
           joinedAt: new Date().toISOString(),
-          playerName: 'Host',
+          playerName: initialHostName,
         },
       };
     }

@@ -21,7 +21,10 @@ const TAB_LOCAL = "local";
 const TAB_CLOUD_HOTSEAT = "cloud-hotseat";
 const TAB_CLOUD_BYOD = "cloud-byod";
 
-type LobbyTab = typeof TAB_LOCAL | typeof TAB_CLOUD_HOTSEAT | typeof TAB_CLOUD_BYOD;
+const LOBBY_TAB_KEY = "lobby_active_tab";
+
+const VALID_TABS = [TAB_LOCAL, TAB_CLOUD_HOTSEAT, TAB_CLOUD_BYOD] as const;
+type LobbyTab = (typeof VALID_TABS)[number];
 
 function getStorageTypeForTab(tab: LobbyTab): "local" | "cloud" {
   return tab === TAB_LOCAL ? "local" : "cloud";
@@ -108,9 +111,23 @@ export function LobbyScreen({
     }
   }, [joinFormPrefill, clearJoinFormPrefill, setJoinFormPrefill, doJoinGame]);
 
-  const [activeTab, setActiveTab] = React.useState<LobbyTab>(() =>
-    storage.storageType === "local" ? TAB_LOCAL : TAB_CLOUD_HOTSEAT
-  );
+  const [activeTab, setActiveTab] = React.useState<LobbyTab>(() => {
+    if (typeof localStorage !== "undefined") {
+      const saved = localStorage.getItem(LOBBY_TAB_KEY);
+      if (saved === TAB_LOCAL || saved === TAB_CLOUD_HOTSEAT || saved === TAB_CLOUD_BYOD) {
+        return saved;
+      }
+    }
+    return storage.storageType === "local" ? TAB_LOCAL : TAB_CLOUD_HOTSEAT;
+  });
+
+  // Sync storage type with restored tab on mount (e.g. user had Cloud BYOD last time)
+  React.useEffect(() => {
+    const needed = getStorageTypeForTab(activeTab);
+    if (storage.storageType !== needed) {
+      storage.setStorageType(needed);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [joinGameCode, setJoinGameCode] = React.useState("");
   const [joinError, setJoinError] = React.useState("");
@@ -170,6 +187,9 @@ export function LobbyScreen({
       if (newTab === activeTab) return;
 
       setActiveTab(newTab);
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(LOBBY_TAB_KEY, newTab);
+      }
 
       const newStorageType = getStorageTypeForTab(newTab);
       if (newStorageType !== storage.storageType) {
@@ -220,20 +240,18 @@ export function LobbyScreen({
   const handleDeleteGame = async (gameCode: string, event: React.MouseEvent) => {
     event.stopPropagation();
 
-    if (window.confirm(`Are you sure you want to delete game "${gameCode}"?`)) {
-      try {
-        const deleted = await gameManager.onDeleteGame(gameCode);
-        if (deleted) {
-          await refreshGames();
-        } else {
-          alert(`Failed to delete game "${gameCode}".`);
-        }
-      } catch (error) {
-        console.error("[LobbyScreen] Error deleting game:", error);
-        alert(
-          `Failed to delete game "${gameCode}". ${error instanceof Error ? error.message : "Please try again."}`
-        );
+    try {
+      const deleted = await gameManager.onDeleteGame(gameCode);
+      if (deleted) {
+        await refreshGames();
+      } else {
+        alert(`Failed to delete game "${gameCode}".`);
       }
+    } catch (error) {
+      console.error("[LobbyScreen] Error deleting game:", error);
+      alert(
+        `Failed to delete game "${gameCode}". ${error instanceof Error ? error.message : "Please try again."}`
+      );
     }
   };
 

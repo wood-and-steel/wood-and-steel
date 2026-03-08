@@ -349,12 +349,18 @@ const AppContent = (): React.ReactElement => {
       try {
         const isBYOD = gameMode === 'byod';
         const hostDeviceId = isBYOD ? storage.getDeviceId() : null;
+        const savedByName =
+          isBYOD && typeof localStorage !== 'undefined'
+            ? (localStorage.getItem('byod_player_name') ?? '').trim()
+            : '';
+        const hostPlayerName = savedByName || undefined;
 
         // New game is created by createNewGame with 'waiting_for_players' phase
         const newCode = await createNewGame(storage.storageType, {
           gameMode,
           hostDeviceId,
           numPlayers: validNumPlayers,
+          ...(hostPlayerName && { hostPlayerName }),
         });
 
         if (!isBYOD) {
