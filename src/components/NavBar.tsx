@@ -66,6 +66,17 @@ export function NavBar({
   >(null);
   const isDesktop = useIsDesktop();
 
+  /** Clamp tab center X so a callout centered there stays on screen (halfMax = half of max callout width). */
+  const clampCalloutCenterX = React.useCallback(
+    (tabCenterX: number, halfMax: number): number => {
+      return Math.max(
+        halfMax,
+        Math.min(tabCenterX, window.innerWidth - halfMax)
+      );
+    },
+    []
+  );
+
   React.useEffect(() => {
     if (!showRailroadHint) {
       setHintPosition(null);
@@ -78,15 +89,17 @@ export function NavBar({
 
       const rect = tabRef.getBoundingClientRect();
       const tabCenterX = rect.left + rect.width / 2;
-
       if (isDesktop) {
+        const halfMax = 144; // 9rem – half of max-width 18rem for edge clamp
         setHintPosition({
           contentTop: rect.bottom + 12,
-          contentLeft: Math.max(8, tabCenterX - 80),
+          contentCenterX: clampCalloutCenterX(tabCenterX, halfMax),
         });
       } else {
+        const halfMax = 128; // 8rem – half of max-width 16rem for edge clamp
         setHintPosition({
           contentBottom: window.innerHeight - rect.top + 12,
+          contentCenterX: clampCalloutCenterX(tabCenterX, halfMax),
         });
       }
     };
@@ -94,7 +107,7 @@ export function NavBar({
     updatePosition();
     window.addEventListener("resize", updatePosition);
     return () => window.removeEventListener("resize", updatePosition);
-  }, [showRailroadHint, isDesktop]);
+  }, [showRailroadHint, isDesktop, clampCalloutCenterX]);
 
   React.useEffect(() => {
     if (!showRoutesAddedHint(routesAddedCount)) {
@@ -108,15 +121,17 @@ export function NavBar({
 
       const rect = tabRef.getBoundingClientRect();
       const tabCenterX = rect.left + rect.width / 2;
-
       if (isDesktop) {
+        const halfMax = 144;
         setRoutesAddedHintPosition({
           contentTop: rect.bottom + 12,
-          contentLeft: Math.max(8, tabCenterX - 80),
+          contentCenterX: clampCalloutCenterX(tabCenterX, halfMax),
         });
       } else {
+        const halfMax = 128;
         setRoutesAddedHintPosition({
           contentBottom: window.innerHeight - rect.top + 12,
+          contentCenterX: clampCalloutCenterX(tabCenterX, halfMax),
         });
       }
     };
@@ -124,7 +139,7 @@ export function NavBar({
     updatePosition();
     window.addEventListener("resize", updatePosition);
     return () => window.removeEventListener("resize", updatePosition);
-  }, [routesAddedCount, isDesktop]);
+  }, [routesAddedCount, isDesktop, clampCalloutCenterX]);
 
   React.useEffect(() => {
     if (!showRailroadHint || !onDismissHint) return;

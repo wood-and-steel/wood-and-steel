@@ -2,11 +2,14 @@ import React from "react";
 
 export interface HintPositionDesktop {
   contentTop: number;
-  contentLeft: number;
+  /** Horizontal center of the callout (use with transform: translateX(-50%)). */
+  contentCenterX: number;
 }
 
 export interface HintPositionMobile {
   contentBottom: number;
+  /** Horizontal center of the callout (use with transform: translateX(-50%)). */
+  contentCenterX: number;
 }
 
 export interface NavBarHintCalloutProps {
@@ -29,9 +32,17 @@ export function NavBarHintCallout({
       className={`navBar__hintCallout ${isDesktop ? "navBar__hintCallout--desktop" : ""}`}
       style={
         isDesktop && "contentTop" in hintPosition
-          ? { top: hintPosition.contentTop, left: hintPosition.contentLeft }
+          ? {
+              top: hintPosition.contentTop,
+              left: hintPosition.contentCenterX,
+              transform: "translateX(-50%)",
+            }
           : "contentBottom" in hintPosition
-            ? { bottom: hintPosition.contentBottom }
+            ? {
+                bottom: hintPosition.contentBottom,
+                left: hintPosition.contentCenterX,
+                transform: "translateX(-50%)",
+              }
             : undefined
       }
     >
