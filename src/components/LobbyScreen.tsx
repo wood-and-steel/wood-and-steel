@@ -240,18 +240,20 @@ export function LobbyScreen({
   const handleDeleteGame = async (gameCode: string, event: React.MouseEvent) => {
     event.stopPropagation();
 
-    try {
-      const deleted = await gameManager.onDeleteGame(gameCode);
-      if (deleted) {
-        await refreshGames();
-      } else {
-        alert(`Failed to delete game "${gameCode}".`);
+    if (window.confirm(`Are you sure you want to delete game "${gameCode}"?`)) {
+      try {
+        const deleted = await gameManager.onDeleteGame(gameCode);
+        if (deleted) {
+          await refreshGames();
+        } else {
+          alert(`Failed to delete game "${gameCode}".`);
+        }
+      } catch (error) {
+        console.error("[LobbyScreen] Error deleting game:", error);
+        alert(
+          `Failed to delete game "${gameCode}". ${error instanceof Error ? error.message : "Please try again."}`
+        );
       }
-    } catch (error) {
-      console.error("[LobbyScreen] Error deleting game:", error);
-      alert(
-        `Failed to delete game "${gameCode}". ${error instanceof Error ? error.message : "Please try again."}`
-      );
     }
   };
 
