@@ -21,21 +21,26 @@ export function endTurn(): void {
 
   const nextTurn = nextPlayOrderPos === 0 ? ctx.turn + 1 : ctx.turn;
 
-  // Update state immutably
+  // Update state immutably; set turn-start snapshot for the next player so they can undo their turn
   // Note: If turn.onEnd hook mutated G, we need to update G as well
-  useGameStore.setState((currentState) => ({
-    G: {
+  useGameStore.setState((currentState) => {
+    const newG = {
       ...currentState.G,
-      // Ensure independentRailroads is a new object reference if it was mutated by growIndependentRailroads
       independentRailroads: { ...currentState.G.independentRailroads },
-    },
-    ctx: {
+    };
+    const newCtx = {
       ...ctx,
       currentPlayer: nextPlayer,
       playOrderPos: nextPlayOrderPos,
       turn: nextTurn,
-    },
-  }));
+    };
+    return {
+      G: newG,
+      ctx: newCtx,
+      turnStartSnapshot: structuredClone({ G: newG, ctx: newCtx }),
+      hasMovedThisTurn: false,
+    };
+  });
 
   // Save state after turn change
   const gameCode = getCurrentGameCode();

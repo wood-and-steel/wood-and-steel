@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Contract } from '../Contract';
+import { getCurrentGameCode, saveGameState } from '../utils/gameManager';
 
 export type RegionCode = 'NW' | 'NC' | 'NE' | 'SW' | 'SC' | 'SE';
 
@@ -39,11 +40,18 @@ export interface GameContext {
   round: number;
 }
 
+/** Snapshot of game state at the start of the current player's turn (for undo). */
+export type TurnStartSnapshot = { G: GameState; ctx: GameContext };
+
 /** Full store state: G, ctx, and methods. */
 export interface GameStoreState {
   G: GameState;
   ctx: GameContext;
+  turnStartSnapshot: TurnStartSnapshot | null;
+  hasMovedThisTurn: boolean;
   resetState: (numPlayers?: number) => void;
+  setTurnStartSnapshot: (snapshot: TurnStartSnapshot | null) => void;
+  undoCurrentTurn: () => void;
   getPlayerContracts: (playerID: string) => Contract[];
   getMarketContracts: () => Contract[];
   getCurrentPlayer: () => [string, PlayerProps] | undefined;
@@ -58,7 +66,9 @@ export interface GameStoreState {
  * @param numPlayers - Number of players (default 2)
  * @returns Object with G (game state) and ctx (game context)
  */
-function getInitialState(numPlayers: number = 2): { G: GameState; ctx: GameContext } {
+function getInitialState(
+  numPlayers: number = 2
+): { G: GameState; ctx: GameContext; turnStartSnapshot: null; hasMovedThisTurn: false } {
   return {
     G: {
       contracts: [],
@@ -77,7 +87,14 @@ function getInitialState(numPlayers: number = 2): { G: GameState; ctx: GameConte
       turn: 0,
       round: 0,
     },
+    turnStartSnapshot: null,
+    hasMovedThisTurn: false,
   };
+}
+
+/** Deep-clone G and ctx for snapshot/restore so stored snapshot is immutable. */
+function cloneState(snapshot: TurnStartSnapshot): TurnStartSnapshot {
+  return structuredClone(snapshot);
 }
 
 const storeImpl = (
@@ -87,7 +104,38 @@ const storeImpl = (
   ...getInitialState(),
 
   resetState: (numPlayers: number = 2) => {
-    set(getInitialState(numPlayers));
+    set({ ...getInitialState(numPlayers) });
+  },
+
+  setTurnStartSnapshot: (snapshot: TurnStartSnapshot | null) => {
+    set({
+      turnStartSnapshot: snapshot ? cloneState(snapshot) : null,
+      hasMovedThisTurn: false,
+    });
+  },
+
+  undoCurrentTurn: () => {
+    const state = get();
+    const { turnStartSnapshot } = state;
+    if (!turnStartSnapshot || turnStartSnapshot.ctx.currentPlayer !== state.ctx.currentPlayer) {
+      return;
+    }
+    const restored = cloneState(turnStartSnapshot);
+    set({
+      G: restored.G,
+      ctx: restored.ctx,
+      hasMovedThisTurn: false,
+    });
+    // Persist so BYOD stays in sync (same pattern as gameActions.saveCurrentGameState)
+    const code = getCurrentGameCode();
+    if (code) {
+      saveGameState(code, restored.G, restored.ctx).catch((error: unknown) => {
+        console.error(
+          '[undoCurrentTurn] Failed to save game state:',
+          error instanceof Error ? error.message : String(error)
+        );
+      });
+    }
   },
 
   getPlayerContracts: (playerID: string) => {

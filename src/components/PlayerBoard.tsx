@@ -2,6 +2,7 @@ import React from "react";
 import { railroadTieValue } from "../Contract";
 import { ContractsList } from "./ContractsList";
 import type { GameState, GameContext } from "../stores/gameStore";
+import { useGameStore } from "../stores/gameStore";
 
 const STARTING_CITY_PAIRS: [string, string][] = [
   ["Montreal", "Quebec City"],
@@ -72,6 +73,15 @@ export function PlayerBoard({
   const isPairChosen = (pair: [string, string]): boolean =>
     chosenCities.has(pair[0]) || chosenCities.has(pair[1]);
 
+  const hasMovedThisTurn = useGameStore((s) => s.hasMovedThisTurn);
+  const turnStartSnapshot = useGameStore((s) => s.turnStartSnapshot);
+  const undoCurrentTurn = useGameStore((s) => s.undoCurrentTurn);
+  const canUndo =
+    currentPhase === "play" &&
+    isPlayerTurn &&
+    turnStartSnapshot != null &&
+    hasMovedThisTurn;
+
   const handlePairClick = (pair: [string, string]) => {
     if (isPairChosen(pair) || !isPlayerTurn) return;
     onStartingPairSelect(pair);
@@ -90,6 +100,16 @@ export function PlayerBoard({
             </div>
           ) : (
             <div className="playerBoard__buttonGroup">
+              <button
+                type="button"
+                name="undo"
+                aria-label="Undo all actions this turn"
+                className={`button playerBoard__undo ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
+                disabled={!canUndo}
+                onClick={() => undoCurrentTurn()}
+              >
+                Undo
+              </button>
               <button
                 type="button"
                 name="privateContract"

@@ -36,14 +36,19 @@ export function checkPhaseTransition(G: GameState, ctx: GameContext): boolean {
   // Run current phase's onEnd hook before switching phase
   executePhaseOnEnd(ctx.phase, G, ctx);
 
-  // Update store: next phase; spread currentState so any onEnd mutations to G are kept
-  useGameStore.setState((currentState) => ({
-    G: { ...currentState.G },
-    ctx: {
-      ...currentState.ctx,
-      phase: nextPhase,
-    },
-  }));
+  // Update store: next phase; set turn-start snapshot when entering play so first player can undo
+  useGameStore.setState((currentState) => {
+    const newG = { ...currentState.G };
+    const newCtx = { ...currentState.ctx, phase: nextPhase };
+    const turnStartSnapshot =
+      nextPhase === 'play' ? structuredClone({ G: newG, ctx: newCtx }) : null;
+    return {
+      G: newG,
+      ctx: newCtx,
+      turnStartSnapshot,
+      hasMovedThisTurn: false,
+    };
+  });
 
   // Persist state after transition (when we have a game code, e.g. BYOD)
   const gameCode = getCurrentGameCode();

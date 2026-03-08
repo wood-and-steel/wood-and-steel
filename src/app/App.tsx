@@ -130,10 +130,14 @@ const AppContent = (): React.ReactElement => {
             }
           }
 
-          // Load state into Zustand store
+          // Load state into Zustand store; set turn-start snapshot so current player can undo after load
+          const loadedG = savedState.G as GameState;
+          const loadedCtx = savedState.ctx as GameContext;
           useGameStore.setState({
-            G: savedState.G as GameState,
-            ctx: savedState.ctx as GameContext,
+            G: loadedG,
+            ctx: loadedCtx,
+            turnStartSnapshot: structuredClone({ G: loadedG, ctx: loadedCtx }),
+            hasMovedThisTurn: false,
           });
           setSelectedGame(code);
           setLobbyMode(false);
@@ -211,15 +215,21 @@ const AppContent = (): React.ReactElement => {
 
           // Update Zustand store with remote state.
           // Preserve transient UI fields (e.g. lastRoundRoutesAdded) so subscription doesn't clear the routes-added hint.
+          // Preserve hasMovedThisTurn when the update is for the same turn (e.g. our own save echoed back), so Undo stays enabled.
           useGameStore.setState((current) => {
             const incomingG = state.G as GameState;
             const preserved =
               current.G.lastRoundRoutesAdded !== undefined
                 ? { lastRoundRoutesAdded: current.G.lastRoundRoutesAdded }
                 : {};
+            const newG = { ...incomingG, ...preserved };
+            const newCtx = state.ctx as GameContext;
+            const turnChanged = newCtx.currentPlayer !== current.ctx.currentPlayer;
             return {
-              G: { ...incomingG, ...preserved },
-              ctx: state.ctx as GameContext,
+              G: newG,
+              ctx: newCtx,
+              turnStartSnapshot: turnChanged ? structuredClone({ G: newG, ctx: newCtx }) : current.turnStartSnapshot,
+              hasMovedThisTurn: turnChanged ? false : current.hasMovedThisTurn,
             };
           });
 
@@ -309,9 +319,13 @@ const AppContent = (): React.ReactElement => {
             }
           }
 
+          const loadedG = savedState.G as GameState;
+          const loadedCtx = savedState.ctx as GameContext;
           useGameStore.setState({
-            G: savedState.G as GameState,
-            ctx: savedState.ctx as GameContext,
+            G: loadedG,
+            ctx: loadedCtx,
+            turnStartSnapshot: structuredClone({ G: loadedG, ctx: loadedCtx }),
+            hasMovedThisTurn: false,
           });
           if (storage.storageType !== storageType) {
             storage.setStorageType(storageType);
@@ -379,9 +393,13 @@ const AppContent = (): React.ReactElement => {
           // For BYOD, load the state that was created by createNewGame
           const savedState = await loadGameState(newCode, storage.storageType);
           if (savedState?.G && savedState?.ctx) {
+            const loadedG = savedState.G as GameState;
+            const loadedCtx = savedState.ctx as GameContext;
             useGameStore.setState({
-              G: savedState.G as GameState,
-              ctx: savedState.ctx as GameContext,
+              G: loadedG,
+              ctx: loadedCtx,
+              turnStartSnapshot: structuredClone({ G: loadedG, ctx: loadedCtx }),
+              hasMovedThisTurn: false,
             });
           }
         }

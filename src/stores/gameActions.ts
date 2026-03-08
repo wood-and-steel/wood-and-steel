@@ -35,6 +35,11 @@ function saveCurrentGameState(): void {
   }
 }
 
+/** Mark that the current player has made a move this turn (enables Undo button). */
+function markMovedThisTurn(): void {
+  useGameStore.setState({ hasMovedThisTurn: true });
+}
+
 export function generateStartingContract(
   activeCities: string[],
   playerID?: string
@@ -105,6 +110,7 @@ export function generatePrivateContract(): void {
     },
   }));
 
+  markMovedThisTurn();
   saveCurrentGameState();
 }
 
@@ -156,6 +162,7 @@ export function generateMarketContract(): void {
   const updatedState = useGameStore.getState();
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
+  markMovedThisTurn();
   saveCurrentGameState();
 }
 
@@ -228,6 +235,7 @@ export function claimMarketContract(contractID: string): void {
   const updatedState = useGameStore.getState();
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
+  markMovedThisTurn();
   saveCurrentGameState();
 }
 
@@ -280,6 +288,7 @@ export function addContract(
   const updatedState = useGameStore.getState();
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
+  markMovedThisTurn();
   saveCurrentGameState();
 }
 
@@ -385,6 +394,7 @@ export function toggleContractFulfilled(contractID: string): void {
   const updatedState = useGameStore.getState();
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
+  markMovedThisTurn();
   saveCurrentGameState();
 }
 
@@ -425,6 +435,7 @@ export function deleteContract(contractID: string): void {
   const updatedState = useGameStore.getState();
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
+  markMovedThisTurn();
   saveCurrentGameState();
 }
 
@@ -493,6 +504,7 @@ export function acquireIndependentRailroad(railroadName: string): void {
   const updatedState = useGameStore.getState();
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
+  markMovedThisTurn();
   saveCurrentGameState();
 }
 
@@ -560,6 +572,7 @@ export function claimHubCity(cityKey: string): boolean {
   const updatedState = useGameStore.getState();
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
+  markMovedThisTurn();
   saveCurrentGameState();
   return true;
 }
@@ -619,6 +632,7 @@ export function claimRegionalOffice(regionCode: string): boolean {
   const updatedState = useGameStore.getState();
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
+  markMovedThisTurn();
   saveCurrentGameState();
   return true;
 }
@@ -668,6 +682,7 @@ export function addCityToPlayer(cityKey: string): void {
   const updatedState = useGameStore.getState();
   checkPhaseTransition(updatedState.G, updatedState.ctx);
 
+  markMovedThisTurn();
   saveCurrentGameState();
 }
 
