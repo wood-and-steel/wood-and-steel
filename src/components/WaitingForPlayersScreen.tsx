@@ -196,11 +196,7 @@ export function WaitingForPlayersScreen({
   const handleCancel = () => {
     if (!isHost) return;
 
-    if (
-      window.confirm("Are you sure you want to cancel? This will delete the game for all players.")
-    ) {
-      onCancel?.();
-    }
+    onCancel?.();
   };
 
   const handleReturnToLobby = () => {
