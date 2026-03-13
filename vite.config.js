@@ -24,6 +24,21 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-dom') || id.includes('react/')) return 'react';
+            if (id.includes('react-router')) return 'react-router';
+            if (id.includes('@supabase')) return 'supabase';
+            if (id.includes('zustand')) return 'zustand';
+            return 'vendor';
+          }
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
