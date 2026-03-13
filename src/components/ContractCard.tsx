@@ -49,8 +49,8 @@ export const ContractCard = React.forwardRef<HTMLButtonElement, ContractCardProp
       onKeyDown,
       "aria-haspopup": ariaHaspopup,
       "aria-expanded": ariaExpanded,
-    },
-    ref
+    }: ContractCardProps,
+    ref: React.ForwardedRef<HTMLButtonElement>
   ): React.ReactElement {
     const spec: ContractCardSpec = { commodity, destinationKey };
     const reward = moneyValue(spec);
