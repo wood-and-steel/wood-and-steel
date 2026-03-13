@@ -12,21 +12,32 @@
   align-items: center;
   justify-content: space-between;
   width: 10rem;
-  min-height: 5.5rem;
-  padding: 0;
-  background-color: transparent;
-  border: solid var(--border-width-md) var(--color-border-light);
-  border-radius: var(--radius-sm);
+  min-height: 12.5rem;
+  padding: var(--spacing-md) var(--spacing-sm);
+  position: relative;
+  background-image: linear-gradient(to bottom, #fbfaf8 0%, #f0ebe0 33%, #eae4d7 33%, #f6f4ee 50%, #f2efe8 67%, #efebe1 67%, #f5f2eb 100%);
+  border: none;
+  border-radius: 0;
   cursor: pointer;
   font: inherit;
   color: inherit;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: var(--border-width-lg) var(--border-width-lg) var(--spacing-sm) rgba(0, 0, 0, 0.15);
 }
 
 .contract:hover:not(:disabled) {
   background-color: var(--color-bg-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.contract__fulfilledStamp {
+  position: absolute;
+  right: 1rem;
+  bottom: 1.75rem;
+  width: 4.5rem;
+  height: auto;
+  pointer-events: none;
 }
 
 .contract:focus-visible {
@@ -39,10 +50,6 @@
   opacity: var(--opacity-disabled);
 }
 
-.contract--fulfilled {
-  text-decoration: line-through;
-}
-
 .contract--market {
   color: var(--color-contract-market);
 }
@@ -51,18 +58,21 @@
   color: var(--color-contract-private);
 }
 
-.contract__header {
+.contract__commodityIcon {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+}
+
+.contract__valueBar {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--color-bg-light);
-  padding: var(--spacing-xs) var(--spacing-sm);
   width: 100%;
   box-sizing: border-box;
 }
 
-.contract--market .contract__header {
+.contract--market .contract__valueBar {
   background-color: var(--color-bg-active);
 }
 
@@ -80,7 +90,8 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  height: 100%;
+  height: fit-content;
+  gap: var(--spacing-xxs);
   padding: var(--spacing-sm);
   box-sizing: border-box;
 }

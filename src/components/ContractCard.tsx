@@ -1,7 +1,11 @@
 import React from "react";
 import { moneyValue, railroadTieValue } from "../Contract";
-import { CommodityRichName } from "./CommodityRichName";
-import { contractTieIcons } from "../shared/assets/icons";
+import { contractTieIcons, commodityIcons } from "../shared/assets/icons";
+import fulfilledStamp from "../shared/assets/images/fulfilled-stamp.svg";
+
+function capitalizeFirst(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 export interface ContractCardSpec {
   commodity: string;
@@ -74,14 +78,32 @@ export const ContractCard = React.forwardRef<HTMLButtonElement, ContractCardProp
         aria-haspopup={ariaHaspopup}
         aria-expanded={ariaExpanded}
       >
-        <div className="contract__header">
+        <div className="contract__body">
+          <img
+            src={(commodityIcons as Record<string, string>)[commodity]}
+            alt={commodity}
+            className={"contract__commodityIcon"}
+          />
+          <span>{capitalizeFirst(commodity)}</span>
+          <div className="contract__destination">to {destinationKey}</div>
+        </div>
+        <div className="contract__valueBar">
           {formatContractTieValue(spec)}
           <div className="contract__moneyValue">${reward / 1000}K</div>
         </div>
-        <div className="contract__body">
-          <CommodityRichName commodity={commodity} />
-          <div className="contract__destination">to {destinationKey}</div>
-        </div>
+        {fulfilled && (() => {
+          const hashStr = commodity + destinationKey;
+          const hash = hashStr.split("").reduce((n, c) => n + c.charCodeAt(0), 0);
+          const rotation = Math.cos(hash) * 10;
+          return (
+            <img
+              src={fulfilledStamp}
+              alt="Fulfilled"
+              className="contract__fulfilledStamp"
+              style={{ transform: `rotate(${rotation}deg)` }}
+            />
+          );
+        })()}
       </button>
     );
   }

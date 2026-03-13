@@ -14,6 +14,7 @@
   --font-size-h6: 0.875rem;
 
   /* Spacing */
+  --spacing-xxs: 0.125rem;
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
@@ -37,6 +38,7 @@
   /* Sizes */
   --button-height: 1.75rem;
   --icon-size: 1.5rem;
+  --icon-size-lg: 3rem;
   
   /* Opacity */
   --opacity-disabled: 0.6;
