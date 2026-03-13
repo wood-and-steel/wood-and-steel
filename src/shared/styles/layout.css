@@ -5,6 +5,7 @@
 /* Mobile Layout (default, < 768px) */
 .boardPage {
   padding: var(--spacing-xs);
+  padding-top: 0; /* Toolbar flush with top; no gap above */
   padding-bottom: 3.125rem; /* Account for fixed navBar height on mobile */
 }
 
@@ -26,16 +27,15 @@
 @media (min-width: 768px) {
   .boardPage {
     padding: var(--spacing-md);
+    padding-top: 0; /* Toolbar flush with top; no gap above */
     padding-bottom: 5rem; /* Account for fixed navBar height on tablet */
   }
-
 }
 
 /* Desktop Layout (>= 1024px) */
 @media (min-width: 1024px) {
   .boardPage {
     padding: var(--spacing-md);
-    padding-top: var(--spacing-2xl); /* Account for fixed navBar height on desktop */
+    padding-top: var(--nav-height-desktop); /* Match fixed nav height; no gap under nav */
   }
-
 }

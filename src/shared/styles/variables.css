@@ -22,7 +22,10 @@
   --spacing-xl: 2rem;
   --spacing-2xl: 3.5rem;
   --spacing-3xl: 5rem;
-  
+
+  /* Layout: desktop nav bar height (padding-top + content) for content offset */
+  --nav-height-desktop: 44px;
+
   /* Border Width */
   --border-width-md: 0.0625rem;
   --border-width-lg: 0.125rem;

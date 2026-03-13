@@ -1,3 +1,58 @@
+/* Player toolbar (peer to tab content, below NavBar) */
+/* Full-bleed: break out of boardPage horizontal padding; sticky so it stays visible when scrolling */
+.playerToolbar {
+  margin-left: calc(-1 * var(--spacing-xs));
+  margin-right: calc(-1 * var(--spacing-xs));
+  width: calc(100% + 2 * var(--spacing-xs));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--color-bg-light);
+}
+
+/* Desktop: nav is fixed at top; stick toolbar just below it so it doesn't sit behind the nav */
+@media (min-width: 1024px) {
+  .playerToolbar {
+    top: var(--nav-height-desktop);
+  }
+}
+
+.playerToolbar__info {
+  padding: var(--spacing-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.playerToolbar__buttonGroup {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.playerToolbar__info--active {
+  background-color: var(--color-bg-active);
+}
+
+.playerToolbar__turnIndicator {
+  font-size: 0.875rem;
+  color: var(--color-text-subtle);
+}
+
+.playerToolbar__name {
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-body);
+}
+
+.playerToolbar__name--active {
+  font-weight: bold;
+}
+
+.playerToolbar__score {
+  font-weight: normal;
+  color: var(--color-text-subtle);
+}
+
 .playerBoard {
   display: flex;
   gap: var(--spacing-md);
@@ -78,6 +133,12 @@
 
 /* Tablet Layout (768px - 1023px) */
 @media (min-width: 768px) {
+  .playerToolbar {
+    margin-left: calc(-1 * var(--spacing-md));
+    margin-right: calc(-1 * var(--spacing-md));
+    width: calc(100% + 2 * var(--spacing-md));
+  }
+
   .playerBoard__pairButton {
     width: 15rem;
   }

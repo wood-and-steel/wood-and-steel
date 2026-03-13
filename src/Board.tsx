@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavBar } from './components/NavBar';
 import { PlayerBoard } from './components/PlayerBoard';
+import { PlayerToolbar } from './components/PlayerToolbar';
 import { PrivateContractOfferModal } from './components/PrivateContractOfferModal';
 import { CommoditiesPage } from './components/CommoditiesPage';
 import { CitiesPage } from './components/CitiesPage';
@@ -233,6 +234,17 @@ export function WoodAndSteelState({
               setIsPrivateContractModalOpen(false);
             }}
             moves={moves}
+          />
+          <PlayerToolbar
+            G={G}
+            ctx={ctx}
+            playerID={playerID}
+            isBYODMode={isBYODMode}
+            startingContractExists={startingContractExists}
+            currentPhase={currentPhase}
+            onOpenPrivateContractModal={() =>
+              setIsPrivateContractModalOpen(true)
+            }
           />
           {activeTab === 'board' && (
             <PlayerBoard

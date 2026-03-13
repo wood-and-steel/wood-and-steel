@@ -2,7 +2,6 @@ import React from "react";
 import { railroadTieValue } from "../Contract";
 import { ContractsList } from "./ContractsList";
 import type { GameState, GameContext } from "../stores/gameStore";
-import { useGameStore } from "../stores/gameStore";
 
 const STARTING_CITY_PAIRS: [string, string][] = [
   ["Montreal", "Quebec City"],
@@ -48,9 +47,6 @@ export function PlayerBoard({
   const effectivePlayerID = isBYODMode && playerID != null ? playerID : ctx.currentPlayer;
   const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
   const isPlayerTurn = !isBYODMode || playerID === ctx.currentPlayer;
-  const currentPlayerEntry = G.players.find(([id]) => id === ctx.currentPlayer);
-  const currentPlayerName = currentPlayerEntry?.[1]?.name ?? `Player ${ctx.currentPlayer}`;
-  const showTurnIndicator = isBYODMode && !isPlayerTurn;
 
   if (!activePlayer) return null;
 
@@ -73,15 +69,6 @@ export function PlayerBoard({
   const isPairChosen = (pair: [string, string]): boolean =>
     chosenCities.has(pair[0]) || chosenCities.has(pair[1]);
 
-  const hasMovedThisTurn = useGameStore((s) => s.hasMovedThisTurn);
-  const turnStartSnapshot = useGameStore((s) => s.turnStartSnapshot);
-  const undoCurrentTurn = useGameStore((s) => s.undoCurrentTurn);
-  const canUndo =
-    currentPhase === "play" &&
-    isPlayerTurn &&
-    turnStartSnapshot != null &&
-    hasMovedThisTurn;
-
   const handlePairClick = (pair: [string, string]) => {
     if (isPairChosen(pair) || !isPlayerTurn) return;
     onStartingPairSelect(pair);
@@ -90,50 +77,6 @@ export function PlayerBoard({
   return (
     <div className="playerBoard">
       <div className="playerBoard__player">
-        <div className="playerBoard__info playerBoard__info--active">
-          <div className="playerBoard__name playerBoard__name--active">
-            {name} <span className="playerBoard__score">(Score: {playerScore})</span>
-          </div>
-          {showTurnIndicator ? (
-            <div className="playerBoard__turnIndicator">
-              {currentPlayerName} is taking their turn
-            </div>
-          ) : (
-            <div className="playerBoard__buttonGroup">
-              <button
-                type="button"
-                name="undo"
-                aria-label="Undo all actions this turn"
-                className={`button playerBoard__undo ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
-                disabled={!canUndo}
-                onClick={() => undoCurrentTurn()}
-              >
-                Undo
-              </button>
-              <button
-                type="button"
-                name="privateContract"
-                className={`button ${startingContractExists && isPlayerTurn ? "" : "button--hidden"}`}
-                onClick={() => onOpenPrivateContractModal?.()}
-              >
-                +P
-              </button>
-              <button
-                name="marketContract"
-                className={`button ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
-              >
-                +M
-              </button>
-              <button
-                name="endTurn"
-                className={`button ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
-              >
-                End Turn
-              </button>
-            </div>
-          )}
-        </div>
-
         {currentPhase === "setup" && (
           <div className="playerBoard__startingPairs">
             <div className="playerBoard__startingPairsLabel">Choose your starting cities:</div>
