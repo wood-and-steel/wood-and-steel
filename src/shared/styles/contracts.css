@@ -11,6 +11,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
+  position: relative;
   width: 10rem;
   min-height: 5.5rem;
   padding: 0;
@@ -39,8 +40,12 @@
   opacity: var(--opacity-disabled);
 }
 
-.contract--fulfilled {
-  text-decoration: line-through;
+.contract__fulfilledStamp {
+  position: absolute;
+  right: var(--spacing-sm);
+  bottom: var(--spacing-xs);
+  height: auto;
+  pointer-events: none;
 }
 
 .contract--market {
@@ -49,6 +54,10 @@
 
 .contract--private {
   color: var(--color-contract-private);
+}
+
+.contract--fulfilled .contract__body {
+  color: var(--color-disabled);
 }
 
 .contract__header {

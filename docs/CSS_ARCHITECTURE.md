@@ -2,11 +2,15 @@
 
 ## Overview
 
-This project now uses a modern, maintainable CSS architecture with no inline styles. All styling is centralized in `/src/shared/styles/index.css`, which imports multiple organized CSS files.
+This project uses a modern, maintainable CSS architecture with no inline styles by default. All styling is centralized in `/src/shared/styles/index.css`, which imports multiple organized CSS files.
+
+### Exception: dynamic transforms
+
+`ContractCard` applies `style={{ transform: \`rotate(\${rotation}deg)\` }}` on the fulfilled-stamp image so rotation can follow the per-contract hash with full floating-point precision (`Math.cos(hash) * 10`, same as commit ea521bdf). Do not add further inline styling there without a project-wide discussion; prefer classes and CSS variables elsewhere.
 
 ## Key tenets
 
-1. **No inline styles** - Components only refer to class names and never have style={} attributes
+1. **No inline styles** (except the fulfilled-stamp rotation on `ContractCard`, documented above) - Components only refer to class names and never have `style={}` attributes
 2. **Centralized styling** - All CSS files imported through `/src/shared/styles/index.css` with clear organization
 3. **CSS Variables** - Consistent colors, spacing, and values throughout
 4. **Semantic class names** - Classes describe purpose, not appearance
@@ -223,7 +227,7 @@ Use template literals for conditional classes:
 
 ### DON'T ❌
 
-1. **No inline styles** - Always use CSS classes
+1. **No inline styles** - Always use CSS classes (except the `ContractCard` fulfilled-stamp rotation; see Exception above)
 2. **No JavaScript style objects** - Keep styles in CSS
 3. **No magic numbers** - Use variables (`var(--spacing-md)`)
 4. **No generic class names** - `.info` is too vague
@@ -402,7 +406,7 @@ For now, the current CSS architecture is:
 - ✅ Simple and maintainable
 - ✅ Well-organized and documented
 - ✅ Scalable for future growth
-- ✅ Zero inline styles
+- ✅ Virtually no inline styles (one documented exception for per-contract stamp rotation)
 - ✅ Responsive with pixel-perfect breakpoints
 
 ## Quick Reference

@@ -2,6 +2,7 @@ import React from "react";
 import { moneyValue, railroadTieValue } from "../Contract";
 import { CommodityRichName } from "./CommodityRichName";
 import { contractTieIcons } from "../shared/assets/icons";
+import fulfilledStamp from "../shared/assets/images/fulfilled-stamp.svg";
 
 export interface ContractCardSpec {
   commodity: string;
@@ -82,6 +83,22 @@ export const ContractCard = React.forwardRef<HTMLButtonElement, ContractCardProp
           <CommodityRichName commodity={commodity} />
           <div className="contract__destination">to {destinationKey}</div>
         </div>
+        {fulfilled
+          ? (() => {
+              const hashStr = commodity + destinationKey;
+              const hash = hashStr.split("").reduce((n, c) => n + c.charCodeAt(0), 0);
+              const rotation = Math.cos(hash) * 10;
+              return (
+                <img
+                  src={fulfilledStamp}
+                  alt=""
+                  aria-hidden={true}
+                  className="contract__fulfilledStamp"
+                  style={{ transform: `rotate(${rotation}deg)` }}
+                />
+              );
+            })()
+          : null}
       </button>
     );
   }

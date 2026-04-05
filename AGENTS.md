@@ -37,7 +37,7 @@ This file is the entrypoint for AI agents to find project conventions and avoid 
 
 **React and styling**
 
-- Do not use inline styles or JavaScript style objects; use CSS classes and `src/shared/styles/index.css` (see [docs/CSS_ARCHITECTURE.md](docs/CSS_ARCHITECTURE.md)).
+- Do not use inline styles or JavaScript style objects except the documented `ContractCard` fulfilled-stamp rotation; use CSS classes and `src/shared/styles/index.css` (see [docs/CSS_ARCHITECTURE.md](docs/CSS_ARCHITECTURE.md)).
 - Do not introduce new state libraries (e.g. Redux, Jotai) for app or game state; the codebase uses Zustand only.
 - Do not over-abstract components (e.g. unnecessary wrappers, a generic “game state context” beyond the existing GameProvider); follow existing patterns in `Board.tsx`, `GameProvider`, and the agent guides.
 
