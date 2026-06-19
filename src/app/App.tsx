@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GameProvider } from '../providers/GameProvider';
 import { StorageProvider, useStorage } from '../providers/StorageProvider';
@@ -24,6 +24,12 @@ import { checkPhaseTransition } from '../stores/phaseManager';
 import { initializeIndependentRailroads } from '../independentRailroads';
 
 const NOT_PLAYING_MESSAGE = 'This device is not playing this game.';
+
+const DevSimulatorPage = import.meta.env.PROD
+  ? null
+  : React.lazy(() =>
+      import('../sim/SimulatorPage').then((mod) => ({ default: mod.SimulatorPage }))
+    );
 
 // Import test utilities in development
 if (!import.meta.env.PROD) {
@@ -677,6 +683,14 @@ const AppContent = (): React.ReactElement => {
 };
 
 const App = (): React.ReactElement => {
+  const location = useLocation();
+  if (!import.meta.env.PROD && location.pathname === '/sim' && DevSimulatorPage) {
+    return (
+      <Suspense fallback={<p>Loading simulator…</p>}>
+        <DevSimulatorPage />
+      </Suspense>
+    );
+  }
   return (
     <StorageProvider>
       <AppContent />

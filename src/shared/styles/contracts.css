@@ -44,6 +44,7 @@
   position: absolute;
   right: var(--spacing-sm);
   bottom: var(--spacing-xs);
+  width: 4rem;
   height: auto;
   pointer-events: none;
 }

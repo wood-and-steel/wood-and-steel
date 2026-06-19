@@ -28,6 +28,7 @@ import {
 import { serializeState, deserializeState, isValidSerializedState } from '../stateSerialization';
 import type { SerializedState } from '../stateSerialization';
 import { createClient, type SupabaseClient, type RealtimeChannel } from '@supabase/supabase-js';
+import { debugSessionLog } from '../debugSessionLog';
 
 /** Row shape from games table (state is serialized). */
 interface GamesRow {
@@ -439,6 +440,14 @@ export class SupabaseAdapter extends StorageAdapter {
         },
         (payload: GamesRowPayload) => {
           try {
+            // #region agent log
+            debugSessionLog({
+              location: 'supabaseAdapter.ts:postgres_changes',
+              message: 'realtime postgres_changes received',
+              data: { code: normalizedCode, hasState: Boolean(payload.new?.state) },
+              hypothesisId: 'H1',
+            });
+            // #endregion
             const newData = payload.new;
             if (newData?.state) {
               if (isValidSerializedState(newData.state)) {
@@ -461,7 +470,19 @@ export class SupabaseAdapter extends StorageAdapter {
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status, err) => {
+        // #region agent log
+        debugSessionLog({
+          location: 'supabaseAdapter.ts:channel.subscribe',
+          message: 'realtime channel status',
+          data: {
+            code: normalizedCode,
+            status,
+            errMsg: err instanceof Error ? err.message : undefined,
+          },
+          hypothesisId: 'H2',
+        });
+        // #endregion
         if (status === 'SUBSCRIBED') {
           console.info(
             `[SupabaseAdapter.${operation}] Subscribed to real-time updates for game "${normalizedCode}"`
