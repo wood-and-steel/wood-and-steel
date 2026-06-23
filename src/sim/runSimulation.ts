@@ -19,7 +19,7 @@ export interface SimulationParams {
   numPlayers: number;
   numRounds: number;
   numGames: number;
-  expandChancePct: number;
+  activeCitiesPerRound: number;
 }
 
 export interface GameResult {
@@ -81,11 +81,13 @@ function createStubGame(numPlayers: number): { G: GameState; ctx: GameContext } 
   return { G, ctx };
 }
 
-function maybeExpandActiveCities(
+function expandCities(
   activeCities: string[],
-  expandChancePct: number
+  activeCitiesPerRound: number,
+  round: number
 ): void {
-  if (Math.random() * 100 >= expandChancePct) {
+  const target = Math.trunc(round * activeCitiesPerRound + 2);
+  if (target <= activeCities.length) {
     return;
   }
 
@@ -107,7 +109,7 @@ function runSingleGame(params: SimulationParams, gameNumber: number): GameResult
     for (const playerId of ctx.playOrder) {
       const player = G.players.find(([id]) => id === playerId)?.[1];
       if (player) {
-        maybeExpandActiveCities(player.activeCities, params.expandChancePct);
+        expandCities(player.activeCities, params.activeCitiesPerRound, round);
       }
     }
 

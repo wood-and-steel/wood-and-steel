@@ -14,11 +14,17 @@ const MIN_ROUNDS = 1;
 const MAX_ROUNDS = 30;
 const MIN_GAMES = 1;
 const MAX_GAMES = 1000;
-const MIN_EXPAND = 0;
-const MAX_EXPAND = 100;
+const MIN_ACTIVE_CITIES_PER_ROUND = 0.1;
+const MAX_ACTIVE_CITIES_PER_ROUND = 1;
 
 function clampInt(value: string, min: number, max: number, fallback: number): number {
   const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function clampFloat(value: string, min: number, max: number, fallback: number): number {
+  const parsed = Number.parseFloat(value);
   if (Number.isNaN(parsed)) return fallback;
   return Math.min(max, Math.max(min, parsed));
 }
@@ -27,7 +33,7 @@ function validateParams(
   players: number,
   rounds: number,
   games: number,
-  expandPct: number
+  activeCitiesPerRound: number
 ): string | null {
   if (players < MIN_PLAYERS || players > MAX_PLAYERS) {
     return `Players must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}.`;
@@ -38,8 +44,11 @@ function validateParams(
   if (games < MIN_GAMES || games > MAX_GAMES) {
     return `Games must be between ${MIN_GAMES} and ${MAX_GAMES}.`;
   }
-  if (expandPct < MIN_EXPAND || expandPct > MAX_EXPAND) {
-    return `Expand chance must be between ${MIN_EXPAND} and ${MAX_EXPAND}.`;
+  if (
+    activeCitiesPerRound < MIN_ACTIVE_CITIES_PER_ROUND ||
+    activeCitiesPerRound > MAX_ACTIVE_CITIES_PER_ROUND
+  ) {
+    return `Active cities per round must be between ${MIN_ACTIVE_CITIES_PER_ROUND} and ${MAX_ACTIVE_CITIES_PER_ROUND}.`;
   }
   if (players * 2 > 11) {
     return `Not enough starting cities for ${players} players (need ${players * 2}).`;
@@ -51,7 +60,7 @@ export function SimulatorPage(): React.ReactElement {
   const [numPlayers, setNumPlayers] = React.useState('3');
   const [numRounds, setNumRounds] = React.useState('20');
   const [numGames, setNumGames] = React.useState('100');
-  const [expandPct, setExpandPct] = React.useState('50');
+  const [activeCitiesPerRound, setActiveCitiesPerRound] = React.useState('0.25');
   const [status, setStatus] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [running, setRunning] = React.useState(false);
@@ -71,14 +80,19 @@ export function SimulatorPage(): React.ReactElement {
       numPlayers: clampInt(numPlayers, MIN_PLAYERS, MAX_PLAYERS, MIN_PLAYERS),
       numRounds: clampInt(numRounds, MIN_ROUNDS, MAX_ROUNDS, MIN_ROUNDS),
       numGames: clampInt(numGames, MIN_GAMES, MAX_GAMES, MIN_GAMES),
-      expandChancePct: clampInt(expandPct, MIN_EXPAND, MAX_EXPAND, MIN_EXPAND),
+      activeCitiesPerRound: clampFloat(
+        activeCitiesPerRound,
+        MIN_ACTIVE_CITIES_PER_ROUND,
+        MAX_ACTIVE_CITIES_PER_ROUND,
+        MIN_ACTIVE_CITIES_PER_ROUND
+      ),
     };
 
     const validationError = validateParams(
       params.numPlayers,
       params.numRounds,
       params.numGames,
-      params.expandChancePct
+      params.activeCitiesPerRound
     );
     if (validationError) {
       setError(validationError);
@@ -133,8 +147,8 @@ export function SimulatorPage(): React.ReactElement {
       <div className="simulatorPage__content">
         <h1 className="simulatorPage__title">Independent Railroad Growth Simulator</h1>
         <p className="simulatorPage__intro">
-          Batch-simulate indie railroad growth over multiple rounds. Outputs a CSV summary and one
-          PNG map per game into a folder you choose (Chrome/Edge).
+          Batch-simulate indepdendent railroad growth over multiple rounds. Outputs a CSV summary and one
+          PNG map per game into a folder you choose. Only runs on Chrome or Edge.
         </p>
 
         <form
@@ -185,15 +199,16 @@ export function SimulatorPage(): React.ReactElement {
 
           <label className="simulatorPage__field">
             <span className="simulatorPage__label">
-              Expand active cities per turn ({MIN_EXPAND}–{MAX_EXPAND}%)
+              Active cities per round ({MIN_ACTIVE_CITIES_PER_ROUND}–{MAX_ACTIVE_CITIES_PER_ROUND})
             </span>
             <input
               className="simulatorPage__input"
               type="number"
-              min={MIN_EXPAND}
-              max={MAX_EXPAND}
-              value={expandPct}
-              onChange={(e) => setExpandPct(e.target.value)}
+              min={MIN_ACTIVE_CITIES_PER_ROUND}
+              max={MAX_ACTIVE_CITIES_PER_ROUND}
+              step={0.01}
+              value={activeCitiesPerRound}
+              onChange={(e) => setActiveCitiesPerRound(e.target.value)}
               disabled={running}
             />
           </label>
