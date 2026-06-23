@@ -1,8 +1,13 @@
+import { routes } from '../data';
 import {
   growIndependentRailroads,
   initializeIndependentRailroads,
 } from '../independentRailroads';
-import type { GameContext, GameState } from '../stores/gameStore';
+import type {
+  GameContext,
+  GameState,
+  IndependentRailroadRoute,
+} from '../stores/gameStore';
 import { citiesConnectedTo } from '../utils/graph';
 import { randomArrayItem, shuffleArray } from '../utils/random';
 
@@ -22,6 +27,13 @@ export interface SimulationParams {
   activeCitiesPerRound: number;
 }
 
+export interface AcquiredRailroad {
+  name: string;
+  routes: IndependentRailroadRoute[];
+  acquiredByPlayer: string;
+  acquiredInRound: number;
+}
+
 export interface GameResult {
   gameNumber: number;
   G: GameState;
@@ -31,6 +43,8 @@ export interface GameResult {
   rrSizes: number[];
   maxRrSize: number;
   rrRoutes: string[];
+  acquiredRailroads: AcquiredRailroad[];
+  railroadColorIndices: Record<string, number>;
 }
 
 function seedStartingCities(G: GameState, numPlayers: number): void {
@@ -81,14 +95,22 @@ function createStubGame(numPlayers: number): { G: GameState; ctx: GameContext } 
   return { G, ctx };
 }
 
+function captureRailroadColorIndices(G: GameState): Record<string, number> {
+  const indices: Record<string, number> = {};
+  Object.keys(G.independentRailroads).forEach((name, index) => {
+    indices[name] = index;
+  });
+  return indices;
+}
+
 function expandCities(
   activeCities: string[],
   activeCitiesPerRound: number,
   round: number
-): void {
+): string | undefined {
   const target = Math.trunc(round * activeCitiesPerRound + 2);
   if (target <= activeCities.length) {
-    return;
+    return undefined;
   }
 
   const owned = new Set(activeCities);
@@ -97,11 +119,63 @@ function expandCities(
   const picked = randomArrayItem(candidates) as string | undefined;
   if (picked != null) {
     activeCities.push(picked);
+    return picked;
+  }
+  return undefined;
+}
+
+function collectRailroadCities(rr: {
+  routes: IndependentRailroadRoute[];
+}): Set<string> {
+  const cities = new Set<string>();
+  for (const routeEntry of rr.routes) {
+    const route = routes.get(routeEntry.key);
+    if (route) {
+      cities.add(route.cities[0]);
+      cities.add(route.cities[1]);
+    }
+  }
+  return cities;
+}
+
+function checkAcquisitions(
+  newCity: string,
+  G: GameState,
+  playerId: string,
+  round: number,
+  acquiredRailroads: AcquiredRailroad[]
+): void {
+  const player = G.players.find(([id]) => id === playerId)?.[1];
+  if (!player) return;
+
+  for (const [rrName, rr] of Object.entries(G.independentRailroads)) {
+    const rrCities = collectRailroadCities(rr);
+    if (!rrCities.has(newCity)) continue;
+
+    const owned = new Set(player.activeCities);
+    for (const city of rrCities) {
+      if (!owned.has(city)) {
+        player.activeCities.push(city);
+        owned.add(city);
+      }
+    }
+
+    acquiredRailroads.push({
+      name: rr.name,
+      routes: [...rr.routes],
+      acquiredByPlayer: playerId,
+      acquiredInRound: round,
+    });
+
+    delete G.independentRailroads[rrName];
+    break;
   }
 }
 
 function runSingleGame(params: SimulationParams, gameNumber: number): GameResult {
   const { G, ctx } = createStubGame(params.numPlayers);
+  const railroadColorIndices = captureRailroadColorIndices(G);
+  const acquiredRailroads: AcquiredRailroad[] = [];
 
   for (let round = 1; round <= params.numRounds; round++) {
     ctx.round = round;
@@ -109,7 +183,14 @@ function runSingleGame(params: SimulationParams, gameNumber: number): GameResult
     for (const playerId of ctx.playOrder) {
       const player = G.players.find(([id]) => id === playerId)?.[1];
       if (player) {
-        expandCities(player.activeCities, params.activeCitiesPerRound, round);
+        const newCity = expandCities(
+          player.activeCities,
+          params.activeCitiesPerRound,
+          round
+        );
+        if (newCity) {
+          checkAcquisitions(newCity, G, playerId, round, acquiredRailroads);
+        }
       }
     }
 
@@ -131,6 +212,8 @@ function runSingleGame(params: SimulationParams, gameNumber: number): GameResult
     rrSizes,
     maxRrSize: rrSizes.length > 0 ? Math.max(...rrSizes) : 0,
     rrRoutes,
+    acquiredRailroads,
+    railroadColorIndices,
   };
 }
 

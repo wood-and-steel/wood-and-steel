@@ -48,7 +48,7 @@ function validateParams(
     activeCitiesPerRound < MIN_ACTIVE_CITIES_PER_ROUND ||
     activeCitiesPerRound > MAX_ACTIVE_CITIES_PER_ROUND
   ) {
-    return `Active cities per round must be between ${MIN_ACTIVE_CITIES_PER_ROUND} and ${MAX_ACTIVE_CITIES_PER_ROUND}.`;
+    return `Active cities added each round must be between ${MIN_ACTIVE_CITIES_PER_ROUND} and ${MAX_ACTIVE_CITIES_PER_ROUND}.`;
   }
   if (players * 2 > 11) {
     return `Not enough starting cities for ${players} players (need ${players * 2}).`;
@@ -117,7 +117,9 @@ export function SimulatorPage(): React.ReactElement {
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
         if (!result) continue;
-        pngBlobs.push(await renderGamePng(result.G));
+        pngBlobs.push(
+          await renderGamePng(result.G, result.acquiredRailroads, result.railroadColorIndices)
+        );
         setProgress(Math.round(((i + 1) / results.length) * 100));
         await new Promise((resolve) => setTimeout(resolve, 0));
       }
@@ -199,7 +201,7 @@ export function SimulatorPage(): React.ReactElement {
 
           <label className="simulatorPage__field">
             <span className="simulatorPage__label">
-              Active cities per round ({MIN_ACTIVE_CITIES_PER_ROUND}–{MAX_ACTIVE_CITIES_PER_ROUND})
+              Active cities added reach round ({MIN_ACTIVE_CITIES_PER_ROUND}–{MAX_ACTIVE_CITIES_PER_ROUND})
             </span>
             <input
               className="simulatorPage__input"

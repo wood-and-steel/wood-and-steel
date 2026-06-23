@@ -9,6 +9,7 @@ import {
   indieColor,
   mapImageUrl,
 } from './mapCoordinates';
+import type { AcquiredRailroad } from './runSimulation';
 
 let cachedMapImage: HTMLImageElement | null = null;
 
@@ -32,7 +33,8 @@ function drawRoute(
   ctx: CanvasRenderingContext2D,
   routeKey: string,
   color: string,
-  lineWidth: number
+  lineWidth: number,
+  dashed = false
 ): void {
   const route = routes.get(routeKey);
   if (!route) return;
@@ -45,10 +47,12 @@ function drawRoute(
   ctx.strokeStyle = color;
   ctx.lineWidth = lineWidth;
   ctx.lineCap = 'round';
+  ctx.setLineDash(dashed ? [8, 6] : []);
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);
   ctx.lineTo(b.x, b.y);
   ctx.stroke();
+  ctx.setLineDash([]);
 }
 
 function drawActiveCity(
@@ -79,7 +83,11 @@ function collectStartingCities(G: GameState): Set<string> {
   return starting;
 }
 
-export async function renderGamePng(G: GameState): Promise<Blob> {
+export async function renderGamePng(
+  G: GameState,
+  acquiredRailroads: AcquiredRailroad[],
+  railroadColorIndices: Record<string, number>
+): Promise<Blob> {
   const mapImage = await loadMapImage();
   const canvas = document.createElement('canvas');
   canvas.width = MAP_WIDTH;
@@ -91,11 +99,21 @@ export async function renderGamePng(G: GameState): Promise<Blob> {
 
   ctx.drawImage(mapImage, 0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-  const indieEntries = Object.entries(G.independentRailroads);
-  indieEntries.forEach(([, railroad], index) => {
-    const color = indieColor(index);
+  for (const [name, railroad] of Object.entries(G.independentRailroads)) {
+    const colorIndex = railroadColorIndices[name];
+    if (colorIndex === undefined) continue;
+    const color = indieColor(colorIndex);
     for (const routeEntry of railroad.routes) {
       drawRoute(ctx, routeEntry.key, color, 5);
+    }
+  }
+
+  acquiredRailroads.forEach((rr) => {
+    const colorIndex = railroadColorIndices[rr.name];
+    if (colorIndex === undefined) return;
+    const color = indieColor(colorIndex);
+    for (const routeEntry of rr.routes) {
+      drawRoute(ctx, routeEntry.key, color, 5, true);
     }
   });
 
