@@ -6,19 +6,14 @@ import type { GameContext, GameState } from '../stores/gameStore';
 import { citiesConnectedTo } from '../utils/graph';
 import { randomArrayItem, shuffleArray } from '../utils/random';
 
-export const STARTING_CITIES = [
-  'Quebec City',
-  'Montreal',
-  'Boston',
-  'Portland ME',
-  'Philadelphia',
-  'New York',
-  'Washington',
-  'Norfolk',
-  'Raleigh',
-  'Charleston',
-  'Savannah',
-] as const;
+export const STARTING_CITY_PAIRS: readonly [string, string][] = [
+  ['Montreal', 'Quebec City'],
+  ['Boston', 'Portland ME'],
+  ['New York', 'Philadelphia'],
+  // ['Philadelphia', 'Washington'], -- omitting one of the Phildelphia dupes to simplify implementation
+  ['Norfolk', 'Raleigh'],
+  ['Charleston', 'Savannah'],
+];
 
 export interface SimulationParams {
   numPlayers: number;
@@ -39,20 +34,20 @@ export interface GameResult {
 }
 
 function seedStartingCities(G: GameState, numPlayers: number): void {
-  const pool: string[] = shuffleArray([...STARTING_CITIES]) as string[];
-  if (pool.length < numPlayers * 2) {
+  const pool: [string, string][] = shuffleArray([...STARTING_CITY_PAIRS]) as [string, string][];
+  if (pool.length < numPlayers) {
     throw new Error(
-      `Not enough starting cities for ${numPlayers} players (need ${numPlayers * 2}, have ${pool.length}).`
+      `Not enough starting city pairs for ${numPlayers} players (need ${numPlayers}, have ${pool.length}).`
     );
   }
 
   for (let i = 0; i < numPlayers; i++) {
-    const cityA = pool.pop();
-    const cityB = pool.pop();
-    if (!cityA || !cityB) break;
+    const [cityA, cityB] = pool.pop()!;
     const player = G.players[i]?.[1];
     if (player) {
       player.activeCities = [cityA, cityB];
+    } else {
+      throw new Error(`Player ${i} not found in game state.`);
     }
   }
 }
