@@ -5,9 +5,9 @@ export { mapImageUrl };
 export const MAP_WIDTH = 1110;
 export const MAP_HEIGHT = 858;
 
-/** Tableau 10 palette for independent railroad routes. */
+/** Modified Tableau 10 palette for independent railroad routes. */
 export const TABLEAU_10 = [
-  '#1f77b4',
+  '#3d51f6',
   '#ff7f0e',
   '#2ca02c',
   '#d62728',
@@ -20,11 +20,11 @@ export const TABLEAU_10 = [
 
 /** Per-player active city fill colors (up to 5 players). */
 export const PLAYER_CITY_COLORS = [
-  '#00ffff',
-  '#fcff00',
-  '#ff43ff',
-  '#42ff2f',
-  '#ffadf1',
+  '#a8f4ff',
+  '#ffb6d5',
+  '#ffe29c',
+  '#90ff88',
+  '#cbcddd',
 ] as const;
 
 export const STARTING_CITY_SIZE = 22;
