@@ -25,11 +25,11 @@ import { initializeIndependentRailroads } from '../independentRailroads';
 
 const NOT_PLAYING_MESSAGE = 'This device is not playing this game.';
 
-const DevSimulatorPage = import.meta.env.PROD
-  ? null
-  : React.lazy(() =>
+const DevSimulatorPage = __INCLUDE_SIM__
+  ? React.lazy(() =>
       import('../sim/SimulatorPage').then((mod) => ({ default: mod.SimulatorPage }))
-    );
+    )
+  : null;
 
 // Import test utilities in development
 if (!import.meta.env.PROD) {
@@ -684,7 +684,7 @@ const AppContent = (): React.ReactElement => {
 
 const App = (): React.ReactElement => {
   const location = useLocation();
-  if (!import.meta.env.PROD && location.pathname === '/sim' && DevSimulatorPage) {
+  if (__INCLUDE_SIM__ && location.pathname === '/sim' && DevSimulatorPage) {
     return (
       <Suspense fallback={<p>Loading simulator…</p>}>
         <DevSimulatorPage />

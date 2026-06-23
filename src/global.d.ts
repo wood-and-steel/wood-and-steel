@@ -44,6 +44,8 @@ declare module '*.png' {
 }
 
 declare global {
+  const __INCLUDE_SIM__: boolean;
+
   interface FileSystemCreateWritableOptions {
     keepExistingData?: boolean;
   }

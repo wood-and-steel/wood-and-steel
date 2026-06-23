@@ -32,6 +32,7 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
+    "build:sim": "vite build --mode sim",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"

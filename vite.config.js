@@ -2,7 +2,10 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  define: {
+    __INCLUDE_SIM__: mode !== 'production',
+  },
   resolve: {
     // Prefer .ts/.tsx so JS imports like '../Contract' resolve to Contract.ts
     extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
@@ -44,4 +47,4 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/config/setupTests.js',
   },
-});
+}));
