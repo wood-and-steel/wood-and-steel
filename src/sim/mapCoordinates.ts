@@ -5,7 +5,7 @@ export { mapImageUrl };
 export const MAP_WIDTH = 1110;
 export const MAP_HEIGHT = 858;
 
-/** Tableau 10 palette; cyan (#17becf) reserved for active cities. */
+/** Tableau 10 palette for independent railroad routes. */
 export const TABLEAU_10 = [
   '#1f77b4',
   '#ff7f0e',
@@ -18,10 +18,25 @@ export const TABLEAU_10 = [
   '#bcbd22',
 ] as const;
 
-export const ACTIVE_CITY_COLOR = '#00ffff';
+/** Per-player active city fill colors (up to 5 players). */
+export const PLAYER_CITY_COLORS = [
+  '#00ffff',
+  '#fcff00',
+  '#ff43ff',
+  '#42ff2f',
+  '#ffadf1',
+] as const;
 
-/** Active cities gained after the initial starting pair. */
-export const EXPANDED_CITY_COLOR = '#888888';
+export const STARTING_CITY_SIZE = 22;
+export const STARTING_CITY_BORDER_WIDTH = 1;
+export const EXPANDED_CITY_BORDER_WIDTH = 0.8;
+
+/** Active city marker radius on the map PNG. */
+export const CITY_DOT_RADIUS = 9.5;
+
+export function playerCityColor(playerIndex: number): string {
+  return PLAYER_CITY_COLORS[playerIndex % PLAYER_CITY_COLORS.length];
+}
 
 /**
  * Pixel color for an independent railroad by index.
@@ -50,7 +65,7 @@ export const CITY_PIXELS: readonly (readonly [string, number, number])[] = [
   ['Calgary', 236, 99],
   ['Charleston', 935, 545],
   ['Chicago', 726, 326],
-  ['Cincinnati', 929, 301],
+  ['Cincinnati', 804, 391],
   ['Cleveland', 850, 331],
   ['Dallas', 567, 587],
   ['Denver', 386, 401],

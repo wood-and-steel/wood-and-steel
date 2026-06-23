@@ -118,7 +118,12 @@ export function SimulatorPage(): React.ReactElement {
         const result = results[i];
         if (!result) continue;
         pngBlobs.push(
-          await renderGamePng(result.G, result.acquiredRailroads, result.railroadColorIndices)
+          await renderGamePng(
+            result.G,
+            result.acquiredRailroads,
+            result.railroadColorIndices,
+            result.playerCityAcquiredInRound
+          )
         );
         setProgress(Math.round(((i + 1) / results.length) * 100));
         await new Promise((resolve) => setTimeout(resolve, 0));

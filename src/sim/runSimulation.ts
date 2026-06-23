@@ -34,6 +34,9 @@ export interface AcquiredRailroad {
   acquiredInRound: number;
 }
 
+/** Round in which each player acquired each city (starting cities use round 0). */
+export type PlayerCityAcquiredInRound = Record<string, Record<string, number>>;
+
 export interface GameResult {
   gameNumber: number;
   G: GameState;
@@ -45,9 +48,14 @@ export interface GameResult {
   rrRoutes: string[];
   acquiredRailroads: AcquiredRailroad[];
   railroadColorIndices: Record<string, number>;
+  playerCityAcquiredInRound: PlayerCityAcquiredInRound;
 }
 
-function seedStartingCities(G: GameState, numPlayers: number): void {
+function seedStartingCities(
+  G: GameState,
+  numPlayers: number,
+  playerCityAcquiredInRound: PlayerCityAcquiredInRound
+): void {
   const pool: [string, string][] = shuffleArray([...STARTING_CITY_PAIRS]) as [string, string][];
   if (pool.length < numPlayers) {
     throw new Error(
@@ -57,16 +65,24 @@ function seedStartingCities(G: GameState, numPlayers: number): void {
 
   for (let i = 0; i < numPlayers; i++) {
     const [cityA, cityB] = pool.pop()!;
-    const player = G.players[i]?.[1];
-    if (player) {
+    const playerEntry = G.players[i];
+    const player = playerEntry?.[1];
+    if (player && playerEntry) {
+      const playerId = playerEntry[0];
       player.activeCities = [cityA, cityB];
+      const rounds = (playerCityAcquiredInRound[playerId] ??= {});
+      rounds[cityA] = 0;
+      rounds[cityB] = 0;
     } else {
       throw new Error(`Player ${i} not found in game state.`);
     }
   }
 }
 
-function createStubGame(numPlayers: number): { G: GameState; ctx: GameContext } {
+function createStubGame(
+  numPlayers: number,
+  playerCityAcquiredInRound: PlayerCityAcquiredInRound
+): { G: GameState; ctx: GameContext } {
   const G: GameState = {
     contracts: [],
     players: Array.from({ length: numPlayers }, (_, i) => [
@@ -91,7 +107,7 @@ function createStubGame(numPlayers: number): { G: GameState; ctx: GameContext } 
     round: 0,
   };
 
-  seedStartingCities(G, numPlayers);
+  seedStartingCities(G, numPlayers, playerCityAcquiredInRound);
   return { G, ctx };
 }
 
@@ -109,7 +125,7 @@ function expandCities(
   round: number
 ): string | undefined {
   const target = Math.trunc(round * activeCitiesPerRound + 2);
-  if (target <= activeCities.length) {
+  if (target <= activeCities.length && Math.random() < 0.75 && target <= (activeCities.length + 1)) {
     return undefined;
   }
 
@@ -143,7 +159,8 @@ function checkAcquisitions(
   G: GameState,
   playerId: string,
   round: number,
-  acquiredRailroads: AcquiredRailroad[]
+  acquiredRailroads: AcquiredRailroad[],
+  playerCityAcquiredInRound: PlayerCityAcquiredInRound
 ): void {
   const player = G.players.find(([id]) => id === playerId)?.[1];
   if (!player) return;
@@ -153,10 +170,12 @@ function checkAcquisitions(
     if (!rrCities.has(newCity)) continue;
 
     const owned = new Set(player.activeCities);
+    const rounds = (playerCityAcquiredInRound[playerId] ??= {});
     for (const city of rrCities) {
       if (!owned.has(city)) {
         player.activeCities.push(city);
         owned.add(city);
+        rounds[city] = round;
       }
     }
 
@@ -173,7 +192,8 @@ function checkAcquisitions(
 }
 
 function runSingleGame(params: SimulationParams, gameNumber: number): GameResult {
-  const { G, ctx } = createStubGame(params.numPlayers);
+  const playerCityAcquiredInRound: PlayerCityAcquiredInRound = {};
+  const { G, ctx } = createStubGame(params.numPlayers, playerCityAcquiredInRound);
   const railroadColorIndices = captureRailroadColorIndices(G);
   const acquiredRailroads: AcquiredRailroad[] = [];
 
@@ -189,7 +209,16 @@ function runSingleGame(params: SimulationParams, gameNumber: number): GameResult
           round
         );
         if (newCity) {
-          checkAcquisitions(newCity, G, playerId, round, acquiredRailroads);
+          const rounds = (playerCityAcquiredInRound[playerId] ??= {});
+          rounds[newCity] = round;
+          checkAcquisitions(
+            newCity,
+            G,
+            playerId,
+            round,
+            acquiredRailroads,
+            playerCityAcquiredInRound
+          );
         }
       }
     }
@@ -214,6 +243,7 @@ function runSingleGame(params: SimulationParams, gameNumber: number): GameResult
     rrRoutes,
     acquiredRailroads,
     railroadColorIndices,
+    playerCityAcquiredInRound,
   };
 }
 
