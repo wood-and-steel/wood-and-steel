@@ -298,7 +298,7 @@ Key areas still in development:
 ## Git Workflow
 
 1. Work in feature branches
-2. Write descriptive commit messages
+2. Write commit messages per [docs/COMMIT_MESSAGE_GUIDE.md](../docs/COMMIT_MESSAGE_GUIDE.md) (imperative subject, `bug fix:` for fixes, optional body for *why*)
 3. Keep commits focused and atomic
 4. Test before committing
 

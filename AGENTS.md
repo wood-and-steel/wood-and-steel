@@ -19,6 +19,7 @@ This file is the entrypoint for AI agents to find project conventions and avoid 
 - [docs/CSS_ARCHITECTURE.md](docs/CSS_ARCHITECTURE.md) — Styling: no inline styles, centralized CSS, BEM, variables
 - [docs/Game rules.md](docs/Game%20rules.md) — Game rules and implementation status
 - [docs/TS_JS_CONFIG_POLICY.md](docs/TS_JS_CONFIG_POLICY.md) — TypeScript/JS migration, extensionless imports
+- [docs/COMMIT_MESSAGE_GUIDE.md](docs/COMMIT_MESSAGE_GUIDE.md) — Commit message style when the user asks for a commit
 - When relevant: [docs/Contract generation.md](docs/Contract%20generation.md), [docs/CLOUD_STORAGE_TESTING.md](docs/CLOUD_STORAGE_TESTING.md)
 
 ## Anti-patterns (avoid these)
