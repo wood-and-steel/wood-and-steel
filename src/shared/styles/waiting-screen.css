@@ -10,6 +10,7 @@
   align-items: center;
   justify-content: flex-start;
   padding: var(--spacing-md);
+  padding-bottom: calc(var(--spacing-md) + var(--safe-area-inset-bottom));
   background-color: var(--color-bg-light);
 }
 

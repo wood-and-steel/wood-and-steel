@@ -25,6 +25,9 @@
   /* Layout: desktop nav bar height (padding-top + content) for content offset */
   --nav-height-desktop: 44px;
 
+  /* iOS home indicator / curved screen edges (0 on most non-phone viewports) */
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+
   /* Border Width */
   --border-width-md: 0.0625rem;
   --border-width-lg: 0.125rem;
