@@ -134,7 +134,7 @@ export function generateStartingContract(
  *
  * @param G - Game state object
  * @param ctx - Game context
- * @param commodityRegion - Optional region code (NW, NC, NE, SW, SC, SE). If provided, candidate commodities are those supplied in that region instead of within one hop of active cities.
+ * @param commodityRegion - Optional region code of a regional office. If provided, commodity will be from that region.
  * @returns A spec with commodity and destinationKey, or undefined
  */
 export function generatePrivateContractSpec(
@@ -203,8 +203,22 @@ export function generatePrivateContractSpec(
   const destCity = cities.get(contractCity);
   if (destCity) destCity.commodities.forEach((c) => availableCommodities.delete(c));
 
+  // Once a player has fulfilled 3+ contracts, prefer commodities worth at least $6k,
+  // but fall back to the unfiltered list if that would leave fewer than 2 choices.
+  let commodityPool = availableCommodities;
+  if (countFulfilledContracts(G, ctx.currentPlayer) >= 3) {
+    const highValueCommodities = filterCommoditiesByMinDistance(
+      availableCommodities,
+      contractCity,
+      2
+    );
+    if (highValueCommodities.size >= 2) {
+      commodityPool = highValueCommodities;
+    }
+  }
+
   // Pick a commodity for the contract
-  const contractCommodity = randomSetItem(availableCommodities);
+  const contractCommodity = randomSetItem(commodityPool);
   if (!contractCommodity) return undefined;
 
   return { commodity: contractCommodity, destinationKey: contractCity };
@@ -312,16 +326,7 @@ export function generateMarketContract(G: GameState): Contract | undefined {
 
   // Filter out commodities that are too close to the destination (distance < 2).
   // This ensures all market contracts are worth at least $6k (2 segments × $3k)
-  const validCommodities = new Set<string>();
-  possibleCommodities.forEach((commodity) => {
-    const distance = shortestDistance(
-      contractCity,
-      (c: string) => (cities.get(c)?.commodities.includes(commodity) ?? false)
-    );
-    if (distance !== undefined && distance >= 2) {
-      validCommodities.add(commodity);
-    }
-  });
+  const validCommodities = filterCommoditiesByMinDistance(possibleCommodities, contractCity, 2);
 
   // TODO: Write test to ensure this case never happens (low priority, seems very unlikely by inspection)
   if (validCommodities.size === 0) {
@@ -334,6 +339,35 @@ export function generateMarketContract(G: GameState): Contract | undefined {
   if (!contractCommodity) return undefined;
 
   return newContract(contractCity, contractCommodity, { type: "market" });
+}
+
+/**
+ * Returns the subset of commodities whose nearest producing city is at least
+ * minDistance segments from destinationKey.
+ */
+function filterCommoditiesByMinDistance(
+  candidateCommodities: Set<string>,
+  destinationKey: string,
+  minDistance: number
+): Set<string> {
+  const valid = new Set<string>();
+  candidateCommodities.forEach((commodity) => {
+    const distance = shortestDistance(
+      destinationKey,
+      (c: string) => cities.get(c)?.commodities.includes(commodity) ?? false
+    );
+    if (distance !== undefined && distance >= minDistance) {
+      valid.add(commodity);
+    }
+  });
+  return valid;
+}
+
+/**
+ * Counts fulfilled contracts (private or market) held by the given player.
+ */
+function countFulfilledContracts(G: GameState, playerID: string): number {
+  return G.contracts.filter((c) => c.playerID === playerID && c.fulfilled).length;
 }
 
 /**

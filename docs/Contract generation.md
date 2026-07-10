@@ -66,6 +66,8 @@ Private contracts are offered to a player just after they fulfill a prior privat
 
 3. **Select commodity**: Available in cities that are within 1 segment of the player’s active cities. Excludes commodities produced in the destination city. Chosen at random with equal probability. When generating multiple private contract offers, one offer may be generated with commodity restricted to the player's regional office region (if any).
 
+4. **Minimum value floor**: If the current player has 3 or more fulfilled contracts (private or market, combined), the commodity choice in step 3 is restricted to commodities whose nearest producing city is at least 2 segments from the destination (i.e. worth at least $6,000). If this restriction would leave fewer than 2 eligible commodities, the restriction is skipped and the full candidate list from step 3 is used instead. The same floor applies to regional-office offers.
+
 ---
 
 ## Starting private contract
@@ -98,6 +100,6 @@ Starting contracts are a special kind of private contract given to players durin
 2. **Select commodity**
    - Must be available in active cities or cities within 1 segment of active cities (including the active cities).
    - Must **not** be produced in the destination city.
-   - Must have **distance ≥ 2** from the destination (shortest path to any city that produces the commodity). This ensures a minimum cash reward of $6,000 (2 segments × $3,000).
+   - Must have **distance ≥ 2** from the destination (shortest path to any city that produces the commodity). This ensures a minimum cash reward of $6,000 (2 segments × $3,000). Market and private generation share this distance filter via `filterCommoditiesByMinDistance` in [Contract.ts](../src/Contract.ts); market always requires it, while private applies it only under the minimum-value floor in step 4 above.
 
 3. Chosen at random with equal probability among valid commodities.
