@@ -233,10 +233,15 @@ export function growIndependentRailroads(
   const addedRoutes = new Set<string>();
 
   // Candidate RR list, filtered to only include RRs that are at or below the cap
+  const indieCaps = new Map<string, number>();
   const indieEntries = Object.entries(G.independentRailroads).filter(
-    ([, rr]) => {
+    ([name, rr]) => {
       // 85% of the time, the cap is one below the max, otherwise at the max
-      const cap = Math.random() < 0.85 ? LARGEST_RR_ROUTE_COUNT - 1 : LARGEST_RR_ROUTE_COUNT;
+      const cap =
+        Math.random() < 0.85
+          ? LARGEST_RR_ROUTE_COUNT - 1
+          : LARGEST_RR_ROUTE_COUNT;
+      indieCaps.set(name, cap);
       return rr.routes.length < cap;
     }
   );
@@ -248,8 +253,13 @@ export function growIndependentRailroads(
     addedRoutes.size < numberOfRoutesToAdd && attempt < maxAttempts;
     attempt++
   ) {
+    const eligibleEntries = indieEntries.filter(
+      ([name, rr]) => rr.routes.length < (indieCaps.get(name) ?? LARGEST_RR_ROUTE_COUNT)
+    );
+    if (eligibleEntries.length === 0) break;
+
     const [randomRailroadName, railroadToExpand] =
-      indieEntries[Math.floor(Math.random() * indieEntries.length)] ?? [];
+      eligibleEntries[Math.floor(Math.random() * eligibleEntries.length)] ?? [];
     if (!railroadToExpand) continue;
 
     /*
@@ -307,6 +317,9 @@ export function growIndependentRailroads(
 
     const routeToAdd = randomArrayItem([...possibleRoutes]);
     if (routeToAdd != null) {
+      const cap = indieCaps.get(randomRailroadName) ?? LARGEST_RR_ROUTE_COUNT;
+      if (railroadToExpand.routes.length >= cap) continue;
+
       railroadToExpand.routes.push({
         key: routeToAdd,
         addedInRound: ctx.round,
