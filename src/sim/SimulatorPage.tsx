@@ -60,7 +60,7 @@ export function SimulatorPage(): React.ReactElement {
   const [numPlayers, setNumPlayers] = React.useState('3');
   const [numRounds, setNumRounds] = React.useState('20');
   const [numGames, setNumGames] = React.useState('100');
-  const [activeCitiesPerRound, setActiveCitiesPerRound] = React.useState('0.25');
+  const [activeCitiesPerRound, setActiveCitiesPerRound] = React.useState('0.4');
   const [status, setStatus] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [running, setRunning] = React.useState(false);
