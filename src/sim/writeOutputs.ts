@@ -86,6 +86,18 @@ export function supportsDirectoryPicker(): boolean {
   return typeof getDirectoryPicker() === 'function';
 }
 
+async function ensureWritePermission(
+  dirHandle: FileSystemDirectoryHandle
+): Promise<void> {
+  const options = { mode: 'readwrite' as const };
+  if ((await dirHandle.queryPermission(options)) === 'granted') {
+    return;
+  }
+  if ((await dirHandle.requestPermission(options)) !== 'granted') {
+    throw new Error('Write permission was denied for the selected folder.');
+  }
+}
+
 export async function pickOutputDirectory(): Promise<FileSystemDirectoryHandle> {
   const picker = getDirectoryPicker();
   if (!picker) {
@@ -93,7 +105,10 @@ export async function pickOutputDirectory(): Promise<FileSystemDirectoryHandle> 
       'File System Access API is not supported in this browser. Use Chrome or Edge.'
     );
   }
-  return picker();
+  const dirHandle = await picker({ mode: 'readwrite' });
+  // Confirm write access while the Launch click is still in the user-activation chain.
+  await ensureWritePermission(dirHandle);
+  return dirHandle;
 }
 
 export interface WriteOutputsOptions {

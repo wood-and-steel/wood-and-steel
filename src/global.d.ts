@@ -55,15 +55,23 @@ declare global {
     close(): Promise<void>;
   }
 
+  interface FileSystemHandlePermissionDescriptor {
+    mode?: 'read' | 'readwrite';
+  }
+
   interface FileSystemFileHandle {
     readonly name: string;
     getFile(): Promise<File>;
     createWritable(options?: FileSystemCreateWritableOptions): Promise<FileSystemWritableFileStream>;
+    queryPermission(descriptor?: FileSystemHandlePermissionDescriptor): Promise<PermissionState>;
+    requestPermission(descriptor?: FileSystemHandlePermissionDescriptor): Promise<PermissionState>;
   }
 
   interface FileSystemDirectoryHandle {
     getFileHandle(name: string, options?: { create?: boolean }): Promise<FileSystemFileHandle>;
     getDirectoryHandle(name: string, options?: { create?: boolean }): Promise<FileSystemDirectoryHandle>;
+    queryPermission(descriptor?: FileSystemHandlePermissionDescriptor): Promise<PermissionState>;
+    requestPermission(descriptor?: FileSystemHandlePermissionDescriptor): Promise<PermissionState>;
   }
 
   interface Window {
