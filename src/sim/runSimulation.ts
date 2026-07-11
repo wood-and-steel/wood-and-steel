@@ -43,7 +43,7 @@ export interface GameResult {
   activeCities: string[];
   activeCitiesTotal: number;
   activeCitiesAverage: number;
-  rrSizes: number[];
+  rrSizes: string[];
   maxRrSize: number;
   rrRoutes: string[];
   acquiredRailroads: AcquiredRailroad[];
@@ -227,7 +227,13 @@ function runSingleGame(params: SimulationParams, gameNumber: number): GameResult
   }
 
   const activeCities = G.players.flatMap(([, player]) => player.activeCities);
-  const rrSizes = Object.values(G.independentRailroads).map((rr) => rr.routes.length);
+  const independentSizes = Object.values(G.independentRailroads).map((rr) => rr.routes.length);
+  const acquiredSizes = acquiredRailroads.map((ar) => ar.routes.length);
+  const rrSizes = [
+    ...independentSizes.map(String),
+    ...acquiredSizes.map((size) => `${size}*`),
+  ];
+  const allSizes = [...independentSizes, ...acquiredSizes];
   const rrRoutes = Object.values(G.independentRailroads).flatMap((rr) =>
     rr.routes.map((route) => route.key)
   );
@@ -239,7 +245,7 @@ function runSingleGame(params: SimulationParams, gameNumber: number): GameResult
     activeCitiesTotal: activeCities.length,
     activeCitiesAverage: activeCities.length / params.numPlayers,
     rrSizes,
-    maxRrSize: rrSizes.length > 0 ? Math.max(...rrSizes) : 0,
+    maxRrSize: allSizes.length > 0 ? Math.max(...allSizes) : 0,
     rrRoutes,
     acquiredRailroads,
     railroadColorIndices,
