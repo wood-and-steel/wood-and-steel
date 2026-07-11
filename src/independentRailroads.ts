@@ -237,8 +237,7 @@ export function growIndependentRailroads(
     ([, rr]) => {
       // 85% of the time, the cap is one below the max, otherwise at the max
       const cap = Math.random() < 0.85 ? LARGEST_RR_ROUTE_COUNT - 1 : LARGEST_RR_ROUTE_COUNT;
-      return rr.routes.length <= cap;
- 
+      return rr.routes.length < cap;
     }
   );
   if (indieEntries.length === 0) return undefined;
