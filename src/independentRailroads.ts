@@ -178,6 +178,8 @@ export function growIndependentRailroads(
   const smallestMappedOccupancy = Math.min(...growthProbabilities.keys());
   const largestMappedOccupancy = Math.max(...growthProbabilities.keys());
 
+  const LARGEST_RR_ROUTE_COUNT = 7;
+
   // Collect keys of all active cities and what's adjacent to them
   const activeCities = new Set<string>();
   for (const [, player] of G.players) {
@@ -230,7 +232,16 @@ export function growIndependentRailroads(
   const numberOfRoutesToAdd = newRouteCount - startingRouteCount;
   const addedRoutes = new Set<string>();
 
-  const indieEntries = Object.entries(G.independentRailroads);
+  // Candidate RR list, filtered to only include RRs that are at or below the cap
+  const indieEntries = Object.entries(G.independentRailroads).filter(
+    ([, rr]) => {
+      // 85% of the time, the cap is one below the max, otherwise at the max
+      const cap = Math.random() < 0.85 ? LARGEST_RR_ROUTE_COUNT - 1 : LARGEST_RR_ROUTE_COUNT;
+      return rr.routes.length <= cap;
+ 
+    }
+  );
+  if (indieEntries.length === 0) return undefined;
   const maxAttempts = 100;
 
   for (
