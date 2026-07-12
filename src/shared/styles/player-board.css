@@ -71,6 +71,13 @@
   color: var(--color-text-subtle);
 }
 
+.playerToolbar__otherAvatars {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-left: var(--spacing-xs);
+}
+
 .playerBoard {
   display: flex;
   gap: var(--spacing-md);

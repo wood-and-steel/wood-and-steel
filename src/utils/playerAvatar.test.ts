@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
   generatePlayerAvatarColor,
   getAvatarTextColor,
+  getOtherPlayerIdsInPlayOrder,
   getPlayerAvatarColor,
   getPlayerInitials,
 } from './playerAvatar';
@@ -36,6 +37,14 @@ describe('playerAvatar', () => {
     expect(getPlayerAvatarColor('0', stored)).toBe(stored);
     expect(getPlayerAvatarColor('0')).toBe(getPlayerAvatarColor('0'));
     expect(getPlayerAvatarColor('1')).not.toBe(getPlayerAvatarColor('0'));
+  });
+
+  test('getOtherPlayerIdsInPlayOrder returns remaining players in play order', () => {
+    const playOrder = ['0', '1', '2'];
+    expect(getOtherPlayerIdsInPlayOrder('0', playOrder)).toEqual(['1', '2']);
+    expect(getOtherPlayerIdsInPlayOrder('1', playOrder)).toEqual(['2', '0']);
+    expect(getOtherPlayerIdsInPlayOrder('2', playOrder)).toEqual(['0', '1']);
+    expect(getOtherPlayerIdsInPlayOrder('missing', playOrder)).toEqual([]);
   });
 
   test('getAvatarTextColor returns black or white', () => {

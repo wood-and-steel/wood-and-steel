@@ -1,6 +1,6 @@
 import React from "react";
 import { railroadTieValue } from "../Contract";
-import { getPlayerAvatarColor } from "../utils/playerAvatar";
+import { getOtherPlayerIdsInPlayOrder, getPlayerAvatarColor } from "../utils/playerAvatar";
 import { PlayerAvatar } from "./PlayerAvatar";
 import type { GameState, GameContext } from "../stores/gameStore";
 import { useGameStore } from "../stores/gameStore";
@@ -52,6 +52,7 @@ export function PlayerToolbar({
   const playerScore = contracts
     .filter((contract) => contract.playerID === key && contract.fulfilled)
     .reduce((sum, contract) => sum + railroadTieValue(contract), 0);
+  const otherPlayerIds = getOtherPlayerIdsInPlayOrder(key, ctx.playOrder);
 
   return (
     <div className="playerToolbar">
@@ -61,6 +62,23 @@ export function PlayerToolbar({
           <span>
             {name} <span className="playerToolbar__score">(Score: {playerScore})</span>
           </span>
+          {otherPlayerIds.length > 0 && (
+            <span className="playerToolbar__otherAvatars">
+              {otherPlayerIds.map((otherPlayerId) => {
+                const otherPlayer = G.players.find(([id]) => id === otherPlayerId);
+                if (!otherPlayer) return null;
+                const [, { name: otherName, avatarColor: otherAvatarColor }] = otherPlayer;
+                return (
+                  <PlayerAvatar
+                    key={otherPlayerId}
+                    name={otherName}
+                    avatarColor={getPlayerAvatarColor(otherPlayerId, otherAvatarColor)}
+                    title={otherName}
+                  />
+                );
+              })}
+            </span>
+          )}
         </div>
         {showTurnIndicator ? (
           <div className="playerToolbar__turnIndicator">

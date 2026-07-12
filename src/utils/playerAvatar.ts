@@ -23,6 +23,18 @@ export function getPlayerInitials(name: string): string {
   return firstInitial + words[1][0].toUpperCase();
 }
 
+export function getOtherPlayerIdsInPlayOrder(
+  viewingPlayerId: string,
+  playOrder: string[]
+): string[] {
+  const startIndex = playOrder.indexOf(viewingPlayerId);
+  if (startIndex === -1) return [];
+
+  return Array.from({ length: playOrder.length - 1 }, (_, offset) =>
+    playOrder[(startIndex + offset + 1) % playOrder.length]
+  );
+}
+
 export function getAvatarTextColor(backgroundColor: string): "#000000" | "#ffffff" {
   const { h, s, l } = parseHsl(backgroundColor);
   const { r, g, b } = hslToRgb(h, s, l);
