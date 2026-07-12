@@ -9,6 +9,7 @@ import type {
   IndependentRailroadRoute,
 } from '../stores/gameStore';
 import { citiesConnectedTo } from '../utils/graph';
+import { generatePlayerAvatarColor } from '../utils/playerAvatar';
 import { randomArrayItem, shuffleArray } from '../utils/random';
 
 export const STARTING_CITY_PAIRS: readonly [string, string][] = [
@@ -92,6 +93,7 @@ function createStubGame(
         activeCities: [],
         hubCity: null,
         regionalOffice: null,
+        avatarColor: generatePlayerAvatarColor(),
       },
     ]),
     independentRailroads: initializeIndependentRailroads(),

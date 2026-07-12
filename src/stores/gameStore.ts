@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Contract } from '../Contract';
 import { getCurrentGameCode, saveGameState } from '../utils/gameManager';
+import { generatePlayerAvatarColor } from '../utils/playerAvatar';
 
 export type RegionCode = 'NW' | 'NC' | 'NE' | 'SW' | 'SC' | 'SE';
 
@@ -9,6 +10,7 @@ export interface PlayerProps {
   activeCities: string[];
   hubCity: string | null;
   regionalOffice: RegionCode | null;
+  avatarColor?: string;
 }
 
 /** A route owned by an independent railroad, with the round it was added. */
@@ -74,7 +76,13 @@ function getInitialState(
       contracts: [],
       players: Array.from({ length: numPlayers }, (_, i) => [
         String(i),
-        { name: `Player ${i}`, activeCities: [], hubCity: null, regionalOffice: null },
+        {
+          name: `Player ${i}`,
+          activeCities: [],
+          hubCity: null,
+          regionalOffice: null,
+          avatarColor: generatePlayerAvatarColor(),
+        },
       ]),
       independentRailroads: {},
     },

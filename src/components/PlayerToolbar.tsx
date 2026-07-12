@@ -1,5 +1,7 @@
 import React from "react";
 import { railroadTieValue } from "../Contract";
+import { getPlayerAvatarColor } from "../utils/playerAvatar";
+import { PlayerAvatar } from "./PlayerAvatar";
 import type { GameState, GameContext } from "../stores/gameStore";
 import { useGameStore } from "../stores/gameStore";
 
@@ -45,7 +47,7 @@ export function PlayerToolbar({
 
   if (!activePlayer) return null;
 
-  const [key, { name }] = activePlayer;
+  const [key, { name, avatarColor }] = activePlayer;
   const contracts = G.contracts;
   const playerScore = contracts
     .filter((contract) => contract.playerID === key && contract.fulfilled)
@@ -55,7 +57,10 @@ export function PlayerToolbar({
     <div className="playerToolbar">
       <div className="playerToolbar__info playerToolbar__info--active">
         <div className="playerToolbar__name playerToolbar__name--active">
-          {name} <span className="playerToolbar__score">(Score: {playerScore})</span>
+          <PlayerAvatar name={name} avatarColor={getPlayerAvatarColor(key, avatarColor)} />
+          <span>
+            {name} <span className="playerToolbar__score">(Score: {playerScore})</span>
+          </span>
         </div>
         {showTurnIndicator ? (
           <div className="playerToolbar__turnIndicator">

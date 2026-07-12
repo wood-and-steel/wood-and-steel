@@ -22,6 +22,7 @@ import {
 } from '../utils/gameManager';
 import { checkPhaseTransition } from '../stores/phaseManager';
 import { initializeIndependentRailroads } from '../independentRailroads';
+import { generatePlayerAvatarColor } from '../utils/playerAvatar';
 
 const NOT_PLAYING_MESSAGE = 'This device is not playing this game.';
 
@@ -469,7 +470,13 @@ const AppContent = (): React.ReactElement => {
             const seat = deviceId ? playerSeats[deviceId] : null;
             const playerName = seat?.playerName ?? `Player ${i}`;
 
-            return [playerID, { name: playerName, activeCities: [] as string[], hubCity: null, regionalOffice: null }];
+            return [playerID, {
+              name: playerName,
+              activeCities: [] as string[],
+              hubCity: null,
+              regionalOffice: null,
+              avatarColor: generatePlayerAvatarColor(),
+            }];
           });
 
           console.info('[App] Initialized players for BYOD game:', players);

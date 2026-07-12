@@ -42,6 +42,24 @@
 .playerToolbar__name {
   margin-bottom: var(--spacing-xs);
   font-size: var(--font-size-body);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.playerAvatar {
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: var(--font-size-body);
+  font-weight: bold;
+  line-height: 1;
+  background-color: var(--avatar-bg);
+  color: var(--avatar-text);
 }
 
 .playerToolbar__name--active {
