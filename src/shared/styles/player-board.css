@@ -58,8 +58,29 @@
   font-size: var(--font-size-body);
   font-weight: bold;
   line-height: 1;
+  box-sizing: border-box;
+  border: var(--border-width-lg) solid transparent;
   background-color: var(--avatar-bg);
   color: var(--avatar-text);
+}
+
+.playerAvatar--currentTurn {
+  animation: playerAvatarTurnPulse 3s ease-in-out infinite;
+  box-shadow:
+    0 0 0.25rem 0.0625rem color-mix(in srgb, var(--avatar-bg) 55%, transparent),
+    0 0 0.5rem 0.125rem color-mix(in srgb, var(--avatar-bg) 35%, transparent),
+    0 0 0.875rem 0.25rem color-mix(in srgb, var(--avatar-bg) 20%, transparent);
+}
+
+@keyframes playerAvatarTurnPulse {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--color-text-light) 35%, transparent);
+  }
+
+  50% {
+    border-color: var(--color-text-light);
+  }
 }
 
 .playerToolbar__name--active {
@@ -74,8 +95,8 @@
 .playerToolbar__otherAvatars {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  margin-left: var(--spacing-xs);
+  gap: var(--spacing-sm);
+  margin-left: var(--spacing-sm);
 }
 
 .playerBoard {

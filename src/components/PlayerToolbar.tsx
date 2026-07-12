@@ -58,7 +58,11 @@ export function PlayerToolbar({
     <div className="playerToolbar">
       <div className="playerToolbar__info playerToolbar__info--active">
         <div className="playerToolbar__name playerToolbar__name--active">
-          <PlayerAvatar name={name} avatarColor={getPlayerAvatarColor(key, avatarColor)} />
+          <PlayerAvatar
+            name={name}
+            avatarColor={getPlayerAvatarColor(key, avatarColor)}
+            isCurrentTurn={key === ctx.currentPlayer}
+          />
           <span>
             {name} <span className="playerToolbar__score">(Score: {playerScore})</span>
           </span>
@@ -74,6 +78,7 @@ export function PlayerToolbar({
                     name={otherName}
                     avatarColor={getPlayerAvatarColor(otherPlayerId, otherAvatarColor)}
                     title={otherName}
+                    isCurrentTurn={otherPlayerId === ctx.currentPlayer}
                   />
                 );
               })}

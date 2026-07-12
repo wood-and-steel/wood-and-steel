@@ -5,18 +5,24 @@ export interface PlayerAvatarProps {
   name: string;
   avatarColor: string;
   title?: string;
+  isCurrentTurn?: boolean;
 }
 
 /**
  * Circular avatar showing one or two initials on a per-player background color.
  */
-export function PlayerAvatar({ name, avatarColor, title }: PlayerAvatarProps): React.ReactElement {
+export function PlayerAvatar({
+  name,
+  avatarColor,
+  title,
+  isCurrentTurn = false,
+}: PlayerAvatarProps): React.ReactElement {
   const initials = getPlayerInitials(name);
   const textColor = getAvatarTextColor(avatarColor);
 
   return (
     <span
-      className="playerAvatar"
+      className={`playerAvatar${isCurrentTurn ? " playerAvatar--currentTurn" : ""}`}
       aria-hidden={title ? undefined : true}
       aria-label={title}
       title={title}
