@@ -103,7 +103,6 @@ export const routes = new Map<string, Route>([
   [ "Raleigh-Washington", { "length": 2, "mountainous": false, cities: ["Raleigh", "Washington"] } ],
   [ "Regina-Winnipeg", { "length": 3, "mountainous": false, cities: ["Regina", "Winnipeg"] } ],
   [ "Salt Lake City-San Francisco", { "length": 5, "mountainous": true, cities: ["Salt Lake City", "San Francisco"] } ],
-  [ "Salt Lake City-Santa Fe", { "length": 4, "mountainous": true, cities: ["Salt Lake City", "Santa Fe"] } ],
   [ "Savannah-Tampa", { "length": 3, "mountainous": false, cities: ["Savannah", "Tampa"] } ],
   [ "Savannah-Tallahassee", { "length": 2, "mountainous": false, cities: ["Savannah", "Tallahassee"] } ],
   [ "Seattle-Spokane", { "length": 2, "mountainous": true, cities: ["Seattle", "Spokane"] } ],
