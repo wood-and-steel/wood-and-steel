@@ -22,7 +22,7 @@ import {
 } from '../utils/gameManager';
 import { checkPhaseTransition } from '../stores/phaseManager';
 import { initializeIndependentRailroads } from '../independentRailroads';
-import { generatePlayerAvatarColor } from '../utils/playerAvatar';
+import { getPlayerAvatarColorForIndex } from '../utils/playerAvatar';
 
 const NOT_PLAYING_MESSAGE = 'This device is not playing this game.';
 
@@ -475,7 +475,7 @@ const AppContent = (): React.ReactElement => {
               activeCities: [] as string[],
               hubCity: null,
               regionalOffice: null,
-              avatarColor: generatePlayerAvatarColor(),
+              avatarColor: getPlayerAvatarColorForIndex(i),
             }];
           });
 

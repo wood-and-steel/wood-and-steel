@@ -1,15 +1,24 @@
-/** Temporary per-player avatar color; algorithm will be replaced soon. */
-export function generatePlayerAvatarColor(): string {
-  const h = Math.random() * 360;
-  const s = 0.7 + Math.random() * 0.2;
-  const l = 0.3 + Math.random() * 0.3;
-  return formatHsl(h, s, l);
+export const PLAYER_AVATAR_COLORS = [
+  '#f83765',
+  '#ba951e',
+  '#0e86f4',
+  '#31b027',
+  '#505050',
+] as const;
+
+/** Assigns a fixed palette color by player index (0-based). */
+export function getPlayerAvatarColorForIndex(playerIndex: number): string {
+  return PLAYER_AVATAR_COLORS[playerIndex] ?? PLAYER_AVATAR_COLORS[PLAYER_AVATAR_COLORS.length - 1];
 }
 
 /** Stable color for a player within a game; uses stored value when present. */
 export function getPlayerAvatarColor(playerId: string, avatarColor?: string): string {
   if (avatarColor) return avatarColor;
-  return generatePlayerAvatarColorFromSeed(seedFromString(playerId));
+  const playerIndex = Number(playerId);
+  if (Number.isInteger(playerIndex) && playerIndex >= 0) {
+    return getPlayerAvatarColorForIndex(playerIndex);
+  }
+  return PLAYER_AVATAR_COLORS[PLAYER_AVATAR_COLORS.length - 1];
 }
 
 export function getPlayerInitials(name: string): string {
@@ -36,41 +45,36 @@ export function getOtherPlayerIdsInPlayOrder(
 }
 
 export function getAvatarTextColor(backgroundColor: string): "#000000" | "#ffffff" {
-  const { h, s, l } = parseHsl(backgroundColor);
-  const { r, g, b } = hslToRgb(h, s, l);
+  const { r, g, b } = parseColor(backgroundColor);
   const luminance = relativeLuminance(r, g, b);
   const contrastWithBlack = (luminance + 0.05) / 0.05;
   const contrastWithWhite = 1.05 / (luminance + 0.05);
   return contrastWithWhite >= contrastWithBlack ? "#ffffff" : "#000000";
 }
 
-function formatHsl(h: number, s: number, l: number): string {
-  return `hsl(${h}, ${s * 100}%, ${l * 100}%)`;
-}
-
-function seedFromString(value: string): number {
-  let hash = 0;
-  for (let i = 0; i < value.length; i++) {
-    hash = (hash * 31 + value.charCodeAt(i)) | 0;
+function parseColor(color: string): { r: number; g: number; b: number } {
+  if (color.startsWith('#')) {
+    return hexToRgb(color);
   }
-  return Math.abs(hash);
+
+  const { h, s, l } = parseHsl(color);
+  return hslToRgb(h, s, l);
 }
 
-function generatePlayerAvatarColorFromSeed(seed: number): string {
-  const rng = mulberry32(seed);
-  const h = rng() * 360;
-  const s = 0.7 + rng() * 0.2;
-  const l = 0.3 + rng() * 0.3;
-  return formatHsl(h, s, l);
-}
+function hexToRgb(color: string): { r: number; g: number; b: number } {
+  const normalized = color.replace('#', '');
+  const hex =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((char) => char + char)
+          .join('')
+      : normalized;
 
-function mulberry32(seed: number): () => number {
-  let state = seed;
-  return () => {
-    state = (state + 0x6d2b79f5) | 0;
-    let t = Math.imul(state ^ (state >>> 15), 1 | state);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  return {
+    r: Number.parseInt(hex.slice(0, 2), 16) / 255,
+    g: Number.parseInt(hex.slice(2, 4), 16) / 255,
+    b: Number.parseInt(hex.slice(4, 6), 16) / 255,
   };
 }
 

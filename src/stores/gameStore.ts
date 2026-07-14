@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Contract } from '../Contract';
 import { getCurrentGameCode, saveGameState } from '../utils/gameManager';
-import { generatePlayerAvatarColor } from '../utils/playerAvatar';
+import { getPlayerAvatarColorForIndex } from '../utils/playerAvatar';
 
 export type RegionCode = 'NW' | 'NC' | 'NE' | 'SW' | 'SC' | 'SE';
 
@@ -81,7 +81,7 @@ function getInitialState(
           activeCities: [],
           hubCity: null,
           regionalOffice: null,
-          avatarColor: generatePlayerAvatarColor(),
+          avatarColor: getPlayerAvatarColorForIndex(i),
         },
       ]),
       independentRailroads: {},
