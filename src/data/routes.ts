@@ -20,6 +20,7 @@ export const routes = new Map<string, Route>([
   [ "Boise-Butte", { "length": 2, "mountainous": true, cities: ["Boise", "Butte"] } ],
   [ "Boise-Portland OR", { "length": 3, "mountainous": true, cities: ["Boise", "Portland OR"] } ],
   [ "Boise-Salt Lake City", { "length": 3, "mountainous": true, cities: ["Boise", "Salt Lake City"] } ],
+  [ "Boise-Spokane", { "length": 3, "mountainous": true, cities: ["Boise", "Spokane"] } ],
   [ "Boston-New York", { "length": 2, "mountainous": false, cities: ["Boston", "New York"] } ],
   [ "Boston-Portland ME", { "length": 1, "mountainous": false, cities: ["Boston", "Portland ME"] } ],
   [ "Boston-Syracuse", { "length": 2, "mountainous": false, cities: ["Boston", "Syracuse"] } ],
