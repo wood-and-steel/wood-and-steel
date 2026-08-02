@@ -34,7 +34,7 @@ export function PlayerToolbar({
   const isPlayerTurn = !isBYODMode || playerID === ctx.currentPlayer;
   const currentPlayerEntry = G.players.find(([id]) => id === ctx.currentPlayer);
   const currentPlayerName = currentPlayerEntry?.[1]?.name ?? `Player ${ctx.currentPlayer}`;
-  const showTurnIndicator = isBYODMode && !isPlayerTurn;
+  const showTurnToolbar = isBYODMode && isPlayerTurn;
 
   const hasMovedThisTurn = useGameStore((s) => s.hasMovedThisTurn);
   const turnStartSnapshot = useGameStore((s) => s.turnStartSnapshot);
@@ -85,11 +85,7 @@ export function PlayerToolbar({
             </span>
           )}
         </div>
-        {showTurnIndicator ? (
-          <div className="playerToolbar__turnIndicator">
-            {currentPlayerName} is taking their turn
-          </div>
-        ) : (
+        {showTurnToolbar ? (
           <div className="playerToolbar__buttonGroup">
             <button
               type="button"
@@ -124,7 +120,7 @@ export function PlayerToolbar({
               End Turn
             </button>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
