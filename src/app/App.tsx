@@ -32,6 +32,14 @@ const DevSimulatorPage = __INCLUDE_SIM__
     )
   : null;
 
+const DevCoordPickerPage = __INCLUDE_SIM__
+  ? React.lazy(() =>
+      import('../sim/coord-picker/CoordPickerPage').then((mod) => ({
+        default: mod.CoordPickerPage,
+      }))
+    )
+  : null;
+
 // Import test utilities in development
 if (!import.meta.env.PROD) {
   import('../utils/storage/testMigration');
@@ -695,6 +703,13 @@ const App = (): React.ReactElement => {
     return (
       <Suspense fallback={<p>Loading simulator…</p>}>
         <DevSimulatorPage />
+      </Suspense>
+    );
+  }
+  if (__INCLUDE_SIM__ && location.pathname === '/pick-coords' && DevCoordPickerPage) {
+    return (
+      <Suspense fallback={<p>Loading coordinate picker…</p>}>
+        <DevCoordPickerPage />
       </Suspense>
     );
   }
