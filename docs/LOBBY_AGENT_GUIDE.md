@@ -217,6 +217,7 @@ beforeEach(() => {
 - `listGames(storageType)` uses storage adapter; cloud adapter fetches from API.
 - `lastModified` should be ISO 8601 for cloud compatibility.
 - LobbyScreen filters by `metadata.gameMode` for cloud tabs.
+- Cloud-unavailable banner (paused Supabase, etc.) links to the owner dashboard for **dev convenience only** — rework before go-live; see [Before going live](CLOUD_STORAGE_TESTING.md#before-going-live-paused-project--dashboard-link) in `CLOUD_STORAGE_TESTING.md`.
 - Future: loading states, polling, offline/online handling.
 
 ---

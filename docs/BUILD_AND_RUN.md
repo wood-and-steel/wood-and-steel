@@ -48,6 +48,7 @@ Optional environment variables (create a `.env.local` file in the project root):
 
 - `VITE_STORAGE_TYPE` — `localStorage` (default) or `supabase`
 - `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — required when using Supabase storage
+- `VITE_SUPABASE_DASHBOARD_URL` — optional override for the lobby’s “resume project” link when cloud is unreachable (defaults to a URL derived from `VITE_SUPABASE_URL`). **Dev-oriented; change before production** — see [Before going live](CLOUD_STORAGE_TESTING.md#before-going-live-paused-project--dashboard-link) in `CLOUD_STORAGE_TESTING.md`.
 
 ## Checks
 

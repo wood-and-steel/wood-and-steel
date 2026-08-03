@@ -2,6 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useLobbyStore } from "../stores/lobbyStore";
 import { useStorage } from "../providers/StorageProvider";
+import { SUPABASE_DASHBOARD_URL } from "../config/storage";
+import { CloudUnavailableError, isCloudUnreachableError } from "../utils/storage/cloudErrors";
 import type { GameListItem } from "../utils/storage/storageAdapter";
 
 const NOT_PLAYING_MESSAGE = "This device is not playing this game.";
@@ -34,6 +36,10 @@ function getGameModeForTab(tab: LobbyTab): "hotseat" | "byod" {
   return tab === TAB_CLOUD_BYOD ? "byod" : "hotseat";
 }
 
+function isCloudUnavailable(error: unknown): boolean {
+  return error instanceof CloudUnavailableError || isCloudUnreachableError(error);
+}
+
 export interface LobbyScreenGameManager {
   onListGames: () => Promise<GameListItem[] | unknown[]>;
   onDeleteGame: (code: string) => Promise<boolean>;
@@ -57,6 +63,7 @@ export function LobbyScreen({
   const [games, setGames] = React.useState<GameListItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [showLoadingIndicator, setShowLoadingIndicator] = React.useState(false);
+  const [cloudError, setCloudError] = React.useState<"unavailable" | "generic" | null>(null);
   const { selectedGameCode, joinFormPrefill, clearJoinFormPrefill, setJoinFormPrefill } =
     useLobbyStore();
   const storage = useStorage();
@@ -136,9 +143,11 @@ export function LobbyScreen({
   const refreshGames = React.useCallback(
     async (showLoading = false) => {
       const startTime = Date.now();
+      const isCloud = storage.storageType === "cloud";
 
       try {
         setIsLoading(true);
+        setCloudError(null);
         if (showLoading) {
           setShowLoadingIndicator(false);
           const loadingTimeout = setTimeout(() => {
@@ -161,11 +170,14 @@ export function LobbyScreen({
       } catch (error) {
         console.error("[LobbyScreen] Error loading games:", error);
         setGames([]);
+        if (isCloud) {
+          setCloudError(isCloudUnavailable(error) ? "unavailable" : "generic");
+        }
       } finally {
         setIsLoading(false);
       }
     },
-    [gameManager]
+    [gameManager, storage.storageType]
   );
 
   React.useEffect(() => {
@@ -187,6 +199,7 @@ export function LobbyScreen({
       if (newTab === activeTab) return;
 
       setActiveTab(newTab);
+      setCloudError(null);
       if (typeof localStorage !== "undefined") {
         localStorage.setItem(LOBBY_TAB_KEY, newTab);
       }
@@ -326,6 +339,36 @@ export function LobbyScreen({
           )}
         </div>
 
+        {cloudError && activeTab !== TAB_LOCAL && (
+          <div className="lobbyScreen__cloudError" role="alert">
+            {cloudError === "unavailable" ? (
+              <p>
+                Cloud storage is unavailable. The Supabase project is likely paused (free-tier
+                projects pause after inactivity).{" "}
+                <a
+                  className="lobbyScreen__cloudErrorLink"
+                  href={SUPABASE_DASHBOARD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open the Supabase dashboard
+                </a>{" "}
+                to sign in and resume the project, then retry.
+              </p>
+            ) : (
+              <p>Unable to load cloud games. Check your connection and try again.</p>
+            )}
+            <button
+              type="button"
+              className="button lobbyScreen__cloudErrorRetry"
+              onClick={() => refreshGames(true)}
+              disabled={isLoading}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {activeTab === TAB_CLOUD_BYOD && (
           <div className="lobbyScreen__joinGame">
             <form onSubmit={handleJoinGame} className="lobbyScreen__joinForm">
@@ -340,14 +383,14 @@ export function LobbyScreen({
                 placeholder="Enter game code"
                 className="lobbyScreen__joinInput"
                 maxLength={6}
-                disabled={isJoining}
+                disabled={isJoining || !!cloudError}
                 autoComplete="off"
                 autoCapitalize="characters"
               />
               <button
                 type="submit"
                 className="button lobbyScreen__joinButton"
-                disabled={isJoining || !joinGameCode.trim()}
+                disabled={isJoining || !joinGameCode.trim() || !!cloudError}
               >
                 {isJoining ? "Joining..." : "Join"}
               </button>
@@ -363,6 +406,10 @@ export function LobbyScreen({
         {isLoading ? (
           <div className="lobbyScreen__emptyState">
             <p>Loading games...</p>
+          </div>
+        ) : cloudError && activeTab !== TAB_LOCAL ? (
+          <div className="lobbyScreen__emptyState">
+            <p>Cloud games cannot be listed until storage is available.</p>
           </div>
         ) : filteredGames.length === 0 ? (
           <div className="lobbyScreen__emptyState">

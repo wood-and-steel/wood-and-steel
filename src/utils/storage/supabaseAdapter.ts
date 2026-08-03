@@ -29,6 +29,7 @@ import { serializeState, deserializeState, isValidSerializedState } from '../sta
 import type { SerializedState } from '../stateSerialization';
 import { createClient, type SupabaseClient, type RealtimeChannel } from '@supabase/supabase-js';
 import { debugSessionLog } from '../debugSessionLog';
+import { CloudUnavailableError, toCloudUnavailableError } from './cloudErrors';
 
 /** Row shape from games table (state is serialized). */
 interface GamesRow {
@@ -358,7 +359,11 @@ export class SupabaseAdapter extends StorageAdapter {
 
       if (error) {
         console.error(`[SupabaseAdapter.${operation}] Error listing games:`, error.message);
-        return [];
+        const unavailable = toCloudUnavailableError(error);
+        if (unavailable) {
+          throw unavailable;
+        }
+        throw new Error(`Failed to list cloud games: ${error.message}`);
       }
 
       if (!data || !Array.isArray(data)) {
@@ -406,10 +411,17 @@ export class SupabaseAdapter extends StorageAdapter {
         return timeB - timeA;
       });
     } catch (e) {
+      if (e instanceof CloudUnavailableError) {
+        throw e;
+      }
+      const unavailable = toCloudUnavailableError(e);
+      if (unavailable) {
+        throw unavailable;
+      }
       const err = e as Error;
       console.error(`[SupabaseAdapter.${operation}] Unexpected error listing games:`, err.message);
       console.error(`[SupabaseAdapter.${operation}] Error details:`, e);
-      return [];
+      throw e instanceof Error ? e : new Error(String(e));
     }
   }
 

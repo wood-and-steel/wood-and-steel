@@ -239,7 +239,8 @@ export async function listGames(storageType: StorageType = 'local'): Promise<Gam
     const err = e as Error;
     console.error(`[${operation}] Unexpected error listing games:`, err.message);
     console.error(`[${operation}] Error details:`, e);
-    return [];
+    // Re-throw so callers (e.g. lobby) can surface cloud outages such as a paused Supabase project.
+    throw e;
   }
 }
 

@@ -17,6 +17,11 @@ import {
 export { StorageAdapter } from './storageAdapter';
 export { LocalStorageAdapter } from './localStorageAdapter';
 export { SupabaseAdapter } from './supabaseAdapter';
+export {
+  CloudUnavailableError,
+  isCloudUnreachableError,
+  toCloudUnavailableError,
+} from './cloudErrors';
 export * from './migration';
 
 /** Normalized storage type for adapter selection. */

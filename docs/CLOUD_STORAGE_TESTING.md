@@ -216,3 +216,18 @@ const adapter = getStorageAdapter();
 [Migration] Imported game: ABCDE
 [Migration] Import complete: 5 succeeded, 0 failed, 0 skipped
 ```
+
+## Before going live (paused-project / dashboard link)
+
+The lobby’s cloud-unavailable banner (paused free-tier Supabase, network failure, etc.) currently links to the **project owner’s** Supabase dashboard so a developer can sign in and resume the project. That is intentional for local/dev use only.
+
+**Do not ship this as-is for a public or multiplayer production audience.** End users cannot resume your project, and a dashboard deep-link is not a product UX.
+
+Before launch, replace or rework this path. Options include:
+
+- Use a paid Supabase plan (or other hosting) that does not auto-pause, so the failure mode is rare
+- Show a generic “cloud temporarily unavailable — try again later” message with no owner dashboard link
+- Point support/status at a public status page or contact channel you control
+- Optionally keep `VITE_SUPABASE_DASHBOARD_URL` / derived dashboard links **only in development builds** (or behind a private admin flag)
+
+Related code: `SUPABASE_DASHBOARD_URL` in `src/config/storage.js`, cloud error UI in `src/components/LobbyScreen.tsx`, reachability helpers in `src/utils/storage/cloudErrors.ts`.
