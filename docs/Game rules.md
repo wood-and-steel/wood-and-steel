@@ -1,26 +1,54 @@
 # Wood and Steel
 
-Wood and Steel is a train game for 2-5 players of growth and expansion in the age of the steam engine, starting in 1830 and running to about 1940.
+Wood and Steel is a board game for 2-5 players. Players each play the role of a rail baron, expanding their railroad empire in the age of the steam engine.
 
-Each player plays as a railroad owner, starting from a small two-city run in the eastern United States. In the beginning of the game, the country is scattered with small railroads owned both by the players and independent companies. Players pick up and deliver commodities to fulfill both private and market contracts generated randomly by the app.
+At the start of the game, each player has a two-city railroad in the eastern United States amd the rest of the map is scattered with small independent railroads. Players pick up and deliver commodities to fulfill private and market contracts, making money to build more track and upgrade their company.
 
-Each turn, players can choose to buy engines, lay track, buy independent railroads, fulfill contracts, bid for going first, and build buildings. Some cities will have a greater likelihood to grow, but that is not etched in stone. Cities that get deliveries will be more likely to grow.
+This is a board game that is under development. These rules are intended for agents and people who are creating and testing the game.
 
-## A note to AI agents
-
-This document describes a work in progress. The code in this project implements some of the app functionality described, but not all of it.
 
 ## Implementation
 
-Wood and Steel is played with physical tabletop components and a web app.
+Wood and Steel is played with physical tabletop components and a web app. On the table, players share access to a central map board, and each of them has their own set of components. Each player also runs the app on their own phone or other device.
 
-### Tabletop components
 
-The centerpiece physical component is a map board that covers the US and southern Canada. There are also player boards, cards, and counters to keep track of per-player information that is not tracked in the app.
+## Main concepts
+
+- **Railroad**. A player's collection of routes and cities.
+- **City**. A city is a place on the game board where engines move through and stop at.
+- **Active city**. A city that the app knows is controlled by a specific player, a subset of all the citiies in their railroad. The concept of "active city" is internal to the app and not shown to the players.
+- **Route**. A route connects two cities. After a player builds track on a route, they may move an engine along that route. More than 1 player can build on a route, but players a route owned by an independent railroad cannot be built on by players or other independent railroads.
+- **Independent railroad**. An app-controlled collection of routes.
+- **Commodity**. An engine can carry 0 or 1 commodity at a time. Each city supplies 0 or more commodities. The categories (e.g. "Finished goods") and colors (e.g. purple) of the commodities are only decorative.
+- **Engine**. Each player starts with 1 engine and can buy a 2nd one.
+- **Train**. In game mechanics terms, this is a synonym for Engine.
+- **Contract**. An offer to give money in exchange for delivering a commodity to a city.
+- **Money**. Players have cash on hand (in US Dollars) and can go into debt to borrow more money. The smallest unit of money in the game is $1,000.
+
+
+### Tabletop game box components
+
+- A map board of the continental United States and southern Canada showing cities, routes, and commodities. It also has spaces to track regional office ownership. ([Image of board](./map-board-full.png))
+- 5 player boards for tracking commodities on engines, upgrades purchased, and engines owned ([Image of player board](./player-board.png))
+- 5 identical decks of 9 engine cards
+- 10 engine tokens: a lighter and darker version of each of the 5 player hues (blue, tan, green, pink, red)
+- 10 commodity tokens in the same colors as the engines
+- 30 upgrade tokens: 6 in each of the darker player hues
+- 15 upgrade discs: 3 in each of the darker player hues for the Hub, Railyard, and Regional Upgrades
+- 7 markers with erasable ink: 1 in each of the darker player hues and 1 black (for independent railroads)
+
 
 ### App
 
-The app is responsible for all the random behavior in the game—think virtual decks of cards—and tracks some elements of player progress. The goal is that players keep track of the things that are interesting and fun (e.g. their track and engines), while the grunt work is delegated to the app (e.g. generating a random contract based on board state).
+The app is responsible for all the random behavior in the game, similar to virtual decks of cards. It also tracks some elements of player progress. The goal is that players keep track of the things that are interesting and fun (track, engines, upgrades, money), while the grunt work is delegated to the app (e.g. generating a random contract based on board state).
+
+Once the game is started, each player sees four tabs in the app:
+
+- Contracts, where they see and manage their private contracts and the shared market contracts
+- Commodities, a reference to which commodities are available in which cities
+- Railroads, a list of the independent railroads and their routes
+- Cities, a reference list of cities in the game; this tab is only 
+
 
 #### Global state information
 
@@ -28,17 +56,18 @@ The app is responsible for all the random behavior in the game—think virtual d
 * Phase of the game
 * Current player
 * All contracts
-* Independent railroads  
-  * name  
+* Independent railroads
+  * name
   * routes it contains (1 or more)  
 * Metadata
-  * game unique ID  
-  * start timestamp  
+  * game unique ID
+  * start timestamp
   * current turn number
 
 #### Per-player state information
 
 * Name
+* Color
 * Active cities: starting cities and all cities they have fulfilled contracts for
 * Hub city, once the player has purchased a hub
 
@@ -50,9 +79,11 @@ The app is responsible for all the random behavior in the game—think virtual d
 * Whether the contract has been fulfilled or not
 * Type (market or private)
 
+
+
 ## Object of the game and scoring
 
-To be the player with the most railroad ties. Railroad ties are awarded these ways during gameplay:
+The player with the most railroad ties wins. Railroad ties are awarded these ways during gameplay:
 
 - **Contract fulfillment**: Fulfilling a contract is worth 1 to 4 railroad ties depending on the minimum region boundaries that must be crossed to bring a commodity to the destination city. If the commodity is available in the same region as the destination, 1 tie is awarded. Each region boundary that must be crossed increases the value of the contract by 1.
 - **Connection bonuses** are generated by the app and give railroad ties for connecting certain locations (i.e. East Coast to West Coast) or specific cities. The value in railroad ties is based on the length of track required.
@@ -61,44 +92,67 @@ To be the player with the most railroad ties. Railroad ties are awarded these wa
 
 The app currently shows the total railroad ties earned from contract fulfillment, but not any of the bonuses.
 
+
 ### End of game scoring
 
-When a player collects 30 railroad ties or more, the game is over. In addition to railroad ties scored during the game, these bonuses are awarded:
+When a player collects 30 or more railroad ties from contract fulfillment, the game is over. In addition to railroad ties scored during the game, these bonuses are awarded:
 
-- **Regional Office:** If a player has met the requirements for and purchased a Regional Office, they are awarded bonus railroad ties.
+- **Regional Office:** If a player has mpurchased a Regional Office, they are awarded bonus railroad ties.
+
 
 ## Set Up
 
-On the tabletop, each player chooses a color and starts with a John Bull engine and $10,000.
+### Map board
 
-In the app, each player chooses a starting route by ranking their top three choices from the list below. The app resolves their choices and tells all players the starting routes.
+Place the map board in the center of the table where all players can see and reach it.
+
+
+### Player boards
+
+On the tabletop, each player chooses a color and takes a player board, an engine deck, and the tokens, discs, and marker of their color. Each player should:
+
+1. Place their board in front of them.
+2. Sort the engine deck face up from lowest to highest value amd put it next to their board.
+3. Put the 3 discs on their respective places on the player board.
+4. Put their engine, commodity, and upgrade tokens near their player board.
+5. On a piece of peper, make a note they have $10,000 cash and $0 debt.
+
+[Rendering of player's board set up with red pieces](./player-board-set-up-rendering.png)
+
+
+### App
+
+#### Choose starting cities
+
+One player, the host, starts the app on their device by visiting https://woodandsteel.pettiross.com/. From the Cloud (BYOD) tab, click the button with the number of players to start a new game. The other players start the app and join the game using the 5-letter code from the host's game.
+
+The app randomly chooses a player order. In turn, each player chooses a starting route. Players cannot share starting routes or citites, so only one player can have either New York-Philadelphia or Philadelphia-Washington.
 
 Starting route options:
-* Montreal-Quebec City
-* Boston-Portland ME  
-* New York-Philadelphia
-* Philadelphia-Washington  
-* Norfolk-Raleigh
-* Charleston-Savannah
 
-The app currently decides player order randomly. Eventually, the app will decide the starting player based on who received the starting least desirable position on the map. Design idea: Balance the starting capital, etc. to equalize the starting placement?
+- Montreal-Quebec City
+- Boston-Portland ME  
+- New York-Philadelphia
+- Philadelphia-Washington  
+- Norfolk-Raleigh
+- Charleston-Savannah
 
-Then, given the active cites for each player, the app generates a Private Contract for each player. Market Contracts for the game will not be created until a player is eligible to use one.
+After choosing their starting route, the player uses their marker to draw a line on the route on the map and puts one of their two engine markers on one of the two cities it connects. The app notes the starting cities as the player's first two active cities.
 
-Each player places an engine marker on one of their two starting cities on the board.
 
-App places independent railroads:
+#### Indepdendent railroads
 
-* Independent railroads start in any city at least 2 segments away from any of the possible starting cities and at least 1 segment away from each other.
-* The app will place them to fill in the most spacious areas so there is a rough balance of open space for all players. (Not yet implemented)
+After all players have chosen starting cities, the app creates independent railroads and gives each of them a starting route. Using the black marker, the host marks the routes on the map board.
 
-At this point, game play starts, transitioning the app phase from **setup** to **play**.
+When this is done, setup is complete. Players can switch to the Contracts tab to see their first private contract, generated based on their active cities.
+
+
 
 ## Contracts
 
 The app generates contracts as described later in this document. Fulfilling a contract is the way players make money and earn railroad ties. Each player always has a Private Contract and may also hold a Market Contract.
 
-Contracts represent a request to deliver a commodity to a specific city. Players fulfill a contract by running one of their trains to a city that supplies the named commodity, then running that train to the destination city.
+Players fulfill a contract by running one of their trains to a city that supplies the named commodity, then running that train to the destination city.
 
 ### Types of contracts
 
@@ -115,12 +169,15 @@ The available actions are:
 * Run trains  
 * Build track  
 * Buy an engine  
-* Merge with an independent railroad  
-* Go first the next round  
+* Acquire an independent railroad  
 * Borrow money  
 * Repay debt  
 * Buy an upgrade  
 * Discard and draw a new private contract  
+
+Actions that are not yet available in the game, but will be in the future:
+
+* Go first the next round
 
 ### Run trains
 
