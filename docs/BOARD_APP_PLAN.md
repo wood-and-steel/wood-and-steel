@@ -1,0 +1,147 @@
+# Board App Plan (`/board`)
+
+A shared, playtest-only digital map board that mirrors the physical board: track, engine tokens, Hub/Railyard tokens, Regional Office discs, and independent railroad routes. Built only on request; the main app neither imports nor depends on it.
+
+## Decisions (from Q&A, 2026-11-01)
+
+| Topic | Decision |
+|---|---|
+| Relationship to `G`/`ctx` | **Read-only.** The board never calls moves or `saveGameState`. Anything the app can change is only changeable from the app. |
+| Board-only state | Player track (incl. parallel), engine token positions, Railyard tokens. Stored outside `G`/`ctx`. |
+| Displayed from `G` (read-only) | Independent railroad routes, Hub cities, Regional Offices, current player, round, phase, player names/colors. |
+| Persistence / sync | New Supabase table `board_states` (one row per game code) with Realtime. localStorage fallback for local games. Works on one shared screen or several synced browsers. |
+| Build gating | Copy the `/sim` pattern: `__INCLUDE_BOARD__` flag, `npm run build:board`, always on in dev, lazy-loaded, excluded from `npm run build`. |
+| Map art | `docs/map-board-full.png` as background; route curves **approximated from the PNG** (auto-trace + dev fix-up tool). No SVG source exists. |
+| Seeding | On first open, draw each player's starting route from `G`. **No engines placed.** After that, all board state is independent. |
+| Claim gesture | Click a route. Unclaimed → instant claim for `ctx.currentPlayer`. Claimed (or shift/right-click) → popover. |
+| Tokens | Drag and drop between cities and per-player trays. |
+| Rule enforcement | **Silent.** Rules only inform defaults (current player). No warnings, no confirms. |
+| Acquisitions | When an indie railroad disappears from `G`, auto-convert its routes to board track for the acquiring player. |
+| Undo / history | None. |
+| Layout | Non-responsive, min width 1000px. Default zoom = fit browser width; zoom in/out + pan. |
+
+## Architecture
+
+### Isolation and gating
+
+- All code lives in **`src/board/`** (plus a dev-only `scripts/trace-routes.py`). The main app imports nothing from it.
+- `vite.config.js`: `__INCLUDE_BOARD__: ['development', 'test', 'board'].includes(mode)`; declare in `src/global.d.ts`.
+- `package.json`: `"build:board": "vite build --mode board"`.
+- `App.tsx`: one lazy branch alongside `/sim`, e.g. `if (__INCLUDE_BOARD__ && location.pathname.startsWith('/board') && BoardApp) …`. Wrapped in `StorageProvider` but **not** `AppContent`.
+- Removing `src/board/` and that branch leaves the main app fully working. If the `board_states` table doesn't exist, only the board shows an error.
+
+### Reading the game (read-only)
+
+- URL: `/board?game=ABCDE`. With no code, show a small picker using `listGames('cloud')` (and local games).
+- `useBoardGameSync(code)`: `loadGameState` + `adapter.subscribeToGame`, hydrating the existing `useGameStore` with `{ G, ctx }` (complies with AGENTS.md: there's no second store for game state). Never calls `gameActions`, `moves`, or `saveGameState`.
+- A vitest guard asserts no file in `src/board/` imports `stores/gameActions`, `stores/moves`, or `saveGameState`.
+
+### Board state
+
+New Zustand store `src/board/boardStore.ts`. This is a documented exception in AGENTS.md: it's playtest-only and holds no `G`/`ctx` data.
+
+```ts
+interface BoardState {
+  version: 1;
+  seeded: boolean;
+  /** routeKey -> up to 2 owners [primary, parallel] as playerIDs */
+  track: Record<string, string[]>;
+  /** playerID -> [lightEngineCity, darkEngineCity]; null = in tray */
+  engines: Record<string, [string | null, string | null]>;
+  /** playerID -> city key or null (one Railyard per player) */
+  railyards: Record<string, string | null>;
+  /** last-seen G.independentRailroads (name -> route keys), for acquisition detection */
+  seenIndependentRailroads: Record<string, string[]>;
+}
+```
+
+- All edits are **pure ops** (`claimRoute`, `setRouteOwners`, `unclaimRoute`, `moveEngine`, `moveRailyard`, `applyAcquisition`) in `boardOps.ts`, so they can be unit-tested and replayed.
+- **Persistence:** `BoardStateAdapter` with `supabase` and `localStorage` implementations, picked by the game's storage type. Each save sends the expected `updated_at`. On conflict, the board reloads, re-applies the op to the fresh state, and saves again. This avoids clobbering when two screens edit at once.
+
+```sql
+create table board_states (
+  code text primary key references games(code) on delete cascade,
+  state jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter publication supabase_realtime add table board_states;
+-- RLS policies mirroring the existing `games` table
+```
+
+SQL is kept in `src/board/supabase/board_states.sql`. Jeff applies it in the Supabase dashboard.
+
+### Seeding (first open, no row yet)
+
+- For each player, find the starting route whose two cities are both in `activeCities` (from the six starting-route options) and set it as that player's track.
+- Snapshot `G.independentRailroads` into `seenIndependentRailroads`. Engines and railyards start in the trays. Set `seeded: true`.
+
+### Acquisition auto-convert
+
+On every `G` update, diff `seenIndependentRailroads` against `G.independentRailroads`:
+
+- **Railroad removed:** pick the acquirer as the player whose `activeCities` now include all of the railroad's cities (the acquire move adds them). If several players qualify, prefer `ctx.currentPlayer`. Add its routes to that player's track: primary if empty, otherwise parallel.
+- **Routes added (end-of-round growth):** just update the snapshot.
+- The snapshot and the track change are written in the same save, so the conflict check keeps two open boards from converting twice.
+
+## Rendering
+
+- One `<svg>` in **full-PNG pixel space** (viewBox `0 0 6660 4173`). Background `<image>` is a pre-scaled WebP of the board art (~3330px wide, generated once) to keep it light.
+- Layers, bottom to top:
+  1. Background art
+  2. Indie routes (black, from `G`)
+  3. Player track (player hue; a parallel owner is drawn as a second stroke offset from the curve)
+  4. Hub markers (from `G.players[].hubCity`)
+  5. Regional Office discs in the printed Regional Offices panel (from `G.players[].regionalOffice`)
+  6. Railyard tokens
+  7. Engine tokens (light/dark shade of the player hue)
+  8. Invisible wide-stroke route hit areas
+- **Zoom/pan:** fit to width by default; `+`/`−`/reset buttons and Ctrl/⌘+wheel; drag empty space to pan when zoomed. Body `min-width: 1000px`.
+- **Chrome:** a slim top bar (game code, phase, round, current player, sync status, zoom) and a player tray strip (name, color, unplaced engines and railyard, current player highlighted).
+- **Hover tooltip on a route:** key, length, mountainous. It's informational only.
+- Styling follows `CSS_ARCHITECTURE.md`: `src/shared/styles/board.css` with BEM classes, no inline styles. Dynamic SVG attributes (coordinates, fills) are attributes, not style objects.
+
+## Interactions
+
+| Action | Gesture |
+|---|---|
+| Claim unclaimed route | Click → owner = current player |
+| Edit claimed route | Click (or shift/right-click any route) → popover: set primary owner, add/change parallel owner (current player preselected), unclaim. Player swatches in play order. |
+| Move engine / railyard | Drag from tray or city; snaps to nearest city within a radius; drop on tray (or off-board) to remove |
+| No current player (e.g. setup phase) | Click opens the popover instead of instant-claiming |
+
+Anything is allowed: claims off-network, more than 2 builds per turn, engines anywhere, and claims overlapping indie routes (both drawn).
+
+## Route geometry (milestone 0)
+
+The full board PNG (6660×4173) looks like a 6× scale of `simple-map.png` (1110×696), so the existing `CITY_PIXELS` give a starting estimate.
+
+1. **City points:** scale `CITY_PIXELS` ×6, then refine each point to the center of the nearest white city circle (circle detection). Output to `src/board/geometry/cityPoints.ts`. Regional Office disc centers are added by hand (6 points).
+2. **Route curves:** `scripts/trace-routes.py` (OpenCV/scikit-image, dev-only, never bundled):
+   - mask the white route lines
+   - for each route, find a path along the mask between its two city circles
+   - fit 1–2 cubic Béziers
+   - output `src/board/geometry/routePaths.ts` (`routeKey -> SVG path d`)
+   - flag low-confidence fits
+3. **Fix-up tool:** `/board/edit-paths` (dev-only) overlays every path on the art, highlights flagged routes, lets you drag endpoints and control points, and saves via the File System Access API (same approach as `/pick-coords`).
+
+## Milestones
+
+1. **M0 Geometry:** city points, traced route paths, fix-up page; Jeff reviews the overlay.
+2. **M1 Shell:** flag/script/route, lazy load, read-only `G` sync, background, indie routes, hubs, RO discs, zoom/pan, top bar, trays.
+3. **M2 Board state:** ops, store, adapters (Supabase + local), SQL, conflict-retry, seeding.
+4. **M3 Track:** click-claim, popover, parallel rendering.
+5. **M4 Tokens:** engine and railyard drag/drop.
+6. **M5 Acquisitions:** diff and auto-convert.
+7. **M6 Hardening:**
+   - vitest for ops, seeding, acquisition diff, import guard
+   - `npm run build` produces no board chunk (grep `dist/` for `board_states`)
+   - typecheck
+   - docs: `docs/BOARD_AGENT_GUIDE.md`, AGENTS.md exception, BUILD_AND_RUN, GAME_DATA_SCHEMA note
+
+## Open questions (non-blocking; defaults in brackets)
+
+- **Player colors:** the app palette (`#f83765`, `#ba951e`, `#0e86f4`, `#31b027`, `#505050`) doesn't match the physical hues (blue, tan, green, pink, red). [Use `avatarColor` with derived light/dark shades for engines.]
+- **Owners per route:** [cap at 4, primary + parallel]
+- **Railyard tokens per player:** [1].
+- **Hub token on the board:** read-only from `G`. Should the board also show where a player *physically* put their Hub marker if it differs? [No.]
+- **Local-storage games:** [Not supported].
