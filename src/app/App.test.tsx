@@ -1,11 +1,16 @@
 /// <reference types="@testing-library/jest-dom" />
 import { test, expect } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import App from './App';
 
 test('renders lobby screen on initial load', async () => {
   await act(async () => {
-    render(<App />);
+    render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>
+    );
   });
 
   await waitFor(() => {
