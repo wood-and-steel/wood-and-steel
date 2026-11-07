@@ -12,7 +12,7 @@ Wood and Steel is a React app that is a companion to a board game in development
 
 This application handles the random elements and some computational aspects of the game, such as generating contracts (both private and market contracts), managing independent railroads, tracking player progress, and determining game phases. The goal is to allow players to focus on the engaging physical components of the game while the app handles the calculations and random generation that would traditionally require cards or dice.
 
-The project is currently in active development, with core functionality implemented for contract generation, independent railroad management, and game state tracking. Both hotseat and one-player-per-screen are currently implemented, but hotseat mode is likely to be removed before launch. For detailed information about the game rules, mechanics, and implementation status, see [Game rules.md](docs/Game%20rules.md).
+The project is currently in active development, with core functionality implemented for contract generation, independent railroad management, and game state tracking. Each player plays on their own device (BYOD), joining the host's game with a game code; games are stored in Supabase. For detailed information about the game rules, mechanics, and implementation status, see [Game rules.md](docs/Game%20rules.md).
 
 ## Available Scripts
 

@@ -9,7 +9,7 @@ A shared, playtest-only digital map board that mirrors the physical board: track
 | Relationship to `G`/`ctx` | **Read-only.** The board never calls moves or `saveGameState`. Anything the app can change is only changeable from the app. |
 | Board-only state | Player track (incl. parallel), engine token positions, Railyard tokens. Stored outside `G`/`ctx`. |
 | Displayed from `G` (read-only) | Independent railroad routes, Hub cities, Regional Offices, current player, round, phase, player names/colors. |
-| Persistence / sync | New Supabase table `board_states` (one row per game code) with Realtime. localStorage fallback for local games. Works on one shared screen or several synced browsers. |
+| Persistence / sync | New Supabase table `board_states` (one row per game code) with Realtime. Works on one shared screen or several synced browsers. |
 | Build gating | Copy the `/sim` pattern: `__INCLUDE_BOARD__` flag, `npm run build:board`, always on in dev, lazy-loaded, excluded from `npm run build`. |
 | Map art | `docs/map-board-full.png` as background; route curves **approximated from the PNG** (auto-trace + dev fix-up tool). No SVG source exists. |
 | Seeding | On first open, draw each player's starting route from `G`. **No engines placed.** After that, all board state is independent. |
@@ -32,7 +32,7 @@ A shared, playtest-only digital map board that mirrors the physical board: track
 
 ### Reading the game (read-only)
 
-- URL: `/board?game=ABCDE`. With no code, show a small picker using `listGames('cloud')` (and local games).
+- URL: `/board?game=ABCDE`. With no code, show a small picker using `listGames()`.
 - `useBoardGameSync(code)`: `loadGameState` + `adapter.subscribeToGame`, hydrating the existing `useGameStore` with `{ G, ctx }` (complies with AGENTS.md: there's no second store for game state). Never calls `gameActions`, `moves`, or `saveGameState`.
 - A vitest guard asserts no file in `src/board/` imports `stores/gameActions`, `stores/moves`, or `saveGameState`.
 
@@ -56,7 +56,7 @@ interface BoardState {
 ```
 
 - All edits are **pure ops** (`claimRoute`, `setRouteOwners`, `unclaimRoute`, `moveEngine`, `moveRailyard`, `applyAcquisition`) in `boardOps.ts`, so they can be unit-tested and replayed.
-- **Persistence:** `BoardStateAdapter` with `supabase` and `localStorage` implementations, picked by the game's storage type. Each save sends the expected `updated_at`. On conflict, the board reloads, re-applies the op to the fresh state, and saves again. This avoids clobbering when two screens edit at once.
+- **Persistence:** `BoardStateAdapter` backed by Supabase (one implementation; the interface stays so tests can use an in-memory fake). Each save sends the expected `updated_at`. On conflict, the board reloads, re-applies the op to the fresh state, and saves again. This avoids clobbering when two screens edit at once.
 
 ```sql
 create table board_states (
@@ -129,7 +129,7 @@ The full board PNG (6660×4173) looks like a 6× scale of `simple-map.png` (1110
 1. **M0 Geometry:** city points, traced route paths, fix-up page; Jeff reviews the overlay.
    - *Status (2026-11-01):* built. All 56 cities and the 6 RO discs are auto-detected, and 105/105 routes have paths. The PNG is not an exact 6× scale of `simple-map.png`, so cities are matched by an affine fit plus optimal assignment. Three routes have **no stroke in the art** and fall back to flagged straight lines: Chicago–Saint Louis (only its price pill is printed), Flagstaff–Phoenix, and Los Angeles–Phoenix. Re-running `scripts/trace-routes.py` keeps routes listed in `EDITED_ROUTES`.
 2. **M1 Shell:** flag/script/route, lazy load, read-only `G` sync, background, indie routes, hubs, RO discs, zoom/pan, top bar, trays.
-3. **M2 Board state:** ops, store, adapters (Supabase + local), SQL, conflict-retry, seeding.
+3. **M2 Board state:** ops, store, Supabase adapter, SQL, conflict-retry, seeding.
 4. **M3 Track:** click-claim, popover, parallel rendering.
 5. **M4 Tokens:** engine and railyard drag/drop.
 6. **M5 Acquisitions:** diff and auto-convert.
@@ -145,4 +145,3 @@ The full board PNG (6660×4173) looks like a 6× scale of `simple-map.png` (1110
 - **Owners per route:** [cap at 4, primary + parallel]
 - **Railyard tokens per player:** [1].
 - **Hub token on the board:** read-only from `G`. Should the board also show where a player *physically* put their Hub marker if it differs? [No.]
-- **Local-storage games:** [Not supported].

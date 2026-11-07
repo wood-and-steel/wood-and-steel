@@ -50,7 +50,7 @@ export function checkPhaseTransition(G: GameState, ctx: GameContext): boolean {
     };
   });
 
-  // Persist state after transition (when we have a game code, e.g. BYOD)
+  // Persist state after transition (when we have a game code)
   const gameCode = getCurrentGameCode();
   if (gameCode) {
     const updatedState = useGameStore.getState();

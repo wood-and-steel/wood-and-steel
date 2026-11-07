@@ -1,7 +1,7 @@
 /**
  * Game Manager - Handles multiple game instances with unique four-letter codes
  * Works with Zustand store state persistence
- * Uses storage adapter pattern to support multiple storage backends (localStorage, Supabase, etc.)
+ * Games are stored in Supabase via the storage adapter (see ./storage).
  */
 
 import { getStorageAdapter } from './storage/index';
@@ -11,16 +11,16 @@ import type { SerializedState } from './stateSerialization';
 import { shuffleArray } from './random';
 import type { GameState, GameContext } from '../stores/gameStore';
 
-export type StorageType = 'local' | 'cloud';
+/** localStorage key for this device's current game code. */
+const CURRENT_GAME_KEY = 'current_game_cloud';
 
-// Storage keys for current game (separate for local and cloud)
-const CURRENT_GAME_LOCAL_KEY = 'current_game_local';
-const CURRENT_GAME_CLOUD_KEY = 'current_game_cloud';
-
-/** Metadata stored per game (BYOD fields optional). */
+/**
+ * Metadata stored per game. `gameMode` is always 'byod' for games this app creates;
+ * rows created by older app versions may have another value and are rejected.
+ */
 export interface GameMetadata {
   lastModified: string;
-  gameMode: 'hotseat' | 'byod';
+  gameMode: string;
   hostDeviceId?: string;
   playerSeats?: Record<string, PlayerSeat>;
 }
@@ -85,13 +85,17 @@ export function isValidGameCode(code: string): boolean {
   return /^[A-Z]{4,5}$/.test(normalized);
 }
 
-function getAdapter(storageType: StorageType | null): StorageAdapter {
-  return getStorageAdapter(storageType ?? undefined) as StorageAdapter;
+function getAdapter(): StorageAdapter {
+  return getStorageAdapter();
+}
+
+/** True for games created by this app (BYOD). Rows from older app versions return false. */
+export function isSupportedGameMetadata(metadata: Record<string, unknown> | null | undefined): boolean {
+  return metadata?.gameMode === 'byod';
 }
 
 export async function switchToGame(
-  code: string,
-  storageType: StorageType = 'local'
+  code: string
 ): Promise<boolean> {
   const operation = 'switchToGame';
 
@@ -103,14 +107,14 @@ export async function switchToGame(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
     const exists = await adapter.gameExists(normalizedCode);
     if (!exists) {
       console.warn(`[${operation}] Game not found:`, normalizedCode);
       return false;
     }
 
-    setCurrentGameCode(normalizedCode, storageType);
+    setCurrentGameCode(normalizedCode);
     return true;
   } catch (e) {
     const err = e as Error;
@@ -121,8 +125,7 @@ export async function switchToGame(
 }
 
 export async function deleteGame(
-  code: string,
-  storageType: StorageType | null = null
+  code: string
 ): Promise<boolean> {
   const operation = 'deleteGame';
 
@@ -134,17 +137,7 @@ export async function deleteGame(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    if (storageType) {
-      const adapter = getAdapter(storageType);
-      return await adapter.deleteGame(normalizedCode);
-    } else {
-      // Try both storage types (backward compatibility)
-      const localAdapter = getAdapter('local');
-      const cloudAdapter = getAdapter('cloud');
-      const localResult = await localAdapter.deleteGame(normalizedCode);
-      const cloudResult = await cloudAdapter.deleteGame(normalizedCode);
-      return localResult || cloudResult;
-    }
+    return await getAdapter().deleteGame(normalizedCode);
   } catch (e) {
     const err = e as Error;
     console.error(`[${operation}] Unexpected error deleting game "${normalizedCode}":`, err.message);
@@ -158,34 +151,21 @@ export async function listGameCodes(): Promise<string[]> {
   return games.map((game) => game.code).sort();
 }
 
-export async function gameExists(code: string, storageType: StorageType): Promise<boolean> {
+export async function gameExists(code: string): Promise<boolean> {
   if (!isValidGameCode(code)) {
     return false;
   }
 
   const normalizedCode = normalizeGameCode(code);
-  const adapter = getAdapter(storageType);
+  const adapter = getAdapter();
   return await adapter.gameExists(normalizedCode);
 }
 
-/** When storageType is null, uses storage_preference from localStorage. */
-export function getCurrentGameCode(storageType: StorageType | null = null): string | null {
-  if (storageType === 'local') {
-    return localStorage.getItem(CURRENT_GAME_LOCAL_KEY);
-  }
-  if (storageType === 'cloud') {
-    return localStorage.getItem(CURRENT_GAME_CLOUD_KEY);
-  }
-
-  const storagePreference = localStorage.getItem('storage_preference');
-  const currentStorageType: StorageType =
-    storagePreference === 'local' || storagePreference === 'cloud' ? storagePreference : 'local';
-
-  const key = currentStorageType === 'cloud' ? CURRENT_GAME_CLOUD_KEY : CURRENT_GAME_LOCAL_KEY;
-  return localStorage.getItem(key);
+export function getCurrentGameCode(): string | null {
+  return localStorage.getItem(CURRENT_GAME_KEY);
 }
 
-export function setCurrentGameCode(code: string, storageType: StorageType | null = null): void {
+export function setCurrentGameCode(code: string): void {
   const operation = 'setCurrentGameCode';
 
   if (!isValidGameCode(code)) {
@@ -194,19 +174,8 @@ export function setCurrentGameCode(code: string, storageType: StorageType | null
     throw error;
   }
 
-  const normalizedCode = normalizeGameCode(code);
-
-  let typeToUse: StorageType = storageType ?? 'local';
-  if (!typeToUse) {
-    const storagePreference = localStorage.getItem('storage_preference');
-    typeToUse =
-      storagePreference === 'local' || storagePreference === 'cloud' ? storagePreference : 'local';
-  }
-
-  const key = typeToUse === 'cloud' ? CURRENT_GAME_CLOUD_KEY : CURRENT_GAME_LOCAL_KEY;
-
   try {
-    localStorage.setItem(key, normalizedCode);
+    localStorage.setItem(CURRENT_GAME_KEY, normalizeGameCode(code));
   } catch (e) {
     const err = e as Error;
     const error = new Error(`Failed to set current game code: ${err.message}`);
@@ -216,24 +185,16 @@ export function setCurrentGameCode(code: string, storageType: StorageType | null
   }
 }
 
-export function clearCurrentGameCode(storageType: StorageType | null = null): void {
-  let typeToUse: StorageType = storageType ?? 'local';
-  if (!typeToUse) {
-    const storagePreference = localStorage.getItem('storage_preference');
-    typeToUse =
-      storagePreference === 'local' || storagePreference === 'cloud' ? storagePreference : 'local';
-  }
-
-  const key = typeToUse === 'cloud' ? CURRENT_GAME_CLOUD_KEY : CURRENT_GAME_LOCAL_KEY;
-  localStorage.removeItem(key);
+export function clearCurrentGameCode(): void {
+  localStorage.removeItem(CURRENT_GAME_KEY);
 }
 
 /** Games with codes and basic info; sorted by lastModified descending (most recent first). */
-export async function listGames(storageType: StorageType = 'local'): Promise<GameListItem[]> {
+export async function listGames(): Promise<GameListItem[]> {
   const operation = 'listGames';
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
     return await adapter.listGames();
   } catch (e) {
     const err = e as Error;
@@ -244,61 +205,45 @@ export async function listGames(storageType: StorageType = 'local'): Promise<Gam
   }
 }
 
-interface CreateNewGameOptions {
-  gameMode?: 'hotseat' | 'byod';
-  hostDeviceId?: string | null;
+export interface CreateNewGameOptions {
+  hostDeviceId: string;
   numPlayers?: number;
   hostPlayerName?: string;
 }
 
-export async function createNewGame(
-  storageType: StorageType = 'local',
-  options: CreateNewGameOptions = {}
-): Promise<string> {
+/** Create a new game hosted by `hostDeviceId`. It starts in waiting_for_players. */
+export async function createNewGame(options: CreateNewGameOptions): Promise<string> {
   const operation = 'createNewGame';
 
-  const { gameMode = 'hotseat', hostDeviceId = null, numPlayers = 3, hostPlayerName } = options;
+  const { hostDeviceId, numPlayers = 3, hostPlayerName } = options;
 
-  if (gameMode !== 'hotseat' && gameMode !== 'byod') {
-    throw new Error(`Invalid gameMode: ${gameMode}. Must be 'hotseat' or 'byod'.`);
-  }
-
-  if (gameMode === 'byod' && !hostDeviceId) {
-    throw new Error('BYOD games require a hostDeviceId');
-  }
-
-  if (gameMode === 'byod' && storageType !== 'cloud') {
-    throw new Error('BYOD games require cloud storage');
+  if (!hostDeviceId) {
+    throw new Error('New games require a hostDeviceId');
   }
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
     const code = await generateUniqueGameCode();
-    setCurrentGameCode(code, storageType);
+    setCurrentGameCode(code);
 
+    const initialHostName =
+      hostPlayerName && hostPlayerName.trim() ? hostPlayerName.trim() : 'Host';
     const metadata: GameMetadata = {
       lastModified: new Date().toISOString(),
-      gameMode,
-    };
-
-    if (gameMode === 'byod' && hostDeviceId) {
-      metadata.hostDeviceId = hostDeviceId;
-      const initialHostName =
-        hostPlayerName && hostPlayerName.trim() ? hostPlayerName.trim() : 'Host';
-      metadata.playerSeats = {
+      gameMode: 'byod',
+      hostDeviceId,
+      playerSeats: {
         [hostDeviceId]: {
           joinedAt: new Date().toISOString(),
           playerName: initialHostName,
         },
-      };
-    }
+      },
+    };
 
-    // BYOD: initial phase is waiting_for_players; hotseat: setup
-    const initialPhase = gameMode === 'byod' ? 'waiting_for_players' : 'setup';
     const initialState: SerializedState = {
       G: { contracts: [], players: [], independentRailroads: {} },
       ctx: {
-        phase: initialPhase,
+        phase: 'waiting_for_players',
         currentPlayer: '0',
         numPlayers,
         playOrder: Array.from({ length: numPlayers }, (_, i) => String(i)),
@@ -316,7 +261,7 @@ export async function createNewGame(
     console.info(
       `[${operation}] Created new game with code:`,
       code,
-      `(storage: ${storageType}, mode: ${gameMode}, numPlayers: ${numPlayers})`
+      `(numPlayers: ${numPlayers})`
     );
     return code;
   } catch (e) {
@@ -333,8 +278,7 @@ const lastModifiedCache = new Map<string, string>();
 export async function saveGameState(
   code: string,
   G: GameState,
-  ctx: GameContext,
-  storageType: StorageType | null = null
+  ctx: GameContext
 ): Promise<boolean> {
   const operation = 'saveGameState';
 
@@ -365,23 +309,7 @@ export async function saveGameState(
       ctx as unknown as Record<string, unknown>
     );
 
-    // Resolve adapter: use storageType when provided; otherwise which current-game key has this code (BYOD saves must go to cloud)
-    let adapterStorageType: StorageType;
-    if (storageType === 'local' || storageType === 'cloud') {
-      adapterStorageType = storageType;
-    } else {
-      const localCode = localStorage.getItem(CURRENT_GAME_LOCAL_KEY);
-      const cloudCode = localStorage.getItem(CURRENT_GAME_CLOUD_KEY);
-      if (cloudCode === normalizedCode) {
-        adapterStorageType = 'cloud';
-      } else if (localCode === normalizedCode) {
-        adapterStorageType = 'local';
-      } else {
-        adapterStorageType = 'local';
-      }
-    }
-
-    const adapter = getAdapter(adapterStorageType);
+    const adapter = getAdapter();
     let existingMetadata: Record<string, unknown> = {};
     try {
       const meta = await adapter.getGameMetadata(normalizedCode);
@@ -454,8 +382,7 @@ export function updateLastModifiedCache(code: string, lastModified: string): voi
 }
 
 export async function loadGameState(
-  code: string,
-  storageType: StorageType | null = null
+  code: string
 ): Promise<{ G: GameState; ctx: GameContext } | null> {
   const operation = 'loadGameState';
 
@@ -467,40 +394,17 @@ export async function loadGameState(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    if (storageType) {
-      const adapter = getAdapter(storageType);
-      const state = await adapter.loadGame(normalizedCode);
+    const adapter = getAdapter();
+    const state = await adapter.loadGame(normalizedCode);
 
-      if (state && adapter.getLastModified && typeof adapter.getLastModified === 'function') {
-        const lastModified = await adapter.getLastModified(normalizedCode);
-        if (lastModified) {
-          lastModifiedCache.set(normalizedCode, lastModified);
-        }
+    if (state && adapter.getLastModified && typeof adapter.getLastModified === 'function') {
+      const lastModified = await adapter.getLastModified(normalizedCode);
+      if (lastModified) {
+        lastModifiedCache.set(normalizedCode, lastModified);
       }
-
-      return state as { G: GameState; ctx: GameContext } | null;
-    } else {
-      // No storageType: try cloud first, then local
-      const localAdapter = getAdapter('local');
-      const cloudAdapter = getAdapter('cloud');
-
-      let state = await cloudAdapter.loadGame(normalizedCode);
-      if (state) {
-        if (
-          cloudAdapter.getLastModified &&
-          typeof cloudAdapter.getLastModified === 'function'
-        ) {
-          const lastModified = await cloudAdapter.getLastModified(normalizedCode);
-          if (lastModified) {
-            lastModifiedCache.set(normalizedCode, lastModified);
-          }
-        }
-        return state as unknown as { G: GameState; ctx: GameContext };
-      }
-
-      state = await localAdapter.loadGame(normalizedCode);
-      return state as unknown as { G: GameState; ctx: GameContext } | null;
     }
+
+    return state as { G: GameState; ctx: GameContext } | null;
   } catch (e) {
     const err = e as Error;
     console.error(
@@ -526,8 +430,7 @@ export const SeatAssignmentError = {
 } as const;
 
 export async function getGameMetadata(
-  code: string,
-  storageType: StorageType = 'cloud'
+  code: string
 ): Promise<Record<string, unknown> | null> {
   const operation = 'getGameMetadata';
 
@@ -539,7 +442,7 @@ export async function getGameMetadata(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
     return await adapter.getGameMetadata(normalizedCode);
   } catch (e) {
     const err = e as Error;
@@ -553,8 +456,7 @@ export async function getGameMetadata(
 
 export async function updateGameMetadata(
   code: string,
-  metadata: Record<string, unknown>,
-  storageType: StorageType = 'cloud'
+  metadata: Record<string, unknown>
 ): Promise<boolean> {
   const operation = 'updateGameMetadata';
 
@@ -566,7 +468,7 @@ export async function updateGameMetadata(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
     return await adapter.updateGameMetadata(normalizedCode, metadata);
   } catch (e) {
     const err = e as Error;
@@ -580,8 +482,7 @@ export async function updateGameMetadata(
 
 export async function assignPlayerSeat(
   code: string,
-  deviceId: string,
-  storageType: StorageType = 'cloud'
+  deviceId: string
 ): Promise<SeatAssignmentResult> {
   const operation = 'assignPlayerSeat';
 
@@ -598,7 +499,7 @@ export async function assignPlayerSeat(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
 
     const metadata = (await adapter.getGameMetadata(normalizedCode)) as unknown as GameMetadata | null;
 
@@ -607,9 +508,9 @@ export async function assignPlayerSeat(
       return { success: false, error: SeatAssignmentError.GAME_NOT_FOUND };
     }
 
-    if (metadata.gameMode !== 'byod') {
+    if (!isSupportedGameMetadata(metadata as unknown as Record<string, unknown>)) {
       console.error(
-        `[${operation}] Game "${normalizedCode}" is not a BYOD game (mode: ${metadata.gameMode})`
+        `[${operation}] Game "${normalizedCode}" uses an unsupported mode (${metadata.gameMode})`
       );
       return { success: false, error: SeatAssignmentError.WRONG_GAME_MODE };
     }
@@ -691,8 +592,7 @@ export async function assignPlayerSeat(
 export async function updatePlayerName(
   code: string,
   deviceId: string,
-  playerName: string,
-  storageType: StorageType = 'cloud'
+  playerName: string
 ): Promise<{ success: boolean; error?: string }> {
   const operation = 'updatePlayerName';
 
@@ -707,7 +607,7 @@ export async function updatePlayerName(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
 
     const metadata = (await adapter.getGameMetadata(normalizedCode)) as unknown as GameMetadata | null;
 
@@ -756,8 +656,7 @@ export async function updatePlayerName(
 
 export async function isHost(
   code: string,
-  deviceId: string,
-  storageType: StorageType = 'cloud'
+  deviceId: string
 ): Promise<boolean> {
   const operation = 'isHost';
 
@@ -768,7 +667,7 @@ export async function isHost(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
     const metadata = (await adapter.getGameMetadata(normalizedCode)) as unknown as GameMetadata | null;
 
     if (!metadata) {
@@ -784,8 +683,7 @@ export async function isHost(
 }
 
 export async function getNumPlayersJoined(
-  code: string,
-  storageType: StorageType = 'cloud'
+  code: string
 ): Promise<{ joined: number; total: number } | null> {
   const operation = 'getNumPlayersJoined';
 
@@ -796,7 +694,7 @@ export async function getNumPlayersJoined(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
 
     const metadata = await adapter.getGameMetadata(normalizedCode);
     if (!metadata) {
@@ -822,10 +720,9 @@ export async function getNumPlayersJoined(
 }
 
 export async function allPlayersJoined(
-  code: string,
-  storageType: StorageType = 'cloud'
+  code: string
 ): Promise<boolean> {
-  const counts = await getNumPlayersJoined(code, storageType);
+  const counts = await getNumPlayersJoined(code);
   if (!counts) {
     return false;
   }
@@ -835,8 +732,7 @@ export async function allPlayersJoined(
 /** Call when transitioning from waiting_for_players to setup. Shuffles playerIDs and assigns to joined devices (host only). */
 export async function assignRandomPlayerIDs(
   code: string,
-  deviceId: string,
-  storageType: StorageType = 'cloud'
+  deviceId: string
 ): Promise<AssignPlayerIDsResult> {
   const operation = 'assignRandomPlayerIDs';
 
@@ -851,7 +747,7 @@ export async function assignRandomPlayerIDs(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
 
     const metadata = (await adapter.getGameMetadata(normalizedCode)) as unknown as GameMetadata | null;
 
@@ -866,7 +762,7 @@ export async function assignRandomPlayerIDs(
       return { success: false, error: SeatAssignmentError.NOT_HOST };
     }
 
-    if (metadata.gameMode !== 'byod') {
+    if (!isSupportedGameMetadata(metadata as unknown as Record<string, unknown>)) {
       return { success: false, error: SeatAssignmentError.WRONG_GAME_MODE };
     }
 
@@ -935,8 +831,7 @@ export async function assignRandomPlayerIDs(
 /** PlayerID for device in BYOD game; null if device not joined or playerIDs not yet assigned. */
 export async function getDevicePlayerID(
   code: string,
-  deviceId: string,
-  storageType: StorageType = 'cloud'
+  deviceId: string
 ): Promise<string | null> {
   const operation = 'getDevicePlayerID';
 
@@ -947,7 +842,7 @@ export async function getDevicePlayerID(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
     const metadata = (await adapter.getGameMetadata(normalizedCode)) as unknown as GameMetadata | null;
 
     if (!metadata?.playerSeats) {
@@ -969,8 +864,7 @@ export async function getDevicePlayerID(
 
 export async function getDeviceSeat(
   code: string,
-  deviceId: string,
-  storageType: StorageType = 'cloud'
+  deviceId: string
 ): Promise<PlayerSeat | null> {
   const operation = 'getDeviceSeat';
 
@@ -981,7 +875,7 @@ export async function getDeviceSeat(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
     const metadata = (await adapter.getGameMetadata(normalizedCode)) as unknown as GameMetadata | null;
 
     if (!metadata?.playerSeats) {
@@ -997,8 +891,7 @@ export async function getDeviceSeat(
 }
 
 export async function getPlayerSeats(
-  code: string,
-  storageType: StorageType = 'cloud'
+  code: string
 ): Promise<Record<string, PlayerSeat> | null> {
   const operation = 'getPlayerSeats';
 
@@ -1009,7 +902,7 @@ export async function getPlayerSeats(
   const normalizedCode = normalizeGameCode(code);
 
   try {
-    const adapter = getAdapter(storageType);
+    const adapter = getAdapter();
     const metadata = (await adapter.getGameMetadata(normalizedCode)) as unknown as GameMetadata | null;
 
     if (!metadata) {

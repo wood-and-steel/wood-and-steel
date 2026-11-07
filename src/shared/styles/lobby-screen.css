@@ -25,53 +25,11 @@
   color: var(--color-text);
 }
 
-.lobbyScreen__tabs {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-md);
-  border-bottom: var(--border-width-md) solid var(--color-border);
-  position: relative;
-  align-items: center;
-}
-
-.lobbyScreen__tab {
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: transparent;
-  border: none;
-  border-bottom: var(--border-width-md) solid transparent;
-  color: var(--color-text-muted);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: calc(0 - var(--border-width-xl));
-  position: relative;
-}
-
-.lobbyScreen__tab:hover:not(:disabled) {
-  color: var(--color-text);
-  background-color: var(--color-bg-hover);
-}
-
-.lobbyScreen__tab:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.lobbyScreen__tab--active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  border-bottom-width: var(--border-width-md);
-  font-weight: 600;
-}
-
 .lobbyScreen__loadingIndicator {
-  margin-left: auto;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  padding: 0 var(--spacing-sm);
+  margin-left: var(--spacing-sm);
+  vertical-align: middle;
 }
 
 .lobbyScreen__spinner {
@@ -222,15 +180,6 @@
     margin-bottom: var(--spacing-lg);
   }
 
-  .lobbyScreen__tabs {
-    margin-bottom: var(--spacing-lg);
-  }
-
-  .lobbyScreen__tab {
-    font-size: 1rem;
-    padding: var(--spacing-sm) var(--spacing-lg);
-  }
-
   .lobbyScreen__joinGame {
     margin-bottom: var(--spacing-lg);
     padding: var(--spacing-md);
@@ -290,14 +239,6 @@
 
   .lobbyScreen__title {
     margin-bottom: var(--spacing-lg);
-  }
-
-  .lobbyScreen__tabs {
-    margin-bottom: var(--spacing-lg);
-  }
-
-  .lobbyScreen__tab {
-    padding: var(--spacing-md) var(--spacing-xl);
   }
 
   .lobbyScreen__joinGame {

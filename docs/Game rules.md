@@ -124,7 +124,7 @@ On the tabletop, each player chooses a color and takes a player board, an engine
 
 #### Choose starting cities
 
-One player, the host, starts the app on their device by visiting https://woodandsteel.pettiross.com/. From the Cloud (BYOD) tab, click the button with the number of players to start a new game. The other players start the app and join the game using the 5-letter code from the host's game.
+One player, the host, starts the app on their device by visiting https://woodandsteel.pettiross.com/. From the lobby, click the button with the number of players to start a new game. The other players start the app and join the game using the 5-letter code from the host's game.
 
 The app randomly chooses a player order. In turn, each player chooses a starting route. Players cannot share starting routes or citites, so only one player can have either New York-Philadelphia or Philadelphia-Washington.
 

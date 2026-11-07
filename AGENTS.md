@@ -35,6 +35,7 @@ This file is the entrypoint for AI agents to find project conventions and avoid 
 
 - Do not add a separate store or context for lobby mode or selected game; use `lobbyStore` and `gameManager` only.
 - Do not add a new place for BYOD metadata or seat assignment; use `gameManager` and the metadata shape in BYOD_AGENT_GUIDE.
+- BYOD (one device per player, Supabase storage) is the only game mode. Do not reintroduce a storage-type or game-mode switch (the old Local and Cloud (Hotseat) modes were removed).
 
 **React and styling**
 

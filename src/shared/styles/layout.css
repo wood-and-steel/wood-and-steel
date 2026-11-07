@@ -9,10 +9,6 @@
   padding-bottom: calc(3.125rem + var(--safe-area-inset-bottom)); /* Account for fixed navBar height on mobile */
 }
 
-.boardPage--hidden {
-  display: none;
-}
-
 .form {
   display: flex;
   flex-direction: column;

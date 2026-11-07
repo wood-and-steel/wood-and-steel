@@ -11,7 +11,6 @@ export interface PlayerToolbarProps {
   G: GameState;
   ctx: GameContext;
   playerID: string | null;
-  isBYODMode?: boolean;
   startingContractExists: boolean;
   currentPhase: GamePhase;
   onOpenPrivateContractModal?: () => void;
@@ -24,17 +23,16 @@ export function PlayerToolbar({
   G,
   ctx,
   playerID,
-  isBYODMode = false,
   startingContractExists,
   currentPhase,
   onOpenPrivateContractModal,
 }: PlayerToolbarProps): React.ReactElement | null {
-  const effectivePlayerID = isBYODMode && playerID != null ? playerID : ctx.currentPlayer;
+  const effectivePlayerID = playerID ?? ctx.currentPlayer;
   const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
-  const isPlayerTurn = !isBYODMode || playerID === ctx.currentPlayer;
+  const isPlayerTurn = playerID === ctx.currentPlayer;
   const currentPlayerEntry = G.players.find(([id]) => id === ctx.currentPlayer);
   const currentPlayerName = currentPlayerEntry?.[1]?.name ?? `Player ${ctx.currentPlayer}`;
-  const showTurnToolbar = isBYODMode && isPlayerTurn;
+  const showTurnToolbar = isPlayerTurn;
 
   const hasMovedThisTurn = useGameStore((s) => s.hasMovedThisTurn);
   const turnStartSnapshot = useGameStore((s) => s.turnStartSnapshot);

@@ -19,7 +19,6 @@ export interface GameManagerProps {
 
 export interface WoodAndSteelStateProps {
   gameManager?: GameManagerProps;
-  isBYODMode?: boolean;
 }
 
 type TabId = 'board' | 'commodities' | 'cities' | 'indies';
@@ -27,7 +26,6 @@ type TabId = 'board' | 'commodities' | 'cities' | 'indies';
 /** Main game board: tabs, NavBar, and form-driven moves. */
 export function WoodAndSteelState({
   gameManager,
-  isBYODMode = false,
 }: WoodAndSteelStateProps) {
   const { G, ctx, moves, playerID } = useGame();
   const { clearSelection, setLobbyMode } = useLobbyStore();
@@ -168,12 +166,9 @@ export function WoodAndSteelState({
     }
   }
 
-  // In hotseat, hide board when it's not this player's turn
-  const isHidden = !isBYODMode && ctx.currentPlayer !== playerID;
-
   if (currentPhase === 'scoring') {
     return (
-      <div className={`boardPage ${isHidden ? 'boardPage--hidden' : ''}`}>
+      <div className="boardPage">
         <form className="form" method="post" onSubmit={handleSubmit}>
           <NavBar
             gameManager={gameManager ?? {}}
@@ -203,7 +198,7 @@ export function WoodAndSteelState({
   }
 
   return (
-    <div className={`boardPage ${isHidden ? 'boardPage--hidden' : ''}`}>
+    <div className="boardPage">
       <form className="form" method="post" onSubmit={handleSubmit}>
         <div>
           <NavBar
@@ -239,7 +234,6 @@ export function WoodAndSteelState({
             G={G}
             ctx={ctx}
             playerID={playerID}
-            isBYODMode={isBYODMode}
             startingContractExists={startingContractExists}
             currentPhase={currentPhase}
             onOpenPrivateContractModal={() =>
@@ -251,7 +245,6 @@ export function WoodAndSteelState({
               G={G}
               ctx={ctx}
               playerID={playerID ?? ''}
-              isBYODMode={isBYODMode}
               startingContractExists={startingContractExists}
               currentPhase={currentPhase}
               onStartingPairSelect={handleStartingPairSelect}

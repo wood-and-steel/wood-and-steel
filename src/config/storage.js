@@ -1,22 +1,10 @@
 /**
  * Storage Configuration
  * 
- * Configuration for storage adapters. Determines which storage backend to use
- * based on environment variables.
- * 
- * @deprecated VITE_STORAGE_TYPE environment variable is deprecated.
- * Storage type selection is now managed by StorageProvider context.
- * The tab bar in the lobby screen allows users to switch between Local and Cloud storage.
- * 
- * This file is kept for backward compatibility and for reading Supabase configuration.
- * 
  * Environment Variables:
- * - VITE_STORAGE_TYPE: 'localStorage' (default) or 'supabase' (DEPRECATED - use StorageProvider)
- * - VITE_SUPABASE_URL: Supabase project URL (required for cloud storage)
- * - VITE_SUPABASE_ANON_KEY: Supabase anonymous key (required for cloud storage)
+ * - VITE_SUPABASE_URL: Supabase project URL (required)
+ * - VITE_SUPABASE_ANON_KEY: Supabase anonymous key (required)
  */
-
-export const STORAGE_TYPE = import.meta.env.VITE_STORAGE_TYPE || 'localStorage';
 
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -59,20 +47,11 @@ export function isSupabaseConfigured() {
  * @returns {{valid: boolean, error?: string}}
  */
 export function validateStorageConfig() {
-  if (STORAGE_TYPE === 'supabase') {
-    if (!SUPABASE_URL) {
-      return {
-        valid: false,
-        error: 'VITE_SUPABASE_URL is required when using supabase storage'
-      };
-    }
-    if (!SUPABASE_ANON_KEY) {
-      return {
-        valid: false,
-        error: 'VITE_SUPABASE_ANON_KEY is required when using supabase storage'
-      };
-    }
+  if (!SUPABASE_URL) {
+    return { valid: false, error: 'VITE_SUPABASE_URL is required' };
   }
-  
+  if (!SUPABASE_ANON_KEY) {
+    return { valid: false, error: 'VITE_SUPABASE_ANON_KEY is required' };
+  }
   return { valid: true };
 }

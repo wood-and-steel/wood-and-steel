@@ -5,36 +5,20 @@ import { useStorage } from "../providers/StorageProvider";
 import { SUPABASE_DASHBOARD_URL } from "../config/storage";
 import { CloudUnavailableError, isCloudUnreachableError } from "../utils/storage/cloudErrors";
 import type { GameListItem } from "../utils/storage/storageAdapter";
+import { isSupportedGameMetadata } from "../utils/gameManager";
 
 const NOT_PLAYING_MESSAGE = "This device is not playing this game.";
 
 const JOIN_ERROR_MESSAGES: Record<string, string> = {
   INVALID_CODE: "Invalid game code format. Please check and try again.",
   GAME_NOT_FOUND: "Game not found. Please check the code and try again.",
-  WRONG_GAME_MODE: "This game is not accepting join requests (hotseat mode).",
+  WRONG_GAME_MODE: "This game was created by an older version and can no longer be joined.",
   GAME_FULL: "This game is full. No more players can join.",
   ALREADY_JOINED: "You have already joined this game.",
   GAME_STARTED: NOT_PLAYING_MESSAGE,
   UPDATE_FAILED: "Unable to join game. Please try again.",
   NOT_JOINED: NOT_PLAYING_MESSAGE,
 };
-
-const TAB_LOCAL = "local";
-const TAB_CLOUD_HOTSEAT = "cloud-hotseat";
-const TAB_CLOUD_BYOD = "cloud-byod";
-
-const LOBBY_TAB_KEY = "lobby_active_tab";
-
-const VALID_TABS = [TAB_LOCAL, TAB_CLOUD_HOTSEAT, TAB_CLOUD_BYOD] as const;
-type LobbyTab = (typeof VALID_TABS)[number];
-
-function getStorageTypeForTab(tab: LobbyTab): "local" | "cloud" {
-  return tab === TAB_LOCAL ? "local" : "cloud";
-}
-
-function getGameModeForTab(tab: LobbyTab): "hotseat" | "byod" {
-  return tab === TAB_CLOUD_BYOD ? "byod" : "hotseat";
-}
 
 function isCloudUnavailable(error: unknown): boolean {
   return error instanceof CloudUnavailableError || isCloudUnreachableError(error);
@@ -47,8 +31,8 @@ export interface LobbyScreenGameManager {
 
 export interface LobbyScreenProps {
   gameManager: LobbyScreenGameManager;
-  onEnterGame?: (gameCode: string, options?: { storageType?: "cloud" }) => Promise<void>;
-  onNewGame?: (numPlayers: number, gameMode: "hotseat" | "byod") => void;
+  onEnterGame?: (gameCode: string) => Promise<void>;
+  onNewGame?: (numPlayers: number) => void;
 }
 
 /**
@@ -81,12 +65,8 @@ export function LobbyScreen({
           setJoinFormPrefill(code, errorMessage);
           return;
         }
-        if (storage.storageType !== "cloud") {
-          storage.setStorageType("cloud");
-        }
-        setActiveTab(TAB_CLOUD_BYOD);
         if (onEnterGame) {
-          await onEnterGame(code, { storageType: "cloud" });
+          await onEnterGame(code);
           navigate("/", { replace: true });
         }
       } catch (error) {
@@ -105,7 +85,6 @@ export function LobbyScreen({
     if (joinFormPrefill.error) {
       setJoinGameCode(joinFormPrefill.code);
       setJoinError(joinFormPrefill.error);
-      setActiveTab(TAB_CLOUD_BYOD);
       clearJoinFormPrefill();
       return;
     }
@@ -113,28 +92,9 @@ export function LobbyScreen({
     if (joinFormPrefill.autoJoin) {
       const code = joinFormPrefill.code;
       clearJoinFormPrefill();
-      setActiveTab(TAB_CLOUD_BYOD);
       doJoinGame(code);
     }
   }, [joinFormPrefill, clearJoinFormPrefill, setJoinFormPrefill, doJoinGame]);
-
-  const [activeTab, setActiveTab] = React.useState<LobbyTab>(() => {
-    if (typeof localStorage !== "undefined") {
-      const saved = localStorage.getItem(LOBBY_TAB_KEY);
-      if (saved === TAB_LOCAL || saved === TAB_CLOUD_HOTSEAT || saved === TAB_CLOUD_BYOD) {
-        return saved;
-      }
-    }
-    return storage.storageType === "local" ? TAB_LOCAL : TAB_CLOUD_HOTSEAT;
-  });
-
-  // Sync storage type with restored tab on mount (e.g. user had Cloud BYOD last time)
-  React.useEffect(() => {
-    const needed = getStorageTypeForTab(activeTab);
-    if (storage.storageType !== needed) {
-      storage.setStorageType(needed);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [joinGameCode, setJoinGameCode] = React.useState("");
   const [joinError, setJoinError] = React.useState("");
@@ -143,7 +103,6 @@ export function LobbyScreen({
   const refreshGames = React.useCallback(
     async (showLoading = false) => {
       const startTime = Date.now();
-      const isCloud = storage.storageType === "cloud";
 
       try {
         setIsLoading(true);
@@ -170,59 +129,30 @@ export function LobbyScreen({
       } catch (error) {
         console.error("[LobbyScreen] Error loading games:", error);
         setGames([]);
-        if (isCloud) {
-          setCloudError(isCloudUnavailable(error) ? "unavailable" : "generic");
-        }
+        setCloudError(isCloudUnavailable(error) ? "unavailable" : "generic");
       } finally {
         setIsLoading(false);
       }
     },
-    [gameManager, storage.storageType]
+    [gameManager]
   );
 
   React.useEffect(() => {
     refreshGames();
-  }, [storage.storageType]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filteredGames = React.useMemo(() => {
-    if (activeTab === TAB_LOCAL) return games;
-
-    const expectedMode = getGameModeForTab(activeTab);
-    return games.filter((game: GameListItem) => {
-      const gameMode = (game.metadata?.gameMode as string) || "hotseat";
-      return gameMode === expectedMode;
-    });
-  }, [games, activeTab]);
-
-  const handleTabSwitch = React.useCallback(
-    (newTab: LobbyTab) => {
-      if (newTab === activeTab) return;
-
-      setActiveTab(newTab);
-      setCloudError(null);
-      if (typeof localStorage !== "undefined") {
-        localStorage.setItem(LOBBY_TAB_KEY, newTab);
-      }
-
-      const newStorageType = getStorageTypeForTab(newTab);
-      if (newStorageType !== storage.storageType) {
-        storage.setStorageType(newStorageType);
-      }
-    },
-    [activeTab, storage]
+  // Rows created by older app versions can't be opened, so they aren't listed.
+  const filteredGames = React.useMemo(
+    () => games.filter((game: GameListItem) => isSupportedGameMetadata(game.metadata)),
+    [games]
   );
 
   const handleRowClick = async (game: GameListItem) => {
     const gameCode = game.code;
     if (gameCode === selectedGameCode) return;
 
-    const isBYODWaiting =
-      (game.metadata?.gameMode as string) === "byod" && game.phase === "waiting_for_players";
-    if (isBYODWaiting) {
-      if (storage.storageType !== "cloud") {
-        storage.setStorageType("cloud");
-      }
-      setActiveTab(TAB_CLOUD_BYOD);
+    const isWaiting = game.phase === "waiting_for_players";
+    if (isWaiting) {
       setIsJoining(true);
       setJoinError("");
       try {
@@ -246,7 +176,7 @@ export function LobbyScreen({
     }
 
     if (onEnterGame) {
-      await onEnterGame(gameCode, isBYODWaiting ? { storageType: "cloud" } : undefined);
+      await onEnterGame(gameCode);
     }
   };
 
@@ -272,8 +202,7 @@ export function LobbyScreen({
 
   const handleNewGame = (numPlayers: number) => {
     if (onNewGame) {
-      const gameMode = getGameModeForTab(activeTab);
-      onNewGame(numPlayers, gameMode);
+      onNewGame(numPlayers);
     }
   };
 
@@ -308,38 +237,16 @@ export function LobbyScreen({
   return (
     <div className="lobbyScreen">
       <div className="lobbyScreen__content">
-        <h1 className="lobbyScreen__title">Wood and Steel Lobby</h1>
-
-        <div className="lobbyScreen__tabs">
-          <button
-            className={`lobbyScreen__tab ${activeTab === TAB_LOCAL ? "lobbyScreen__tab--active" : ""}`}
-            onClick={() => handleTabSwitch(TAB_LOCAL)}
-            disabled={isLoading}
-          >
-            Local
-          </button>
-          <button
-            className={`lobbyScreen__tab ${activeTab === TAB_CLOUD_HOTSEAT ? "lobbyScreen__tab--active" : ""}`}
-            onClick={() => handleTabSwitch(TAB_CLOUD_HOTSEAT)}
-            disabled={isLoading}
-          >
-            Cloud (Hotseat)
-          </button>
-          <button
-            className={`lobbyScreen__tab ${activeTab === TAB_CLOUD_BYOD ? "lobbyScreen__tab--active" : ""}`}
-            onClick={() => handleTabSwitch(TAB_CLOUD_BYOD)}
-            disabled={isLoading}
-          >
-            Cloud (BYOD)
-          </button>
+        <h1 className="lobbyScreen__title">
+          Wood and Steel Lobby
           {showLoadingIndicator && (
             <span className="lobbyScreen__loadingIndicator" aria-label="Loading">
               <span className="lobbyScreen__spinner" />
             </span>
           )}
-        </div>
+        </h1>
 
-        {cloudError && activeTab !== TAB_LOCAL && (
+        {cloudError && (
           <div className="lobbyScreen__cloudError" role="alert">
             {cloudError === "unavailable" ? (
               <p>
@@ -369,45 +276,43 @@ export function LobbyScreen({
           </div>
         )}
 
-        {activeTab === TAB_CLOUD_BYOD && (
-          <div className="lobbyScreen__joinGame">
-            <form onSubmit={handleJoinGame} className="lobbyScreen__joinForm">
-              <label htmlFor="joinGameCode" className="lobbyScreen__joinLabel">
-                Join a game:
-              </label>
-              <input
-                id="joinGameCode"
-                type="text"
-                value={joinGameCode}
-                onChange={handleJoinCodeChange}
-                placeholder="Enter game code"
-                className="lobbyScreen__joinInput"
-                maxLength={6}
-                disabled={isJoining || !!cloudError}
-                autoComplete="off"
-                autoCapitalize="characters"
-              />
-              <button
-                type="submit"
-                className="button lobbyScreen__joinButton"
-                disabled={isJoining || !joinGameCode.trim() || !!cloudError}
-              >
-                {isJoining ? "Joining..." : "Join"}
-              </button>
-            </form>
-            {joinError && (
-              <p className="lobbyScreen__joinError" role="alert">
-                {joinError}
-              </p>
-            )}
-          </div>
-        )}
+        <div className="lobbyScreen__joinGame">
+          <form onSubmit={handleJoinGame} className="lobbyScreen__joinForm">
+            <label htmlFor="joinGameCode" className="lobbyScreen__joinLabel">
+              Join a game:
+            </label>
+            <input
+              id="joinGameCode"
+              type="text"
+              value={joinGameCode}
+              onChange={handleJoinCodeChange}
+              placeholder="Enter game code"
+              className="lobbyScreen__joinInput"
+              maxLength={6}
+              disabled={isJoining || !!cloudError}
+              autoComplete="off"
+              autoCapitalize="characters"
+            />
+            <button
+              type="submit"
+              className="button lobbyScreen__joinButton"
+              disabled={isJoining || !joinGameCode.trim() || !!cloudError}
+            >
+              {isJoining ? "Joining..." : "Join"}
+            </button>
+          </form>
+          {joinError && (
+            <p className="lobbyScreen__joinError" role="alert">
+              {joinError}
+            </p>
+          )}
+        </div>
 
         {isLoading ? (
           <div className="lobbyScreen__emptyState">
             <p>Loading games...</p>
           </div>
-        ) : cloudError && activeTab !== TAB_LOCAL ? (
+        ) : cloudError ? (
           <div className="lobbyScreen__emptyState">
             <p>Cloud games cannot be listed until storage is available.</p>
           </div>

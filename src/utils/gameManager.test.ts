@@ -42,6 +42,11 @@ import {
 } from '../stores/gameActions';
 import { endTurn as endTurnEvent } from '../stores/events';
 import { checkPhaseTransition } from '../stores/phaseManager';
+import { setStorageAdapter } from './storage';
+import { MemoryStorageAdapter } from './storage/memoryStorageAdapter.testHelper';
+
+const TEST_HOST_DEVICE = 'test-host-device';
+const memoryAdapter = new MemoryStorageAdapter();
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
@@ -62,10 +67,12 @@ const localStorageMock = (() => {
 beforeAll(() => {
   (globalThis as typeof globalThis & { localStorage: Storage }).localStorage =
     localStorageMock as unknown as Storage;
+  setStorageAdapter(memoryAdapter);
 });
 
 beforeEach(() => {
   localStorageMock.clear();
+  memoryAdapter.clear();
   useGameStore.getState().resetState();
   vi.clearAllMocks();
 });
@@ -73,7 +80,7 @@ beforeEach(() => {
 describe('Persistence Tests', () => {
   describe('1. Moves - State persists after moves', () => {
     test('state persists after generateStartingContract', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       const { G: initialG, ctx: initialCtx } = useGameStore.getState();
 
       generateStartingContract(['New York', 'Philadelphia']);
@@ -85,7 +92,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists after generatePrivateContract', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -114,7 +121,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists after toggleContractFulfilled', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -150,7 +157,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists after multiple moves in sequence', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -179,7 +186,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists after claimHubCity', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -208,7 +215,7 @@ describe('Persistence Tests', () => {
     });
 
     test('second player cannot claim hub city already claimed by another player', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -238,7 +245,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists after claimRegionalOffice', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -266,7 +273,7 @@ describe('Persistence Tests', () => {
     });
 
     test('second player cannot claim same regional office', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -296,7 +303,7 @@ describe('Persistence Tests', () => {
 
   describe('2. Turns - State persists after turn changes', () => {
     test('state persists after endTurn', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       const { ctx: initialCtx } = useGameStore.getState();
       const initialPlayer = initialCtx.currentPlayer;
       const initialTurn = initialCtx.turn;
@@ -314,7 +321,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists after turn wraps to new round', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         ctx: {
@@ -339,7 +346,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists after multiple turn changes', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       const initialTurn = useGameStore.getState().ctx.turn;
 
       endTurnEvent();
@@ -356,7 +363,7 @@ describe('Persistence Tests', () => {
 
   describe('3. Phases - State persists after phase transitions', () => {
     test('state persists after phase transition from setup to play', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -406,7 +413,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists even when phase transition does not occur', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -448,7 +455,7 @@ describe('Persistence Tests', () => {
 
   describe('4. Game switching - State persists when switching between games', () => {
     test('can create and switch between multiple games', async () => {
-      const gameCode1 = await createNewGame();
+      const gameCode1 = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       useGameStore.setState({
         G: {
           ...useGameStore.getState().G,
@@ -472,7 +479,7 @@ describe('Persistence Tests', () => {
       });
       await saveGameState(gameCode1, useGameStore.getState().G, useGameStore.getState().ctx);
 
-      const gameCode2 = await createNewGame();
+      const gameCode2 = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       useGameStore.setState({
         G: {
           ...useGameStore.getState().G,
@@ -496,8 +503,8 @@ describe('Persistence Tests', () => {
       });
       await saveGameState(gameCode2, useGameStore.getState().G, useGameStore.getState().ctx);
 
-      expect(await gameExists(gameCode1, 'local')).toBe(true);
-      expect(await gameExists(gameCode2, 'local')).toBe(true);
+      expect(await gameExists(gameCode1)).toBe(true);
+      expect(await gameExists(gameCode2)).toBe(true);
 
       await switchToGame(gameCode1);
       const state1 = await loadGameState(gameCode1);
@@ -515,7 +522,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists correctly when switching back and forth between games', async () => {
-      const gameCode1 = await createNewGame();
+      const gameCode1 = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       useGameStore.setState({
         G: {
           ...useGameStore.getState().G,
@@ -535,7 +542,7 @@ describe('Persistence Tests', () => {
       });
       await saveGameState(gameCode1, useGameStore.getState().G, useGameStore.getState().ctx);
 
-      const gameCode2 = await createNewGame();
+      const gameCode2 = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       useGameStore.setState({
         G: {
           ...useGameStore.getState().G,
@@ -573,19 +580,19 @@ describe('Persistence Tests', () => {
     });
 
     test('can list all games and their states persist', async () => {
-      const gameCode1 = await createNewGame();
+      const gameCode1 = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       useGameStore.setState({
         ctx: { ...useGameStore.getState().ctx, turn: 1 },
       });
       await saveGameState(gameCode1, useGameStore.getState().G, useGameStore.getState().ctx);
 
-      const gameCode2 = await createNewGame();
+      const gameCode2 = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       useGameStore.setState({
         ctx: { ...useGameStore.getState().ctx, turn: 2 },
       });
       await saveGameState(gameCode2, useGameStore.getState().G, useGameStore.getState().ctx);
 
-      const gameCode3 = await createNewGame();
+      const gameCode3 = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       useGameStore.setState({
         ctx: { ...useGameStore.getState().ctx, turn: 3 },
       });
@@ -610,7 +617,7 @@ describe('Persistence Tests', () => {
 
   describe('5. Reloads - State persists across simulated page reloads', () => {
     test('state persists after save, clear store, and reload', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -672,7 +679,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists after complex game session simulation', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         ctx: { ...useGameStore.getState().ctx, phase: 'setup' },
@@ -722,7 +729,7 @@ describe('Persistence Tests', () => {
     });
 
     test('state persists correctly with nested data structures', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         G: {
@@ -795,28 +802,18 @@ describe('Persistence Tests', () => {
     });
 
     test('handles corrupted state data gracefully', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       await saveGameState(gameCode, useGameStore.getState().G, useGameStore.getState().ctx);
 
-      const stateMap = JSON.parse(
-        localStorage.getItem('game_state') ?? '[]'
-      ) as Array<[string, unknown]>;
-      const corruptedState = { G: 'invalid', ctx: 'invalid' };
-      const idx = stateMap.findIndex(([code]) => code === gameCode);
-      if (idx >= 0) {
-        stateMap[idx][1] = corruptedState;
-        localStorage.setItem('game_state', JSON.stringify(stateMap));
-      }
+      memoryAdapter.setRawState(gameCode, { G: 'invalid', ctx: 'invalid' });
 
       const loadedState = await loadGameState(gameCode);
-      if (loadedState) {
-        expect(loadedState.G).toBe('invalid');
-      }
+      expect(loadedState).toBeNull();
     });
 
     test('state serialization filters internal properties', async () => {
-      const gameCode = await createNewGame();
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
       useGameStore.setState({
         ctx: {
@@ -832,61 +829,38 @@ describe('Persistence Tests', () => {
     });
   });
 
-  describe('7. Game Mode support', () => {
-    test('createNewGame defaults to hotseat mode', async () => {
-      const gameCode = await createNewGame('local');
+  describe('7. New game metadata', () => {
+    test('createNewGame records the host seat and byod mode', async () => {
+      const gameCode = await createNewGame({ hostDeviceId: 'host-1', hostPlayerName: ' Ada ' });
 
-      expect(await gameExists(gameCode, 'local')).toBe(true);
+      expect(await gameExists(gameCode)).toBe(true);
 
-      const metadataMap = JSON.parse(
-        localStorage.getItem('game_metadata') ?? '[]'
-      ) as Array<[string, GameMetadata]>;
-      const metadata = new Map(metadataMap).get(gameCode);
+      const metadata = (await getGameMetadata(gameCode)) as GameMetadata | null;
       expect(metadata).toBeDefined();
-      expect(metadata!.gameMode).toBe('hotseat');
-    });
-
-    test('createNewGame BYOD requires hostDeviceId', async () => {
-      await expect(createNewGame('local', { gameMode: 'byod' })).rejects.toThrow(
-        'BYOD games require a hostDeviceId'
-      );
-    });
-
-    test('createNewGame BYOD requires cloud storage', async () => {
-      await expect(
-        createNewGame('local', { gameMode: 'byod', hostDeviceId: 'test-device' })
-      ).rejects.toThrow('BYOD games require cloud storage');
-    });
-
-    test('createNewGame rejects invalid gameMode', async () => {
-      await expect(
-        createNewGame('local', { gameMode: 'invalid' as 'hotseat' })
-      ).rejects.toThrow(
-        "Invalid gameMode: invalid. Must be 'hotseat' or 'byod'."
-      );
-    });
-
-    test('createNewGame preserves other options with default gameMode', async () => {
-      const gameCode = await createNewGame('local');
-
-      const metadataMap = JSON.parse(
-        localStorage.getItem('game_metadata') ?? '[]'
-      ) as Array<[string, GameMetadata]>;
-      const metadata = new Map(metadataMap).get(gameCode);
-      expect(metadata).toBeDefined();
-      expect(metadata!.gameMode).toBe('hotseat');
+      expect(metadata!.gameMode).toBe('byod');
+      expect(metadata!.hostDeviceId).toBe('host-1');
       expect(metadata!.lastModified).toBeDefined();
+      expect(metadata!.playerSeats!['host-1'].playerName).toBe('Ada');
     });
 
-    test('createNewGame with explicit hotseat mode', async () => {
-      const gameCode = await createNewGame('local', { gameMode: 'hotseat' });
+    test('createNewGame defaults the host name to Host', async () => {
+      const gameCode = await createNewGame({ hostDeviceId: 'host-1' });
+      const metadata = (await getGameMetadata(gameCode)) as GameMetadata | null;
+      expect(metadata!.playerSeats!['host-1'].playerName).toBe('Host');
+    });
 
-      const metadataMap = JSON.parse(
-        localStorage.getItem('game_metadata') ?? '[]'
-      ) as Array<[string, GameMetadata]>;
-      const metadata = new Map(metadataMap).get(gameCode);
-      expect(metadata).toBeDefined();
-      expect(metadata!.gameMode).toBe('hotseat');
+    test('createNewGame requires hostDeviceId', async () => {
+      await expect(createNewGame({ hostDeviceId: '' })).rejects.toThrow(
+        'New games require a hostDeviceId'
+      );
+    });
+
+    test('new games start in waiting_for_players and become the current game', async () => {
+      const gameCode = await createNewGame({ hostDeviceId: 'host-1', numPlayers: 4 });
+      const state = await loadGameState(gameCode);
+      expect(state!.ctx.phase).toBe('waiting_for_players');
+      expect(state!.ctx.numPlayers).toBe(4);
+      expect(getCurrentGameCode()).toBe(gameCode);
     });
   });
 
@@ -895,81 +869,35 @@ describe('Persistence Tests', () => {
     const testDeviceId2 = 'test-device-uuid-5678';
     const testDeviceId3 = 'test-device-uuid-9999';
 
-    describe('createNewGame for BYOD', () => {
-      test('BYOD game requires hostDeviceId', async () => {
-        await expect(createNewGame('local', { gameMode: 'byod' })).rejects.toThrow(
-          'BYOD games require a hostDeviceId'
-        );
-      });
-
-      test('BYOD game requires cloud storage', async () => {
-        await expect(
-          createNewGame('local', { gameMode: 'byod', hostDeviceId: testDeviceId })
-        ).rejects.toThrow('BYOD games require cloud storage');
-      });
-
-      test('createNewGame with BYOD initializes host device in playerSeats (local mock)', async () => {
-        const gameCode = await createNewGame('local');
-
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        metadataMapObj.set(gameCode, {
-          gameMode: 'byod',
-          hostDeviceId: testDeviceId,
-          playerSeats: {
-            [testDeviceId]: {
-              joinedAt: new Date().toISOString(),
-              playerName: '',
-            },
-          },
-          lastModified: new Date().toISOString(),
-        });
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
-
-        const metadata = (await getGameMetadata(gameCode, 'local')) as GameMetadata | null;
-        expect(metadata).toBeDefined();
-        expect(metadata!.gameMode).toBe('byod');
-        expect(metadata!.hostDeviceId).toBe(testDeviceId);
-        const seats = metadata!.playerSeats ?? {};
-        expect(seats[testDeviceId]).toBeDefined();
-        expect(seats[testDeviceId].joinedAt).toBeDefined();
-      });
-    });
-
     describe('getGameMetadata and updateGameMetadata', () => {
       test('getGameMetadata returns null for non-existent game', async () => {
-        const metadata = await getGameMetadata('XXXXX', 'local');
+        const metadata = await getGameMetadata('XXXXX');
         expect(metadata).toBeNull();
       });
 
       test('getGameMetadata returns metadata for existing game', async () => {
-        const gameCode = await createNewGame('local');
-        const metadata = await getGameMetadata(gameCode, 'local');
+        const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
+        const metadata = await getGameMetadata(gameCode);
         expect(metadata).toBeDefined();
-        expect(metadata!.gameMode).toBe('hotseat');
+        expect(metadata!.gameMode).toBe('byod');
       });
 
       test('updateGameMetadata merges with existing metadata', async () => {
-        const gameCode = await createNewGame('local');
+        const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
-        const result = await updateGameMetadata(gameCode, { customField: 'test' }, 'local');
+        const result = await updateGameMetadata(gameCode, { customField: 'test' });
         expect(result).toBe(true);
 
-        const metadata = (await getGameMetadata(gameCode, 'local')) as (GameMetadata & {
+        const metadata = (await getGameMetadata(gameCode)) as (GameMetadata & {
           customField?: string;
         }) | null;
         expect(metadata).toBeDefined();
         expect(metadata!.customField).toBe('test');
-        expect(metadata!.gameMode).toBe('hotseat');
+        expect(metadata!.gameMode).toBe('byod');
       });
 
       test('updateGameMetadata returns false for non-existent game', async () => {
-        const result = await updateGameMetadata('XXXXX', { test: true }, 'local');
+        const result = await updateGameMetadata('XXXXX', { test: true });
         expect(result).toBe(false);
       });
     });
@@ -978,13 +906,9 @@ describe('Persistence Tests', () => {
       let gameCode: string;
 
       beforeEach(async () => {
-        gameCode = await createNewGame('local');
+        gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        metadataMapObj.set(gameCode, {
+        await updateGameMetadata(gameCode, {
           gameMode: 'byod',
           hostDeviceId: testDeviceId,
           playerSeats: {
@@ -995,33 +919,25 @@ describe('Persistence Tests', () => {
           },
           lastModified: new Date().toISOString(),
         });
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
       });
 
       test('assigns seat to new device', async () => {
-        const result = await assignPlayerSeat(gameCode, testDeviceId2, 'local');
+        const result = await assignPlayerSeat(gameCode, testDeviceId2);
 
         expect(result.success).toBe(true);
         expect(result.seat).toBeDefined();
         expect(result.seat!.joinedAt).toBeDefined();
         expect(result.seat!.playerName).toBe('Guest 1');
 
-        const metadata = (await getGameMetadata(gameCode, 'local')) as GameMetadata | null;
+        const metadata = (await getGameMetadata(gameCode)) as GameMetadata | null;
         const seats = metadata!.playerSeats ?? {};
         expect(seats[testDeviceId2]).toBeDefined();
       });
 
       test('assigns "Guest" without number for 2-player game', async () => {
-        const twoPlayerCode = await createNewGame('local');
+        const twoPlayerCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        metadataMapObj.set(twoPlayerCode, {
+        await updateGameMetadata(twoPlayerCode, {
           gameMode: 'byod',
           hostDeviceId: testDeviceId,
           playerSeats: {
@@ -1032,85 +948,74 @@ describe('Persistence Tests', () => {
           },
           lastModified: new Date().toISOString(),
         });
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
 
-        const state = await loadGameState(twoPlayerCode, 'local');
+        const state = await loadGameState(twoPlayerCode);
         state!.ctx.numPlayers = 2;
-        await saveGameState(twoPlayerCode, state!.G, state!.ctx, 'local');
+        await saveGameState(twoPlayerCode, state!.G, state!.ctx);
 
-        const result = await assignPlayerSeat(twoPlayerCode, testDeviceId2, 'local');
+        const result = await assignPlayerSeat(twoPlayerCode, testDeviceId2);
 
         expect(result.success).toBe(true);
         expect(result.seat!.playerName).toBe('Guest');
       });
 
       test('assigns sequential guest numbers for 3+ player games', async () => {
-        const result1 = await assignPlayerSeat(gameCode, testDeviceId2, 'local');
+        const result1 = await assignPlayerSeat(gameCode, testDeviceId2);
         expect(result1.success).toBe(true);
         expect(result1.seat!.playerName).toBe('Guest 1');
 
-        const result2 = await assignPlayerSeat(gameCode, testDeviceId3, 'local');
+        const result2 = await assignPlayerSeat(gameCode, testDeviceId3);
         expect(result2.success).toBe(true);
         expect(result2.seat!.playerName).toBe('Guest 2');
       });
 
       test('returns existing seat for reconnection', async () => {
-        const result = await assignPlayerSeat(gameCode, testDeviceId, 'local');
+        const result = await assignPlayerSeat(gameCode, testDeviceId);
 
         expect(result.success).toBe(true);
         expect(result.seat!.playerName).toBe('Host Player');
       });
 
       test('returns error for non-existent game', async () => {
-        const result = await assignPlayerSeat('XXXXX', testDeviceId2, 'local');
+        const result = await assignPlayerSeat('XXXXX', testDeviceId2);
 
         expect(result.success).toBe(false);
         expect(result.error).toBe(SeatAssignmentError.GAME_NOT_FOUND);
       });
 
-      test('returns error for hotseat game', async () => {
-        const hotseatCode = await createNewGame('local', { gameMode: 'hotseat' });
+      test('returns error for game with unsupported mode', async () => {
+        const legacyCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
+        await updateGameMetadata(legacyCode, { gameMode: 'legacy' });
 
-        const result = await assignPlayerSeat(hotseatCode, testDeviceId2, 'local');
+        const result = await assignPlayerSeat(legacyCode, testDeviceId2);
 
         expect(result.success).toBe(false);
         expect(result.error).toBe(SeatAssignmentError.WRONG_GAME_MODE);
       });
 
       test('returns error when game is full', async () => {
-        await assignPlayerSeat(gameCode, testDeviceId2, 'local');
-        await assignPlayerSeat(gameCode, testDeviceId3, 'local');
+        await assignPlayerSeat(gameCode, testDeviceId2);
+        await assignPlayerSeat(gameCode, testDeviceId3);
 
-        const result = await assignPlayerSeat(gameCode, 'fourth-device', 'local');
+        const result = await assignPlayerSeat(gameCode, 'fourth-device');
 
         expect(result.success).toBe(false);
         expect(result.error).toBe(SeatAssignmentError.GAME_FULL);
       });
 
       test('returns error when game has started', async () => {
-        await assignPlayerSeat(gameCode, testDeviceId2, 'local');
-        await assignPlayerSeat(gameCode, testDeviceId3, 'local');
+        await assignPlayerSeat(gameCode, testDeviceId2);
+        await assignPlayerSeat(gameCode, testDeviceId3);
 
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        const metadata = metadataMapObj.get(gameCode);
+        const metadata = (await getGameMetadata(gameCode)) as GameMetadata | null;
         expect(metadata).toBeDefined();
         expect(metadata!.playerSeats).toBeDefined();
         Object.keys(metadata!.playerSeats!).forEach((deviceId, index) => {
-          (metadata!.playerSeats![deviceId] as { playerID?: string }).playerID =
-            String(index);
+          metadata!.playerSeats![deviceId].playerID = String(index);
         });
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
+        await updateGameMetadata(gameCode, { playerSeats: metadata!.playerSeats });
 
-        const result = await assignPlayerSeat(gameCode, 'new-device', 'local');
+        const result = await assignPlayerSeat(gameCode, 'new-device');
 
         expect(result.success).toBe(false);
         expect(result.error).toBe(SeatAssignmentError.GAME_STARTED);
@@ -1121,13 +1026,9 @@ describe('Persistence Tests', () => {
       let gameCode: string;
 
       beforeEach(async () => {
-        gameCode = await createNewGame('local');
+        gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        metadataMapObj.set(gameCode, {
+        await updateGameMetadata(gameCode, {
           gameMode: 'byod',
           hostDeviceId: testDeviceId,
           playerSeats: {
@@ -1138,18 +1039,14 @@ describe('Persistence Tests', () => {
           },
           lastModified: new Date().toISOString(),
         });
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
       });
 
       test('updates player name successfully', async () => {
-        const result = await updatePlayerName(gameCode, testDeviceId, 'Alice', 'local');
+        const result = await updatePlayerName(gameCode, testDeviceId, 'Alice');
 
         expect(result.success).toBe(true);
 
-        const metadata = (await getGameMetadata(gameCode, 'local')) as GameMetadata | null;
+        const metadata = (await getGameMetadata(gameCode)) as GameMetadata | null;
         expect(metadata!.playerSeats![testDeviceId].playerName).toBe('Alice');
       });
 
@@ -1157,16 +1054,14 @@ describe('Persistence Tests', () => {
         const result = await updatePlayerName(
           gameCode,
           'not-joined-device',
-          'Bob',
-          'local'
-        );
+          'Bob');
 
         expect(result.success).toBe(false);
         expect(result.error).toBe(SeatAssignmentError.NOT_JOINED);
       });
 
       test('returns error for non-existent game', async () => {
-        const result = await updatePlayerName('XXXXX', testDeviceId, 'Alice', 'local');
+        const result = await updatePlayerName('XXXXX', testDeviceId, 'Alice');
 
         expect(result.success).toBe(false);
         expect(result.error).toBe(SeatAssignmentError.GAME_NOT_FOUND);
@@ -1177,36 +1072,28 @@ describe('Persistence Tests', () => {
       let gameCode: string;
 
       beforeEach(async () => {
-        gameCode = await createNewGame('local');
+        gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        metadataMapObj.set(gameCode, {
+        await updateGameMetadata(gameCode, {
           gameMode: 'byod',
           hostDeviceId: testDeviceId,
           playerSeats: {},
           lastModified: new Date().toISOString(),
         });
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
       });
 
       test('returns true for host device', async () => {
-        const result = await isHost(gameCode, testDeviceId, 'local');
+        const result = await isHost(gameCode, testDeviceId);
         expect(result).toBe(true);
       });
 
       test('returns false for non-host device', async () => {
-        const result = await isHost(gameCode, testDeviceId2, 'local');
+        const result = await isHost(gameCode, testDeviceId2);
         expect(result).toBe(false);
       });
 
       test('returns false for non-existent game', async () => {
-        const result = await isHost('XXXXX', testDeviceId, 'local');
+        const result = await isHost('XXXXX', testDeviceId);
         expect(result).toBe(false);
       });
     });
@@ -1215,13 +1102,9 @@ describe('Persistence Tests', () => {
       let gameCode: string;
 
       beforeEach(async () => {
-        gameCode = await createNewGame('local');
+        gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        metadataMapObj.set(gameCode, {
+        await updateGameMetadata(gameCode, {
           gameMode: 'byod',
           hostDeviceId: testDeviceId,
           playerSeats: {
@@ -1232,14 +1115,10 @@ describe('Persistence Tests', () => {
           },
           lastModified: new Date().toISOString(),
         });
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
       });
 
       test('getNumPlayersJoined returns correct counts', async () => {
-        const counts = await getNumPlayersJoined(gameCode, 'local');
+        const counts = await getNumPlayersJoined(gameCode);
 
         expect(counts != null).toBe(true);
         expect(counts!.joined).toBe(1);
@@ -1247,15 +1126,15 @@ describe('Persistence Tests', () => {
       });
 
       test('allPlayersJoined returns false when not all joined', async () => {
-        const result = await allPlayersJoined(gameCode, 'local');
+        const result = await allPlayersJoined(gameCode);
         expect(result).toBe(false);
       });
 
       test('allPlayersJoined returns true when all joined', async () => {
-        await assignPlayerSeat(gameCode, testDeviceId2, 'local');
-        await assignPlayerSeat(gameCode, testDeviceId3, 'local');
+        await assignPlayerSeat(gameCode, testDeviceId2);
+        await assignPlayerSeat(gameCode, testDeviceId3);
 
-        const result = await allPlayersJoined(gameCode, 'local');
+        const result = await allPlayersJoined(gameCode);
         expect(result).toBe(true);
       });
     });
@@ -1264,13 +1143,9 @@ describe('Persistence Tests', () => {
       let gameCode: string;
 
       beforeEach(async () => {
-        gameCode = await createNewGame('local');
+        gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        metadataMapObj.set(gameCode, {
+        await updateGameMetadata(gameCode, {
           gameMode: 'byod',
           hostDeviceId: testDeviceId,
           playerSeats: {
@@ -1289,14 +1164,10 @@ describe('Persistence Tests', () => {
           },
           lastModified: new Date().toISOString(),
         });
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
       });
 
       test('assigns random playerIDs to all joined players', async () => {
-        const result = await assignRandomPlayerIDs(gameCode, testDeviceId, 'local');
+        const result = await assignRandomPlayerIDs(gameCode, testDeviceId);
 
         expect(result.success).toBe(true);
         expect(result.assignments).toBeDefined();
@@ -1308,7 +1179,7 @@ describe('Persistence Tests', () => {
         expect(assignedIDs).toContain('1');
         expect(assignedIDs).toContain('2');
 
-        const metadata = (await getGameMetadata(gameCode, 'local')) as GameMetadata | null;
+        const metadata = (await getGameMetadata(gameCode)) as GameMetadata | null;
         const seats = metadata!.playerSeats ?? {};
         Object.keys(seats).forEach((deviceId) => {
           expect(seats[deviceId].playerID).toBeDefined();
@@ -1316,34 +1187,27 @@ describe('Persistence Tests', () => {
       });
 
       test('returns error if caller is not host', async () => {
-        const result = await assignRandomPlayerIDs(gameCode, testDeviceId2, 'local');
+        const result = await assignRandomPlayerIDs(gameCode, testDeviceId2);
 
         expect(result.success).toBe(false);
         expect(result.error).toBe(SeatAssignmentError.NOT_HOST);
       });
 
       test('returns error if not all players joined', async () => {
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        const metadata = metadataMapObj.get(gameCode) as GameMetadata | undefined;
+        const metadata = (await getGameMetadata(gameCode)) as GameMetadata | null;
         if (!metadata?.playerSeats) throw new Error('expected metadata');
         delete metadata.playerSeats[testDeviceId3];
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
+        await updateGameMetadata(gameCode, { playerSeats: metadata.playerSeats });
 
-        const result = await assignRandomPlayerIDs(gameCode, testDeviceId, 'local');
+        const result = await assignRandomPlayerIDs(gameCode, testDeviceId);
 
         expect(result.success).toBe(false);
       });
 
       test('returns error if playerIDs already assigned', async () => {
-        await assignRandomPlayerIDs(gameCode, testDeviceId, 'local');
+        await assignRandomPlayerIDs(gameCode, testDeviceId);
 
-        const result = await assignRandomPlayerIDs(gameCode, testDeviceId, 'local');
+        const result = await assignRandomPlayerIDs(gameCode, testDeviceId);
 
         expect(result.success).toBe(false);
         expect(result.error).toBe(SeatAssignmentError.GAME_STARTED);
@@ -1354,13 +1218,9 @@ describe('Persistence Tests', () => {
       let gameCode: string;
 
       beforeEach(async () => {
-        gameCode = await createNewGame('local');
+        gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        metadataMapObj.set(gameCode, {
+        await updateGameMetadata(gameCode, {
           gameMode: 'byod',
           hostDeviceId: testDeviceId,
           playerSeats: {
@@ -1377,27 +1237,23 @@ describe('Persistence Tests', () => {
           },
           lastModified: new Date().toISOString(),
         });
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
       });
 
       test('getDevicePlayerID returns assigned playerID', async () => {
-        const playerID = await getDevicePlayerID(gameCode, testDeviceId, 'local');
+        const playerID = await getDevicePlayerID(gameCode, testDeviceId);
         expect(playerID).toBe('2');
 
-        const playerID2 = await getDevicePlayerID(gameCode, testDeviceId2, 'local');
+        const playerID2 = await getDevicePlayerID(gameCode, testDeviceId2);
         expect(playerID2).toBe('0');
       });
 
       test('getDevicePlayerID returns null for device not in game', async () => {
-        const playerID = await getDevicePlayerID(gameCode, 'not-joined', 'local');
+        const playerID = await getDevicePlayerID(gameCode, 'not-joined');
         expect(playerID).toBeNull();
       });
 
       test('getDeviceSeat returns full seat information', async () => {
-        const seat = await getDeviceSeat(gameCode, testDeviceId, 'local');
+        const seat = await getDeviceSeat(gameCode, testDeviceId);
 
         expect(seat != null).toBe(true);
         expect(seat!.joinedAt).toBe('2026-01-01T00:00:00.000Z');
@@ -1406,7 +1262,7 @@ describe('Persistence Tests', () => {
       });
 
       test('getDeviceSeat returns null for device not in game', async () => {
-        const seat = await getDeviceSeat(gameCode, 'not-joined', 'local');
+        const seat = await getDeviceSeat(gameCode, 'not-joined');
         expect(seat).toBeNull();
       });
     });
@@ -1415,13 +1271,9 @@ describe('Persistence Tests', () => {
       let gameCode: string;
 
       beforeEach(async () => {
-        gameCode = await createNewGame('local');
+        gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 
-        const metadataMap = JSON.parse(
-          localStorage.getItem('game_metadata') ?? '[]'
-        ) as Array<[string, GameMetadata]>;
-        const metadataMapObj = new Map(metadataMap);
-        metadataMapObj.set(gameCode, {
+        await updateGameMetadata(gameCode, {
           gameMode: 'byod',
           hostDeviceId: testDeviceId,
           playerSeats: {
@@ -1436,14 +1288,10 @@ describe('Persistence Tests', () => {
           },
           lastModified: new Date().toISOString(),
         });
-        localStorage.setItem(
-          'game_metadata',
-          JSON.stringify(Array.from(metadataMapObj.entries()))
-        );
       });
 
       test('returns all player seats', async () => {
-        const seats = await getPlayerSeats(gameCode, 'local');
+        const seats = await getPlayerSeats(gameCode);
 
         expect(seats != null).toBe(true);
         expect(Object.keys(seats!).length).toBe(2);
@@ -1452,14 +1300,15 @@ describe('Persistence Tests', () => {
       });
 
       test('returns empty object for game with no seats', async () => {
-        const hotseatCode = await createNewGame('local', { gameMode: 'hotseat' });
+        const emptyCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
+        await updateGameMetadata(emptyCode, { playerSeats: {} });
 
-        const seats = await getPlayerSeats(hotseatCode, 'local');
+        const seats = await getPlayerSeats(emptyCode);
         expect(seats).toEqual({});
       });
 
       test('returns null for non-existent game', async () => {
-        const seats = await getPlayerSeats('XXXXX', 'local');
+        const seats = await getPlayerSeats('XXXXX');
         expect(seats).toBeNull();
       });
     });

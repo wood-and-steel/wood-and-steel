@@ -14,7 +14,7 @@
 | Which moves are allowed in which phase | `src/stores/moveValidation.js` | `MOVES_BY_PHASE` |
 | Move implementation + phase checks + `checkPhaseTransition` | `src/stores/gameActions.js` | Per-move `ctx.phase` checks; call `checkPhaseTransition` after state-changing moves |
 | Moves wiring consumed by UI | `src/stores/moves.js` | Ensure new/changed moves are exposed via `createMoves` |
-| Initial phase (hotseat/BYOD) | `src/stores/gameStore.ts` (initial ctx), `src/utils/gameManager.js` (BYOD initial phase) | Default `ctx.phase` |
+| Initial phase | `src/utils/gameManager.ts` (`createNewGame` always starts in `waiting_for_players`); `src/stores/gameStore.ts` (store default ctx) | Default `ctx.phase` |
 | Phase-dependent app routing (lobby/waiting/game board) | `src/app/App.js` | `waiting_for_players` branch and BYOD transitions |
 | Provider path from UI to moves/state | `src/providers/GameProvider.js`, `src/hooks/useGame.js` | Verify phase/move changes are reachable by components |
 | Phase in UI (tabs, scoring stub, setup→play hint) | `src/Board.tsx` | `currentPhase`, scoring branch, `prevPhaseRef` effect |
@@ -42,7 +42,7 @@ Phase transitions are triggered by **`checkPhaseTransition(G, ctx)`** in `src/st
 
 ### 1. `waiting_for_players` (BYOD only)
 
-- **Purpose:** Players join; host starts the game. Hotseat skips this and starts in `setup`.
+- **Purpose:** Players join; host starts the game. Every new game starts here.
 - **Flow:** `endIf` is true when `G.byodGameStarted === true`. Then transition to `setup`.
 - **Where:** `phaseConfig.ts`; start-game flow in `App.js` and `WaitingForPlayersScreen.js`.
 

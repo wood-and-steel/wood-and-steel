@@ -27,7 +27,7 @@ interface PhaseConfigEntry {
 }
 
 export const phaseConfig: Record<PhaseName, PhaseConfigEntry> = {
-  // Phase 0: Waiting for Players (BYOD only). Players join; host starts the game. Hotseat skips this and starts in 'setup'.
+  // Phase 0: Waiting for Players. Every new game starts here; players join and the host starts the game.
   waiting_for_players: {
     next: 'setup',
     // End when host has started the game (G.byodGameStarted set after assignRandomPlayerIDs).

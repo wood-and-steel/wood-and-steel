@@ -134,7 +134,7 @@ const storeImpl = (
       ctx: restored.ctx,
       hasMovedThisTurn: false,
     });
-    // Persist so BYOD stays in sync (same pattern as gameActions.saveCurrentGameState)
+    // Persist so other devices stay in sync (same pattern as gameActions.saveCurrentGameState)
     const code = getCurrentGameCode();
     if (code) {
       saveGameState(code, restored.G, restored.ctx).catch((error: unknown) => {

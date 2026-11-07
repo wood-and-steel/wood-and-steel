@@ -17,6 +17,8 @@ test('renders lobby screen on initial load', async () => {
     expect(screen.getByText(/wood and steel lobby/i)).toBeInTheDocument();
   });
 
-  expect(screen.getByRole('button', { name: /local/i })).toBeInTheDocument();
-  expect(screen.getAllByRole('button', { name: /cloud/i }).length).toBeGreaterThan(0);
+  // Single mode: no storage/mode tabs, join form always shown
+  expect(screen.queryByRole('button', { name: /local/i })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /hotseat/i })).not.toBeInTheDocument();
+  expect(screen.getByLabelText(/join a game/i)).toBeInTheDocument();
 });

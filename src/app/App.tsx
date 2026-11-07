@@ -8,7 +8,6 @@ import { WaitingForPlayersScreen } from '../components/WaitingForPlayersScreen';
 import { useGameStore } from '../stores/gameStore';
 import { useLobbyStore } from '../stores/lobbyStore';
 import type { GameState, GameContext } from '../stores/gameStore';
-import type { StorageType } from '../utils/gameManager';
 import {
   createNewGame,
   gameExists,
@@ -17,14 +16,15 @@ import {
   isValidGameCode,
   normalizeGameCode,
   loadGameState,
-  saveGameState,
   updateLastModifiedCache,
+  isSupportedGameMetadata,
 } from '../utils/gameManager';
 import { checkPhaseTransition } from '../stores/phaseManager';
 import { initializeIndependentRailroads } from '../independentRailroads';
 import { getPlayerAvatarColorForIndex } from '../utils/playerAvatar';
 
 const NOT_PLAYING_MESSAGE = 'This device is not playing this game.';
+const UNSUPPORTED_GAME_MESSAGE = 'This game was created by an older version and can no longer be opened.';
 
 const DevSimulatorPage = __INCLUDE_SIM__
   ? React.lazy(() =>
@@ -46,14 +46,9 @@ const DevEditPathsPage = import.meta.env.DEV
     )
   : null;
 
-// Import test utilities in development
-if (!import.meta.env.PROD) {
-  import('../utils/storage/testMigration');
-}
-
 export interface AppGameManager {
   currentGameCode: string | null;
-  onNewGame: (numPlayers?: number, gameMode?: 'hotseat' | 'byod') => Promise<void>;
+  onNewGame: (numPlayers?: number) => Promise<void>;
   onSwitchGame: (code: string) => void;
   onDeleteGame: (code: string) => Promise<boolean>;
   onListGames: () => Promise<unknown[]>;
@@ -73,8 +68,7 @@ const AppContent = (): React.ReactElement => {
   const numPlayers = useGameStore((state) => state.ctx?.numPlayers ?? 2);
   const currentPhase = useGameStore((state) => state.ctx?.phase);
 
-  // BYOD mode state
-  const [isBYODGame, setIsBYODGame] = React.useState(false);
+  // This device's playerID; null until the host starts the game
   const [myPlayerID, setMyPlayerID] = React.useState<string | null>(null);
 
   // Track last applied update timestamp to prevent stale real-time updates.
@@ -91,7 +85,6 @@ const AppContent = (): React.ReactElement => {
       setLobbyMode(true);
       setSelectedGame(null);
       setCurrentGameCodeState(null);
-      setIsBYODGame(false);
       setMyPlayerID(null);
       if (isValidGameCode(normalizedCode)) {
         setJoinFormPrefill(normalizedCode, null, true);
@@ -110,43 +103,51 @@ const AppContent = (): React.ReactElement => {
         setLobbyMode(true);
         setSelectedGame(null);
         setCurrentGameCodeState(null);
-        setIsBYODGame(false);
         setMyPlayerID(null);
         console.info('[App] No current game, starting in lobby mode');
         return;
       }
 
       try {
-        const exists = await gameExists(code, storage.storageType);
+        const exists = await gameExists(code);
         if (!exists) {
           setLobbyMode(true);
           setSelectedGame(null);
           setCurrentGameCodeState(null);
-          setIsBYODGame(false);
           setMyPlayerID(null);
           console.info('[App] Current game does not exist, starting in lobby mode');
           return;
         }
 
         // Game exists, load it and exit lobby mode
-        const savedState = await loadGameState(code, storage.storageType);
+        const savedState = await loadGameState(code);
         if (savedState?.G && savedState?.ctx) {
-          // Check BYOD "device not playing" before loading state (avoids flash of Loading screen)
-          const isBYOD = await storage.isBYODGame(code);
+          const metadata = await storage.getMetadata(code);
+          if (!isSupportedGameMetadata(metadata)) {
+            storage.clearCurrentGameCode();
+            setLobbyMode(true);
+            setSelectedGame(null);
+            setCurrentGameCodeState(null);
+            setMyPlayerID(null);
+            setJoinFormPrefill(code, UNSUPPORTED_GAME_MESSAGE);
+            console.info('[App] Current game uses an unsupported mode, returning to lobby:', code);
+            return;
+          }
+
+          // Check "device not playing" before loading state (avoids flash of Loading screen)
           const phase = savedState.ctx?.phase;
           const isPastWaiting = phase && phase !== 'waiting_for_players';
 
-          if (isBYOD && isPastWaiting) {
+          if (isPastWaiting) {
             const playerID = await storage.getMyPlayerID(code);
             if (playerID == null) {
               storage.clearCurrentGameCode();
               setLobbyMode(true);
               setSelectedGame(null);
               setCurrentGameCodeState(null);
-              setIsBYODGame(false);
               setMyPlayerID(null);
               setJoinFormPrefill(code, NOT_PLAYING_MESSAGE);
-              console.info('[App] Device not playing BYOD game, returning to lobby with code:', code);
+              console.info('[App] Device not playing this game, returning to lobby with code:', code);
               return;
             }
           }
@@ -164,15 +165,9 @@ const AppContent = (): React.ReactElement => {
           setLobbyMode(false);
           setCurrentGameCodeState(code);
 
-          if (isBYOD) {
-            const playerID = await storage.getMyPlayerID(code);
-            setMyPlayerID(playerID);
-            setIsBYODGame(true);
-            console.info('[App] BYOD game detected, myPlayerID:', playerID);
-          } else {
-            setMyPlayerID(null);
-            setIsBYODGame(false);
-          }
+          const playerID = await storage.getMyPlayerID(code);
+          setMyPlayerID(playerID);
+          console.info('[App] Loaded game, myPlayerID:', playerID);
 
           console.info('[App] Successfully loaded game state for:', code);
         } else {
@@ -181,7 +176,6 @@ const AppContent = (): React.ReactElement => {
           setLobbyMode(true);
           setSelectedGame(null);
           setCurrentGameCodeState(null);
-          setIsBYODGame(false);
           setMyPlayerID(null);
         }
       } catch (error) {
@@ -191,7 +185,6 @@ const AppContent = (): React.ReactElement => {
         setLobbyMode(true);
         setSelectedGame(null);
         setCurrentGameCodeState(null);
-        setIsBYODGame(false);
         setMyPlayerID(null);
       }
     };
@@ -260,8 +253,8 @@ const AppContent = (): React.ReactElement => {
             lastAppliedTimestampRef.current = lastModified;
           }
 
-          // For BYOD games, check if playerID was just assigned (when game transitions from waiting)
-          if (isBYODGame && !myPlayerID && (state.ctx as GameContext).phase !== 'waiting_for_players') {
+          // Check if playerID was just assigned (when game transitions from waiting)
+          if (!myPlayerID && (state.ctx as GameContext).phase !== 'waiting_for_players') {
             const newPlayerID = await storage.getMyPlayerID(currentGameCode);
             if (newPlayerID) {
               setMyPlayerID(newPlayerID);
@@ -281,18 +274,13 @@ const AppContent = (): React.ReactElement => {
         console.info('[App] Unsubscribed from real-time updates for game:', currentGameCode);
       }
     };
-  }, [currentGameCode, isLobbyMode, storage, isBYODGame, myPlayerID]);
+  }, [currentGameCode, isLobbyMode, storage, myPlayerID]);
 
   // Effect to update myPlayerID when game phase changes from waiting_for_players.
   // This catches the case when the host starts the game on this device.
   React.useEffect(() => {
     const updatePlayerID = async (): Promise<void> => {
-      if (
-        isBYODGame &&
-        currentGameCode &&
-        currentPhase !== 'waiting_for_players' &&
-        !myPlayerID
-      ) {
+      if (currentGameCode && currentPhase !== 'waiting_for_players' && !myPlayerID) {
         const newPlayerID = await storage.getMyPlayerID(currentGameCode);
         if (newPlayerID) {
           setMyPlayerID(newPlayerID);
@@ -302,40 +290,44 @@ const AppContent = (): React.ReactElement => {
     };
 
     updatePlayerID();
-  }, [isBYODGame, currentGameCode, currentPhase, myPlayerID, storage]);
+  }, [currentGameCode, currentPhase, myPlayerID, storage]);
 
   // Handler to enter a game
   const handleEnterGame = React.useCallback(
-    async (code: string, options: { storageType?: StorageType } = {}): Promise<void> => {
+    async (code: string): Promise<void> => {
       try {
         const normalizedCode = normalizeGameCode(code);
-        const storageType = options.storageType ?? storage.storageType;
 
         if (!isValidGameCode(normalizedCode)) {
           alert(`Invalid game code: "${code}"`);
           return;
         }
 
-        const exists = await gameExists(normalizedCode, storageType);
+        const exists = await gameExists(normalizedCode);
         if (!exists) {
           alert(`Game "${normalizedCode}" not found.`);
           return;
         }
 
         // Load game state
-        const savedState = await loadGameState(normalizedCode, storageType);
+        const savedState = await loadGameState(normalizedCode);
         if (savedState?.G && savedState?.ctx) {
-          // For BYOD games in play/setup, verify this device is a player before entering
-          const isBYOD = await storage.isBYODGame(normalizedCode);
+          const metadata = await storage.getMetadata(normalizedCode);
+          if (!isSupportedGameMetadata(metadata)) {
+            setJoinFormPrefill(normalizedCode, UNSUPPORTED_GAME_MESSAGE);
+            return;
+          }
+
+          // For games in play/setup, verify this device is a player before entering
           const phase = savedState.ctx?.phase;
           const isPastWaiting = phase && phase !== 'waiting_for_players';
 
-          if (isBYOD && isPastWaiting) {
+          if (isPastWaiting) {
             const playerID = await storage.getMyPlayerID(normalizedCode);
             if (playerID == null) {
               // Device is not playing - stay in lobby, show error in Join form (LobbyScreen effect will apply prefill)
               setJoinFormPrefill(normalizedCode, NOT_PLAYING_MESSAGE);
-              console.info('[App] Device not playing BYOD game, staying in lobby with code:', normalizedCode);
+              console.info('[App] Device not playing this game, staying in lobby with code:', normalizedCode);
               return;
             }
           }
@@ -348,23 +340,14 @@ const AppContent = (): React.ReactElement => {
             turnStartSnapshot: structuredClone({ G: loadedG, ctx: loadedCtx }),
             hasMovedThisTurn: false,
           });
-          if (storage.storageType !== storageType) {
-            storage.setStorageType(storageType);
-          }
-          storage.setCurrentGameCodeForType(storageType, normalizedCode);
+          storage.setCurrentGameCode(normalizedCode);
           setSelectedGame(normalizedCode);
           setLobbyMode(false);
           setCurrentGameCodeState(normalizedCode);
-          setIsBYODGame(isBYOD);
 
-          if (isBYOD) {
-            const playerID = await storage.getMyPlayerID(normalizedCode);
-            setMyPlayerID(playerID);
-            console.info('[App] Entered BYOD game:', normalizedCode, 'myPlayerID:', playerID);
-          } else {
-            setMyPlayerID(null);
-            console.info('[App] Entered hotseat game:', normalizedCode);
-          }
+          const playerID = await storage.getMyPlayerID(normalizedCode);
+          setMyPlayerID(playerID);
+          console.info('[App] Entered game:', normalizedCode, 'myPlayerID:', playerID);
         } else {
           alert(`Unable to load game "${normalizedCode}". The game state may be corrupted.`);
         }
@@ -378,51 +361,33 @@ const AppContent = (): React.ReactElement => {
   );
 
   const handleNewGame = React.useCallback(
-    async (numPlayersParam: number = 2, gameMode: 'hotseat' | 'byod' = 'hotseat'): Promise<void> => {
+    async (numPlayersParam: number = 2): Promise<void> => {
       const validNumPlayers = Math.max(2, Math.min(5, Math.floor(numPlayersParam) || 2));
 
       try {
-        const isBYOD = gameMode === 'byod';
-        const hostDeviceId = isBYOD ? storage.getDeviceId() : null;
         const savedByName =
-          isBYOD && typeof localStorage !== 'undefined'
+          typeof localStorage !== 'undefined'
             ? (localStorage.getItem('byod_player_name') ?? '').trim()
             : '';
         const hostPlayerName = savedByName || undefined;
 
-        // New game is created by createNewGame with 'waiting_for_players' phase
-        const newCode = await createNewGame(storage.storageType, {
-          gameMode,
-          hostDeviceId,
+        // New games start in 'waiting_for_players'
+        const newCode = await createNewGame({
+          hostDeviceId: storage.getDeviceId(),
           numPlayers: validNumPlayers,
           ...(hostPlayerName && { hostPlayerName }),
         });
 
-        if (!isBYOD) {
-          // Initialize game state to initial values with specified number of players
-          useGameStore.getState().resetState(validNumPlayers);
-
-          // Initialize independent railroads
-          const { G, ctx } = useGameStore.getState();
-          const independentRailroads = initializeIndependentRailroads();
-          const initializedG = { ...G, independentRailroads };
-          useGameStore.setState({ G: initializedG });
-
-          // Save the properly initialized state to storage
-          await saveGameState(newCode, initializedG, ctx, storage.storageType);
-        } else {
-          // For BYOD, load the state that was created by createNewGame
-          const savedState = await loadGameState(newCode, storage.storageType);
-          if (savedState?.G && savedState?.ctx) {
-            const loadedG = savedState.G as GameState;
-            const loadedCtx = savedState.ctx as GameContext;
-            useGameStore.setState({
-              G: loadedG,
-              ctx: loadedCtx,
-              turnStartSnapshot: structuredClone({ G: loadedG, ctx: loadedCtx }),
-              hasMovedThisTurn: false,
-            });
-          }
+        const savedState = await loadGameState(newCode);
+        if (savedState?.G && savedState?.ctx) {
+          const loadedG = savedState.G as GameState;
+          const loadedCtx = savedState.ctx as GameContext;
+          useGameStore.setState({
+            G: loadedG,
+            ctx: loadedCtx,
+            turnStartSnapshot: structuredClone({ G: loadedG, ctx: loadedCtx }),
+            hasMovedThisTurn: false,
+          });
         }
 
         // Set as current game
@@ -430,16 +395,8 @@ const AppContent = (): React.ReactElement => {
         setSelectedGame(newCode);
         setLobbyMode(false);
         setCurrentGameCodeState(newCode);
-        setIsBYODGame(isBYOD);
-        setMyPlayerID(null); // For BYOD, playerID will be assigned when game starts
-        console.info(
-          '[App] Created and entered new game:',
-          newCode,
-          'with',
-          validNumPlayers,
-          'players (mode:',
-          gameMode + ')'
-        );
+        setMyPlayerID(null); // playerID is assigned when the host starts the game
+        console.info('[App] Created and entered new game:', newCode, 'with', validNumPlayers, 'players');
       } catch (error) {
         const err = error as Error;
         console.error('[App] Error creating new game:', err.message);
@@ -557,7 +514,7 @@ const AppContent = (): React.ReactElement => {
 
     try {
       // Delete the game
-      const deleted = await deleteGame(currentGameCode, storage.storageType);
+      const deleted = await deleteGame(currentGameCode);
 
       if (deleted) {
         // Clear current game and return to lobby
@@ -565,7 +522,6 @@ const AppContent = (): React.ReactElement => {
         setSelectedGame(null);
         setLobbyMode(true);
         setCurrentGameCodeState(null);
-        setIsBYODGame(false);
         setMyPlayerID(null);
 
         // Clear game store state
@@ -590,7 +546,6 @@ const AppContent = (): React.ReactElement => {
     setSelectedGame(null);
     setLobbyMode(true);
     setCurrentGameCodeState(null);
-    setIsBYODGame(false);
     setMyPlayerID(null);
 
     console.info('[App] Returned to lobby from waiting screen');
@@ -608,7 +563,7 @@ const AppContent = (): React.ReactElement => {
         const normalizedCode = normalizeGameCode(code);
         const wasCurrentGame = normalizedCode === currentGameCode;
 
-        const deleted = await deleteGame(normalizedCode, storage.storageType);
+        const deleted = await deleteGame(normalizedCode);
         if (deleted) {
           // If we deleted the current game, return to lobby
           if (wasCurrentGame) {
@@ -630,7 +585,7 @@ const AppContent = (): React.ReactElement => {
       }
     },
     onListGames: async () => {
-      return await listGames(storage.storageType);
+      return await listGames();
     },
     isValidGameCode,
     normalizeGameCode,
@@ -647,8 +602,8 @@ const AppContent = (): React.ReactElement => {
     );
   }
 
-  // BYOD game in waiting_for_players phase: show waiting screen
-  if (isBYODGame && currentPhase === 'waiting_for_players') {
+  // Waiting for players to join: show waiting screen
+  if (currentPhase === 'waiting_for_players') {
     return (
       <WaitingForPlayersScreen
         gameCode={currentGameCode}
@@ -660,45 +615,25 @@ const AppContent = (): React.ReactElement => {
     );
   }
 
-  // BYOD game after start: render only this player's board
-  if (isBYODGame && myPlayerID !== null) {
+  // Game started: render only this device's player board
+  if (myPlayerID !== null) {
     return (
       <div>
         <GameProvider playerID={myPlayerID}>
           <WoodAndSteelState
             gameManager={{ ...gameManager, currentGameCode: gameManager.currentGameCode ?? undefined }}
-            isBYODMode={true}
           />
         </GameProvider>
       </div>
     );
   }
 
-  // BYOD game but no playerID yet (should not reach here after fix - device not playing now returns to lobby)
-  if (
-    isBYODGame &&
-    myPlayerID === null &&
-    currentPhase !== 'waiting_for_players'
-  ) {
-    return (
-      <div className="waitingScreen">
-        <div className="waitingScreen__content">
-          <p>Loading player assignment...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Hotseat mode: render all player boards
+  // Started but no playerID yet (device not playing returns to lobby before reaching here)
   return (
-    <div>
-      {Array.from({ length: numPlayers }, (_, i) => (
-        <GameProvider key={i} playerID={String(i)}>
-          <WoodAndSteelState
-            gameManager={{ ...gameManager, currentGameCode: gameManager.currentGameCode ?? undefined }}
-          />
-        </GameProvider>
-      ))}
+    <div className="waitingScreen">
+      <div className="waitingScreen__content">
+        <p>Loading player assignment...</p>
+      </div>
     </div>
   );
 };

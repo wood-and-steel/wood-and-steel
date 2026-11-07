@@ -34,13 +34,13 @@ These invariants must hold. Code and tests must respect them.
 
 | Path | Role |
 |------|------|
-| `src/components/LobbyScreen.js` | Full-screen lobby UI; manages games list, tabs, join form, new game |
+| `src/components/LobbyScreen.tsx` | Full-screen lobby UI; manages games list, join form, new game |
 | `src/stores/lobbyStore.js` | Zustand store for lobby mode, selected game, join form prefill |
 | `src/utils/gameManager.js` | `listGames`, `createNewGame`, `deleteGame`, `loadGameState`; uses storage adapter |
 | `src/app/App.js` | Entry point; conditional lobby vs board render; `onEnterGame`, `onNewGame` handlers |
 | `src/components/TopButtonBar.js` | Game code button triggers `onNavigateToLobby` |
 | `src/Board.tsx` | Board container; passes `onNavigateToLobby` to TopButtonBar |
-| `src/providers/StorageProvider.js` | Storage type (local/cloud); `joinGame`, `getCurrentGameCode`, etc. |
+| `src/providers/StorageProvider.tsx` | Current game code, device ID, `joinGame`, and other BYOD seat helpers |
 
 ---
 
@@ -67,12 +67,12 @@ These invariants must hold. Code and tests must respect them.
 
 ### 2. `gameManager.js` — Game List Contract
 
-**`listGames(storageType)`** returns an array of game objects. Each object must have:
+**`listGames()`** returns an array of game objects. Each object must have:
 - `code: string` — game code
 - `phase: string` — e.g. `'setup'`, `'play'`, `'waiting_for_players'`
 - `numPlayers: number`
 - `lastModified: string` — ISO 8601 timestamp
-- `metadata?: object` — includes `gameMode: 'hotseat' | 'byod'` for cloud games
+- `metadata?: object` — includes `gameMode: 'byod'` (older rows may lack it; the lobby hides them)
 
 Games are sorted by `lastModified` descending (most recent first).
 
@@ -80,19 +80,16 @@ Games are sorted by `lastModified` descending (most recent first).
 
 **Props:**
 - `gameManager: { onListGames, onDeleteGame, ... }` — game management API
-- `onEnterGame(gameCode, options?)` — callback to enter a game; `options.storageType` can force storage type
-- `onNewGame(numPlayers, gameMode)` — callback to create a new game
+- `onEnterGame(gameCode)` — callback to enter a game
+- `onNewGame(numPlayers)` — callback to create a new game
 
-**Tabs:**
-- `local` — local storage, hotseat only
-- `cloud-hotseat` — cloud storage, hotseat games
-- `cloud-byod` — cloud storage, BYOD games; includes Join form
+**Layout:** title (with loading spinner), cloud-error banner when Supabase is unreachable, Join form, games list (only games where `isSupportedGameMetadata(metadata)`), New Game controls. There are no mode or storage tabs.
 
 **UI behavior:**
-- Row click: enter game; for BYOD `waiting_for_players` games, join first then enter
+- Row click: enter game; for `waiting_for_players` games, join first then enter
 - Delete button: `window.confirm`, then `gameManager.onDeleteGame(code)`, then refresh list
-- New game: player count buttons (2–5), `onNewGame(num, gameMode)`
-- Join form (Cloud BYOD tab): `storage.joinGame(code)` then `onEnterGame(code, { storageType: 'cloud' })`
+- New game: player count buttons (2–5), `onNewGame(num)`
+- Join form: `storage.joinGame(code)` then `onEnterGame(code)`
 
 **CSS:** Uses `lobbyScreen`, `lobbyScreen__*` BEM classes. See `docs/CSS_ARCHITECTURE.md`.
 
@@ -166,7 +163,7 @@ beforeEach(() => {
 **App-level:**
 - [ ] App renders lobby when no current game
 - [ ] App renders lobby when current game does not exist in storage
-- [ ] Lobby shows Local / Cloud (Hotseat) / Cloud (BYOD) tabs
+- [ ] Lobby shows the Join form and no mode tabs
 - [ ] Clicking game code button returns to lobby
 - [ ] New game creates and enters game (exits lobby)
 - [ ] Entering a game loads board (exits lobby)
@@ -176,9 +173,9 @@ beforeEach(() => {
 - [ ] Games list: shows Code, Phase, Players, Last Turn; sorted by recency
 - [ ] Row click enters game
 - [ ] Delete with confirm removes game and refreshes list
-- [ ] New Game buttons call `onNewGame(numPlayers, gameMode)` with correct args
-- [ ] Tab switch updates storage type and refreshes list
-- [ ] Join form (BYOD tab): validation, error display, success flow
+- [ ] New Game buttons call `onNewGame(numPlayers)` with correct args
+- [ ] Games from older app versions (no `gameMode: 'byod'`) are not listed
+- [ ] Join form: validation, error display, success flow
 
 **lobbyStore unit:**
 - [ ] `setLobbyMode` updates `isLobbyMode`
@@ -214,9 +211,9 @@ beforeEach(() => {
 
 ## Cloud Storage Notes
 
-- `listGames(storageType)` uses storage adapter; cloud adapter fetches from API.
+- `listGames()` uses the Supabase storage adapter.
 - `lastModified` should be ISO 8601 for cloud compatibility.
-- LobbyScreen filters by `metadata.gameMode` for cloud tabs.
+- LobbyScreen hides rows whose `metadata.gameMode` isn't `'byod'`.
 - Cloud-unavailable banner (paused Supabase, etc.) links to the owner dashboard for **dev convenience only** — rework before go-live; see [Before going live](CLOUD_STORAGE_TESTING.md#before-going-live-paused-project--dashboard-link) in `CLOUD_STORAGE_TESTING.md`.
 - Future: loading states, polling, offline/online handling.
 

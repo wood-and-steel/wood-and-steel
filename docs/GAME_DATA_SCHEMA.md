@@ -30,7 +30,7 @@ export interface GameState {
     string,                                             // company name
     { name: string; routes: IndependentRailroadRoute[] }
   >;
-  byodGameStarted?: boolean;          // BYOD only: true once host starts the game
+  byodGameStarted?: boolean;          // true once host starts the game (waiting_for_players → setup)
   lastRoundRoutesAdded?: number;      // UI hint; set when growIndependentRailroads adds routes
 }
 ```

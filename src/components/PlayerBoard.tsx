@@ -18,7 +18,6 @@ export interface PlayerBoardProps {
   G: GameState;
   ctx: GameContext;
   playerID: string | null;
-  isBYODMode?: boolean;
   startingContractExists: boolean;
   currentPhase: GamePhase;
   onStartingPairSelect: (pair: [string, string]) => void;
@@ -35,7 +34,6 @@ export function PlayerBoard({
   G,
   ctx,
   playerID,
-  isBYODMode = false,
   startingContractExists,
   currentPhase,
   onStartingPairSelect,
@@ -44,9 +42,9 @@ export function PlayerBoard({
   onDelete,
   onClaimContract,
 }: PlayerBoardProps): React.ReactElement | null {
-  const effectivePlayerID = isBYODMode && playerID != null ? playerID : ctx.currentPlayer;
+  const effectivePlayerID = playerID ?? ctx.currentPlayer;
   const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
-  const isPlayerTurn = !isBYODMode || playerID === ctx.currentPlayer;
+  const isPlayerTurn = playerID === ctx.currentPlayer;
 
   if (!activePlayer) return null;
 
