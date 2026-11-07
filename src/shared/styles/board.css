@@ -1,0 +1,273 @@
+/*
+ * Playtest board app (/board, src/board/). Imported only by src/board/BoardApp.tsx so it ships
+ * in the lazy board chunk, not the main bundle. See docs/BOARD_APP_PLAN.md.
+ *
+ * SVG map shapes are sized in board pixels (viewBox 0 0 6660 4173), so stroke widths below
+ * are in board pixels too. The printed route strokes are ~23px wide.
+ */
+
+.boardApp {
+  --board-indie-route: #111111;
+  --board-token-outline: #ffffff;
+  --board-bar-height: 2.75rem;
+
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: 1000px;
+  background: var(--color-bg-light);
+  color: var(--color-text);
+}
+
+/* Top bar */
+
+.boardTopBar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  flex-shrink: 0;
+  min-height: var(--board-bar-height);
+  padding: 0 var(--spacing-md);
+  background: var(--color-bg-primary);
+  border-bottom: var(--border-width-md) solid var(--color-border-light);
+  white-space: nowrap;
+}
+
+.boardTopBar__code {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-h2);
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+}
+
+.boardTopBar__code:hover {
+  text-decoration: underline;
+}
+
+.boardTopBar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.boardTopBar__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.boardTopBar__sync {
+  margin-left: auto;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.boardTopBar__sync--live::before {
+  content: '● ';
+  color: #1a9e3a;
+}
+
+.boardTopBar__sync--error {
+  color: var(--color-danger);
+}
+
+.boardTopBar__zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.boardTopBar__zoom .button {
+  min-width: 2rem;
+  justify-content: center;
+  /* Judson's + and − glyphs are tiny */
+  font-family: system-ui, sans-serif;
+}
+
+.boardTopBar__zoomLevel {
+  min-width: 3.5em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Map viewport and SVG */
+
+.boardViewport {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.boardMap {
+  display: block;
+  flex: none;
+  margin: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.boardMap--panning {
+  cursor: grabbing;
+}
+
+.boardMap__indieRoute {
+  fill: none;
+  stroke: var(--board-indie-route);
+  stroke-width: 15;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.boardMap__hub {
+  fill: none;
+  stroke-width: 22;
+  pointer-events: visiblePainted;
+}
+
+.boardMap__regionalOffice {
+  stroke: var(--board-token-outline);
+  stroke-width: 8;
+}
+
+.boardMap__routeHit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 40;
+  pointer-events: stroke;
+}
+
+/* Player trays */
+
+.boardTrays {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-primary);
+  border-top: var(--border-width-md) solid var(--color-border-light);
+}
+
+.boardTray {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  flex: 1;
+  min-width: 0;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: var(--border-width-lg) solid transparent;
+  border-radius: var(--radius-md);
+}
+
+.boardTray--current {
+  border-color: var(--color-primary);
+  background: var(--color-bg-hover);
+}
+
+.boardTray__name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boardTray__tokens {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.boardSwatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+}
+
+.boardToken {
+  height: 1.25rem;
+  overflow: visible;
+}
+
+.boardToken--engine {
+  width: 1.875rem;
+}
+
+.boardToken--railyard {
+  width: 1.25rem;
+}
+
+.boardToken rect,
+.boardToken circle {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+/* Picker and messages */
+
+.boardApp--message {
+  align-items: center;
+  justify-content: center;
+}
+
+.boardMessage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 32rem;
+  max-height: 80vh;
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  background: var(--color-bg-primary);
+  border: var(--border-width-md) solid var(--color-border-light);
+  border-radius: var(--radius-md);
+}
+
+.boardMessage__title {
+  margin: 0;
+  font-size: var(--font-size-h1);
+}
+
+.boardMessage__error {
+  margin: 0;
+  color: var(--color-danger);
+}
+
+.boardPicker {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.boardPicker__game {
+  display: grid;
+  grid-template-columns: 5rem 8rem 1fr;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  color: inherit;
+  text-decoration: none;
+}
+
+.boardPicker__game:hover {
+  background: var(--color-bg-hover);
+}
+
+.boardPicker__code {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.boardPicker__players {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -129,6 +129,7 @@ The full board PNG (6660×4173) looks like a 6× scale of `simple-map.png` (1110
 1. **M0 Geometry:** city points, traced route paths, fix-up page; Jeff reviews the overlay.
    - *Status (2026-11-01):* built. All 56 cities and the 6 RO discs are auto-detected, and 105/105 routes have paths. The PNG is not an exact 6× scale of `simple-map.png`, so cities are matched by an affine fit plus optimal assignment. Three routes have **no stroke in the art** and fall back to flagged straight lines: Chicago–Saint Louis (only its price pill is printed), Flagstaff–Phoenix, and Los Angeles–Phoenix. Re-running `scripts/trace-routes.py` keeps routes listed in `EDITED_ROUTES`.
 2. **M1 Shell:** flag/script/route, lazy load, read-only `G` sync, background, indie routes, hubs, RO discs, zoom/pan, top bar, trays.
+   - *Status (2026-11-07):* built. `src/board/BoardApp.tsx` (picker + view), `useBoardGameSync.ts`, `useZoomPan.ts` (scroll-container zoom, 50–400%), `BoardMap.tsx`, `BoardChrome.tsx`, styles in `src/shared/styles/board.css` (imported only by the board chunk). Background is `src/board/assets/map-board.webp` (3330px, ~320 KB) from `scripts/make-board-webp.py`. Route hover tooltips are native `<title>`s on the hit layer. The import guard test (`boardIsolation.test.ts`) landed early. Trays show all tokens as unplaced until M2/M4.
 3. **M2 Board state:** ops, store, Supabase adapter, SQL, conflict-retry, seeding.
 4. **M3 Track:** click-claim, popover, parallel rendering.
 5. **M4 Tokens:** engine and railyard drag/drop.
@@ -141,7 +142,7 @@ The full board PNG (6660×4173) looks like a 6× scale of `simple-map.png` (1110
 
 ## Open questions (non-blocking; defaults in brackets)
 
-- **Player colors:** the app palette (`#f83765`, `#ba951e`, `#0e86f4`, `#31b027`, `#505050`) doesn't match the physical hues (blue, tan, green, pink, red). [Use `avatarColor` with derived light/dark shades for engines.]
+- **Player colors:** *Resolved:* the app palette now matches the physical hues (pink `#f0609e`, tan `#c9a66b`, blue `#1e6fd9`, green `#2e8b3e`, red `#c8202e`). Use `avatarColor` with derived light/dark shades for engines.
 - **Owners per route:** [cap at 4, primary + parallel]
 - **Railyard tokens per player:** [1].
 - **Hub token on the board:** read-only from `G`. Should the board also show where a player *physically* put their Hub marker if it differs? [No.]
