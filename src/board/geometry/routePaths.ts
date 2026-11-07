@@ -61,7 +61,6 @@ export const ROUTE_PATHS: Record<string, string> = {
   'Fargo-Minneapolis': 'M 3268 922 C 3381 1062 3515 1168 3696 1199',
   'Fargo-Winnipeg': 'M 3268 922 C 3211 749 3139 584 3179 398',
   'Flagstaff-Los Angeles': 'M 1474 2670 C 1174 2654 898 2692 617 2795',
-  'Flagstaff-Phoenix': 'M 1474 2670 C 1445 2772 1416 2873 1388 2975',
   'Flagstaff-Santa Fe': 'M 1474 2670 C 1717 2754 1979 2757 2230 2708',
   'Houston-Memphis': 'M 3626 3649 C 3931 3394 4116 3076 4258 2711',
   'Houston-New Orleans': 'M 3626 3649 C 3862 3646 4112 3635 4329 3539',
@@ -71,7 +70,6 @@ export const ROUTE_PATHS: Record<string, string> = {
   'Kansas City-Omaha': 'M 3586 2201 C 3470 2095 3396 1959 3401 1799',
   'Kansas City-Saint Louis': 'M 3586 2201 C 3768 2278 3965 2255 4142 2176',
   'Kansas City-Santa Fe': 'M 3586 2201 C 3094 2255 2637 2422 2230 2708',
-  'Los Angeles-Phoenix': 'M 617 2795 C 874 2855 1131 2915 1388 2975',
   'Los Angeles-San Diego': 'M 617 2795 C 605 2885 673 2955 729 3013',
   'Los Angeles-San Francisco': 'M 617 2795 C 535 2540 411 2310 237 2104',
   'Memphis-New Orleans': 'M 4258 2711 C 4199 2987 4201 3280 4329 3539',
@@ -113,8 +111,6 @@ export const ROUTE_PATHS: Record<string, string> = {
 
 /** Routes whose auto-trace looked unreliable, with the reason. Cleared per route once edited in /board/edit-paths. */
 export const FLAGGED_ROUTES: Record<string, string> = {
-  'Flagstaff-Phoenix': 'no stroke found in art; straight line',
-  'Los Angeles-Phoenix': 'no stroke found in art; straight line',
 };
 
 /** Routes hand-edited in /board/edit-paths. scripts/trace-routes.py keeps these paths when re-run. */
