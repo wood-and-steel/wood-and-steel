@@ -44,7 +44,7 @@ New Zustand store `src/board/boardStore.ts`. This is a documented exception in A
 interface BoardState {
   version: 1;
   seeded: boolean;
-  /** routeKey -> up to 2 owners [primary, parallel] as playerIDs */
+  /** routeKey -> up to 4 owners [primary, ...parallel] as playerIDs */
   track: Record<string, string[]>;
   /** playerID -> [lightEngineCity, darkEngineCity]; null = in tray */
   engines: Record<string, [string | null, string | null]>;
@@ -131,6 +131,7 @@ The full board PNG (6660×4173) looks like a 6× scale of `simple-map.png` (1110
 2. **M1 Shell:** flag/script/route, lazy load, read-only `G` sync, background, indie routes, hubs, RO discs, zoom/pan, top bar, trays.
    - *Status (2026-11-07):* built. `src/board/BoardApp.tsx` (picker + view), `useBoardGameSync.ts`, `useZoomPan.ts` (scroll-container zoom, 50–400%), `BoardMap.tsx`, `BoardChrome.tsx`, styles in `src/shared/styles/board.css` (imported only by the board chunk). Background is `src/board/assets/map-board.webp` (3330px, ~320 KB) from `scripts/make-board-webp.py`. Route hover tooltips are native `<title>`s on the hit layer. The import guard test (`boardIsolation.test.ts`) landed early. Trays show all tokens as unplaced until M2/M4.
 3. **M2 Board state:** ops, store, Supabase adapter, SQL, conflict-retry, seeding.
+   - *Status (2026-11-07):* built; **needs `src/board/supabase/board_states.sql` applied** (until then the board shows a banner and the game view still works). `boardOps.ts` (state shape, pure ops incl. `applyAcquisition`/`snapshotIndependentRailroads` for M5, `BoardOp` union, `normalizeBoardState`), `boardSeed.ts`, `boardStateAdapter.ts` (Supabase, own client), `boardStore.ts` (`confirmed` + `pending` ops → `board`), `boardSync.ts` (load, realtime, seed, queued saves with conflict re-apply, 5 attempts), `useBoardStateSync.ts`. Owners per route are capped at 4 (`[primary, ...parallel]`). Seeding waits until the phase is past `setup`; if several starting pairs match (first opened mid-game), each player gets one not already given to an earlier player. `STARTING_CITY_PAIRS` moved to `src/data/startingRoutes.ts`. Track isn't drawn yet (M3); trays now hide placed tokens.
 4. **M3 Track:** click-claim, popover, parallel rendering.
 5. **M4 Tokens:** engine and railyard drag/drop.
 6. **M5 Acquisitions:** diff and auto-convert.
@@ -142,7 +143,6 @@ The full board PNG (6660×4173) looks like a 6× scale of `simple-map.png` (1110
 
 ## Open questions (non-blocking; defaults in brackets)
 
-- **Player colors:** *Resolved:* the app palette now matches the physical hues (pink `#f0609e`, tan `#c9a66b`, blue `#1e6fd9`, green `#2e8b3e`, red `#c8202e`). Use `avatarColor` with derived light/dark shades for engines.
-- **Owners per route:** [cap at 4, primary + parallel]
-- **Railyard tokens per player:** [1].
+- **Owners per route:** cap at 4, primary + parallel
+- **Railyard tokens per player:** 1
 - **Hub token on the board:** read-only from `G`. Should the board also show where a player *physically* put their Hub marker if it differs? [No.]

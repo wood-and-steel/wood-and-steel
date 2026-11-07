@@ -2,15 +2,7 @@ import React from "react";
 import { railroadTieValue } from "../Contract";
 import { ContractsList } from "./ContractsList";
 import type { GameState, GameContext } from "../stores/gameStore";
-
-const STARTING_CITY_PAIRS: [string, string][] = [
-  ["Montreal", "Quebec City"],
-  ["Boston", "Portland ME"],
-  ["New York", "Philadelphia"],
-  ["Philadelphia", "Washington"],
-  ["Norfolk", "Raleigh"],
-  ["Charleston", "Savannah"],
-];
+import { STARTING_CITY_PAIRS } from "../data/startingRoutes";
 
 export type GamePhase = "setup" | "play" | "scoring";
 

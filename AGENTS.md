@@ -27,6 +27,7 @@ This file is the entrypoint for AI agents to find project conventions and avoid 
 **Game state**
 
 - Do not add a separate state store (Redux, another context, or a new Zustand store) for game state, phase, or current player. Use `gameStore` and `phaseConfig.ts` / `phaseManager.ts` only.
+  - *Exception:* `src/board/boardStore.ts` (playtest board app, [docs/BOARD_APP_PLAN.md](docs/BOARD_APP_PLAN.md)) holds board-only state (track, engine and Railyard positions) persisted in its own `board_states` table. It holds no `G`/`ctx` data and never writes `G`/`ctx`.
 - Do not duplicate phase or “current phase” in component state; read `ctx.phase` from the store (or via `useGame()` / GameProvider).
 - Do not add a second source of truth for “allowed moves”; keep it in `moveValidation.js` (`MOVES_BY_PHASE`) and enforce in `gameActions.js`.
 - Do not persist or derive game state from somewhere other than the Zustand store and the existing persistence layer.

@@ -74,6 +74,24 @@
   color: var(--color-danger);
 }
 
+.boardTopBar__boardStatus {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.boardTopBar__boardStatus--error {
+  color: var(--color-danger);
+}
+
+.boardBanner {
+  flex-shrink: 0;
+  margin: 0;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--color-danger-bg);
+  border-bottom: var(--border-width-md) solid var(--color-danger);
+  color: var(--color-danger);
+}
+
 .boardTopBar__zoom {
   display: inline-flex;
   align-items: center;

@@ -12,7 +12,9 @@ import type { GameListItem } from '../utils/storage/storageAdapter';
 import { BoardMap } from './BoardMap';
 import { BoardTopBar, PlayerTrays } from './BoardChrome';
 import { formatPhase, getBoardPlayers } from './boardPlayers';
+import { useBoardStore } from './boardStore';
 import { useBoardGameSync } from './useBoardGameSync';
+import { useBoardStateSync } from './useBoardStateSync';
 import { useZoomPan } from './useZoomPan';
 
 export function BoardApp(): React.ReactElement {
@@ -37,6 +39,11 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
   const viewportRef = React.useRef<HTMLDivElement>(null);
   const zoomPan = useZoomPan(viewportRef);
   const players = React.useMemo(() => getBoardPlayers(G, ctx), [G, ctx]);
+  useBoardStateSync(code, status === 'live');
+  const boardStatus = useBoardStore((s) => s.status);
+  const boardError = useBoardStore((s) => s.error);
+  const board = useBoardStore((s) => s.board);
+  const pendingCount = useBoardStore((s) => s.pending.length);
 
   if (status === 'not-found' || status === 'error') {
     return (
@@ -51,14 +58,27 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
   return (
     <div className="boardApp">
       {ready ? (
-        <BoardTopBar code={code} ctx={ctx} players={players} status={status} zoomPan={zoomPan} />
+        <BoardTopBar
+          code={code}
+          ctx={ctx}
+          players={players}
+          status={status}
+          boardStatus={boardStatus}
+          pendingCount={pendingCount}
+          zoomPan={zoomPan}
+        />
       ) : (
         <header className="boardTopBar">Loading {rawCode}…</header>
+      )}
+      {boardError && (
+        <p className="boardBanner" role="alert">
+          {boardError}
+        </p>
       )}
       <div ref={viewportRef} className="boardViewport">
         {ready && <BoardMap G={G} players={players} zoomPan={zoomPan} />}
       </div>
-      {ready && <PlayerTrays players={players} currentPlayer={ctx.currentPlayer} />}
+      {ready && <PlayerTrays players={players} currentPlayer={ctx.currentPlayer} board={board} />}
     </div>
   );
 }
