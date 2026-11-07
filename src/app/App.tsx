@@ -46,6 +46,10 @@ const DevEditPathsPage = import.meta.env.DEV
     )
   : null;
 
+const BoardApp = __INCLUDE_BOARD__
+  ? React.lazy(() => import('../board/BoardApp').then((mod) => ({ default: mod.BoardApp })))
+  : null;
+
 export interface AppGameManager {
   currentGameCode: string | null;
   onNewGame: (numPlayers?: number) => Promise<void>;
@@ -659,6 +663,16 @@ const App = (): React.ReactElement => {
       <Suspense fallback={<p>Loading route path editor…</p>}>
         <DevEditPathsPage />
       </Suspense>
+    );
+  }
+  // Playtest board (docs/BOARD_APP_PLAN.md): read-only view of G/ctx, no AppContent.
+  if (__INCLUDE_BOARD__ && location.pathname.startsWith('/board') && BoardApp) {
+    return (
+      <StorageProvider>
+        <Suspense fallback={<p>Loading board…</p>}>
+          <BoardApp />
+        </Suspense>
+      </StorageProvider>
     );
   }
   return (

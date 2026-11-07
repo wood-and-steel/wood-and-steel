@@ -9,7 +9,9 @@ describe('EditPathsPage', () => {
     const { container } = render(<EditPathsPage />);
     expect(container.querySelectorAll('.editPaths__route')).toHaveLength(routes.size);
     expect(container.querySelectorAll('.editPaths__route--flagged')).toHaveLength(Object.keys(FLAGGED_ROUTES).length);
-    expect(container.querySelectorAll('.editPaths__listItem')).toHaveLength(Object.keys(FLAGGED_ROUTES).length);
+    // With nothing flagged, the page opens on the "All" filter.
+    const flaggedCount = Object.keys(FLAGGED_ROUTES).length;
+    expect(container.querySelectorAll('.editPaths__listItem')).toHaveLength(flaggedCount > 0 ? flaggedCount : routes.size);
   });
 
   it('selects a route, shows handles, and splits it', () => {

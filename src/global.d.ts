@@ -43,7 +43,13 @@ declare module '*.png' {
   export default src;
 }
 
+declare module '*.webp' {
+  const src: string;
+  export default src;
+}
+
 declare const __INCLUDE_SIM__: boolean;
+declare const __INCLUDE_BOARD__: boolean;
 
 declare global {
   interface FileSystemCreateWritableOptions {

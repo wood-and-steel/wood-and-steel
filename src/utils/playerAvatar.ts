@@ -1,9 +1,10 @@
+/** Matches the physical player pieces: pink, tan, blue, green, red. */
 export const PLAYER_AVATAR_COLORS = [
-  '#f83765',
-  '#ba951e',
-  '#0e86f4',
-  '#31b027',
-  '#505050',
+  '#f0609e', // pink
+  '#c9a66b', // tan
+  '#1e6fd9', // blue
+  '#2e8b3e', // green
+  '#c8202e', // red
 ] as const;
 
 /** Assigns a fixed palette color by player index (0-based). */

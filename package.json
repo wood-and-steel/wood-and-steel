@@ -33,6 +33,7 @@
     "start": "vite",
     "build": "vite build",
     "build:sim": "vite build --mode sim",
+    "build:board": "vite build --mode board",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
