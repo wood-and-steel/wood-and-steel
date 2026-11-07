@@ -141,7 +141,7 @@ export function CoordPickerPage(): React.ReactElement {
     const scaleX = rect.width / image.naturalWidth;
     const scaleY = rect.height / image.naturalHeight;
 
-    coords.forEach(([name, x, y], index) => {
+    coords.forEach(([name, x, y]: CityCoord, index: number) => {
       const px = x * scaleX;
       const py = y * scaleY;
       ctx.fillStyle = index === coords.length - 1 ? '#d62728' : '#1f77b4';

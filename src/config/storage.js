@@ -9,7 +9,11 @@
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-/** Build a project dashboard URL from a `*.supabase.co` API URL when possible. */
+/**
+ * Build a project dashboard URL from a `*.supabase.co` API URL when possible.
+ * @param {string | undefined} supabaseUrl
+ * @returns {string | null}
+ */
 function deriveSupabaseDashboardUrl(supabaseUrl) {
   if (!supabaseUrl) return null;
   try {

@@ -8,13 +8,12 @@ import {
   generatePrivateContractOffers,
 } from './Contract';
 import { cities, commodities } from './data';
+import type { GameContext, GameState, PlayerProps, RegionCode } from './stores/gameStore';
 
-type PlayerProps = {
-  name: string;
-  activeCities: string[];
-  hubCity: string | null;
-  regionalOffice: string | null;
-};
+/** Minimal game context for contract tests; only currentPlayer matters. */
+function makeCtx(currentPlayer: string): GameContext {
+  return { phase: 'play', currentPlayer, numPlayers: 2, playOrder: ['0', '1'], playOrderPos: 0, turn: 1, round: 1 };
+}
 
 /** Minimal game state shape for contract tests (matches Contract's expected shape). */
 function makeGameState(
@@ -22,12 +21,12 @@ function makeGameState(
   options: {
     currentPlayer?: string;
     contracts?: Contract[];
-    regionalOffice?: string | null;
+    regionalOffice?: RegionCode | null;
     hubCity?: string | null;
   } = {}
 ): {
-  G: { contracts: Contract[]; players: [string, PlayerProps][] };
-  ctx: { currentPlayer: string };
+  G: GameState;
+  ctx: GameContext;
 } {
   const {
     currentPlayer = '0',
@@ -38,14 +37,13 @@ function makeGameState(
   return {
     G: {
       contracts,
+      independentRailroads: {},
       players: [
         ['0', { name: 'P0', activeCities, hubCity, regionalOffice }],
         ['1', { name: 'P1', activeCities: ['Chicago', 'Detroit'], hubCity: null, regionalOffice: null }],
       ],
     },
-    ctx: {
-      currentPlayer,
-    },
+    ctx: makeCtx(currentPlayer),
   };
 }
 
@@ -95,8 +93,9 @@ describe('generatePrivateContractSpec', () => {
     const G = {
       contracts: [] as Contract[],
       players: [] as [string, PlayerProps][],
+      independentRailroads: {},
     };
-    const ctx = { currentPlayer: '0' };
+    const ctx = makeCtx('0');
     const spec = generatePrivateContractSpec(G, ctx);
     expect(spec).toBeUndefined();
   });
@@ -221,6 +220,7 @@ describe('generateMarketContract', () => {
         ['0', { name: 'P0', activeCities: ['New York', 'Philadelphia', 'Pittsburgh'], hubCity: null, regionalOffice: null }],
         ['1', { name: 'P1', activeCities: ['Raleigh', 'Norfolk'], hubCity: null, regionalOffice: null }],
       ] as [string, PlayerProps][],
+      independentRailroads: {},
     };
 
     for (let i = 0; i < 20; i++) {

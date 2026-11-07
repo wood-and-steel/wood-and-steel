@@ -86,9 +86,16 @@ export function supportsDirectoryPicker(): boolean {
   return typeof getDirectoryPicker() === 'function';
 }
 
+/** File System Access permission methods (Chromium); not yet in TypeScript's DOM lib. */
+type PermissionedDirectoryHandle = FileSystemDirectoryHandle & {
+  queryPermission(options: { mode: 'read' | 'readwrite' }): Promise<PermissionState>;
+  requestPermission(options: { mode: 'read' | 'readwrite' }): Promise<PermissionState>;
+};
+
 async function ensureWritePermission(
-  dirHandle: FileSystemDirectoryHandle
+  handle: FileSystemDirectoryHandle
 ): Promise<void> {
+  const dirHandle = handle as PermissionedDirectoryHandle;
   const options = { mode: 'readwrite' as const };
   if ((await dirHandle.queryPermission(options)) === 'granted') {
     return;
