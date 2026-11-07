@@ -40,6 +40,12 @@ const DevCoordPickerPage = __INCLUDE_SIM__
     )
   : null;
 
+const DevEditPathsPage = import.meta.env.DEV
+  ? React.lazy(() =>
+      import('../board/edit-paths/EditPathsPage').then((mod) => ({ default: mod.EditPathsPage }))
+    )
+  : null;
+
 // Import test utilities in development
 if (!import.meta.env.PROD) {
   import('../utils/storage/testMigration');
@@ -710,6 +716,13 @@ const App = (): React.ReactElement => {
     return (
       <Suspense fallback={<p>Loading coordinate picker…</p>}>
         <DevCoordPickerPage />
+      </Suspense>
+    );
+  }
+  if (import.meta.env.DEV && location.pathname === '/board/edit-paths' && DevEditPathsPage) {
+    return (
+      <Suspense fallback={<p>Loading route path editor…</p>}>
+        <DevEditPathsPage />
       </Suspense>
     );
   }

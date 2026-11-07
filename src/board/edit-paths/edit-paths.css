@@ -1,0 +1,182 @@
+/* DEV-ONLY: /board/edit-paths route geometry fix-up tool. */
+
+.editPaths {
+  --edit-paths-route: #1f6fff;
+  --edit-paths-flagged: #e0115f;
+  --edit-paths-edited: #1a9e3a;
+  --edit-paths-handle: #ffbf00;
+
+  display: flex;
+  height: 100vh;
+  min-width: 1000px;
+  background: var(--color-bg-light);
+  color: var(--color-text);
+}
+
+.editPaths__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 20rem;
+  flex-shrink: 0;
+  padding: var(--spacing-md);
+  overflow-y: auto;
+  background: var(--color-bg-primary);
+  border-right: var(--border-width-md) solid var(--color-border-light);
+}
+
+.editPaths__title {
+  margin: 0;
+  font-size: var(--font-size-h2);
+}
+
+.editPaths__hint,
+.editPaths__meta {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.editPaths__actions,
+.editPaths__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.editPaths__unsaved {
+  margin: 0;
+  font-weight: 600;
+}
+
+.editPaths__status {
+  margin: 0;
+  color: var(--edit-paths-edited);
+}
+
+.editPaths__error,
+.editPaths__flag {
+  margin: 0;
+  color: var(--color-danger);
+}
+
+.editPaths__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.editPaths__selected {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  border: var(--border-width-md) solid var(--color-border-light);
+  border-radius: var(--radius-md);
+}
+
+.editPaths__routeName {
+  margin: 0;
+  font-size: var(--font-size-h3);
+}
+
+.editPaths__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.editPaths__listItem {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.editPaths__listItem:hover {
+  background: var(--color-bg-hover);
+}
+
+.editPaths__listItem--selected {
+  background: var(--color-bg-active);
+}
+
+.editPaths__listStatus {
+  color: var(--color-text-muted);
+}
+
+.editPaths__board {
+  flex: 1;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.editPaths__board--panning {
+  cursor: grabbing;
+}
+
+.editPaths__city {
+  fill: none;
+  stroke: #ff00ff;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.editPaths__route {
+  fill: none;
+  stroke: var(--edit-paths-route);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.editPaths__route--edited {
+  stroke: var(--edit-paths-edited);
+}
+
+.editPaths__route--flagged {
+  stroke: var(--edit-paths-flagged);
+  stroke-width: 3px;
+}
+
+.editPaths__route--selected {
+  stroke-width: 4px;
+}
+
+.editPaths__hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14px;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+}
+
+.editPaths__arm {
+  stroke: var(--edit-paths-handle);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.editPaths__handle {
+  fill: var(--edit-paths-handle);
+  stroke: #000;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  cursor: move;
+}
+
+.editPaths__handle--anchor {
+  fill: #fff;
+}

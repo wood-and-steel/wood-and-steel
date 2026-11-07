@@ -127,6 +127,7 @@ The full board PNG (6660×4173) looks like a 6× scale of `simple-map.png` (1110
 ## Milestones
 
 1. **M0 Geometry:** city points, traced route paths, fix-up page; Jeff reviews the overlay.
+   - *Status (2026-11-01):* built. All 56 cities and the 6 RO discs are auto-detected, and 105/105 routes have paths. The PNG is not an exact 6× scale of `simple-map.png`, so cities are matched by an affine fit plus optimal assignment. Three routes have **no stroke in the art** and fall back to flagged straight lines: Chicago–Saint Louis (only its price pill is printed), Flagstaff–Phoenix, and Los Angeles–Phoenix. Re-running `scripts/trace-routes.py` keeps routes listed in `EDITED_ROUTES`.
 2. **M1 Shell:** flag/script/route, lazy load, read-only `G` sync, background, indie routes, hubs, RO discs, zoom/pan, top bar, trays.
 3. **M2 Board state:** ops, store, adapters (Supabase + local), SQL, conflict-retry, seeding.
 4. **M3 Track:** click-claim, popover, parallel rendering.
