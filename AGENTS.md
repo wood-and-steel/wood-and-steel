@@ -19,6 +19,7 @@ This file is the entrypoint for AI agents to find project conventions and avoid 
 - [docs/CSS_ARCHITECTURE.md](docs/CSS_ARCHITECTURE.md) — Styling: no inline styles, centralized CSS, BEM, variables
 - [docs/Game rules.md](docs/Game%20rules.md) — Game rules and implementation status
 - [docs/TS_JS_CONFIG_POLICY.md](docs/TS_JS_CONFIG_POLICY.md) — TypeScript/JS migration, extensionless imports
+- [docs/BOARD_AGENT_GUIDE.md](docs/BOARD_AGENT_GUIDE.md) — Playtest board app at `/board` (`src/board/`): read-only toward `G`/`ctx`, own store and table
 - [docs/COMMIT_MESSAGE_GUIDE.md](docs/COMMIT_MESSAGE_GUIDE.md) — Commit message style when the user asks for a commit
 - When relevant: [docs/Contract generation.md](docs/Contract%20generation.md), [docs/CLOUD_STORAGE_TESTING.md](docs/CLOUD_STORAGE_TESTING.md)
 
@@ -27,7 +28,7 @@ This file is the entrypoint for AI agents to find project conventions and avoid 
 **Game state**
 
 - Do not add a separate state store (Redux, another context, or a new Zustand store) for game state, phase, or current player. Use `gameStore` and `phaseConfig.ts` / `phaseManager.ts` only.
-  - *Exception:* `src/board/boardStore.ts` (playtest board app, [docs/BOARD_APP_PLAN.md](docs/BOARD_APP_PLAN.md)) holds board-only state (track, engine and Railyard positions) persisted in its own `board_states` table. It holds no `G`/`ctx` data and never writes `G`/`ctx`.
+  - *Exception:* `src/board/boardStore.ts` (playtest board app, see [docs/BOARD_AGENT_GUIDE.md](docs/BOARD_AGENT_GUIDE.md)) holds board-only state (track, engine and Railyard positions) persisted in its own `board_states` table. It holds no `G`/`ctx` data and never writes `G`/`ctx`.
 - Do not duplicate phase or “current phase” in component state; read `ctx.phase` from the store (or via `useGame()` / GameProvider).
 - Do not add a second source of truth for “allowed moves”; keep it in `moveValidation.js` (`MOVES_BY_PHASE`) and enforce in `gameActions.js`.
 - Do not persist or derive game state from somewhere other than the Zustand store and the existing persistence layer.

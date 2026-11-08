@@ -34,6 +34,7 @@
     "build": "vite build",
     "build:sim": "vite build --mode sim",
     "build:board": "vite build --mode board",
+    "check:board-build": "vite build --mode board && node scripts/check-board-build.mjs --expect && vite build && node scripts/check-board-build.mjs",
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"

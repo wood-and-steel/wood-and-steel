@@ -28,6 +28,22 @@ npm run build:sim
 
 Same optimized production build, but includes the simulator at `/sim`. Uses the Vite `sim` build mode (`vite build --mode sim`).
 
+### With the playtest board
+
+```bash
+npm run build:board
+```
+
+Includes the shared map board at `/board` (`src/board/`, see [BOARD_AGENT_GUIDE.md](BOARD_AGENT_GUIDE.md)). Uses the Vite `board` build mode. The board also needs the `board_states` table: apply `src/board/supabase/board_states.sql` once in the Supabase dashboard's SQL editor. Without it, the board shows a banner and only the read-only game view works.
+
+To check that the default build contains no board code (and the board build does):
+
+```bash
+npm run check:board-build
+```
+
+It runs both builds and leaves a plain production build in `dist/`.
+
 Preview either build locally:
 
 ```bash
@@ -42,7 +58,7 @@ Serves the contents of `dist/` so you can smoke-test before deploying.
 npm start
 ```
 
-Starts the Vite dev server with hot reload. Open the URL shown in the terminal (usually `http://localhost:5173`). The simulator is always available at `/sim` in development.
+Starts the Vite dev server with hot reload. Open the URL shown in the terminal (usually `http://localhost:5173`). The simulator is always available at `/sim` and the playtest board at `/board` in development (dev-only route-geometry editor: `/board/edit-paths`).
 
 Environment variables (create a `.env.local` file in the project root):
 

@@ -42,6 +42,11 @@ export class MemoryBoardStateAdapter implements BoardStateAdapter {
     return record.updatedAt;
   }
 
+  /** Deliver a realtime notification without changing the row (e.g. a late, stale one). */
+  emit(code: string, record: BoardStateRecord): void {
+    this.listeners.get(code)?.forEach((cb) => cb(structuredClone(record)));
+  }
+
   subscribe(code: string, onChange: (record: BoardStateRecord) => void): () => void {
     const set = this.listeners.get(code) ?? new Set();
     set.add(onChange);

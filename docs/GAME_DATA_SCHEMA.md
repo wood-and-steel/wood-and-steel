@@ -89,6 +89,10 @@ export interface GameContext {
 
 `GameStoreState` (same file) also holds `turnStartSnapshot` (`{ G, ctx } | null`, for undo) and `hasMovedThisTurn: boolean`. These are session/UI-adjacent, not persisted game state.
 
+### Playtest board state (not game state)
+
+The playtest board (`/board`, [BOARD_AGENT_GUIDE.md](BOARD_AGENT_GUIDE.md)) stores player track, engine and Railyard positions, and a snapshot of `G.independentRailroads` in its own Supabase table, `board_states` (one row per game code; `BoardState` in `src/board/boardOps.ts`). It is **not** part of `G`/`ctx`. The app never reads it, and the board never writes `G`/`ctx`. Keys in it (route keys, city keys, player IDs) are the same strings used in `G`.
+
 ### Persisted shape
 
 `src/utils/stateSerialization.js` persists exactly `{ G, ctx }` (validated by `isValidSerializedState`, which requires `ctx.phase`, `currentPlayer`, `numPlayers`, `playOrder`, `playOrderPos`, `turn`). Don't add a second persistence path — extend this validator/shape if you add fields to `G` or `ctx`.

@@ -108,6 +108,18 @@ describe('BoardApp (/board)', () => {
     expect(container.querySelectorAll('.boardMap__indieRoute')).toHaveLength(2);
   });
 
+  it('zooms in steps up to 400% and back to fit width', async () => {
+    await renderAt('/board?game=BCDFG');
+    await waitFor(() => expect(screen.getByText('Live')).toBeInTheDocument());
+    const zoomIn = screen.getByRole('button', { name: 'Zoom in' });
+    fireEvent.click(zoomIn);
+    expect(screen.getByText('125%')).toBeInTheDocument();
+    for (let i = 0; i < 10; i++) fireEvent.click(zoomIn);
+    expect(screen.getByText('400%')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Fit width' }));
+    expect(screen.getByText('100%')).toBeInTheDocument();
+  });
+
   it('reports a missing game', async () => {
     await renderAt('/board?game=ZZZZZ');
     expect(await screen.findByText('Game "ZZZZZ" was not found.')).toBeInTheDocument();

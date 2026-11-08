@@ -98,6 +98,30 @@ describe('boardSync', () => {
     expect(state().board?.track).toEqual({ [R2]: ['1'] });
   });
 
+  it('ignores a realtime update older than what it already has', async () => {
+    const firstAt = adapter.write(CODE, { ...seeded(), track: { [R1]: ['0'] } });
+    adapter.write(CODE, { ...seeded(), track: { [R2]: ['1'] } });
+    await openBoard(CODE, adapter);
+    adapter.emit(CODE, { state: { ...seeded(), track: { [R1]: ['0'] } }, updatedAt: firstAt });
+    expect(state().board?.track).toEqual({ [R2]: ['1'] });
+  });
+
+  it('converts an acquisition once when another screen converts it at the same time', async () => {
+    const ERIE = ['Chicago-Cleveland', 'Chicago-Detroit'];
+    adapter.write(CODE, { ...seeded(), seenIndependentRailroads: { Erie: ERIE } });
+    await openBoard(CODE, adapter);
+    const op = { type: 'reconcileIndependentRailroads', railroads: {}, acquirers: { Erie: '1' } } as const;
+    // The other screen converts first, then unclaims one of the converted routes.
+    adapter.beforeSave = () => {
+      const theirs = applyBoardOp(stored(adapter)!, op);
+      adapter.write(CODE, applyBoardOp(theirs, { type: 'unclaimRoute', routeKey: 'Chicago-Cleveland' }));
+    };
+    dispatchBoardOp(op);
+    await settle();
+    expect(stored(adapter)?.track).toEqual({ 'Chicago-Detroit': ['1'] });
+    expect(stored(adapter)?.seenIndependentRailroads).toEqual({});
+  });
+
   it('reports save errors and rolls back the unsaved op', async () => {
     adapter.write(CODE, seeded());
     await openBoard(CODE, adapter);
