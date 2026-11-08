@@ -1,7 +1,7 @@
 /**
  * The board SVG, drawn in full-PNG pixel space (docs/BOARD_APP_PLAN.md, Rendering).
- * Layers bottom to top: art, indie routes, hubs, Regional Office discs, route hit areas.
- * Player track (M3) and engine/Railyard tokens (M4) slot in between as later milestones land.
+ * Layers bottom to top: art, indie routes, player track, hubs, Regional Office discs, route hit areas.
+ * Engine/Railyard tokens (M4) slot in below the hit areas.
  */
 import React from 'react';
 import boardImageUrl from './assets/map-board.webp';
@@ -9,6 +9,7 @@ import { routes } from '../data/routes';
 import type { GameState, RegionCode } from '../stores/gameStore';
 import { BOARD_HEIGHT, BOARD_WIDTH, CITY_POINTS, REGIONAL_OFFICE_POINTS } from './geometry/cityPoints';
 import { ROUTE_PATHS } from './geometry/routePaths';
+import { ownerSlots, trackPathD } from './geometry/trackPaths';
 import type { BoardPlayer } from './boardPlayers';
 import type { ZoomPan } from './useZoomPan';
 
@@ -16,10 +17,24 @@ import type { ZoomPan } from './useZoomPan';
 const HUB_RING_GAP = 20;
 const HUB_RING_SPACING = 26;
 
+/** Track stroke color for an owner who is no longer in the game. */
+const UNKNOWN_OWNER_COLOR = '#808080';
+
+export interface RouteClick {
+  routeKey: string;
+  clientX: number;
+  clientY: number;
+  /** Shift-click or right-click: always open the popover. */
+  forcePopover: boolean;
+}
+
 interface BoardMapProps {
   G: GameState;
   players: BoardPlayer[];
+  /** routeKey -> [primary, ...parallel] owner IDs (board state) */
+  track: Record<string, string[]>;
   zoomPan: ZoomPan;
+  onRouteClick: (click: RouteClick) => void;
 }
 
 /** routeKey -> independent railroad name */
@@ -31,7 +46,12 @@ export function getIndieRouteOwners(G: GameState): Map<string, string> {
   return owners;
 }
 
-function routeTooltip(key: string, indieOwner: string | undefined): string {
+function routeTooltip(
+  key: string,
+  indieOwner: string | undefined,
+  owners: string[] | undefined,
+  players: BoardPlayer[]
+): string {
   const route = routes.get(key);
   const parts = [key];
   if (route) {
@@ -39,6 +59,7 @@ function routeTooltip(key: string, indieOwner: string | undefined): string {
     if (route.mountainous) parts.push('mountainous');
   }
   if (indieOwner) parts.push(indieOwner);
+  for (const id of owners ?? []) parts.push(players.find((p) => p.id === id)?.name ?? `Player ${id}`);
   return parts.join(' · ');
 }
 
@@ -49,8 +70,16 @@ function regionalOfficeDiscs(n: number, r: number): { dx: number; r: number }[] 
   return Array.from({ length: n }, (_, i) => ({ dx: (i - (n - 1) / 2) * step, r: discR }));
 }
 
-export function BoardMap({ G, players, zoomPan }: BoardMapProps): React.ReactElement {
+export function BoardMap({ G, players, track, zoomPan, onRouteClick }: BoardMapProps): React.ReactElement {
   const indieOwners = React.useMemo(() => getIndieRouteOwners(G), [G]);
+
+  const colorById = new Map(players.map((p) => [p.id, p.color]));
+
+  const handleRouteClick = (event: React.MouseEvent<SVGPathElement>, routeKey: string, contextMenu: boolean) => {
+    if (contextMenu) event.preventDefault();
+    if (zoomPan.didPan()) return;
+    onRouteClick({ routeKey, clientX: event.clientX, clientY: event.clientY, forcePopover: contextMenu || event.shiftKey });
+  };
 
   const hubsByCity = new Map<string, BoardPlayer[]>();
   const officesByRegion = new Map<RegionCode, BoardPlayer[]>();
@@ -85,6 +114,30 @@ export function BoardMap({ G, players, zoomPan }: BoardMapProps): React.ReactEle
         {[...indieOwners.keys()].map((key) =>
           ROUTE_PATHS[key] ? <path key={key} className="boardMap__indieRoute" d={ROUTE_PATHS[key]} /> : null
         )}
+      </g>
+
+      <g className="boardMap__track">
+        {Object.entries(track).map(([key, owners]) => {
+          const strokes = ownerSlots(owners.length, indieOwners.has(key))
+            .map((slot, i) => ({ owner: owners[i], d: trackPathD(key, slot) }))
+            .filter((s): s is { owner: string; d: string } => s.d !== null);
+          return (
+            <g key={key} data-track={key}>
+              {strokes.map(({ owner, d }) => (
+                <path key={`casing-${owner}`} className="boardMap__trackCasing" d={d} />
+              ))}
+              {strokes.map(({ owner, d }) => (
+                <path
+                  key={owner}
+                  className="boardMap__trackStroke"
+                  d={d}
+                  stroke={colorById.get(owner) ?? UNKNOWN_OWNER_COLOR}
+                  data-owner={owner}
+                />
+              ))}
+            </g>
+          );
+        })}
       </g>
 
       <g className="boardMap__hubs">
@@ -126,8 +179,15 @@ export function BoardMap({ G, players, zoomPan }: BoardMapProps): React.ReactEle
 
       <g className="boardMap__routeHits">
         {Object.entries(ROUTE_PATHS).map(([key, d]) => (
-          <path key={key} className="boardMap__routeHit" d={d} data-route={key}>
-            <title>{routeTooltip(key, indieOwners.get(key))}</title>
+          <path
+            key={key}
+            className="boardMap__routeHit"
+            d={d}
+            data-route={key}
+            onClick={(event) => handleRouteClick(event, key, false)}
+            onContextMenu={(event) => handleRouteClick(event, key, true)}
+          >
+            <title>{routeTooltip(key, indieOwners.get(key), track[key], players)}</title>
           </path>
         ))}
       </g>

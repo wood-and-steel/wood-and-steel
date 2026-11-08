@@ -9,13 +9,17 @@ import '../shared/styles/board.css';
 import { useGameStore } from '../stores/gameStore';
 import { listGames } from '../utils/gameManager';
 import type { GameListItem } from '../utils/storage/storageAdapter';
-import { BoardMap } from './BoardMap';
+import { BoardMap, type RouteClick } from './BoardMap';
+import { RoutePopover } from './RoutePopover';
+import { dispatchBoardOp } from './boardSync';
 import { BoardTopBar, PlayerTrays } from './BoardChrome';
-import { formatPhase, getBoardPlayers } from './boardPlayers';
+import { formatPhase, getBoardPlayers, type BoardPlayer } from './boardPlayers';
 import { useBoardStore } from './boardStore';
 import { useBoardGameSync } from './useBoardGameSync';
 import { useBoardStateSync } from './useBoardStateSync';
 import { useZoomPan } from './useZoomPan';
+
+const EMPTY_TRACK: Record<string, string[]> = {};
 
 export function BoardApp(): React.ReactElement {
   const [params] = useSearchParams();
@@ -44,6 +48,31 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
   const boardError = useBoardStore((s) => s.error);
   const board = useBoardStore((s) => s.board);
   const pendingCount = useBoardStore((s) => s.pending.length);
+  const [popover, setPopover] = React.useState<{ routeKey: string; clientX: number; clientY: number } | null>(null);
+  const closePopover = React.useCallback(() => setPopover(null), []);
+
+  // Outside the play phase there is no current player to claim for, so clicks open the popover.
+  const claimant = ctx.phase === 'play' && players.some((p: BoardPlayer) => p.id === ctx.currentPlayer) ? ctx.currentPlayer : null;
+
+  const handleRouteClick = (click: RouteClick) => {
+    if (boardStatus !== 'ready' || !board) return;
+    const owners = board.track[click.routeKey] ?? [];
+    if (!click.forcePopover && owners.length === 0 && claimant) {
+      dispatchBoardOp({ type: 'claimRoute', routeKey: click.routeKey, playerID: claimant });
+      setPopover(null);
+      return;
+    }
+    setPopover({ routeKey: click.routeKey, clientX: click.clientX, clientY: click.clientY });
+  };
+
+  // The popover is anchored to screen coordinates, so close it when the map moves.
+  React.useEffect(() => setPopover(null), [zoomPan.zoom]);
+  React.useEffect(() => {
+    const el = viewportRef.current;
+    if (!el || !popover) return;
+    el.addEventListener('scroll', closePopover, { passive: true });
+    return () => el.removeEventListener('scroll', closePopover);
+  }, [popover, closePopover]);
 
   if (status === 'not-found' || status === 'error') {
     return (
@@ -76,8 +105,28 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
         </p>
       )}
       <div ref={viewportRef} className="boardViewport">
-        {ready && <BoardMap G={G} players={players} zoomPan={zoomPan} />}
+        {ready && (
+          <BoardMap
+            G={G}
+            players={players}
+            track={board?.track ?? EMPTY_TRACK}
+            zoomPan={zoomPan}
+            onRouteClick={handleRouteClick}
+          />
+        )}
       </div>
+      {popover && board && (
+        <RoutePopover
+          routeKey={popover.routeKey}
+          owners={board.track[popover.routeKey] ?? []}
+          players={players}
+          currentPlayer={claimant}
+          clientX={popover.clientX}
+          clientY={popover.clientY}
+          onChange={(owners) => dispatchBoardOp({ type: 'setRouteOwners', routeKey: popover.routeKey, owners })}
+          onClose={closePopover}
+        />
+      )}
       {ready && <PlayerTrays players={players} currentPlayer={ctx.currentPlayer} board={board} />}
     </div>
   );

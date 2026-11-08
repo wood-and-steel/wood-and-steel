@@ -9,6 +9,8 @@
 .boardApp {
   --board-indie-route: #111111;
   --board-token-outline: #ffffff;
+  --board-track-casing: rgba(0, 0, 0, 0.75);
+  --board-route-hover: rgba(255, 255, 255, 0.45);
   --board-bar-height: 2.75rem;
 
   display: flex;
@@ -153,11 +155,149 @@
   stroke-width: 8;
 }
 
+/* Player track: a dark casing under each owner's stroke (stroke color is an attribute). */
+.boardMap__trackCasing,
+.boardMap__trackStroke {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.boardMap__trackCasing {
+  stroke: var(--board-track-casing);
+  stroke-width: 24;
+}
+
+.boardMap__trackStroke {
+  stroke-width: 18;
+}
+
 .boardMap__routeHit {
   fill: none;
   stroke: transparent;
   stroke-width: 40;
+  stroke-linecap: round;
   pointer-events: stroke;
+  cursor: pointer;
+}
+
+.boardMap__routeHit:hover {
+  stroke: var(--board-route-hover);
+}
+
+.boardMap--panning .boardMap__routeHit {
+  cursor: grabbing;
+}
+
+/* Route popover (positioned via --route-popover-left/top, set from a ref) */
+
+.routePopover {
+  position: fixed;
+  top: var(--route-popover-top, 0);
+  left: var(--route-popover-left, 0);
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  visibility: hidden;
+  background: var(--color-bg-primary);
+  border: var(--border-width-md) solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+}
+
+.routePopover--placed {
+  visibility: visible;
+}
+
+.routePopover__header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+}
+
+.routePopover__title {
+  font-weight: 700;
+}
+
+.routePopover__meta {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.routePopover__close {
+  margin-left: auto;
+  padding: 0 var(--spacing-xs);
+  border: none;
+  background: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.routePopover__row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.routePopover__label {
+  width: 4.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.routePopover__swatch {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.125rem;
+  border: var(--border-width-lg) solid transparent;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  opacity: 0.45;
+}
+
+.routePopover__swatch svg {
+  width: 100%;
+  height: 100%;
+}
+
+.routePopover__swatch text {
+  font-family: system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.routePopover__swatch:hover:not(:disabled),
+.routePopover__swatch--pressed {
+  opacity: 1;
+}
+
+.routePopover__swatch--pressed {
+  border-color: var(--color-primary);
+}
+
+.routePopover__swatch--suggested {
+  opacity: 1;
+  border-style: dashed;
+  border-color: var(--color-primary);
+}
+
+.routePopover__swatch:disabled {
+  cursor: default;
+  opacity: 0.2;
+}
+
+.routePopover__actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Player trays */

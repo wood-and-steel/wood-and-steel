@@ -27,6 +27,8 @@ export interface ZoomPan {
   width: number;
   height: number;
   isPanning: boolean;
+  /** True if the last pointer press turned into a pan; click handlers use it to ignore the trailing click. */
+  didPan: () => boolean;
   zoomIn: () => void;
   zoomOut: () => void;
   reset: () => void;
@@ -47,6 +49,7 @@ export function useZoomPan(viewportRef: React.RefObject<HTMLElement>): ZoomPan {
   const zoomRef = React.useRef(1);
   const pendingScroll = React.useRef<{ left: number; top: number } | null>(null);
   const panStart = React.useRef<PanStart | null>(null);
+  const lastPressPanned = React.useRef(false);
 
   // Track the viewport width (excluding scrollbars) for fit-to-width.
   React.useLayoutEffect(() => {
@@ -121,6 +124,7 @@ export function useZoomPan(viewportRef: React.RefObject<HTMLElement>): ZoomPan {
 
   const endPan = (event: React.PointerEvent<Element>) => {
     if (panStart.current?.pointerId !== event.pointerId) return;
+    lastPressPanned.current = panStart.current.moved;
     panStart.current = null;
     setIsPanning(false);
   };
@@ -129,6 +133,7 @@ export function useZoomPan(viewportRef: React.RefObject<HTMLElement>): ZoomPan {
     onPointerDown: (event) => {
       const el = viewportRef.current;
       if (!el || event.button !== 0) return;
+      lastPressPanned.current = false;
       panStart.current = {
         pointerId: event.pointerId,
         clientX: event.clientX,
@@ -165,6 +170,7 @@ export function useZoomPan(viewportRef: React.RefObject<HTMLElement>): ZoomPan {
     width,
     height,
     isPanning,
+    didPan: () => lastPressPanned.current,
     zoomIn: () => zoomBy(BUTTON_STEP),
     zoomOut: () => zoomBy(1 / BUTTON_STEP),
     reset,
