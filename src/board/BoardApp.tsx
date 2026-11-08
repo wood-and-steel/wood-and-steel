@@ -1,5 +1,5 @@
 /**
- * Playtest board app at /board?game=CODE (docs/BOARD_APP_PLAN.md).
+ * Playtest board app at /board?game=CODE (docs/archived/BOARD_APP_PLAN.md).
  * Lazy-loaded behind __INCLUDE_BOARD__; the main app imports nothing from src/board/.
  * Read-only with respect to G/ctx: it shows game state but never changes it.
  */

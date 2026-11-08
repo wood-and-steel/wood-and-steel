@@ -1,5 +1,5 @@
 """
-Dev-only: write the /board background art (docs/BOARD_APP_PLAN.md, Rendering).
+Dev-only: write the /board background art (docs/archived/BOARD_APP_PLAN.md, Rendering).
 
 Scales docs/map-board-full.png (6660x4173) to half size and saves it as WebP at
 src/board/assets/map-board.webp. The board SVG still uses full-PNG pixel coordinates;

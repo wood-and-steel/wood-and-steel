@@ -1,5 +1,5 @@
 /**
- * Acquisition auto-convert (docs/BOARD_APP_PLAN.md, M5): compare the board's snapshot of
+ * Acquisition auto-convert (docs/archived/BOARD_APP_PLAN.md, M5): compare the board's snapshot of
  * independent railroads with G and build the op that converts acquired railroads to track.
  */
 import { routes } from '../data/routes';

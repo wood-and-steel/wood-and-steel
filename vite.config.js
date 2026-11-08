@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => ({
   define: {
     __INCLUDE_SIM__: mode !== 'production',
-    // Playtest board app at /board (src/board/); see docs/BOARD_APP_PLAN.md
+    // Playtest board app at /board (src/board/); see docs/archived/BOARD_APP_PLAN.md
     __INCLUDE_BOARD__: ['development', 'test', 'board'].includes(mode),
   },
   resolve: {

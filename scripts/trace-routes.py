@@ -1,5 +1,5 @@
 """
-Dev-only: derive board geometry from docs/map-board-full.png (milestone 0 of docs/BOARD_APP_PLAN.md).
+Dev-only: derive board geometry from docs/map-board-full.png (milestone 0 of docs/archived/BOARD_APP_PLAN.md).
 
 Outputs:
   src/board/geometry/cityPoints.ts   city circle centers/radii + Regional Office disc centers

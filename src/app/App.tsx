@@ -665,7 +665,7 @@ const App = (): React.ReactElement => {
       </Suspense>
     );
   }
-  // Playtest board (docs/BOARD_APP_PLAN.md): read-only view of G/ctx, no AppContent.
+  // Playtest board (docs/archived/BOARD_APP_PLAN.md): read-only view of G/ctx, no AppContent.
   if (__INCLUDE_BOARD__ && location.pathname.startsWith('/board') && BoardApp) {
     return (
       <StorageProvider>

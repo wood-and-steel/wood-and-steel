@@ -1,5 +1,5 @@
 /**
- * Guards from docs/BOARD_APP_PLAN.md: the board is read-only with respect to G/ctx,
+ * Guards from docs/archived/BOARD_APP_PLAN.md: the board is read-only with respect to G/ctx,
  * and the main app imports nothing from src/board/ except the lazy, flag-gated entry points.
  */
 const boardSources = import.meta.glob(['./**/*.{ts,tsx}', '!./**/*.test.{ts,tsx}'], {

@@ -1,5 +1,5 @@
 /**
- * Verify the board app's build gating (docs/BOARD_APP_PLAN.md, M6) by scanning dist/.
+ * Verify the board app's build gating (docs/archived/BOARD_APP_PLAN.md, M6) by scanning dist/.
  *
  *   node scripts/check-board-build.mjs            # after `npm run build`: dist/ must contain no board code
  *   node scripts/check-board-build.mjs --expect   # after `npm run build:board`: dist/ must contain it

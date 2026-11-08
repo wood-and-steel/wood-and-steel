@@ -1,5 +1,5 @@
 /**
- * Edit a route's owners (docs/BOARD_APP_PLAN.md, Interactions): set the primary owner,
+ * Edit a route's owners (docs/archived/BOARD_APP_PLAN.md, Interactions): set the primary owner,
  * toggle parallel owners, or unclaim. Every click applies at once; there is no confirm.
  * Positioned with CSS custom properties set from a ref (no inline style objects).
  */

@@ -1,5 +1,5 @@
 /**
- * Engine and Railyard tokens (docs/BOARD_APP_PLAN.md, M4): identity, where each one is,
+ * Engine and Railyard tokens (docs/archived/BOARD_APP_PLAN.md, M4): identity, where each one is,
  * how tokens sharing a city are laid out, and snapping a drop point to a city.
  */
 import type { BoardOp, BoardState, EngineSlot } from './boardOps';

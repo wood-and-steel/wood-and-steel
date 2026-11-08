@@ -1,5 +1,5 @@
 /**
- * The board SVG, drawn in full-PNG pixel space (docs/BOARD_APP_PLAN.md, Rendering).
+ * The board SVG, drawn in full-PNG pixel space (docs/archived/BOARD_APP_PLAN.md, Rendering).
  * Layers bottom to top: art, indie routes, player track, hubs, Regional Office discs, route hit
  * areas, then Railyard and engine tokens (above the hit areas so they stay grabbable at cities).
  */

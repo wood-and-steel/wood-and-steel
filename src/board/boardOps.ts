@@ -1,5 +1,5 @@
 /**
- * Board-only state and the pure ops that edit it (docs/BOARD_APP_PLAN.md, Board state).
+ * Board-only state and the pure ops that edit it (docs/archived/BOARD_APP_PLAN.md, Board state).
  * Every edit is a serializable BoardOp so it can be re-applied to fresh state after a save
  * conflict. Ops never touch G/ctx and never enforce game rules.
  */

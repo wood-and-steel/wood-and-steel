@@ -1,5 +1,5 @@
 /**
- * Loads, seeds, saves and live-syncs board state for one game (docs/BOARD_APP_PLAN.md,
+ * Loads, seeds, saves and live-syncs board state for one game (docs/archived/BOARD_APP_PLAN.md,
  * Persistence). Ops are applied locally at once, then saved one at a time against the
  * row's updated_at. On conflict the fresh row is loaded, the op is re-applied to it, and
  * the save is retried, so two screens editing at once both keep their edits.

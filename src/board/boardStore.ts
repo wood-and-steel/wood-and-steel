@@ -1,5 +1,5 @@
 /**
- * Board-only state (docs/BOARD_APP_PLAN.md, Board state). A documented exception to the
+ * Board-only state (docs/archived/BOARD_APP_PLAN.md, Board state). A documented exception to the
  * "Zustand gameStore only" rule in AGENTS.md: it is playtest-only and holds no G/ctx data.
  *
  * `confirmed` is the last state known to be saved; `pending` holds ops not yet saved.

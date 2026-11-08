@@ -1,6 +1,6 @@
 /*
  * Playtest board app (/board, src/board/). Imported only by src/board/BoardApp.tsx so it ships
- * in the lazy board chunk, not the main bundle. See docs/BOARD_APP_PLAN.md.
+ * in the lazy board chunk, not the main bundle. See docs/archived/BOARD_APP_PLAN.md.
  *
  * SVG map shapes are sized in board pixels (viewBox 0 0 6660 4173), so stroke widths below
  * are in board pixels too. The printed route strokes are ~23px wide.

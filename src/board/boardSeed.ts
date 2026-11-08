@@ -1,5 +1,5 @@
 /**
- * First-open seeding (docs/BOARD_APP_PLAN.md, Seeding): each player's starting route from G,
+ * First-open seeding (docs/archived/BOARD_APP_PLAN.md, Seeding): each player's starting route from G,
  * engines and Railyards in the trays, and a snapshot of the independent railroads.
  */
 import { routes } from '../data/routes';

@@ -1,5 +1,5 @@
 /**
- * DEV-ONLY fix-up tool for board route geometry (docs/BOARD_APP_PLAN.md, milestone 0).
+ * DEV-ONLY fix-up tool for board route geometry (docs/archived/BOARD_APP_PLAN.md, milestone 0).
  *
  * Visit /board/edit-paths. Overlays every route path from routePaths.ts on the board art,
  * highlights flagged routes, lets you drag anchors and control points, and saves back to

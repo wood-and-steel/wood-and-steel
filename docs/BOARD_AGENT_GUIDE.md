@@ -2,7 +2,7 @@
 
 **Audience:** AI agents writing production or test code for the playtest board at `/board`.
 **Purpose:** Where the board's code lives, the invariants it must keep, and how to change it safely.
-Design history and decisions: [BOARD_APP_PLAN.md](BOARD_APP_PLAN.md).
+Design history and decisions: [BOARD_APP_PLAN.md](archived/BOARD_APP_PLAN.md) (archived).
 
 The board is a shared, playtest-only digital copy of the physical map board: player track, engine and Railyard tokens, Hubs, Regional Offices, and independent railroads. It runs on one shared screen or several synced browsers.
 
