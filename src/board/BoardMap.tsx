@@ -1,7 +1,7 @@
 /**
  * The board SVG, drawn in full-PNG pixel space (docs/BOARD_APP_PLAN.md, Rendering).
- * Layers bottom to top: art, indie routes, player track, hubs, Regional Office discs, route hit areas.
- * Engine/Railyard tokens (M4) slot in below the hit areas.
+ * Layers bottom to top: art, indie routes, player track, hubs, Regional Office discs, route hit
+ * areas, then Railyard and engine tokens (above the hit areas so they stay grabbable at cities).
  */
 import React from 'react';
 import boardImageUrl from './assets/map-board.webp';
@@ -12,10 +12,23 @@ import { ROUTE_PATHS } from './geometry/routePaths';
 import { ownerSlots, trackPathD } from './geometry/trackPaths';
 import type { BoardPlayer } from './boardPlayers';
 import type { ZoomPan } from './useZoomPan';
+import { tokenFill } from './TokenIcon';
+import {
+  ENGINE_HEIGHT,
+  ENGINE_WIDTH,
+  RAILYARD_RADIUS,
+  sameToken,
+  tokenId,
+  tokenLabel,
+  type PlacedToken,
+  type TokenRef,
+} from './tokens';
 
 /** Hub ring: gap outside the printed city circle, and spacing if several hubs share a city. */
 const HUB_RING_GAP = 20;
 const HUB_RING_SPACING = 26;
+/** Snap highlight ring: gap outside the city circle while a token is dragged over it. */
+const SNAP_RING_GAP = 36;
 
 /** Track stroke color for an owner who is no longer in the game. */
 const UNKNOWN_OWNER_COLOR = '#808080';
@@ -35,6 +48,14 @@ interface BoardMapProps {
   track: Record<string, string[]>;
   zoomPan: ZoomPan;
   onRouteClick: (click: RouteClick) => void;
+  /** Engines and Railyards on cities */
+  tokens: PlacedToken[];
+  /** Token being dragged (drawn dimmed in place) */
+  dragging: TokenRef | null;
+  /** City a dragged token would snap to */
+  snapCity: string | null;
+  /** Null when tokens can't be moved yet (board state not ready) */
+  onTokenPointerDown: ((token: TokenRef, event: React.PointerEvent<Element>) => void) | null;
 }
 
 /** routeKey -> independent railroad name */
@@ -70,10 +91,21 @@ function regionalOfficeDiscs(n: number, r: number): { dx: number; r: number }[] 
   return Array.from({ length: n }, (_, i) => ({ dx: (i - (n - 1) / 2) * step, r: discR }));
 }
 
-export function BoardMap({ G, players, track, zoomPan, onRouteClick }: BoardMapProps): React.ReactElement {
+export function BoardMap({
+  G,
+  players,
+  track,
+  zoomPan,
+  onRouteClick,
+  tokens,
+  dragging,
+  snapCity,
+  onTokenPointerDown,
+}: BoardMapProps): React.ReactElement {
   const indieOwners = React.useMemo(() => getIndieRouteOwners(G), [G]);
 
   const colorById = new Map(players.map((p) => [p.id, p.color]));
+  const playerById = new Map(players.map((p) => [p.id, p]));
 
   const handleRouteClick = (event: React.MouseEvent<SVGPathElement>, routeKey: string, contextMenu: boolean) => {
     if (contextMenu) event.preventDefault();
@@ -190,6 +222,49 @@ export function BoardMap({ G, players, track, zoomPan, onRouteClick }: BoardMapP
             <title>{routeTooltip(key, indieOwners.get(key), track[key], players)}</title>
           </path>
         ))}
+      </g>
+
+      {/* Tokens sit above the route hit areas so they can be grabbed where routes meet at a city. */}
+      {snapCity && CITY_POINTS[snapCity] && (
+        <circle
+          className="boardMap__snapTarget"
+          cx={CITY_POINTS[snapCity].x}
+          cy={CITY_POINTS[snapCity].y}
+          r={CITY_POINTS[snapCity].r + SNAP_RING_GAP}
+        />
+      )}
+      <g className="boardMap__tokens">
+        {tokens.map(({ token, city, x, y }) => {
+          const player = playerById.get(token.playerID);
+          if (!player) return null;
+          const fill = tokenFill(token, player);
+          const classes = ['boardMap__token'];
+          if (onTokenPointerDown) classes.push('boardMap__token--movable');
+          if (sameToken(dragging, token)) classes.push('boardMap__token--dragging');
+          return (
+            <g
+              key={tokenId(token)}
+              className={classes.join(' ')}
+              data-token={tokenId(token)}
+              data-city={city}
+              onPointerDown={onTokenPointerDown ? (event) => onTokenPointerDown(token, event) : undefined}
+            >
+              <title>{`${player.name}'s ${tokenLabel(token)}: ${city}`}</title>
+              {token.kind === 'engine' ? (
+                <rect
+                  x={x - ENGINE_WIDTH / 2}
+                  y={y - ENGINE_HEIGHT / 2}
+                  width={ENGINE_WIDTH}
+                  height={ENGINE_HEIGHT}
+                  rx={8}
+                  fill={fill}
+                />
+              ) : (
+                <circle cx={x} cy={y} r={RAILYARD_RADIUS} fill={fill} />
+              )}
+            </g>
+          );
+        })}
       </g>
     </svg>
   );

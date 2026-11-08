@@ -11,6 +11,9 @@ import { listGames } from '../utils/gameManager';
 import type { GameListItem } from '../utils/storage/storageAdapter';
 import { BoardMap, type RouteClick } from './BoardMap';
 import { RoutePopover } from './RoutePopover';
+import { TokenGhost } from './TokenIcon';
+import { layoutTokens, moveTokenOp, tokenCity, type TokenRef } from './tokens';
+import { useTokenDrag } from './useTokenDrag';
 import { dispatchBoardOp } from './boardSync';
 import { BoardTopBar, PlayerTrays } from './BoardChrome';
 import { formatPhase, getBoardPlayers, type BoardPlayer } from './boardPlayers';
@@ -65,6 +68,25 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
     setPopover({ routeKey: click.routeKey, clientX: click.clientX, clientY: click.clientY });
   };
 
+  const canMoveTokens = boardStatus === 'ready' && board !== null;
+  const handleTokenDrop = (token: TokenRef, city: string | null) => {
+    const { board: latest, status: latestStatus } = useBoardStore.getState();
+    if (latestStatus !== 'ready' || tokenCity(latest, token) === city) return;
+    dispatchBoardOp(moveTokenOp(token, city));
+  };
+  const { drag, startDrag } = useTokenDrag(viewportRef, handleTokenDrop);
+  const placedTokens = React.useMemo(
+    () => layoutTokens(board, players.map((p: BoardPlayer) => p.id)),
+    [board, players]
+  );
+  const startTokenDrag = canMoveTokens
+    ? (token: TokenRef, event: React.PointerEvent<Element>) => {
+        setPopover(null);
+        startDrag(token, event);
+      }
+    : null;
+  const dragPlayer = drag ? players.find((p: BoardPlayer) => p.id === drag.token.playerID) : undefined;
+
   // The popover is anchored to screen coordinates, so close it when the map moves.
   React.useEffect(() => setPopover(null), [zoomPan.zoom]);
   React.useEffect(() => {
@@ -85,7 +107,7 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
 
   const ready = status === 'live' && code;
   return (
-    <div className="boardApp">
+    <div className={`boardApp${drag ? ' boardApp--dragging' : ''}`}>
       {ready ? (
         <BoardTopBar
           code={code}
@@ -112,6 +134,10 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
             track={board?.track ?? EMPTY_TRACK}
             zoomPan={zoomPan}
             onRouteClick={handleRouteClick}
+            tokens={placedTokens}
+            dragging={drag?.token ?? null}
+            snapCity={drag?.target.kind === 'city' ? drag.target.city : null}
+            onTokenPointerDown={startTokenDrag}
           />
         )}
       </div>
@@ -127,7 +153,19 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
           onClose={closePopover}
         />
       )}
-      {ready && <PlayerTrays players={players} currentPlayer={ctx.currentPlayer} board={board} />}
+      {ready && (
+        <PlayerTrays
+          players={players}
+          currentPlayer={ctx.currentPlayer}
+          board={board}
+          dragging={drag?.token ?? null}
+          dropTarget={drag?.target.kind === 'tray'}
+          onTokenPointerDown={startTokenDrag}
+        />
+      )}
+      {drag && dragPlayer && (
+        <TokenGhost token={drag.token} player={dragPlayer} clientX={drag.clientX} clientY={drag.clientY} />
+      )}
     </div>
   );
 }

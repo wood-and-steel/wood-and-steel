@@ -1,5 +1,6 @@
 /// <reference types="@testing-library/jest-dom" />
 import React from 'react';
+import { vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App from '../app/App';
@@ -7,6 +8,7 @@ import { setStorageAdapter } from '../utils/storage';
 import { MemoryStorageAdapter } from '../utils/storage/memoryStorageAdapter.testHelper';
 import type { SerializedState } from '../utils/stateSerialization';
 import { setBoardStateAdapter } from './boardStateAdapter';
+import { CITY_POINTS } from './geometry/cityPoints';
 import { trackPathD } from './geometry/trackPaths';
 import { MemoryBoardStateAdapter } from './memoryBoardStateAdapter.testHelper';
 
@@ -171,6 +173,88 @@ describe('BoardApp (/board)', () => {
       fireEvent.click(hit('Chicago-Detroit'));
       const stroke = container.querySelector('[data-track="Chicago-Detroit"] .boardMap__trackStroke')!;
       expect(stroke.getAttribute('d')).toBe(trackPathD('Chicago-Detroit', 1));
+    });
+  });
+
+  describe('tokens (M4)', () => {
+    // jsdom has no layout or PointerEvent: lay the map out at 1/10 scale from (0, 0) and put the
+    // tray strip below y = 500.
+    const SCALE = 10;
+    const MAP_RECT = { left: 0, top: 0, right: 666, bottom: 417.3, width: 666, height: 417.3, x: 0, y: 0 } as DOMRect;
+    const toClient = (city: string) => ({ clientX: CITY_POINTS[city].x / SCALE, clientY: CITY_POINTS[city].y / SCALE });
+    const TRAY_POINT = { clientX: 50, clientY: 600 };
+
+    beforeAll(() => {
+      if (!window.PointerEvent) {
+        (window as unknown as { PointerEvent: typeof MouseEvent }).PointerEvent = class extends MouseEvent {} as typeof MouseEvent;
+      }
+    });
+
+    beforeEach(() => {
+      vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue(MAP_RECT);
+      document.elementFromPoint = (_x: number, y: number) =>
+        y > 500 ? document.querySelector('[data-token-drop="tray"]') : null;
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      delete (document as { elementFromPoint?: unknown }).elementFromPoint;
+    });
+
+    async function openReadyBoard() {
+      const view = await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Board saved')).toBeInTheDocument());
+      return view;
+    }
+
+    function drag(from: Element, to: { clientX: number; clientY: number }) {
+      fireEvent.pointerDown(from, { button: 0, clientX: 1, clientY: 1 });
+      fireEvent.pointerMove(window, to);
+      fireEvent.pointerUp(window, to);
+    }
+
+    it('drags an engine from the tray onto a city, then back to the tray', async () => {
+      const { container } = await openReadyBoard();
+      const trayToken = () => container.querySelector('.boardTrays [data-token="engine-1-0"]');
+      const mapToken = () => container.querySelector('.boardMap [data-token="engine-1-0"]');
+
+      fireEvent.pointerDown(trayToken()!, { button: 0, ...TRAY_POINT });
+      fireEvent.pointerMove(window, toClient('Atlanta'));
+      expect(container.querySelector('.boardMap__snapTarget')).toBeInTheDocument();
+      expect(container.querySelector('.tokenGhost')).toBeInTheDocument();
+      fireEvent.pointerUp(window, toClient('Atlanta'));
+
+      expect(mapToken()).toHaveAttribute('data-city', 'Atlanta');
+      expect(trayToken()).toBeNull();
+      expect(container.querySelector('.tokenGhost')).toBeNull();
+      await waitFor(() =>
+        expect(boardAdapter.rows.get('BCDFG')?.state).toMatchObject({ engines: { '1': ['Atlanta', null] } })
+      );
+
+      drag(mapToken()!, TRAY_POINT);
+      expect(mapToken()).toBeNull();
+      expect(trayToken()).toBeInTheDocument();
+    });
+
+    it('moves a Railyard between cities and cancels a drop away from every city', async () => {
+      const { container } = await openReadyBoard();
+      const yard = () => container.querySelector('[data-token="railyard-0"]')!;
+      drag(yard(), toClient('Denver'));
+      expect(yard()).toHaveAttribute('data-city', 'Denver');
+      drag(yard(), toClient('Omaha'));
+      expect(yard()).toHaveAttribute('data-city', 'Omaha');
+      // Pacific Ocean, far from any city: the token stays put.
+      drag(yard(), { clientX: 2, clientY: 400 });
+      expect(yard()).toHaveAttribute('data-city', 'Omaha');
+    });
+
+    it('Escape cancels a drag', async () => {
+      const { container } = await openReadyBoard();
+      fireEvent.pointerDown(container.querySelector('[data-token="engine-0-1"]')!, { button: 0, ...TRAY_POINT });
+      fireEvent.pointerMove(window, toClient('Denver'));
+      fireEvent.keyDown(window, { key: 'Escape' });
+      fireEvent.pointerUp(window, toClient('Denver'));
+      expect(container.querySelector('.boardMap [data-token="engine-0-1"]')).toBeNull();
     });
   });
 });

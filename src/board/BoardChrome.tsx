@@ -1,6 +1,6 @@
 /**
  * Board chrome: the slim top bar (game, phase, round, current player, sync, zoom) and the
- * player tray strip (unplaced engines and Railyard per player).
+ * player tray strip (unplaced engines and Railyard per player, draggable onto the map).
  */
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -8,6 +8,8 @@ import type { GameContext } from '../stores/gameStore';
 import { formatPhase, type BoardPlayer } from './boardPlayers';
 import type { BoardState } from './boardOps';
 import type { BoardStateStatus } from './boardStore';
+import { TokenIcon } from './TokenIcon';
+import { sameToken, tokenCity, tokenId, tokenLabel, type TokenRef } from './tokens';
 import type { BoardSyncStatus } from './useBoardGameSync';
 import type { ZoomPan } from './useZoomPan';
 
@@ -96,38 +98,37 @@ export function BoardTopBar({
   );
 }
 
-function EngineToken({ fill, label }: { fill: string; label: string }): React.ReactElement {
-  return (
-    <svg className="boardToken boardToken--engine" viewBox="0 0 24 16" role="img" aria-label={label}>
-      <title>{label}</title>
-      <rect x="1" y="1" width="22" height="14" rx="3" fill={fill} />
-    </svg>
-  );
-}
-
-function RailyardToken({ fill, label }: { fill: string; label: string }): React.ReactElement {
-  return (
-    <svg className="boardToken boardToken--railyard" viewBox="0 0 16 16" role="img" aria-label={label}>
-      <title>{label}</title>
-      <circle cx="8" cy="8" r="7" fill={fill} />
-    </svg>
-  );
-}
-
 interface PlayerTraysProps {
   players: BoardPlayer[];
   currentPlayer: string;
   /** Null until board state loads; every token is then shown in its tray. */
   board: BoardState | null;
+  /** Token being dragged, shown dimmed in place */
+  dragging: TokenRef | null;
+  /** True while a dragged token would drop back into its tray */
+  dropTarget: boolean;
+  /** Null when tokens can't be moved yet (board state not ready) */
+  onTokenPointerDown: ((token: TokenRef, event: React.PointerEvent<Element>) => void) | null;
 }
 
-/** Each tray shows the player's engines and Railyard that are not on the board. */
-export function PlayerTrays({ players, currentPlayer, board }: PlayerTraysProps): React.ReactElement {
+/** Each tray shows the player's engines and Railyard that are not on the board; drag them onto a city. */
+export function PlayerTrays({
+  players,
+  currentPlayer,
+  board,
+  dragging,
+  dropTarget,
+  onTokenPointerDown,
+}: PlayerTraysProps): React.ReactElement {
   return (
-    <footer className="boardTrays">
+    <footer className={`boardTrays${dropTarget ? ' boardTrays--dropTarget' : ''}`} data-token-drop="tray">
       {players.map((player) => {
-        const [lightCity, darkCity] = board?.engines[player.id] ?? [null, null];
-        const railyardCity = board?.railyards[player.id] ?? null;
+        const tokens: TokenRef[] = [
+          { kind: 'engine', playerID: player.id, slot: 0 },
+          { kind: 'engine', playerID: player.id, slot: 1 },
+          { kind: 'railyard', playerID: player.id },
+        ];
+        const inTray = tokens.filter((token) => tokenCity(board, token) === null);
         return (
           <section
             key={player.id}
@@ -138,9 +139,20 @@ export function PlayerTrays({ players, currentPlayer, board }: PlayerTraysProps)
               <Swatch color={player.color} /> {player.name}
             </span>
             <span className="boardTray__tokens">
-              {lightCity === null && <EngineToken fill={player.light} label="Light engine" />}
-              {darkCity === null && <EngineToken fill={player.dark} label="Dark engine" />}
-              {railyardCity === null && <RailyardToken fill={player.dark} label="Railyard" />}
+              {inTray.map((token) => (
+                <button
+                  key={tokenId(token)}
+                  type="button"
+                  className={`boardTray__token${sameToken(dragging, token) ? ' boardTray__token--dragging' : ''}`}
+                  aria-label={`${player.name}'s ${tokenLabel(token)}`}
+                  title={`${tokenLabel(token)}: drag onto a city`}
+                  data-token={tokenId(token)}
+                  disabled={!onTokenPointerDown}
+                  onPointerDown={onTokenPointerDown ? (event) => onTokenPointerDown(token, event) : undefined}
+                >
+                  <TokenIcon token={token} player={player} />
+                </button>
+              ))}
             </span>
           </section>
         );
