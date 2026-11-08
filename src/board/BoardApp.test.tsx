@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App from '../app/App';
+import { useGameStore } from '../stores/gameStore';
 import { setStorageAdapter } from '../utils/storage';
 import { MemoryStorageAdapter } from '../utils/storage/memoryStorageAdapter.testHelper';
 import type { SerializedState } from '../utils/stateSerialization';
@@ -255,6 +256,37 @@ describe('BoardApp (/board)', () => {
       fireEvent.keyDown(window, { key: 'Escape' });
       fireEvent.pointerUp(window, toClient('Denver'));
       expect(container.querySelector('.boardMap [data-token="engine-0-1"]')).toBeNull();
+    });
+  });
+
+  describe('acquisitions (M5)', () => {
+    it("converts an acquired railroad's routes to the acquirer's track", async () => {
+      const { container } = await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Board saved')).toBeInTheDocument());
+
+      // The app's acquire move removes the railroad and adds its cities to the acquirer.
+      const { G } = useGameStore.getState();
+      act(() => {
+        useGameStore.setState({
+          G: {
+            ...G,
+            players: G.players.map(([id, props]) =>
+              id === '1' ? [id, { ...props, activeCities: [...props.activeCities, 'Chicago', 'Cleveland', 'Detroit'] }] : [id, props]
+            ),
+            independentRailroads: {},
+          },
+        });
+      });
+
+      expect(container.querySelectorAll('.boardMap__indieRoute')).toHaveLength(0);
+      expect(container.querySelector('[data-track="Chicago-Cleveland"] [data-owner="1"]')).toBeInTheDocument();
+      expect(container.querySelector('[data-track="Chicago-Detroit"] [data-owner="1"]')).toBeInTheDocument();
+      await waitFor(() =>
+        expect(boardAdapter.rows.get('BCDFG')?.state).toMatchObject({
+          track: { 'Chicago-Cleveland': ['1'], 'Chicago-Detroit': ['1'] },
+          seenIndependentRailroads: {},
+        })
+      );
     });
   });
 });

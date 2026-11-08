@@ -143,9 +143,11 @@ export function BoardMap({
       />
 
       <g className="boardMap__indieRoutes">
-        {[...indieOwners.keys()].map((key) =>
-          ROUTE_PATHS[key] ? <path key={key} className="boardMap__indieRoute" d={ROUTE_PATHS[key]} /> : null
-        )}
+        {/* Same trimmed geometry as player track, so indie strokes stop at the city circles too. */}
+        {[...indieOwners.keys()].map((key) => {
+          const d = trackPathD(key, 0);
+          return d ? <path key={key} className="boardMap__indieRoute" d={d} /> : null;
+        })}
       </g>
 
       <g className="boardMap__track">

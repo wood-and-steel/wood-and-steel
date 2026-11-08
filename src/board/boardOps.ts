@@ -30,7 +30,14 @@ export type BoardOp =
   | { type: 'moveEngine'; playerID: string; slot: EngineSlot; city: string | null }
   | { type: 'moveRailyard'; playerID: string; city: string | null }
   | { type: 'applyAcquisition'; railroad: string; playerID: string | null; routeKeys: string[] }
-  | { type: 'snapshotIndependentRailroads'; railroads: Record<string, string[]> };
+  | { type: 'snapshotIndependentRailroads'; railroads: Record<string, string[]> }
+  | {
+      type: 'reconcileIndependentRailroads';
+      /** G.independentRailroads now, as name -> route keys */
+      railroads: Record<string, string[]>;
+      /** Acquirer per railroad that disappeared from G (null: unknown, just forget it) */
+      acquirers: Record<string, string | null>;
+    };
 
 export function emptyBoardState(): BoardState {
   return {
@@ -153,6 +160,24 @@ export function snapshotIndependentRailroads(state: BoardState, railroads: Recor
   return { ...state, seenIndependentRailroads: structuredClone(railroads) };
 }
 
+/**
+ * Catch the snapshot up with G: every snapshotted railroad missing from `railroads` was
+ * acquired and is converted to track for its acquirer; then the snapshot is replaced.
+ * Idempotent: re-applied to a state where another screen already converted a railroad,
+ * that railroad is no longer in the snapshot, so it isn't converted twice.
+ */
+export function reconcileIndependentRailroads(
+  state: BoardState,
+  railroads: Record<string, string[]>,
+  acquirers: Record<string, string | null>
+): BoardState {
+  let next = state;
+  for (const [name, routeKeys] of Object.entries(state.seenIndependentRailroads)) {
+    if (!(name in railroads)) next = applyAcquisition(next, name, acquirers[name] ?? null, routeKeys);
+  }
+  return snapshotIndependentRailroads(next, railroads);
+}
+
 export function applyBoardOp(state: BoardState, op: BoardOp): BoardState {
   switch (op.type) {
     case 'claimRoute':
@@ -169,5 +194,7 @@ export function applyBoardOp(state: BoardState, op: BoardOp): BoardState {
       return applyAcquisition(state, op.railroad, op.playerID, op.routeKeys);
     case 'snapshotIndependentRailroads':
       return snapshotIndependentRailroads(state, op.railroads);
+    case 'reconcileIndependentRailroads':
+      return reconcileIndependentRailroads(state, op.railroads, op.acquirers);
   }
 }
