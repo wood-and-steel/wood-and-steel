@@ -10,6 +10,8 @@ import { setBotStatesAdapter } from '../state/botStatesAdapter';
 import { loadBotStates } from '../state/botStatesSync';
 import { MemoryBotStatesAdapter } from '../state/memoryBotStatesAdapter.testHelper';
 import { BotRunner } from './BotRunner';
+import { HOST as GAME_HOST, setUpHostGame } from '../runner/hostGame.testHelper';
+import { normalizeBotStates } from '../state/botStates';
 
 const HOST = 'host-device';
 const storageAdapter = new MemoryStorageAdapter();
@@ -27,8 +29,8 @@ async function renderRunner(deviceId = HOST) {
   });
 }
 
-function setPhase(phase: string) {
-  useGameStore.setState((s) => ({ ctx: { ...s.ctx, phase } }));
+function setPhase(phase: string, currentPlayer?: string) {
+  useGameStore.setState((s) => ({ ctx: { ...s.ctx, phase, ...(currentPlayer ? { currentPlayer } : {}) } }));
 }
 
 /** Let pending async work in the runner settle. */
@@ -48,12 +50,13 @@ beforeEach(async () => {
   code = await createNewGame({ hostDeviceId: HOST, numPlayers: 3 });
 });
 
-describe('BotRunner (M2: bot state setup)', () => {
+describe('BotRunner: bot state setup', () => {
   test('host creates bot_states once the game has started', async () => {
     await addBotSeat(code, HOST, { name: 'Avery', strategy: 'builder' });
     await addBotSeat(code, HOST, { name: 'Sage', strategy: 'merchant' });
     const { assignments } = await assignRandomPlayerIDs(code, HOST);
-    setPhase('setup');
+    // A human's turn, so the runner only sets up state here.
+    setPhase('setup', assignments![HOST]);
 
     await renderRunner();
 
@@ -92,3 +95,35 @@ describe('BotRunner (M2: bot state setup)', () => {
     expect(botAdapter.saves).toBe(0);
   });
 });
+
+describe('BotRunner: playing turns', () => {
+  async function renderFor(game: Awaited<ReturnType<typeof setUpHostGame>>) {
+    localStorage.setItem('device_id', GAME_HOST);
+    await act(async () => {
+      render(
+        <StorageProvider>
+          <BotRunner gameCode={game.code} ports={game.ports} paceMs={0} />
+        </StorageProvider>
+      );
+    });
+  }
+
+  test('plays the bot’s turn when it is current, then waits for the human', async () => {
+    const game = await setUpHostGame({ phase: 'setup' });
+    await renderFor(game);
+    await waitFor(() => expect(useGameStore.getState().ctx.currentPlayer).toBe('1'));
+    const me = useGameStore.getState().G.players.find(([id]) => id === '0')![1];
+    expect(me.activeCities).toHaveLength(2);
+    await settle();
+    expect(useGameStore.getState().ctx.currentPlayer).toBe('1');
+  });
+
+  test('keeps a heartbeat on each bot', async () => {
+    const game = await setUpHostGame({ phase: 'play', currentPlayer: '1' });
+    await renderFor(game);
+    await waitFor(() =>
+      expect(normalizeBotStates(game.botAdapter.rows.get(game.code)!.state).bots['0'].runnerSeenAt).not.toBeNull()
+    );
+  });
+});
+

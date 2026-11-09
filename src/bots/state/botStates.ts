@@ -8,6 +8,7 @@ import type { PlayerSeat } from '../../utils/gameManager';
 import { isStrategyId, type StrategyId } from '../heuristic/strategies';
 import { WEIGHT_KEYS, defaultWeights, drawWeights, type Weights } from '../heuristic/weights';
 import { createRng, randomSeed } from '../rng';
+import type { Effect } from '../engine/actions';
 
 export const BOT_STATES_VERSION = 1;
 /** Every player starts with $10,000 (rules, Set Up). Money is in dollars, like moneyValue(). */
@@ -21,10 +22,16 @@ export interface BotTurnLog {
   lines: string[];
 }
 
-/** Steps of the current turn already applied, so a reload can resume without repeating a move. */
+/**
+ * The bot's turn so far, so a reload can resume without repeating a move. A turn is identified
+ * by ctx.turn and ctx.playOrderPos. `pending` holds the effects of the action being carried out;
+ * it is saved before they run and cleared after, so a resume re-runs only those not yet done.
+ */
 export interface TurnInProgress {
   turn: number;
+  playOrderPos: number;
   steps: string[];
+  pending: { step: string; effects: Effect[] } | null;
 }
 
 /** The heuristic's multi-turn intent; its shape is defined with the heuristic player (M5). */
@@ -144,9 +151,21 @@ function normalizeDeliveries(raw: unknown): Record<string, number> {
   return deliveries;
 }
 
+function normalizePending(raw: unknown): TurnInProgress['pending'] {
+  if (!isRecord(raw) || typeof raw.step !== 'string' || !Array.isArray(raw.effects)) return null;
+  // Effects are written only by the runner; keep the well-formed ones.
+  const effects = raw.effects.filter((e): e is Effect => isRecord(e) && typeof e.kind === 'string');
+  return { step: raw.step, effects: structuredClone(effects) };
+}
+
 function normalizeTurnInProgress(raw: unknown): TurnInProgress | null {
   if (!isRecord(raw) || !isFiniteNumber(raw.turn) || !isStringArray(raw.steps)) return null;
-  return { turn: raw.turn, steps: [...raw.steps] };
+  return {
+    turn: raw.turn,
+    playOrderPos: isFiniteNumber(raw.playOrderPos) ? raw.playOrderPos : -1,
+    steps: [...raw.steps],
+    pending: normalizePending(raw.pending),
+  };
 }
 
 function normalizeLog(raw: unknown): BotTurnLog[] {

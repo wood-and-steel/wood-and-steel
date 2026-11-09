@@ -62,7 +62,12 @@ describe('normalizeBotStates', () => {
     states.bots['0'].log = [{ round: 1, turn: 2, lines: ['Avery ended the turn.'] }];
     states.bots['0'].deliveries = { coal: 2 };
     states.bots['0'].plan = { target: 'Chicago' };
-    states.bots['0'].turnInProgress = { turn: 4, steps: ['build:Boston-New York'] };
+    states.bots['0'].turnInProgress = {
+      turn: 4,
+      playOrderPos: 1,
+      steps: ['buildTrack'],
+      pending: { step: 'endTurn', effects: [{ kind: 'move', move: { name: 'endTurn', args: [] } }] },
+    };
     expect(normalizeBotStates(JSON.parse(JSON.stringify(states)))).toEqual(states);
   });
 

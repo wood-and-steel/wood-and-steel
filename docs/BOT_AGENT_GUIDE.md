@@ -29,6 +29,19 @@
 | `actions.ts` | `Action`, `listActions`, `applyAction` → predicted world plus effects (app moves, board ops, `requestOffers`, narration). |
 | `narration.ts` | Plain templates: third person by name, no pronouns. |
 
+## Runner (`src/bots/runner/`, `src/bots/host/`)
+
+| File | Role |
+|---|---|
+| `ports.ts` | `GamePort`, `BoardPort`, `BotStatePort`, `Clock`: everything the runner needs from outside. A server runner implements these instead of `host/hostPorts.ts`. |
+| `runner/runTurn.ts` | `runBotTurn`: one turn. Per action: policy chooses from `listActions`, `applyAction` checks it, the action and its effects are saved as `turnInProgress.pending`, the effects run, then narration is saved and `pending` cleared. |
+| `runner/steps.ts` | Step keys (rebuild the turn's actions after a reload) and `isMoveDone` (skip moves `G` already shows when resuming). |
+| `runner/basicPolicy.ts` | Placeholder policy for M4; replaced by the heuristic in M5. |
+| `host/hostPorts.ts` | Host implementations: moves call the app's move functions, then wait until the stored game matches the store; board ops go through `src/board/boardRowOps.ts`. |
+| `host/BotRunner.tsx` | Lazy-mounted by `App.tsx`. On the host only: creates `bot_states`, plays each bot's turn when it's current, and writes a heartbeat (`runnerSeenAt`) every 10 seconds. |
+
+**Adding a move to the engine:** add it to `GameMove` (`engine/actions.ts`), `callMove` (`host/hostPorts.ts`), and `isMoveDone` (`runner/steps.ts`), so a resumed turn neither skips nor repeats it.
+
 A "segment" in the rules is one route between two cities: moves, the two-route build limit, and Hub, Railyard, and Roundhouse ranges all count routes. A route's length (1–5) only sets its cost.
 
 ## Rule changes

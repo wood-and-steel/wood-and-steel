@@ -10,7 +10,7 @@ const appSources = import.meta.glob(
 ) as Record<string, string>;
 
 /** Decision logic that must run anywhere (host browser, tournament, a future server). */
-const pureSources = import.meta.glob(['./rng.ts', './heuristic/**/*.ts', './engine/**/*.ts', '!./**/*.test.ts', '!./**/*.testHelper.ts'], {
+const pureSources = import.meta.glob(['./rng.ts', './ports.ts', './heuristic/**/*.ts', './engine/**/*.ts', './runner/**/*.ts', '!./**/*.test.ts', '!./**/*.testHelper.ts'], {
   query: '?raw',
   import: 'default',
   eager: true,
