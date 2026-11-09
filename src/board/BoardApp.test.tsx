@@ -139,6 +139,44 @@ describe('BoardApp (/board)', () => {
     });
   });
 
+  it('titles the page with the game code', async () => {
+    await renderAt('/board?game=bcdfg');
+    await waitFor(() => expect(document.title).toBe('Board BCDFG - Wood & Steel'));
+  });
+
+  describe('deliveries', () => {
+    it('unloads the engine in the contract city when its contract is fulfilled', async () => {
+      boardAdapter.write('BCDFG', {
+        ...emptyBoardState(),
+        seeded: true,
+        engines: { '0': ['Savannah', 'Atlanta'], '1': [null, null] },
+        engineTypes: { '0': ['american', 'mogul'] },
+        cargo: { '0': ['cotton', 'cotton'] },
+      });
+      await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Board saved')).toBeInTheDocument());
+      const contract = {
+        id: 'k1',
+        destinationKey: 'Savannah',
+        commodity: 'cotton',
+        type: 'private' as const,
+        fulfilled: false,
+        playerID: '0',
+        creationTime: 0,
+        turnsHeld: 0,
+      };
+      act(() => {
+        useGameStore.setState({ G: { ...useGameStore.getState().G, contracts: [contract] } });
+      });
+      act(() => {
+        useGameStore.setState({ G: { ...useGameStore.getState().G, contracts: [{ ...contract, fulfilled: true }] } });
+      });
+      await waitFor(() =>
+        expect(boardAdapter.rows.get('BCDFG')?.state).toMatchObject({ cargo: { '0': [null, 'cotton'] } })
+      );
+    });
+  });
+
   it('lists games when no code is given', async () => {
     await renderAt('/board');
     expect(await screen.findByRole('link', { name: /BCDFG/ })).toHaveAttribute('href', '/board?game=BCDFG');

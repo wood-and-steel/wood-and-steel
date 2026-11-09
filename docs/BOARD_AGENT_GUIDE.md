@@ -39,6 +39,7 @@ All paths under `src/board/` unless noted.
 | `jsonRowAdapter.ts` | One JSON row per game code in a Supabase table: conditional saves on `updated_at`, realtime. Also used by playtest bots for `bot_states` ([BOT_PLAN.md](BOT_PLAN.md)). |
 | `memoryBoardStateAdapter.testHelper.ts` | In-memory adapter for tests (conditional saves, realtime, `beforeSave` hook to simulate another screen). |
 | `boardSeed.ts` | First-open seeding from `G`: starting routes, empty trays, indie snapshot. |
+| `boardDeliveries.ts` | `deliveryCargoOps`: when a contract becomes fulfilled, clears the cargo of the player's engine standing in the destination city with that commodity. Run from `useBoardStateSync` on every `G` change; contracts already fulfilled when the board opened are only remembered. |
 | `boardAcquisitions.ts` | `findAcquirer`, `reconcileOp`: converts acquired indie railroads to track. |
 | `boardPlayers.ts` | Player display data (play order, light/dark shades), `formatPhase`. |
 | `BoardMap.tsx` | The SVG map and all its layers; route click handling. |

@@ -44,6 +44,7 @@ function BoardMessage({ children }: { children: React.ReactNode }): React.ReactE
 
 function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
   const { status, error, code } = useBoardGameSync(rawCode);
+  usePageTitle(`Board ${code ?? rawCode.toUpperCase()} - Wood & Steel`);
   const G = useGameStore((state) => state.G);
   const ctx = useGameStore((state) => state.ctx);
   const viewportRef = React.useRef<HTMLDivElement>(null);
@@ -177,6 +178,17 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
       )}
     </div>
   );
+}
+
+/** Set the browser tab's title while mounted, restoring the previous one afterwards. */
+function usePageTitle(title: string): void {
+  React.useEffect(() => {
+    const previous = document.title;
+    document.title = title;
+    return () => {
+      document.title = previous;
+    };
+  }, [title]);
 }
 
 function GamePicker(): React.ReactElement {
