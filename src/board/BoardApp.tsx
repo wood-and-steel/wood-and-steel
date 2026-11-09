@@ -22,6 +22,8 @@ import { useBoardStore } from './boardStore';
 import { useBoardGameSync } from './useBoardGameSync';
 import { useBoardStateSync } from './useBoardStateSync';
 import { useZoomPan } from './useZoomPan';
+import { useBotNarration } from './useBotNarration';
+import { botTrayInfo } from './botNarration';
 
 const EMPTY_TRACK: Record<string, string[]> = {};
 
@@ -42,6 +44,7 @@ function BoardMessage({ children }: { children: React.ReactNode }): React.ReactE
 
 function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
   const { status, error, code } = useBoardGameSync(rawCode);
+  usePageTitle(`Board ${code ?? rawCode.toUpperCase()} - Wood & Steel`);
   const G = useGameStore((state) => state.G);
   const ctx = useGameStore((state) => state.ctx);
   const viewportRef = React.useRef<HTMLDivElement>(null);
@@ -52,6 +55,8 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
   const boardError = useBoardStore((s) => s.error);
   const board = useBoardStore((s) => s.board);
   const pendingCount = useBoardStore((s) => s.pending.length);
+  const { states: botStates, now } = useBotNarration(code ?? null, status === 'live');
+  const bots = React.useMemo(() => botTrayInfo(botStates, ctx, now), [botStates, ctx, now]);
   const [popover, setPopover] = React.useState<{ routeKey: string; clientX: number; clientY: number } | null>(null);
   const closePopover = React.useCallback(() => setPopover(null), []);
 
@@ -152,6 +157,7 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
             dropTarget={drag?.target.kind === 'tray'}
             onTokenPointerDown={startTokenDrag}
             onBoardOp={canEditBoard ? dispatchBoardOp : null}
+            bots={bots}
           />
         )}
       </div>
@@ -172,6 +178,17 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
       )}
     </div>
   );
+}
+
+/** Set the browser tab's title while mounted, restoring the previous one afterwards. */
+function usePageTitle(title: string): void {
+  React.useEffect(() => {
+    const previous = document.title;
+    document.title = title;
+    return () => {
+      document.title = previous;
+    };
+  }, [title]);
 }
 
 function GamePicker(): React.ReactElement {

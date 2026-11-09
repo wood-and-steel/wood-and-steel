@@ -29,6 +29,10 @@ import {
   getDevicePlayerID,
   getDeviceSeat,
   getPlayerSeats,
+  addBotSeat,
+  removeBotSeat,
+  isBotSeat,
+  BOT_SEAT_PREFIX,
 } from './gameManager';
 import type { GameMetadata } from './gameManager';
 import { useGameStore, type GameContext } from '../stores/gameStore';
@@ -1312,5 +1316,109 @@ describe('Persistence Tests', () => {
         expect(seats).toBeNull();
       });
     });
+  });
+});
+
+describe('9. Bot seats (playtest)', () => {
+  const guestDevice = 'guest-device';
+  let gameCode: string;
+
+  beforeEach(async () => {
+    gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE, numPlayers: 3 });
+  });
+
+  test('host adds a bot to an open seat', async () => {
+    const result = await addBotSeat(gameCode, TEST_HOST_DEVICE, { name: 'Avery', strategy: 'builder' });
+
+    expect(result.success).toBe(true);
+    expect(result.seatKey!.startsWith(BOT_SEAT_PREFIX)).toBe(true);
+    expect(result.seat).toMatchObject({ playerName: 'Avery (bot)', bot: { name: 'Avery', strategy: 'builder' } });
+
+    const seats = await getPlayerSeats(gameCode);
+    expect(seats![result.seatKey!]).toMatchObject({ playerName: 'Avery (bot)' });
+    expect(isBotSeat(seats![result.seatKey!])).toBe(true);
+    expect(isBotSeat(seats![TEST_HOST_DEVICE])).toBe(false);
+  });
+
+  test('only the host can add a bot', async () => {
+    await assignPlayerSeat(gameCode, guestDevice);
+    const result = await addBotSeat(gameCode, guestDevice, { name: 'Avery', strategy: 'builder' });
+    expect(result).toEqual({ success: false, error: SeatAssignmentError.NOT_HOST });
+  });
+
+  test('rejects a bot without a name or strategy', async () => {
+    const result = await addBotSeat(gameCode, TEST_HOST_DEVICE, { name: ' ', strategy: 'builder' });
+    expect(result).toEqual({ success: false, error: SeatAssignmentError.INVALID_BOT });
+  });
+
+  test('rejects a bot when every seat is filled', async () => {
+    await addBotSeat(gameCode, TEST_HOST_DEVICE, { name: 'Avery', strategy: 'builder' });
+    await addBotSeat(gameCode, TEST_HOST_DEVICE, { name: 'Sage', strategy: 'merchant' });
+    const result = await addBotSeat(gameCode, TEST_HOST_DEVICE, { name: 'Quinn', strategy: 'express' });
+    expect(result).toEqual({ success: false, error: SeatAssignmentError.GAME_FULL });
+  });
+
+  test('bots fill seats: humans cannot join a full game and all seats get playerIDs', async () => {
+    await addBotSeat(gameCode, TEST_HOST_DEVICE, { name: 'Avery', strategy: 'builder' });
+    await assignPlayerSeat(gameCode, guestDevice);
+
+    expect(await allPlayersJoined(gameCode)).toBe(true);
+    expect((await assignPlayerSeat(gameCode, 'late-device')).error).toBe(SeatAssignmentError.GAME_FULL);
+
+    const started = await assignRandomPlayerIDs(gameCode, TEST_HOST_DEVICE);
+    expect(started.success).toBe(true);
+    expect(Object.keys(started.assignments!)).toHaveLength(3);
+    expect(new Set(Object.values(started.assignments!))).toEqual(new Set(['0', '1', '2']));
+  });
+
+  test('host removes a bot seat, which reopens it', async () => {
+    const added = await addBotSeat(gameCode, TEST_HOST_DEVICE, { name: 'Avery', strategy: 'builder' });
+    const result = await removeBotSeat(gameCode, TEST_HOST_DEVICE, added.seatKey!);
+
+    expect(result).toEqual({ success: true });
+    expect(Object.keys((await getPlayerSeats(gameCode))!)).toEqual([TEST_HOST_DEVICE]);
+  });
+
+  test('cannot remove a human seat or a missing seat', async () => {
+    await assignPlayerSeat(gameCode, guestDevice);
+    expect(await removeBotSeat(gameCode, TEST_HOST_DEVICE, guestDevice)).toEqual({
+      success: false,
+      error: SeatAssignmentError.NOT_A_BOT,
+    });
+    expect(await removeBotSeat(gameCode, TEST_HOST_DEVICE, `${BOT_SEAT_PREFIX}missing`)).toEqual({
+      success: false,
+      error: SeatAssignmentError.NOT_JOINED,
+    });
+  });
+
+  test('only the host can remove a bot', async () => {
+    const added = await addBotSeat(gameCode, TEST_HOST_DEVICE, { name: 'Avery', strategy: 'builder' });
+    await assignPlayerSeat(gameCode, guestDevice);
+    expect(await removeBotSeat(gameCode, guestDevice, added.seatKey!)).toEqual({
+      success: false,
+      error: SeatAssignmentError.NOT_HOST,
+    });
+  });
+
+  test('bots cannot be added or removed after the game starts', async () => {
+    const added = await addBotSeat(gameCode, TEST_HOST_DEVICE, { name: 'Avery', strategy: 'builder' });
+    await assignPlayerSeat(gameCode, guestDevice);
+    await assignRandomPlayerIDs(gameCode, TEST_HOST_DEVICE);
+
+    expect((await removeBotSeat(gameCode, TEST_HOST_DEVICE, added.seatKey!)).error).toBe(
+      SeatAssignmentError.GAME_STARTED
+    );
+    // Make room so the only failure reason is that the game started
+    const seats = (await getPlayerSeats(gameCode))!;
+    delete seats[guestDevice];
+    await updateGameMetadata(gameCode, { playerSeats: seats });
+    expect(
+      (await addBotSeat(gameCode, TEST_HOST_DEVICE, { name: 'Sage', strategy: 'merchant' })).error
+    ).toBe(SeatAssignmentError.GAME_STARTED);
+  });
+
+  test('returns GAME_NOT_FOUND for an unknown game', async () => {
+    const result = await addBotSeat('XXXXX', TEST_HOST_DEVICE, { name: 'Avery', strategy: 'builder' });
+    expect(result).toEqual({ success: false, error: SeatAssignmentError.GAME_NOT_FOUND });
   });
 });

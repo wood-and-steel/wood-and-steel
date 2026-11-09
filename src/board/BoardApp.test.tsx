@@ -14,9 +14,14 @@ import { setBoardStateAdapter } from './boardStateAdapter';
 import { CITY_POINTS } from './geometry/cityPoints';
 import { trackPathD } from './geometry/trackPaths';
 import { MemoryBoardStateAdapter } from './memoryBoardStateAdapter.testHelper';
+import { setBotStatesAdapter } from '../bots/state/botStatesAdapter';
+import { MemoryBotStatesAdapter } from '../bots/state/memoryBotStatesAdapter.testHelper';
+import { createBotRecord } from '../bots/state/botStates';
+import { setBotNarrationPollMs } from './useBotNarration';
 
 const adapter = new MemoryStorageAdapter();
 let boardAdapter: MemoryBoardStateAdapter;
+let botAdapter: MemoryBotStatesAdapter;
 
 const state = {
   G: {
@@ -64,7 +69,112 @@ describe('BoardApp (/board)', () => {
     setStorageAdapter(adapter);
     boardAdapter = new MemoryBoardStateAdapter();
     setBoardStateAdapter(boardAdapter);
+    botAdapter = new MemoryBotStatesAdapter();
+    setBotStatesAdapter(botAdapter);
     await adapter.saveGame('BCDFG', state, { gameMode: 'byod' });
+  });
+
+  describe('bot narration (bots M6)', () => {
+    /** Ben (player 1, the current player) is a bot. */
+    function writeBen(lines: string[], seenAt: string | null = new Date().toISOString(), turn = 4) {
+      const bot = createBotRecord({ name: 'Ben', strategy: 'builder' }, 1);
+      botAdapter.write('BCDFG', { version: 1, bots: { '1': { ...bot, log: [{ round: 2, turn, lines }], runnerSeenAt: seenAt } } });
+    }
+
+    it('shows the bot’s turn in its tray, and nothing for humans', async () => {
+      writeBen(['Built Boston–Syracuse for $3,000', 'Borrowed $5,000']);
+      await renderAt('/board?game=BCDFG');
+      const narration = await screen.findByRole('region', { name: "Ben's narration" }, { timeout: 3000 });
+      expect(within(narration).queryByRole('heading')).not.toBeInTheDocument();
+      expect(within(narration).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+        'Built Boston–Syracuse for $3,000',
+        'Borrowed $5,000',
+      ]);
+      expect(screen.queryByRole('region', { name: "Ada's narration" })).not.toBeInTheDocument();
+      expect(screen.queryByText("Waiting for the host's app")).not.toBeInTheDocument();
+    });
+
+    it('updates live as the bot plays', async () => {
+      writeBen(['Borrowed $5,000']);
+      await renderAt('/board?game=BCDFG');
+      await screen.findByText('Borrowed $5,000', undefined, { timeout: 3000 });
+      await act(async () => {
+        writeBen(['Borrowed $5,000', 'Bought Upgraded Stations for $10,000']);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
+      expect(await screen.findByText('Bought Upgraded Stations for $10,000', undefined, { timeout: 3000 })).toBeInTheDocument();
+    });
+
+    it('says when the host’s app isn’t running the bot', async () => {
+      writeBen(['Repaid $5,000 debt'], new Date(Date.now() - 120_000).toISOString(), 3);
+      await renderAt('/board?game=BCDFG');
+      const narration = await screen.findByRole('region', { name: "Ben's narration" }, { timeout: 3000 });
+      expect(within(narration).getByRole('status')).toHaveTextContent("Waiting for the host's app");
+      expect(within(narration).getByText('Repaid $5,000 debt')).toBeInTheDocument();
+    });
+
+    it('picks up narration without realtime, e.g. when the board opened before the bots’ row existed', async () => {
+      setBotNarrationPollMs(30);
+      try {
+        botAdapter.subscribe = () => () => {};
+        await renderAt('/board?game=BCDFG');
+        await waitFor(() => expect(screen.getByText('Live')).toBeInTheDocument());
+        expect(screen.queryByRole('region', { name: "Ben's narration" })).not.toBeInTheDocument();
+        await act(async () => {
+          writeBen(['Borrowed $5,000']);
+        });
+        expect(await screen.findByText('Borrowed $5,000', undefined, { timeout: 3000 })).toBeInTheDocument();
+      } finally {
+        setBotNarrationPollMs(10_000);
+      }
+    });
+
+    it('a missing bot_states table only means no narration', async () => {
+      botAdapter.load = () => Promise.reject(new Error('The bot_states table does not exist.'));
+      const { container } = await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Live')).toBeInTheDocument());
+      expect(container.querySelectorAll('.boardTray')).toHaveLength(2);
+      expect(container.querySelector('.boardBot')).toBeNull();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  it('titles the page with the game code', async () => {
+    await renderAt('/board?game=bcdfg');
+    await waitFor(() => expect(document.title).toBe('Board BCDFG - Wood & Steel'));
+  });
+
+  describe('deliveries', () => {
+    it('unloads the engine in the contract city when its contract is fulfilled', async () => {
+      boardAdapter.write('BCDFG', {
+        ...emptyBoardState(),
+        seeded: true,
+        engines: { '0': ['Savannah', 'Atlanta'], '1': [null, null] },
+        engineTypes: { '0': ['american', 'mogul'] },
+        cargo: { '0': ['cotton', 'cotton'] },
+      });
+      await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Board saved')).toBeInTheDocument());
+      const contract = {
+        id: 'k1',
+        destinationKey: 'Savannah',
+        commodity: 'cotton',
+        type: 'private' as const,
+        fulfilled: false,
+        playerID: '0',
+        creationTime: 0,
+        turnsHeld: 0,
+      };
+      act(() => {
+        useGameStore.setState({ G: { ...useGameStore.getState().G, contracts: [contract] } });
+      });
+      act(() => {
+        useGameStore.setState({ G: { ...useGameStore.getState().G, contracts: [{ ...contract, fulfilled: true }] } });
+      });
+      await waitFor(() =>
+        expect(boardAdapter.rows.get('BCDFG')?.state).toMatchObject({ cargo: { '0': [null, 'cotton'] } })
+      );
+    });
   });
 
   it('lists games when no code is given', async () => {

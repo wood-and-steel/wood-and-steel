@@ -12,6 +12,8 @@ This project uses a modern, maintainable CSS architecture with no inline styles 
 
 `src/shared/styles/board.css` is imported only by `src/board/BoardApp.tsx`, not by `index.css`, so it ships in the lazy board chunk and stays out of production builds. The board's pointer-following overlays (route popover, token drag ghost) set CSS custom properties from a ref (`el.style.setProperty('--…', …)`) instead of `style={}`; their CSS reads the variables. SVG geometry and colors are attributes. See [BOARD_AGENT_GUIDE.md](BOARD_AGENT_GUIDE.md).
 
+`src/shared/styles/bots.css` follows the same rule for playtest bots: it is imported only by `src/bots/` components, never by `index.css`. See [BOT_PLAN.md](BOT_PLAN.md).
+
 ## Key tenets
 
 1. **No inline styles** (except the fulfilled-stamp rotation on `ContractCard`, documented above) - Components only refer to class names and never have `style={}` attributes

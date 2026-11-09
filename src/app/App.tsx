@@ -50,6 +50,18 @@ const BoardApp = __INCLUDE_BOARD__
   ? React.lazy(() => import('../board/BoardApp').then((mod) => ({ default: mod.BoardApp })))
   : null;
 
+// Playtest bots (docs/BOT_PLAN.md): host's add/remove controls on the waiting screen.
+const BotSeatControls = __INCLUDE_BOARD__
+  ? React.lazy(() =>
+      import('../bots/host/BotSeatControls').then((mod) => ({ default: mod.BotSeatControls }))
+    )
+  : null;
+
+// Playtest bots: runs bot turns from the host's device while a game is open.
+const BotRunner = __INCLUDE_BOARD__
+  ? React.lazy(() => import('../bots/host/BotRunner').then((mod) => ({ default: mod.BotRunner })))
+  : null;
+
 export interface AppGameManager {
   currentGameCode: string | null;
   onNewGame: (numPlayers?: number) => Promise<void>;
@@ -615,6 +627,7 @@ const AppContent = (): React.ReactElement => {
         onStartGame={handleStartBYODGame}
         onCancel={handleCancelBYODGame}
         onReturnToLobby={handleReturnToLobby}
+        botSeatControls={BotSeatControls}
       />
     );
   }
@@ -628,6 +641,11 @@ const AppContent = (): React.ReactElement => {
             gameManager={{ ...gameManager, currentGameCode: gameManager.currentGameCode ?? undefined }}
           />
         </GameProvider>
+        {BotRunner && currentGameCode && (
+          <Suspense fallback={null}>
+            <BotRunner gameCode={currentGameCode} />
+          </Suspense>
+        )}
       </div>
     );
   }

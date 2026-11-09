@@ -8,7 +8,8 @@ const boardSources = import.meta.glob(['./**/*.{ts,tsx}', '!./**/*.test.{ts,tsx}
   eager: true,
 }) as Record<string, string>;
 
-const appSources = import.meta.glob(['../**/*.{ts,tsx,js,jsx}', '!../board/**', '!../**/*.test.{ts,tsx,js,jsx}'], {
+// src/bots/ is playtest-only like the board and may use board modules (docs/BOT_PLAN.md).
+const appSources = import.meta.glob(['../**/*.{ts,tsx,js,jsx}', '!../board/**', '!../bots/**', '!../**/*.test.{ts,tsx,js,jsx}'], {
   query: '?raw',
   import: 'default',
   eager: true,

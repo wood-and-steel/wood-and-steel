@@ -21,6 +21,7 @@ import {
 import { TokenIcon } from './TokenIcon';
 import { sameToken, tokenCity, tokenId, tokenLabel, type TokenRef } from './tokens';
 import { CommodityIcon, CommodityOptions, EngineOptions, TrayPicker } from './TrayPicker';
+import type { BotTrayInfo } from './botNarration';
 
 type TokenPointerDown = (token: TokenRef, event: React.PointerEvent<Element>) => void;
 
@@ -37,6 +38,8 @@ interface PlayerTraysProps {
   onTokenPointerDown: TokenPointerDown | null;
   /** Null when tray values can't be edited yet (board state not ready) */
   onBoardOp: ((op: BoardOp) => void) | null;
+  /** Narration for players who are bots, by playerID. */
+  bots?: Record<string, BotTrayInfo>;
 }
 
 type PickerKind = 'engine' | 'cargo';
@@ -188,6 +191,30 @@ function UpgradeChecks({ player, owned, onBoardOp }: UpgradeChecksProps): React.
   );
 }
 
+/** A bot's narration: its latest turn's moves, and whether the host's app is running it. */
+function BotTurn({ player, info }: { player: BoardPlayer; info: BotTrayInfo }): React.ReactElement {
+  return (
+    <section className="boardBot" aria-label={`${player.name}'s narration`}>
+      {info.waiting && (
+        <p className="boardBot__waiting" role="status">
+          Waiting for the host's app
+        </p>
+      )}
+      {info.lines.length > 0 ? (
+        <ul className="boardBot__lines">
+          {info.lines.map((text, index) => (
+            <li key={index} className="boardBot__line">
+              {text}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        !info.waiting && <p className="boardBot__none">{info.played ? 'No moves' : 'No turns yet'}</p>
+      )}
+    </section>
+  );
+}
+
 export function PlayerTrays({
   players,
   currentPlayer,
@@ -196,6 +223,7 @@ export function PlayerTrays({
   dropTarget,
   onTokenPointerDown,
   onBoardOp,
+  bots,
 }: PlayerTraysProps): React.ReactElement {
   const trayColumnRef = React.useRef<HTMLElement>(null);
   const [picker, setPicker] = React.useState<OpenPicker | null>(null);
@@ -262,6 +290,7 @@ export function PlayerTrays({
                   />
                 )}
               </header>
+              {bots?.[player.id] && <BotTurn player={player} info={bots[player.id]} />}
               {([0, 1] as const).map((slot) => {
                 const token: TokenRef = { kind: 'engine', playerID: player.id, slot };
                 return (

@@ -12,6 +12,16 @@ function isDefaultSeatName(name: string | null | undefined): boolean {
 
 export interface PlayerSeatDisplay {
   playerName?: string | null;
+  /** Present on bot seats (playtest-only, docs/BOT_PLAN.md). */
+  bot?: { name: string; strategy: string } | null;
+}
+
+/** Props of the host's bot controls, a playtest-only component that App.tsx lazy-loads from src/bots/. */
+export interface BotSeatControlsProps {
+  gameCode: string;
+  seats: Record<string, PlayerSeatDisplay>;
+  openSeats: number;
+  onSeatsChanged: () => void | Promise<void>;
 }
 
 export interface WaitingForPlayersScreenProps {
@@ -20,6 +30,8 @@ export interface WaitingForPlayersScreenProps {
   onStartGame?: (assignments: Record<string, string>) => void;
   onCancel?: () => void;
   onReturnToLobby?: () => void;
+  /** Shown to the host only; omitted in production builds. */
+  botSeatControls?: React.ComponentType<BotSeatControlsProps> | null;
 }
 
 /**
@@ -33,6 +45,7 @@ export function WaitingForPlayersScreen({
   onStartGame,
   onCancel,
   onReturnToLobby,
+  botSeatControls: BotSeatControls,
 }: WaitingForPlayersScreenProps): React.ReactElement {
   const storage = useStorage();
   const [playerName, setPlayerName] = React.useState("");
@@ -338,6 +351,17 @@ export function WaitingForPlayersScreen({
             ))}
           </ul>
         </div>
+
+        {isHost && BotSeatControls && (
+          <React.Suspense fallback={null}>
+            <BotSeatControls
+              gameCode={gameCode}
+              seats={playerSeats}
+              openSeats={openSeats}
+              onSeatsChanged={refreshData}
+            />
+          </React.Suspense>
+        )}
 
         <div className="waitingScreen__actions">
           {isHost ? (
