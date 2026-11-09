@@ -12,7 +12,7 @@
   --board-track-casing: rgba(0, 0, 0, 0.75);
   --board-route-hover: rgba(255, 255, 255, 0.45);
   --board-bar-height: 2.75rem;
-  --board-trays-width: 17rem;
+  --board-trays-width: 18rem;
 
   display: flex;
   flex-direction: column;
@@ -506,6 +506,31 @@
 
 .boardEngine__effects {
   color: var(--color-text-muted);
+}
+
+.boardUpgrades {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 var(--spacing-sm);
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+.boardUpgrades__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+}
+
+.boardUpgrades__item:has(:disabled) {
+  cursor: default;
+  opacity: var(--opacity-disabled);
+}
+
+.boardUpgrades__item input {
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .boardSwatch {

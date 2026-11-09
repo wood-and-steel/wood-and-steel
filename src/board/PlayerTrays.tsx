@@ -1,6 +1,7 @@
 /**
  * Player trays: the column beside the map with one card per player, in play order. Each card
- * has a row per engine token (its type, cargo, stats, and effects) and the Railyard while unplaced.
+ * has a row per engine token (its type, cargo, stats, and effects), the upgrades bought, and the
+ * Railyard while unplaced.
  * The token stays on its row at full color even when on the map: it is the key to which
  * token is which engine type.
  */
@@ -8,7 +9,15 @@ import React from 'react';
 import { Swatch } from './BoardChrome';
 import type { BoardPlayer } from './boardPlayers';
 import { playerCargo, playerEngineTypes, type BoardOp, type BoardState, type EngineSlot } from './boardOps';
-import { formatCommodity, formatSegments, getEngineType, type EngineTypeId } from './playerBoardData';
+import {
+  UPGRADES,
+  engineDistance,
+  formatCommodity,
+  formatSegments,
+  getEngineType,
+  type EngineTypeId,
+  type UpgradeId,
+} from './playerBoardData';
 import { TokenIcon } from './TokenIcon';
 import { sameToken, tokenCity, tokenId, tokenLabel, type TokenRef } from './tokens';
 import { CommodityIcon, CommodityOptions, EngineOptions, TrayPicker } from './TrayPicker';
@@ -64,12 +73,20 @@ function TrayTokenButton({ token, player, dragging, onTokenPointerDown }: TrayTo
   );
 }
 
+/** The distance is shown for reading only; the board does not limit how far a token moves. */
+function travelText(engineType: EngineTypeId, hasServiceYard: boolean): string {
+  const { base, bonus, total } = engineDistance(engineType, hasServiceYard);
+  const breakdown = bonus > 0 ? ` (${base} +${bonus} Service Yard)` : '';
+  return `Travels ${formatSegments(total)}${breakdown}`;
+}
+
 interface EngineRowProps {
   player: BoardPlayer;
   token: TokenRef;
   engineType: EngineTypeId | null;
   cargo: string | null;
   city: string | null;
+  hasServiceYard: boolean;
   dragging: TokenRef | null;
   onTokenPointerDown: TokenPointerDown | null;
   /** Which of this row's pickers is open, if any */
@@ -84,6 +101,7 @@ function EngineRow({
   engineType,
   cargo,
   city,
+  hasServiceYard,
   dragging,
   onTokenPointerDown,
   openPicker,
@@ -92,7 +110,7 @@ function EngineRow({
   const engine = engineType ? getEngineType(engineType) : null;
   const label = tokenLabel(token);
   const cargoName = cargo ? formatCommodity(cargo) : 'No commodity';
-  const stats = [engine && `Travels ${formatSegments(engine.distance)}`, city && `on ${city}`].filter(Boolean).join(' · ');
+  const stats = [engine && travelText(engine.id, hasServiceYard), city && `on ${city}`].filter(Boolean).join(' · ');
   return (
     <div className="boardEngine" role="group" aria-label={`${player.name}'s ${label}`}>
       {city === null ? (
@@ -135,6 +153,37 @@ function EngineRow({
         {stats && <p className="boardEngine__stats">{stats}</p>}
         {engine?.effects && <p className="boardEngine__effects">{engine.effects}</p>}
       </div>
+    </div>
+  );
+}
+
+interface UpgradeChecksProps {
+  player: BoardPlayer;
+  owned: readonly UpgradeId[];
+  /** Null when tray values can't be edited yet */
+  onBoardOp: ((op: BoardOp) => void) | null;
+}
+
+function UpgradeChecks({ player, owned, onBoardOp }: UpgradeChecksProps): React.ReactElement {
+  return (
+    <div className="boardUpgrades" role="group" aria-label={`${player.name}'s upgrades`}>
+      {UPGRADES.map((upgrade) => (
+        <label
+          key={upgrade.id}
+          className="boardUpgrades__item"
+          title={`$${upgrade.price.toLocaleString('en-US')}: ${upgrade.effect}`}
+        >
+          <input
+            type="checkbox"
+            checked={owned.includes(upgrade.id)}
+            disabled={!onBoardOp}
+            onChange={(event) =>
+              onBoardOp?.({ type: 'setUpgrade', playerID: player.id, upgrade: upgrade.id, owned: event.target.checked })
+            }
+          />
+          {upgrade.name}
+        </label>
+      ))}
     </div>
   );
 }
@@ -192,6 +241,7 @@ export function PlayerTrays({
         {players.map((player) => {
           const engineTypes = playerEngineTypes(board, player.id);
           const cargo = playerCargo(board, player.id);
+          const upgrades = board?.upgrades[player.id] ?? [];
           const railyard: TokenRef = { kind: 'railyard', playerID: player.id };
           return (
             <section
@@ -222,6 +272,7 @@ export function PlayerTrays({
                     engineType={engineTypes[slot]}
                     cargo={cargo[slot]}
                     city={tokenCity(board, token)}
+                    hasServiceYard={upgrades.includes('service-yard')}
                     dragging={dragging}
                     onTokenPointerDown={onTokenPointerDown}
                     openPicker={picker?.playerID === player.id && picker.slot === slot ? picker.kind : null}
@@ -229,6 +280,7 @@ export function PlayerTrays({
                   />
                 );
               })}
+              <UpgradeChecks player={player} owned={upgrades} onBoardOp={onBoardOp} />
             </section>
           );
         })}

@@ -465,6 +465,71 @@ describe('BoardApp (/board)', () => {
     });
   });
 
+  describe('upgrades', () => {
+    type Saved = ReturnType<typeof emptyBoardState>;
+    const saved = () => boardAdapter.rows.get('BCDFG')?.state as Saved;
+    const upgrades = (player: string) => within(screen.getByRole('group', { name: `${player}'s upgrades` }));
+    const check = (player: string, name: string) => upgrades(player).getByRole('checkbox', { name });
+    const lightEngine = () => within(screen.getByRole('group', { name: "Ben's Light engine" }));
+
+    async function openBoard(state: Partial<Saved> = {}) {
+      boardAdapter.write('BCDFG', { ...emptyBoardState(), seeded: true, ...state });
+      await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Board saved')).toBeInTheDocument());
+    }
+
+    it('lists all six upgrades, unchecked, with the price and effect on hover', async () => {
+      await openBoard();
+      expect(upgrades('Ben').getAllByRole('checkbox').map((box) => box.closest('label')?.textContent)).toEqual([
+        'Service Yard',
+        'Upgraded Stations',
+        'Roundhouse',
+        'Employment Office',
+        'Timetable',
+        'Commodities Exchange',
+      ]);
+      expect(upgrades('Ben').getAllByRole('checkbox').some((box) => (box as HTMLInputElement).checked)).toBe(false);
+      expect(check('Ben', 'Upgraded Stations').closest('label')).toHaveAttribute(
+        'title',
+        '$10,000: Receive an additional $3,000 for each delivery.'
+      );
+    });
+
+    it('saves a bought upgrade for that player only, and clears it again', async () => {
+      await openBoard();
+      fireEvent.click(check('Ben', 'Timetable'));
+      expect(check('Ben', 'Timetable')).toBeChecked();
+      expect(check('Ada', 'Timetable')).not.toBeChecked();
+      await waitFor(() => expect(saved().upgrades).toEqual({ '1': ['timetable'] }));
+      fireEvent.click(check('Ben', 'Timetable'));
+      expect(check('Ben', 'Timetable')).not.toBeChecked();
+      await waitFor(() => expect(saved().upgrades).toEqual({ '1': [] }));
+    });
+
+    it('adds the Service Yard bonus to a Consolidation when it is bought', async () => {
+      await openBoard({ engineTypes: { '1': ['consolidation', null] }, engines: { '1': ['Atlanta', null] } });
+      expect(lightEngine().getByText('Travels 3 segments · on Atlanta')).toBeInTheDocument();
+      fireEvent.click(check('Ben', 'Service Yard'));
+      expect(lightEngine().getByText('Travels 4 segments (3 +1 Service Yard) · on Atlanta')).toBeInTheDocument();
+    });
+
+    it('leaves engines before the Consolidation and other players alone', async () => {
+      await openBoard({ engineTypes: { '0': ['consolidation', null], '1': ['mogul', null] } });
+      fireEvent.click(check('Ben', 'Service Yard'));
+      expect(lightEngine().getByText('Travels 3 segments')).toBeInTheDocument();
+      expect(
+        within(screen.getByRole('group', { name: "Ada's Light engine" })).getByText('Travels 3 segments')
+      ).toBeInTheDocument();
+    });
+
+    it('disables the checkboxes until board state is ready', async () => {
+      boardAdapter.load = () => Promise.reject(new Error('The board_states table does not exist.'));
+      await renderAt('/board?game=BCDFG');
+      await screen.findByRole('alert');
+      expect(check('Ben', 'Service Yard')).toBeDisabled();
+    });
+  });
+
   describe('acquisitions (M5)', () => {
     it("converts an acquired railroad's routes to the acquirer's track", async () => {
       const { container } = await renderAt('/board?game=BCDFG');
