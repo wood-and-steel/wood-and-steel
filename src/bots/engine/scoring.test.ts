@@ -9,8 +9,8 @@ describe('bonus formulas', () => {
     expect([0, 1, 8, 9, 12, 13, 14].map(breadthBonus)).toEqual([0, 1, 8, 10, 16, 19, 22]);
   });
 
-  test('depth: deliveries of the most-delivered commodity beyond the first', () => {
-    expect([0, 1, 2, 5].map(depthBonus)).toEqual([0, 0, 1, 4]);
+  test('depth: one plus deliveries of the most-delivered commodity, nothing before a delivery', () => {
+    expect([0, 1, 2, 5].map(depthBonus)).toEqual([0, 2, 3, 6]);
   });
 });
 
@@ -25,8 +25,8 @@ describe('tieBreakdown', () => {
     const ties = tieBreakdown(world);
     expect(ties.fulfillment).toBe(delivered.reduce((sum, c) => sum + railroadTieValue(c), 0));
     expect(ties.breadth).toBe(2);
-    expect(ties.depth).toBe(1);
-    expect(ties.total).toBe(ties.fulfillment + 3);
+    expect(ties.depth).toBe(3);
+    expect(ties.total).toBe(ties.fulfillment + 2 + 3);
   });
 
   test('end-of-game ties for a Regional Office and a Challenger', () => {

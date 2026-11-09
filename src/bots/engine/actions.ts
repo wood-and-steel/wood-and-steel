@@ -29,6 +29,7 @@ import {
   runOptions,
   runnableSlots,
   suppliesCommodity,
+  wants,
   type EngineRun,
   type RunTrains,
 } from './movement';
@@ -57,8 +58,11 @@ export type Action =
   | { type: 'placeEngine'; slot: EngineSlot; city: string }
   | ({ type: 'runTrains' } & RunTrains)
   | { type: 'buildTrack'; routes: string[] }
-  /** `city` places a new token; a trade-in keeps the old engine's city. */
-  | { type: 'buyEngine'; engine: EngineTypeId; slot: EngineSlot; city?: string }
+  /**
+   * `city` places a new token, which may pick up a commodity there (and claim a market contract
+   * for it). A trade-in keeps the old engine's city and cargo.
+   */
+  | { type: 'buyEngine'; engine: EngineTypeId; slot: EngineSlot; city?: string; pickup?: { commodity: string; claim?: string } }
   | { type: 'acquireRailroad'; name: string }
   | { type: 'borrow'; amount: number }
   | { type: 'repay'; amount: number }
@@ -262,8 +266,24 @@ export function listActions(world: BotWorld): Action[] {
       const network = [...networkCities(world)].sort();
       for (const p of enginePurchases(world)) {
         if (p.cost > cash) continue;
-        if (p.tradeIn) actions.push({ type: 'buyEngine', engine: p.engine, slot: p.slot });
-        else for (const city of network) actions.push({ type: 'buyEngine', engine: p.engine, slot: p.slot, city });
+        if (p.tradeIn) {
+          actions.push({ type: 'buyEngine', engine: p.engine, slot: p.slot });
+          continue;
+        }
+        // What the new engine might pick up where it's placed (buying a Mogul can open market claims).
+        const withEngine = structuredClone(world);
+        const types: [EngineTypeId | null, EngineTypeId | null] = [...engineTypes(world)];
+        types[p.slot] = p.engine;
+        withEngine.board.engineTypes[world.playerID] = types;
+        const wanted = wants(withEngine);
+        for (const city of network) {
+          actions.push({ type: 'buyEngine', engine: p.engine, slot: p.slot, city });
+          for (const want of wanted) {
+            if (suppliesCommodity(world, city, want.commodity)) {
+              actions.push({ type: 'buyEngine', engine: p.engine, slot: p.slot, city, pickup: { ...want } });
+            }
+          }
+        }
       }
     }
     if (!used.has('acquireRailroad')) {
@@ -389,6 +409,7 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
       const purchase = enginePurchases(world).find((p) => p.engine === action.engine && p.slot === action.slot);
       if (!purchase) return fail('that engine purchase is not allowed');
       if (purchase.cost > world.bot.cash) return fail('not enough cash');
+      if (purchase.tradeIn && action.pickup) return fail('only a new engine picks up where it is placed');
       next.bot.cash -= purchase.cost;
       const types: [EngineTypeId | null, EngineTypeId | null] = [...engineTypes(world)];
       types[action.slot] = action.engine;
@@ -401,7 +422,22 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
         if (!action.city || !networkCities(world).has(action.city)) return fail('a new engine needs a city on the network');
         setEngineCity(next, action.slot, action.city);
         boardOp({ type: 'moveEngine', playerID: world.playerID, slot: action.slot, city: action.city });
-        narrate(`${name} bought a ${label} for ${money(purchase.cost)} and placed it in ${action.city}.`);
+        const bought = `bought a ${label} for ${money(purchase.cost)}`;
+        if (action.pickup) {
+          const { commodity, claim } = action.pickup;
+          if (!suppliesCommodity(next, action.city, commodity)) return fail(`${action.city} doesn't supply ${commodity}`);
+          let claimed = '';
+          if (claim) {
+            const market = claimMarket(next, claim, commodity, effects);
+            if (typeof market === 'string') return fail(market);
+            claimed = `, claiming the market contract for ${contractLabel(market)}`;
+          }
+          setCargoIn(next, action.slot, commodity);
+          boardOp({ type: 'setCargo', playerID: world.playerID, slot: action.slot, commodity });
+          narrate(`${name} ${bought}, placed it in ${action.city}, and picked up ${commodityName(commodity)}${claimed}.`);
+        } else {
+          narrate(`${name} ${bought} and placed it in ${action.city}.`);
+        }
       }
       return { ok: true, world: next, effects };
     }
@@ -505,6 +541,18 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
 
 // --- Running trains ----------------------------------------------------------------
 
+/** Claim an open market contract for `commodity` in `next`; returns it, or an error message. */
+function claimMarket(next: BotWorld, contractId: string, commodity: string, effects: Effect[]): Contract | string {
+  const market = next.contracts.find((c) => c.id === contractId);
+  if (!market || market.type !== 'market' || market.playerID !== null || market.fulfilled) return 'that market contract is not open';
+  if (market.commodity !== commodity) return 'the claimed contract is for another commodity';
+  if (!canClaimMarket(next)) return 'can’t claim a market contract now';
+  market.playerID = next.playerID;
+  market.turnsHeld = 1;
+  effects.push({ kind: 'move', move: { name: 'claimMarketContract', args: [market.id] } });
+  return market;
+}
+
 /** Apply a Run Trains action to `next`, appending effects; returns an error message or null. */
 function applyRuns(world: BotWorld, next: BotWorld, action: RunTrains, effects: Effect[]): string | null {
   const narrate = (line: string) => effects.push({ kind: 'narrate', line });
@@ -583,13 +631,8 @@ function runOne(from: BotWorld, next: BotWorld, run: EngineRun, effects: Effect[
       if (carrying !== null) return `the engine already carries ${carrying}`;
       if (!suppliesCommodity(next, city, event.commodity)) return `${city} doesn't supply ${event.commodity}`;
       if (event.claim) {
-        const market = next.contracts.find((c) => c.id === event.claim);
-        if (!market || market.type !== 'market' || market.playerID !== null || market.fulfilled) return 'that market contract is not open';
-        if (market.commodity !== event.commodity) return 'the claimed contract is for another commodity';
-        if (!canClaimMarket(next)) return 'can’t claim a market contract now';
-        market.playerID = next.playerID;
-        market.turnsHeld = 1;
-        effects.push({ kind: 'move', move: { name: 'claimMarketContract', args: [market.id] } });
+        const market = claimMarket(next, event.claim, event.commodity, effects);
+        if (typeof market === 'string') return market;
         lines.push(`picked up ${commodityName(event.commodity)} in ${city} and claimed the market contract for ${contractLabel(market)}`);
       } else {
         lines.push(`picked up ${commodityName(event.commodity)} in ${city}`);
