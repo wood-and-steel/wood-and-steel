@@ -2,7 +2,7 @@
  * Drag engines and Railyards between the map and the player trays with pointer events
  * (HTML drag-and-drop doesn't work on SVG elements). While dragging, the drop target is:
  * - a city: the nearest city within SNAP_SCREEN_PX of the pointer, or
- * - the tray: the tray strip, or anywhere off the map (returns the token to its tray), or
+ * - the tray: the tray column, or anywhere off the map (returns the token to its tray), or
  * - none: on the map but away from every city (the drop is cancelled).
  */
 import React from 'react';

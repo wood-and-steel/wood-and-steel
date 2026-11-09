@@ -15,7 +15,8 @@ import { TokenGhost } from './TokenIcon';
 import { layoutTokens, moveTokenOp, tokenCity, type TokenRef } from './tokens';
 import { useTokenDrag } from './useTokenDrag';
 import { dispatchBoardOp } from './boardSync';
-import { BoardTopBar, PlayerTrays } from './BoardChrome';
+import { BoardTopBar } from './BoardChrome';
+import { PlayerTrays } from './PlayerTrays';
 import { formatPhase, getBoardPlayers, type BoardPlayer } from './boardPlayers';
 import { useBoardStore } from './boardStore';
 import { useBoardGameSync } from './useBoardGameSync';
@@ -126,17 +127,29 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
           {boardError}
         </p>
       )}
-      <div ref={viewportRef} className="boardViewport">
+      <div className="boardMain">
+        <div ref={viewportRef} className="boardViewport">
+          {ready && (
+            <BoardMap
+              G={G}
+              players={players}
+              track={board?.track ?? EMPTY_TRACK}
+              zoomPan={zoomPan}
+              onRouteClick={handleRouteClick}
+              tokens={placedTokens}
+              dragging={drag?.token ?? null}
+              snapCity={drag?.target.kind === 'city' ? drag.target.city : null}
+              onTokenPointerDown={startTokenDrag}
+            />
+          )}
+        </div>
         {ready && (
-          <BoardMap
-            G={G}
+          <PlayerTrays
             players={players}
-            track={board?.track ?? EMPTY_TRACK}
-            zoomPan={zoomPan}
-            onRouteClick={handleRouteClick}
-            tokens={placedTokens}
+            currentPlayer={ctx.currentPlayer}
+            board={board}
             dragging={drag?.token ?? null}
-            snapCity={drag?.target.kind === 'city' ? drag.target.city : null}
+            dropTarget={drag?.target.kind === 'tray'}
             onTokenPointerDown={startTokenDrag}
           />
         )}
@@ -151,16 +164,6 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
           clientY={popover.clientY}
           onChange={(owners) => dispatchBoardOp({ type: 'setRouteOwners', routeKey: popover.routeKey, owners })}
           onClose={closePopover}
-        />
-      )}
-      {ready && (
-        <PlayerTrays
-          players={players}
-          currentPlayer={ctx.currentPlayer}
-          board={board}
-          dragging={drag?.token ?? null}
-          dropTarget={drag?.target.kind === 'tray'}
-          onTokenPointerDown={startTokenDrag}
         />
       )}
       {drag && dragPlayer && (

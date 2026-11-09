@@ -86,7 +86,10 @@ describe('BoardApp (/board)', () => {
       'Chicago-Detroit · length 2 · Erie'
     );
 
-    // Trays follow play order; the current player is highlighted.
+    // Trays sit in a column beside the map, in play order; the current player is highlighted.
+    expect(container.querySelector('.boardMain > .boardViewport + .boardTrays')).toBe(
+      screen.getByRole('complementary', { name: 'Player trays' })
+    );
     const trays = container.querySelectorAll('.boardTray');
     expect([...trays].map((t) => t.getAttribute('aria-label'))).toEqual(["Ben's tray", "Ada's tray"]);
     expect(trays[0]).toHaveClass('boardTray--current');
@@ -190,8 +193,8 @@ describe('BoardApp (/board)', () => {
   });
 
   describe('tokens (M4)', () => {
-    // jsdom has no layout or PointerEvent: lay the map out at 1/10 scale from (0, 0) and put the
-    // tray strip below y = 500.
+    // jsdom has no layout or PointerEvent: lay the map out at 1/10 scale from (0, 0) and treat
+    // everything below y = 500 as the tray column.
     const SCALE = 10;
     const MAP_RECT = { left: 0, top: 0, right: 666, bottom: 417.3, width: 666, height: 417.3, x: 0, y: 0 } as DOMRect;
     const toClient = (city: string) => ({ clientX: CITY_POINTS[city].x / SCALE, clientY: CITY_POINTS[city].y / SCALE });
