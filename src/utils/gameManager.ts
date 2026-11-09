@@ -29,7 +29,18 @@ export interface PlayerSeat {
   joinedAt: string;
   playerName: string;
   playerID?: string;
+  /** Present only on bot seats (playtest-only, docs/BOT_PLAN.md). Bot seats are keyed by BOT_SEAT_PREFIX, not a device ID. */
+  bot?: BotSeatInfo;
 }
+
+/** A bot's base name ("Avery", shown as "Avery (bot)") and strategy ID. */
+export interface BotSeatInfo {
+  name: string;
+  strategy: string;
+}
+
+/** Seat-key prefix for bot seats. Bots have no device, so their seats use `bot:<uuid>` keys. */
+export const BOT_SEAT_PREFIX = 'bot:';
 
 /** Result of assignPlayerSeat / updatePlayerName. */
 export interface SeatAssignmentResult {
@@ -426,6 +437,8 @@ export const SeatAssignmentError = {
   GAME_STARTED: 'GAME_STARTED',
   NOT_JOINED: 'NOT_JOINED',
   NOT_HOST: 'NOT_HOST',
+  NOT_A_BOT: 'NOT_A_BOT',
+  INVALID_BOT: 'INVALID_BOT',
   UPDATE_FAILED: 'UPDATE_FAILED',
 } as const;
 
@@ -650,6 +663,155 @@ export async function updatePlayerName(
       `[${operation}] Unexpected error updating player name:`,
       err.message
     );
+    return { success: false, error: SeatAssignmentError.UPDATE_FAILED };
+  }
+}
+
+/** True for a bot seat (see addBotSeat). */
+export function isBotSeat(seat: PlayerSeat | null | undefined): boolean {
+  return seat?.bot != null;
+}
+
+/** Display name for a bot seat: "Avery (bot)". */
+export function botSeatName(name: string): string {
+  return `${name} (bot)`;
+}
+
+function newBotSeatKey(): string {
+  const id =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return `${BOT_SEAT_PREFIX}${id}`;
+}
+
+/** Shared host-and-waiting checks for bot seat changes. Returns the metadata and numPlayers, or an error. */
+async function loadForBotSeatChange(
+  normalizedCode: string,
+  hostDeviceId: string
+): Promise<
+  | { ok: true; metadata: GameMetadata; playerSeats: Record<string, PlayerSeat>; numPlayers: number }
+  | { ok: false; error: string }
+> {
+  const adapter = getAdapter();
+  const metadata = (await adapter.getGameMetadata(normalizedCode)) as unknown as GameMetadata | null;
+  if (!metadata) return { ok: false, error: SeatAssignmentError.GAME_NOT_FOUND };
+  if (!isSupportedGameMetadata(metadata as unknown as Record<string, unknown>)) {
+    return { ok: false, error: SeatAssignmentError.WRONG_GAME_MODE };
+  }
+  if (metadata.hostDeviceId !== hostDeviceId) return { ok: false, error: SeatAssignmentError.NOT_HOST };
+
+  const playerSeats = metadata.playerSeats ?? {};
+  if (Object.values(playerSeats).some((seat) => seat.playerID !== undefined)) {
+    return { ok: false, error: SeatAssignmentError.GAME_STARTED };
+  }
+
+  const state = await adapter.loadGame(normalizedCode);
+  if (!state || !state.ctx) return { ok: false, error: SeatAssignmentError.GAME_NOT_FOUND };
+  const ctx = state.ctx as unknown as GameContext;
+  if (ctx.phase !== 'waiting_for_players') return { ok: false, error: SeatAssignmentError.GAME_STARTED };
+
+  return { ok: true, metadata, playerSeats, numPlayers: ctx.numPlayers ?? 3 };
+}
+
+/**
+ * Host only, before the game starts: fill an open seat with a bot (playtest-only, docs/BOT_PLAN.md).
+ * The caller chooses the bot's name and strategy; the seat is named "Name (bot)".
+ */
+export async function addBotSeat(
+  code: string,
+  hostDeviceId: string,
+  bot: BotSeatInfo
+): Promise<SeatAssignmentResult & { seatKey?: string }> {
+  const operation = 'addBotSeat';
+
+  if (!isValidGameCode(code) || !hostDeviceId) {
+    return { success: false, error: SeatAssignmentError.INVALID_CODE };
+  }
+  const name = bot?.name?.trim();
+  const strategy = bot?.strategy?.trim();
+  if (!name || !strategy) {
+    return { success: false, error: SeatAssignmentError.INVALID_BOT };
+  }
+
+  const normalizedCode = normalizeGameCode(code);
+
+  try {
+    const loaded = await loadForBotSeatChange(normalizedCode, hostDeviceId);
+    if (!loaded.ok) {
+      console.error(`[${operation}] Cannot add bot to game "${normalizedCode}": ${loaded.error}`);
+      return { success: false, error: loaded.error };
+    }
+
+    const { playerSeats, numPlayers } = loaded;
+    if (Object.keys(playerSeats).length >= numPlayers) {
+      return { success: false, error: SeatAssignmentError.GAME_FULL };
+    }
+
+    const seatKey = newBotSeatKey();
+    const seat: PlayerSeat = {
+      joinedAt: new Date().toISOString(),
+      playerName: botSeatName(name),
+      bot: { name, strategy },
+    };
+
+    const updated = await getAdapter().updateGameMetadata(normalizedCode, {
+      playerSeats: { ...playerSeats, [seatKey]: seat } as Record<string, unknown>,
+    });
+    if (!updated) {
+      return { success: false, error: SeatAssignmentError.UPDATE_FAILED };
+    }
+
+    console.info(`[${operation}] Added bot "${name}" (${strategy}) to game "${normalizedCode}"`);
+    return { success: true, seat, seatKey };
+  } catch (e) {
+    const err = e as Error;
+    console.error(`[${operation}] Unexpected error adding bot:`, err.message);
+    return { success: false, error: SeatAssignmentError.UPDATE_FAILED };
+  }
+}
+
+/** Host only, before the game starts: remove a bot seat. Human seats can't be removed this way. */
+export async function removeBotSeat(
+  code: string,
+  hostDeviceId: string,
+  seatKey: string
+): Promise<{ success: boolean; error?: string }> {
+  const operation = 'removeBotSeat';
+
+  if (!isValidGameCode(code) || !hostDeviceId || !seatKey) {
+    return { success: false, error: SeatAssignmentError.INVALID_CODE };
+  }
+
+  const normalizedCode = normalizeGameCode(code);
+
+  try {
+    const loaded = await loadForBotSeatChange(normalizedCode, hostDeviceId);
+    if (!loaded.ok) {
+      console.error(`[${operation}] Cannot remove bot from game "${normalizedCode}": ${loaded.error}`);
+      return { success: false, error: loaded.error };
+    }
+
+    const { playerSeats } = loaded;
+    const seat = playerSeats[seatKey];
+    if (!seat) return { success: false, error: SeatAssignmentError.NOT_JOINED };
+    if (!isBotSeat(seat)) return { success: false, error: SeatAssignmentError.NOT_A_BOT };
+
+    const remaining = { ...playerSeats };
+    delete remaining[seatKey];
+
+    const updated = await getAdapter().updateGameMetadata(normalizedCode, {
+      playerSeats: remaining as Record<string, unknown>,
+    });
+    if (!updated) {
+      return { success: false, error: SeatAssignmentError.UPDATE_FAILED };
+    }
+
+    console.info(`[${operation}] Removed bot "${seat.bot?.name}" from game "${normalizedCode}"`);
+    return { success: true };
+  } catch (e) {
+    const err = e as Error;
+    console.error(`[${operation}] Unexpected error removing bot:`, err.message);
     return { success: false, error: SeatAssignmentError.UPDATE_FAILED };
   }
 }

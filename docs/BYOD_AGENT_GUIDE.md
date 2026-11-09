@@ -34,7 +34,7 @@ These invariants must hold. Code and tests must respect them.
 
 | Path | Role |
 |------|------|
-| `src/utils/gameManager.js` | `createNewGame`, `assignPlayerSeat`, `updatePlayerName`, `assignRandomPlayerIDs`, `getDevicePlayerID`, `getDeviceSeat`, `getPlayerSeats`, `isHost`, `allPlayersJoined`, `getNumPlayersJoined`, `SeatAssignmentError` |
+| `src/utils/gameManager.js` | `createNewGame`, `assignPlayerSeat`, `updatePlayerName`, `assignRandomPlayerIDs`, `getDevicePlayerID`, `getDeviceSeat`, `getPlayerSeats`, `isHost`, `allPlayersJoined`, `getNumPlayersJoined`, `SeatAssignmentError`; playtest bot seats: `addBotSeat`, `removeBotSeat`, `isBotSeat`, `botSeatName`, `BOT_SEAT_PREFIX` |
 | `src/providers/StorageProvider.js` | `joinGame`, `updateMyPlayerName`, `getMyPlayerID`, `getPlayerSeatsForGame`, `getMySeat`, `amIHost`, `startBYODGame`, `getDeviceId` |
 | `src/components/WaitingForPlayersScreen.js` | BYOD waiting phase UI: game code, player list, name input, Start Game (host), Cancel |
 | `src/components/LobbyScreen.tsx` | Join form (always shown); row click on a `waiting_for_players` game triggers join first |
@@ -96,6 +96,15 @@ Returns: `{ success: boolean, error?: string, seat?: { joinedAt, playerName } }`
 - `getPlayerSeats(code)` → `{ [deviceId]: seat } | null`
 - `isSupportedGameMetadata(metadata)` → boolean (`gameMode === 'byod'`)
 
+### Bot seats (playtest only)
+
+The host can fill open seats with bots before starting ([BOT_PLAN.md](BOT_PLAN.md)). A bot seat is a normal `playerSeats` entry keyed `bot:<uuid>` with `playerName: 'Name (bot)'` and a `bot: { name, strategy }` field. Seat counting, `allPlayersJoined`, and `assignRandomPlayerIDs` treat it like any seat, and the start-game flow copies its name into `G.players`.
+
+- `addBotSeat(code, hostDeviceId, { name, strategy })` → `{ success, error?, seat?, seatKey? }`: host only, waiting phase only, needs an open seat. Errors: `NOT_HOST`, `GAME_STARTED`, `GAME_FULL`, `INVALID_BOT`, `GAME_NOT_FOUND`, `WRONG_GAME_MODE`, `UPDATE_FAILED`.
+- `removeBotSeat(code, hostDeviceId, seatKey)` → `{ success, error? }`: host only, waiting phase only, bot seats only (`NOT_A_BOT` for a human seat, `NOT_JOINED` for a missing one).
+- StorageProvider wraps both as `addBotSeat(gameCode, bot)` and `removeBotSeat(gameCode, seatKey)` with this device's ID.
+- The controls live in `src/bots/host/BotSeatControls.tsx` and reach `WaitingForPlayersScreen` through its `botSeatControls` prop, only in playtest builds.
+
 ### 3. StorageProvider BYOD API
 
 **Join flow:**
@@ -128,6 +137,7 @@ else { /* show result.error */ }
       joinedAt: string,       // ISO 8601
       playerName: string | null,
       playerID?: string       // Assigned when host starts game
+      bot?: { name, strategy } // Bot seats only (playtest); keyed `bot:<uuid>`, not a device ID
     }
   }
 }

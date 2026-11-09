@@ -50,6 +50,13 @@ const BoardApp = __INCLUDE_BOARD__
   ? React.lazy(() => import('../board/BoardApp').then((mod) => ({ default: mod.BoardApp })))
   : null;
 
+// Playtest bots (docs/BOT_PLAN.md): host's add/remove controls on the waiting screen.
+const BotSeatControls = __INCLUDE_BOARD__
+  ? React.lazy(() =>
+      import('../bots/host/BotSeatControls').then((mod) => ({ default: mod.BotSeatControls }))
+    )
+  : null;
+
 export interface AppGameManager {
   currentGameCode: string | null;
   onNewGame: (numPlayers?: number) => Promise<void>;
@@ -615,6 +622,7 @@ const AppContent = (): React.ReactElement => {
         onStartGame={handleStartBYODGame}
         onCancel={handleCancelBYODGame}
         onReturnToLobby={handleReturnToLobby}
+        botSeatControls={BotSeatControls}
       />
     );
   }

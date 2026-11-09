@@ -21,8 +21,11 @@ import {
   getNumPlayersJoined as getNumPlayersJoinedFromManager,
   allPlayersJoined as allPlayersJoinedFromManager,
   getGameMetadata as getGameMetadataFromManager,
+  addBotSeat as addBotSeatInManager,
+  removeBotSeat as removeBotSeatInManager,
   SeatAssignmentError,
 } from '../utils/gameManager';
+import type { BotSeatInfo } from '../utils/gameManager';
 
 export interface StorageContextValue {
   getStorageAdapter: () => StorageAdapter;
@@ -47,6 +50,13 @@ export interface StorageContextValue {
     assignments?: Record<string, string>;
   }>;
   getMetadata: (gameCode: string) => Promise<Record<string, unknown> | null>;
+  /** Host only, waiting phase: seat a bot (playtest-only, docs/BOT_PLAN.md). */
+  addBotSeat: (
+    gameCode: string,
+    bot: BotSeatInfo
+  ) => Promise<{ success: boolean; error?: string; seatKey?: string }>;
+  /** Host only, waiting phase: remove a bot seat. */
+  removeBotSeat: (gameCode: string, seatKey: string) => Promise<{ success: boolean; error?: string }>;
   SeatAssignmentError: typeof SeatAssignmentError;
 }
 
@@ -134,6 +144,16 @@ export function StorageProvider({ children }: { children: ReactNode }): JSX.Elem
     []
   );
 
+  const addBotSeat = useCallback<StorageContextValue['addBotSeat']>(
+    async (gameCode: string, bot: BotSeatInfo) => addBotSeatInManager(gameCode, getDeviceId(), bot),
+    []
+  );
+
+  const removeBotSeat = useCallback<StorageContextValue['removeBotSeat']>(
+    async (gameCode: string, seatKey: string) => removeBotSeatInManager(gameCode, getDeviceId(), seatKey),
+    []
+  );
+
   const value = useMemo<StorageContextValue>(
     () => ({
       getStorageAdapter,
@@ -151,6 +171,8 @@ export function StorageProvider({ children }: { children: ReactNode }): JSX.Elem
       areAllPlayersJoined,
       startBYODGame,
       getMetadata,
+      addBotSeat,
+      removeBotSeat,
       SeatAssignmentError,
     }),
     [
@@ -164,6 +186,8 @@ export function StorageProvider({ children }: { children: ReactNode }): JSX.Elem
       areAllPlayersJoined,
       startBYODGame,
       getMetadata,
+      addBotSeat,
+      removeBotSeat,
     ]
   );
 

@@ -93,8 +93,8 @@ interface PlayerSeat {
 
 **`WaitingForPlayersScreen.tsx`:**
 
-- Bot seats show their name and, for the host only, a **Remove** button.
-- A new optional prop holds the host's add-bot control. `App.tsx` lazy-loads `BotSeatControls` from `src/bots/host/` and passes it in when `__INCLUDE_BOARD__` is on and this device is the host. It shows a strategy select (Random, then the six strategies) and an **Add bot** button, and is disabled when no seat is open.
+- Bot seats appear in the players list like any other seat, by name ("Avery (bot)").
+- A new optional prop, `botSeatControls`, takes the host's bot controls. `App.tsx` lazy-loads `BotSeatControls` from `src/bots/host/` behind `__INCLUDE_BOARD__` and passes it in; the screen renders it for the host only. The control is a **Bots** section listing each bot with its strategy and a **Remove** button, then a strategy select (Random, then the six strategies) and an **Add bot** button, disabled when no seat is open. Keeping the list in the bot component keeps strategy labels out of core code.
 - **Random** is resolved when the bot is added. Random avoids strategies already in the game until all six are used. The name is drawn from the list, avoiding names already used by any seat, compared case-insensitively and ignoring "(bot)".
 - Humans can't rename bots, and bot seats have no device, so the device-not-playing checks don't apply to them.
 
@@ -265,7 +265,7 @@ The runner appends each line to the open `BotTurnLog` as the action completes, s
 
 ## Milestones
 
-1. **M1 Seats.** `PlayerSeat.bot`, `addBotSeat`, `removeBotSeat`, `isBotSeat` and tests; names and the strategy list; `BotSeatControls` with lazy wiring in `App.tsx`; Remove on the waiting screen. Bots can be seated and the game starts, but bots don't act yet.
+1. **M1 Seats.** `PlayerSeat.bot`, `addBotSeat`, `removeBotSeat`, `isBotSeat` and tests; names and the strategy list; `BotSeatControls` (bot list with Remove, strategy select, Add bot) with lazy wiring in `App.tsx`. Bots can be seated and the game starts, but bots don't act yet.
 2. **M2 Bot state.** `bot_states.sql`, adapter, in-memory test adapter, `normalizeBotStates`, row creation at game start.
 3. **M3 Engine.** `BotWorld`, `rulesData`, paths, costs, finances, movement, scoring, `listActions`, and `applyAction` with effects; the coverage map and the rules fingerprint and their tests.
 4. **M4 Runner and plumbing.** Ports and host implementations, the shared board save helper extracted from `boardSync`, and `BotRunner` with pacing, guards, resume, and narration logging. Uses a minimal policy (setup choice, run and deliver, end turn) to prove the loop end to end.
