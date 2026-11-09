@@ -22,6 +22,7 @@ Current conventions: [BYOD_AGENT_GUIDE.md](BYOD_AGENT_GUIDE.md) (seats), [BOARD_
 | Go first next round | Not implemented in the app; **bots never choose it**. |
 | Bankruptcy | Auctions aren't implemented; **bots avoid bankruptcy** (no delivery whose debt service they can't pay). |
 | Undo | Humans can't undo a bot's turn. |
+| New engine placement | A new (not traded-in) engine goes in any city on the bot's network, per the clarified rules. The bot picks the city its plan needs. |
 | Rule changes | Covered by `docs/BOT_AGENT_GUIDE.md`, a move/rule **coverage map** in code, and a **rules fingerprint** test that **fails** when the rules change until the bots are reviewed. Git is the ledger. |
 
 ## Architecture
@@ -140,6 +141,7 @@ The engine builds a `BotWorld` from `G`/`ctx`, the board state, and the bot's re
 - **Map and paths:** the route graph from `src/data/routes.ts`, including length, mountainous flags, and shortest and cheapest paths over owned track, buildable routes, and parallel slots. Independent railroad routes can't be built on.
 - **Costs:** the track cost table (mountainous, parallel, Hub discount within two links), engine prices and trade-in values, the one-level-up limit (two with a Hub, +$5,000), upgrade prices, and independent railroad prices ($3,000 or $4,000 per route after the first Western delivery).
 - **Finances:** contract payout (`moneyValue`), Upgraded Stations +$3,000, the Mountain and Challenger 1⅓× bonus, debt service by region history, borrowing in $5,000 steps, and repaying $5,000 or $10,000 down to a $15,000 floor.
+- **Engine placement:** a newly bought engine that isn't a trade-in goes in any city on the bot's network, chosen by its plan (usually the next pickup city). A replacement takes the old engine's city, as the rules say.
 - **Movement:** engine distance (`engineDistance`, including the Service Yard bonus), pickup en route, a delivery ending movement unless the bot has a Timetable, Roundhouse transfers, and Railyard supply within two segments.
 - **Scoring:** fulfillment ties (`railroadTieValue`), commodity breadth and depth bonuses, monopoly ties, Regional Office end-of-game ties, and the Challenger's 2 ties. The app doesn't track the bonuses yet, so the engine scores them itself from the rules.
 - **Availability rules:** market contracts need a Mogul or better; Service Yard needs a Consolidation owned by any player; one Hub per city; Regional Office eligibility; at most two engines; per-turn action limits (one or two actions, only Run Trains repeated, each engine run once).
@@ -154,7 +156,7 @@ Rules constants the board doesn't already hold (prices, cost table, debt service
 | Choose starting cities (setup) | `generateStartingContract(pair, playerID)` | Starting route is seeded by the board as today | Cash $10,000 |
 | Run trains | On delivery, `toggleContractFulfilled`. For a private contract, `generatePrivateContractOffers` then `addContract(…, 'private')`, buying a Hub or Regional Office through `claimHubCity` / `claimRegionalOffice` when the policy chooses. For a market contract, the same claim sequence the Contracts tab uses. | `moveEngine`, `setCargo` | Cash, debt service, deliveries |
 | Build track | (none) | `claimRoute` per segment (parallel adds an owner) | Cash |
-| Buy engine | (none) | `setEngineType`, `moveEngine` to place a new token | Cash |
+| Buy engine | (none) | `setEngineType`; for a new (not traded-in) engine, `moveEngine` to a city on the bot's network | Cash |
 | Acquire independent railroad | `acquireIndependentRailroad(name)` | Board's existing acquisition reconciliation | Cash |
 | Borrow / repay | (none) | (none) | Cash, debt |
 | Buy upgrade | Hub: `claimHubCity`; Regional Office: `claimRegionalOffice` | `setUpgrade` for the six tracked upgrades; Railyard: `moveRailyard` | Cash; exchange commodity |
@@ -295,7 +297,7 @@ Then run unit tests, typecheck, `npm run check:board-build`, and a short tournam
 - **Back-to-back saves.** Moves save fire-and-forget, with optimistic concurrency on `lastModified`. Rapid consecutive bot moves from one device could race. The host `GamePort` waits for each save to land (the realtime echo, or `getLastModified` advancing) before the next move, and pacing adds margin.
 - **Host app closed or asleep.** Bots pause; the tray says so. A server runner removes this limit later.
 - **Board not open.** The bot's `BoardPort` seeds the board row if needed, so bot track is never lost. Independent railroad acquisitions are reconciled when a board screen sees the change, as for humans, so keep `/board` open during bot games.
-- **Rules ambiguity.** Where the rules are unclear (for example, where a newly bought engine is placed), the engine picks a documented default in `rulesData.ts` and the guide lists it.
+- **Rules ambiguity.** Where the rules are unclear, the engine picks a documented default in `rulesData.ts` and the guide lists it.
 
 ## Not in this plan
 
@@ -309,6 +311,5 @@ Then run unit tests, typecheck, `npm run check:board-build`, and a short tournam
 ## Open questions (non-blocking; defaults in brackets)
 
 - **Strategy visibility:** show a bot's strategy to non-host players anywhere? [No.]
-- **New engine placement:** the rules say a replacement goes "in that city" but don't say where a second engine starts. [A city on the bot's network chosen by its plan; documented in `rulesData.ts`.]
 - **Commodities Exchange commodity:** the board records bought or not, not which commodity. [Kept in `bot_states` and named in narration.]
 - **Narration history:** show only the last turn? [Yes. The last 20 turns are stored for debugging.]
