@@ -244,7 +244,7 @@ Each player can own up to 2 engines. The trade-in value of an engine—half the 
 
 You can only buy an engine one level higher than the best one you currently own.
 
-To purchase an engine, you pay the cost as printed on the card and place the card in front of you. If you already have the limit of engines you are allowed at this point in the game, you must replace one of the old engines with the one just purchased, putting it in that city. Remove the old engine card from the play area in front of you.
+To purchase an engine, you pay the cost as printed on the card and place the card in front of you. If the engine is a new one (not a trade-in), you may place it in any city in your network. If you already have the limit of engines you are allowed at this point in the game, you must replace one of the old engines with the one just purchased, putting it in that city. Remove the old engine card from the play area in front of you.
 
 #### Engine stats
 
