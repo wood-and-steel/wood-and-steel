@@ -61,7 +61,7 @@ A "segment" in the rules is one route between two cities: moves, the two-route b
 
 ## Narration on the board
 
-Each action's narration lines are saved to the bot's `log` in `bot_states` (the last 20 turns). The board reads them read-only (`src/board/useBotNarration.ts`, `botNarration.ts`), by realtime and by re-reading every 10 seconds, since realtime delivers nothing if the board opened before the row or table existed, and shows the latest turn at the top of the bot's tray card, plus "Waiting for the host's app" when it's the bot's turn and `runnerSeenAt` is over 30 seconds old. The board may import only `bots/state/botStates` and `bots/state/botStatesAdapter`; `botIsolation.test.ts` checks this. New narration goes in `engine/narration.ts` and the action that produces it.
+Each action's narration lines are saved to the bot's `log` in `bot_states` (the last 20 turns). The board reads them read-only (`src/board/useBotNarration.ts`, `botNarration.ts`), by realtime and by re-reading every 10 seconds, since realtime delivers nothing if the board opened before the row or table existed, and lists the latest turn's lines at the top of the bot's tray card (no heading), plus "Waiting for the host's app" when it's the bot's turn and `runnerSeenAt` is over 30 seconds old. The board may import only `bots/state/botStates` and `bots/state/botStatesAdapter`; `botIsolation.test.ts` checks this. New narration goes in `engine/narration.ts` and the action that produces it, in the same terse style: no subject, no articles, "&" for "and", no final period.
 
 ## Rule changes
 

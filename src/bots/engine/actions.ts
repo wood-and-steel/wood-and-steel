@@ -34,7 +34,7 @@ import {
   type RunTrains,
 } from './movement';
 import { canBuildRoute, networkCities, routeCities } from './network';
-import { commodityName, engineName, list, money, regionName, routeLabel, slotLabel, upgradeLabel } from './narration';
+import { commodityName, engineName, line, list, money, regionName, routeLabel, slotLabel, upgradeLabel } from './narration';
 import { ROUNDHOUSE_APPROACH, UPGRADE_PRICES, type UpgradeKey } from './rulesData';
 import {
   actionsLeft,
@@ -117,10 +117,6 @@ export function actionKind(action: Action): ActionKind | null {
 // --- Helpers -------------------------------------------------------------------
 
 const fail = (error: string): ApplyResult => ({ ok: false, error });
-
-function nameOf(world: BotWorld): string {
-  return world.bot.name;
-}
 
 function contractLabel(c: Pick<Contract, 'commodity' | 'destinationKey'>): string {
   return `${commodityName(c.commodity)} to ${c.destinationKey}`;
@@ -325,10 +321,9 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
   if (world.currentPlayer !== world.playerID) return fail('not this bot’s turn');
   const next = structuredClone(world);
   const effects: Effect[] = [];
-  const narrate = (line: string) => effects.push({ kind: 'narrate', line });
+  const narrate = (text: string) => effects.push({ kind: 'narrate', line: line(text) });
   const move = (m: GameMove) => effects.push({ kind: 'move', move: m });
   const boardOp = (op: BoardOp) => effects.push({ kind: 'boardOp', op });
-  const name = nameOf(world);
   const ts = next.turnState;
 
   if (action.type === 'chooseStartingCities') {
@@ -340,7 +335,7 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
       p.activeCities = [...pair];
     });
     move({ name: 'generateStartingContract', args: [[pair[0], pair[1]], world.playerID] });
-    narrate(`${name} chose ${pair[0]} and ${pair[1]} as starting cities.`);
+    narrate(`chose starting cities ${pair[0]} & ${pair[1]}`);
     // The move ends the turn itself.
     next.turnState = emptyTurnState();
     next.currentPlayer = '';
@@ -358,14 +353,13 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
     ts.offers = null;
     ts.awaitingOffers = false;
     move({ name: 'addContract', args: [offer.commodity, offer.destinationKey, 'private'] });
-    narrate(`${name} chose a private contract: ${contractLabel(offer)}.`);
+    narrate(`chose private contract: ${contractLabel(offer)}`);
     return { ok: true, world: next, effects };
   }
   if (world.turnState.offers || world.turnState.awaitingOffers) return fail('choose a private contract first');
 
   if (action.type === 'endTurn') {
     move({ name: 'endTurn', args: [] });
-    narrate(`${name} ended the turn.`);
     next.turnState = emptyTurnState();
     next.currentPlayer = '';
     return { ok: true, world: next, effects };
@@ -376,7 +370,7 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
     if (!networkCities(world).has(action.city)) return fail(`${action.city} is not on the network`);
     setEngineCity(next, action.slot, action.city);
     boardOp({ type: 'moveEngine', playerID: world.playerID, slot: action.slot, city: action.city });
-    narrate(`${name} placed the ${engineName(engineTypes(world)[action.slot]!)} in ${action.city}.`);
+    narrate(`placed ${engineName(engineTypes(world)[action.slot]!)} in ${action.city}`);
     return { ok: true, world: next, effects };
   }
 
@@ -389,11 +383,11 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
     if (action.claim) {
       const market = claimMarket(next, action.claim, action.commodity, effects);
       if (typeof market === 'string') return fail(market);
-      claimed = `, claiming the market contract for ${contractLabel(market)}`;
+      claimed = `, claiming market contract: ${contractLabel(market)}`;
     }
     setCargoIn(next, action.slot, action.commodity);
     boardOp({ type: 'setCargo', playerID: world.playerID, slot: action.slot, commodity: action.commodity });
-    narrate(`${name} picked up ${commodityName(action.commodity)} in ${city} with the ${slotLabel(action.slot)} engine${claimed}.`);
+    narrate(`picked up ${commodityName(action.commodity)} in ${city} with ${slotLabel(action.slot)} engine${claimed}`);
     return { ok: true, world: next, effects };
   }
 
@@ -424,7 +418,7 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
       }
       if (total > world.bot.cash) return fail('not enough cash');
       next.bot.cash -= total;
-      narrate(`${name} built ${list(action.routes.map(routeLabel))} for ${money(total)}.`);
+      narrate(`built ${list(action.routes.map(routeLabel))} for ${money(total)}`);
       return { ok: true, world: next, effects };
     }
 
@@ -439,12 +433,12 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
       boardOp({ type: 'setEngineType', playerID: world.playerID, slot: action.slot, engineType: action.engine });
       const label = `${engineName(action.engine)}`;
       if (purchase.tradeIn) {
-        narrate(`${name} bought a ${label} for ${money(purchase.cost)}, trading in the ${engineName(purchase.tradeIn)}.`);
+        narrate(`bought ${label} for ${money(purchase.cost)}, trading in ${engineName(purchase.tradeIn)}`);
       } else {
         if (!action.city || !networkCities(world).has(action.city)) return fail('a new engine needs a city on the network');
         setEngineCity(next, action.slot, action.city);
         boardOp({ type: 'moveEngine', playerID: world.playerID, slot: action.slot, city: action.city });
-        narrate(`${name} bought a ${label} for ${money(purchase.cost)} and placed it in ${action.city}.`);
+        narrate(`bought ${label} for ${money(purchase.cost)} & placed in ${action.city}`);
       }
       return { ok: true, world: next, effects };
     }
@@ -464,7 +458,7 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
         Object.entries(next.independentRailroads).map(([n, r]) => [n, r.routes.map((x) => x.key)])
       );
       boardOp({ type: 'reconcileIndependentRailroads', railroads: remaining, acquirers: { [action.name]: world.playerID } });
-      narrate(`${name} acquired the ${action.name} for ${money(purchase.cost)}.`);
+      narrate(`acquired ${action.name} for ${money(purchase.cost)}`);
       return { ok: true, world: next, effects };
     }
 
@@ -472,7 +466,7 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
       if (!borrowOptions().includes(action.amount)) return fail('borrow in steps of $5,000');
       next.bot.cash += action.amount;
       next.bot.debt += action.amount;
-      narrate(`${name} borrowed ${money(action.amount)}.`);
+      narrate(`borrowed ${money(action.amount)}`);
       return { ok: true, world: next, effects };
     }
 
@@ -480,7 +474,7 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
       if (!repayOptions(world.bot).includes(action.amount)) return fail('that repayment is not allowed');
       next.bot.cash -= action.amount;
       next.bot.debt -= action.amount;
-      narrate(`${name} repaid ${money(action.amount)} of debt.`);
+      narrate(`repaid ${money(action.amount)} debt`);
       return { ok: true, world: next, effects };
     }
 
@@ -504,19 +498,19 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
           });
           addActiveCity(next, action.city!);
           move({ name: 'claimHubCity', args: [action.city!] });
-          narrate(`${name} bought ${label} in ${action.city} for ${money(price)}.`);
+          narrate(`bought ${label} in ${action.city} for ${money(price)}`);
           break;
         case 'railyard':
           next.board.railyards[world.playerID] = action.city!;
           boardOp({ type: 'moveRailyard', playerID: world.playerID, city: action.city! });
-          narrate(`${name} bought ${label} in ${action.city} for ${money(price)}.`);
+          narrate(`bought ${label} in ${action.city} for ${money(price)}`);
           break;
         case 'regional-office':
           setPlayer(next, (p) => {
             p.regionalOffice = action.region!;
           });
           move({ name: 'claimRegionalOffice', args: [action.region!] });
-          narrate(`${name} bought ${label} in ${regionName(action.region!)} for ${money(price)}.`);
+          narrate(`bought ${label} in ${regionName(action.region!)} for ${money(price)}`);
           break;
         default: {
           const owned = next.board.upgrades[world.playerID] ?? [];
@@ -524,9 +518,9 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
           boardOp({ type: 'setUpgrade', playerID: world.playerID, upgrade: action.upgrade, owned: true });
           if (action.upgrade === 'commodities-exchange') {
             next.bot.exchangeCommodity = action.commodity!;
-            narrate(`${name} bought ${label} for ${commodityName(action.commodity!)} for ${money(price)}.`);
+            narrate(`bought ${label} (${commodityName(action.commodity!)}) for ${money(price)}`);
           } else {
-            narrate(`${name} bought ${label} for ${money(price)}.`);
+            narrate(`bought ${label} for ${money(price)}`);
           }
         }
       }
@@ -540,7 +534,7 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
       ts.awaitingOffers = true;
       move({ name: 'deleteContract', args: [contract.id] });
       effects.push({ kind: 'requestOffers' });
-      narrate(`${name} discarded the private contract for ${contractLabel(contract)}.`);
+      narrate(`discarded private contract: ${contractLabel(contract)}`);
       return { ok: true, world: next, effects };
     }
   }
@@ -562,8 +556,7 @@ function claimMarket(next: BotWorld, contractId: string, commodity: string, effe
 
 /** Apply a Run Trains action to `next`, appending effects; returns an error message or null. */
 function applyRuns(world: BotWorld, next: BotWorld, action: RunTrains, effects: Effect[]): string | null {
-  const narrate = (line: string) => effects.push({ kind: 'narrate', line });
-  const name = nameOf(world);
+  const narrate = (text: string) => effects.push({ kind: 'narrate', line: line(text) });
   if (action.runs.length === 0 || action.runs.length > 2) return 'run one or two engines';
   if (new Set(action.runs.map((r) => r.slot)).size !== action.runs.length) return 'an engine is listed twice';
   const runnable = runnableSlots(world);
@@ -597,7 +590,7 @@ function applyRuns(world: BotWorld, next: BotWorld, action: RunTrains, effects: 
     setCargoIn(next, receiver.slot, commodity);
     effects.push({ kind: 'boardOp', op: { type: 'moveEngine', playerID: world.playerID, slot: receiver.slot, city: meet } });
     effects.push({ kind: 'boardOp', op: { type: 'setCargo', playerID: world.playerID, slot: receiver.slot, commodity } });
-    narrate(`${name} used the Roundhouse to hand ${commodityName(commodity)} to the ${slotLabel(receiver.slot)} engine in ${meet}.`);
+    narrate(`used Roundhouse to hand ${commodityName(commodity)} to ${slotLabel(receiver.slot)} engine in ${meet}`);
     return runOne(next, next, receiver, effects, false);
   }
 
@@ -613,9 +606,8 @@ function applyRuns(world: BotWorld, next: BotWorld, action: RunTrains, effects: 
  * run), `next` receives the changes. `handOver`: Roundhouse carrier, which keeps its load to the end.
  */
 function runOne(from: BotWorld, next: BotWorld, run: EngineRun, effects: Effect[], handOver: boolean): string | null {
-  const narrate = (line: string) => effects.push({ kind: 'narrate', line });
+  const narrate = (text: string) => effects.push({ kind: 'narrate', line: line(text) });
   const boardOp = (op: BoardOp) => effects.push({ kind: 'boardOp', op });
-  const name = nameOf(from);
   const start = engineCities(from)[run.slot];
   const engine = engineTypes(from)[run.slot];
   if (!engine) return `the ${slotLabel(run.slot)} token has no engine`;
@@ -640,7 +632,7 @@ function runOne(from: BotWorld, next: BotWorld, run: EngineRun, effects: Effect[
       if (event.claim) {
         const market = claimMarket(next, event.claim, event.commodity, effects);
         if (typeof market === 'string') return market;
-        lines.push(`picked up ${commodityName(event.commodity)} in ${city} and claimed the market contract for ${contractLabel(market)}`);
+        lines.push(`picked up ${commodityName(event.commodity)} in ${city}, claiming market contract: ${contractLabel(market)}`);
       } else {
         lines.push(`picked up ${commodityName(event.commodity)} in ${city}`);
       }
@@ -679,7 +671,7 @@ function runOne(from: BotWorld, next: BotWorld, run: EngineRun, effects: Effect[
   next.turnState.enginesRun.push(run.slot);
   boardOp({ type: 'moveEngine', playerID: from.playerID, slot: run.slot, city: end });
   if (initialLoad !== carrying) boardOp({ type: 'setCargo', playerID: from.playerID, slot: run.slot, commodity: carrying });
-  const moved = run.path.length > 1 ? `ran the ${slotLabel(run.slot)} engine from ${run.path[0]} to ${end}` : `used the ${slotLabel(run.slot)} engine in ${end}`;
-  narrate(`${name} ${list([moved, ...lines])}.`);
+  const moved = run.path.length > 1 ? `ran ${slotLabel(run.slot)} engine ${run.path[0]} to ${end}` : `used ${slotLabel(run.slot)} engine in ${end}`;
+  narrate(list([moved, ...lines]));
   return null;
 }

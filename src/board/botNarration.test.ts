@@ -15,19 +15,18 @@ function states(log: { round: number; turn: number; lines: string[] }[], seenAgo
 }
 
 describe('botTrayInfo', () => {
-  it('shows the current turn as it happens', () => {
-    const info = botTrayInfo(states([{ round: 2, turn: 4, lines: ['Ben built Boston–Syracuse for $3,000.'] }], 1000), ctx, NOW);
-    expect(info['1']).toEqual({ heading: 'This turn', lines: ['Ben built Boston–Syracuse for $3,000.'], waiting: false });
-  });
-
-  it('shows the last turn when it isn’t the bot’s turn, or before it acts this turn', () => {
-    const s = states([{ round: 1, turn: 3, lines: ['Ben ended the turn.'] }], 1000);
-    expect(botTrayInfo(s, ctx, NOW)['1'].heading).toBe('Last turn');
-    expect(botTrayInfo(s, { ...ctx, currentPlayer: '0' }, NOW)['1']).toEqual({ heading: 'Last turn', lines: ['Ben ended the turn.'], waiting: false });
+  it('shows the latest turn’s moves', () => {
+    const info = botTrayInfo(states([{ round: 2, turn: 4, lines: ['Built Boston–Syracuse for $3,000'] }], 1000), ctx, NOW);
+    expect(info['1']).toEqual({ played: true, lines: ['Built Boston–Syracuse for $3,000'], waiting: false });
+    expect(botTrayInfo(states([{ round: 1, turn: 3, lines: [] }], 1000), { ...ctx, currentPlayer: '0' }, NOW)['1']).toEqual({
+      played: true,
+      lines: [],
+      waiting: false,
+    });
   });
 
   it('nothing before the first turn', () => {
-    expect(botTrayInfo(states([], 1000), { ...ctx, currentPlayer: '0' }, NOW)['1']).toEqual({ heading: null, lines: [], waiting: false });
+    expect(botTrayInfo(states([], 1000), { ...ctx, currentPlayer: '0' }, NOW)['1']).toEqual({ played: false, lines: [], waiting: false });
   });
 
   it('waiting for the host’s app when it’s the bot’s turn and the heartbeat is stale or missing', () => {

@@ -231,21 +231,21 @@ Strategy and weights are not shown to players. Only the host sees the chosen str
 
 ## Narration
 
-Lines are built from templates per action. They are short, plain, and in the third person by name, with no pronouns:
+Lines are built from templates per action (`engine/narration.ts` and the actions that use it). They are terse (changed after M6 on Jeff's request): no subject, since they appear in the bot's own tray card; no articles; "&" for "and"; no final period; and ending the turn isn't narrated. For example:
 
-- "Avery built Boston–New York and New York–Philadelphia for $5,000."
-- "Avery ran the light engine from Boston to Syracuse and picked up machinery."
-- "Avery delivered machinery to Chicago for $9,000 and 2 ties."
-- "Avery chose a private contract: coal to Atlanta."
-- "Avery borrowed $5,000."
-- "Avery bought a 2-6-0 Mogul, trading in the American."
-- "Avery bought Timetable for $15,000."
-- "Avery acquired the Erie & Western for $6,000."
-- "Avery ended the turn."
+- "Built Boston–New York & New York–Philadelphia for $5,000"
+- "Ran light engine Raleigh to Cincinnati & delivered textiles to Cincinnati for $3,000 less $1,000 debt service"
+- "Picked up tourists in New York with light engine, claiming market contract: tourists to Atlanta"
+- "Chose private contract: textiles to Chicago"
+- "Discarded private contract: coal to Boston"
+- "Borrowed $5,000"
+- "Bought 2-6-0 Mogul for $7,000, trading in 4-4-0 American"
+- "Bought Hub in New York for $15,000"
+- "Acquired Erie & Western for $6,000"
 
-The runner appends each line to the open `BotTurnLog` as the action completes, so the tray fills in live during the turn.
+The runner appends each line to the turn's `BotTurnLog` as the action completes, so the tray fills in live during the turn.
 
-**Tray (`src/board/PlayerTrays.tsx`):** a bot's card gets a **Last turn** section that lists the most recent log entry, or the one in progress. If `runnerSeenAt` is more than about 30 seconds old while it's the bot's turn, the card says **Waiting for the host's app**. The board subscribes to `bot_states` read-only, alongside its existing syncs.
+**Tray (`src/board/PlayerTrays.tsx`):** a bot's card lists the lines of its most recent log entry (the turn in progress while it plays), with no heading. A turn with no moves shows "No moves"; before its first turn, "No turns yet". If `runnerSeenAt` is more than about 30 seconds old while it's the bot's turn, the card says **Waiting for the host's app**. The board reads `bot_states` read-only, by realtime and by re-reading every 10 seconds.
 
 ## Runner (`src/bots/runner/`, `src/bots/host/`)
 

@@ -82,35 +82,35 @@ describe('BoardApp (/board)', () => {
     }
 
     it('shows the bot’s turn in its tray, and nothing for humans', async () => {
-      writeBen(['Ben built Boston–Syracuse for $3,000.', 'Ben ended the turn.']);
+      writeBen(['Built Boston–Syracuse for $3,000', 'Borrowed $5,000']);
       await renderAt('/board?game=BCDFG');
       const narration = await screen.findByRole('region', { name: "Ben's narration" }, { timeout: 3000 });
-      expect(within(narration).getByRole('heading', { name: 'This turn' })).toBeInTheDocument();
+      expect(within(narration).queryByRole('heading')).not.toBeInTheDocument();
       expect(within(narration).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-        'Ben built Boston–Syracuse for $3,000.',
-        'Ben ended the turn.',
+        'Built Boston–Syracuse for $3,000',
+        'Borrowed $5,000',
       ]);
       expect(screen.queryByRole('region', { name: "Ada's narration" })).not.toBeInTheDocument();
       expect(screen.queryByText("Waiting for the host's app")).not.toBeInTheDocument();
     });
 
     it('updates live as the bot plays', async () => {
-      writeBen(['Ben borrowed $5,000.']);
+      writeBen(['Borrowed $5,000']);
       await renderAt('/board?game=BCDFG');
-      await screen.findByText('Ben borrowed $5,000.', undefined, { timeout: 3000 });
+      await screen.findByText('Borrowed $5,000', undefined, { timeout: 3000 });
       await act(async () => {
-        writeBen(['Ben borrowed $5,000.', 'Ben bought Upgraded Stations for $10,000.']);
+        writeBen(['Borrowed $5,000', 'Bought Upgraded Stations for $10,000']);
         await new Promise((resolve) => setTimeout(resolve, 10));
       });
-      expect(await screen.findByText('Ben bought Upgraded Stations for $10,000.', undefined, { timeout: 3000 })).toBeInTheDocument();
+      expect(await screen.findByText('Bought Upgraded Stations for $10,000', undefined, { timeout: 3000 })).toBeInTheDocument();
     });
 
     it('says when the host’s app isn’t running the bot', async () => {
-      writeBen(['Ben ended the turn.'], new Date(Date.now() - 120_000).toISOString(), 3);
+      writeBen(['Repaid $5,000 debt'], new Date(Date.now() - 120_000).toISOString(), 3);
       await renderAt('/board?game=BCDFG');
       const narration = await screen.findByRole('region', { name: "Ben's narration" }, { timeout: 3000 });
       expect(within(narration).getByRole('status')).toHaveTextContent("Waiting for the host's app");
-      expect(within(narration).getByRole('heading', { name: 'Last turn' })).toBeInTheDocument();
+      expect(within(narration).getByText('Repaid $5,000 debt')).toBeInTheDocument();
     });
 
     it('picks up narration without realtime, e.g. when the board opened before the bots’ row existed', async () => {
@@ -121,9 +121,9 @@ describe('BoardApp (/board)', () => {
         await waitFor(() => expect(screen.getByText('Live')).toBeInTheDocument());
         expect(screen.queryByRole('region', { name: "Ben's narration" })).not.toBeInTheDocument();
         await act(async () => {
-          writeBen(['Ben borrowed $5,000.']);
+          writeBen(['Borrowed $5,000']);
         });
-        expect(await screen.findByText('Ben borrowed $5,000.', undefined, { timeout: 3000 })).toBeInTheDocument();
+        expect(await screen.findByText('Borrowed $5,000', undefined, { timeout: 3000 })).toBeInTheDocument();
       } finally {
         setBotNarrationPollMs(10_000);
       }

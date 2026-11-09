@@ -1,6 +1,7 @@
 /**
- * Narration templates (docs/BOT_PLAN.md, Narration): short, plain, third person by name, no
- * pronouns, no character voice. One line per action, shown in the bot's tray card on /board.
+ * Narration helpers (docs/BOT_PLAN.md, Narration). Lines are terse: no subject (they appear in the
+ * bot's own tray card on /board), no articles, "&" for "and", no final period, no character voice.
+ * One line per action; ending the turn isn't narrated.
  */
 import { formatCommodity, getEngineType, type EngineTypeId } from '../../board/playerBoardData';
 import { routeCities } from './network';
@@ -15,10 +16,15 @@ export function routeLabel(routeKey: string): string {
   return routeCities(routeKey).join('–');
 }
 
+/** "a", "a & b", "a, b & c" */
 export function list(items: string[]): string {
   if (items.length <= 1) return items.join('');
-  if (items.length === 2) return `${items[0]} and ${items[1]}`;
-  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
+  return `${items.slice(0, -1).join(', ')} & ${items[items.length - 1]}`;
+}
+
+/** Capitalize the first letter of a narration line. */
+export function line(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 export function engineName(engine: EngineTypeId): string {
@@ -35,15 +41,15 @@ export function slotLabel(slot: 0 | 1): string {
 }
 
 const UPGRADE_LABELS: Record<UpgradeKey, string> = {
-  'service-yard': 'a Service Yard',
+  'service-yard': 'Service Yard',
   'upgraded-stations': 'Upgraded Stations',
-  hub: 'a Hub',
-  timetable: 'a Timetable',
-  roundhouse: 'a Roundhouse',
-  'employment-office': 'an Employment Office',
-  railyard: 'a Railyard',
-  'regional-office': 'a Regional Office',
-  'commodities-exchange': 'a Commodities Exchange',
+  hub: 'Hub',
+  timetable: 'Timetable',
+  roundhouse: 'Roundhouse',
+  'employment-office': 'Employment Office',
+  railyard: 'Railyard',
+  'regional-office': 'Regional Office',
+  'commodities-exchange': 'Commodities Exchange',
 };
 
 export function upgradeLabel(upgrade: UpgradeKey): string {
@@ -51,12 +57,12 @@ export function upgradeLabel(upgrade: UpgradeKey): string {
 }
 
 const REGION_NAMES: Record<string, string> = {
-  NW: 'the Northwest',
-  NC: 'the North Central region',
-  NE: 'the Northeast',
-  SW: 'the Southwest',
-  SC: 'the South Central region',
-  SE: 'the Southeast',
+  NW: 'Northwest',
+  NC: 'North Central',
+  NE: 'Northeast',
+  SW: 'Southwest',
+  SC: 'South Central',
+  SE: 'Southeast',
 };
 
 export function regionName(region: string): string {

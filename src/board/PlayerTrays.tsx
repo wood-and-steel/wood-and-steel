@@ -191,7 +191,7 @@ function UpgradeChecks({ player, owned, onBoardOp }: UpgradeChecksProps): React.
   );
 }
 
-/** A bot's narration: its last (or current) turn, and whether the host's app is running it. */
+/** A bot's narration: its latest turn's moves, and whether the host's app is running it. */
 function BotTurn({ player, info }: { player: BoardPlayer; info: BotTrayInfo }): React.ReactElement {
   return (
     <section className="boardBot" aria-label={`${player.name}'s narration`}>
@@ -200,19 +200,16 @@ function BotTurn({ player, info }: { player: BoardPlayer; info: BotTrayInfo }): 
           Waiting for the host's app
         </p>
       )}
-      {info.heading ? (
-        <>
-          <h3 className="boardBot__heading">{info.heading}</h3>
-          <ul className="boardBot__lines">
-            {info.lines.map((line, index) => (
-              <li key={index} className="boardBot__line">
-                {line}
-              </li>
-            ))}
-          </ul>
-        </>
+      {info.lines.length > 0 ? (
+        <ul className="boardBot__lines">
+          {info.lines.map((text, index) => (
+            <li key={index} className="boardBot__line">
+              {text}
+            </li>
+          ))}
+        </ul>
       ) : (
-        !info.waiting && <p className="boardBot__none">No turns yet</p>
+        !info.waiting && <p className="boardBot__none">{info.played ? 'No moves' : 'No turns yet'}</p>
       )}
     </section>
   );

@@ -62,7 +62,7 @@ describe('runBotTurn', () => {
 
     const record = botRecord(game);
     expect(record.turnInProgress).toBeNull();
-    expect(last(record.log).lines).toEqual([`Avery chose ${me.activeCities[0]} and ${me.activeCities[1]} as starting cities.`]);
+    expect(last(record.log).lines).toEqual([`Chose starting cities ${me.activeCities[0]} & ${me.activeCities[1]}`]);
   });
 
   test('play: delivers, takes a new private contract, and ends the turn', async () => {
@@ -87,15 +87,15 @@ describe('runBotTurn', () => {
     expect(record.deliveries).toEqual({ machinery: 1 });
     expect(record.turnInProgress).toBeNull();
     const lines = last(record.log).lines;
-    expect(lines[0]).toMatch(/^Avery ran the light engine from Boston to New York, picked up machinery in Boston, and delivered machinery to New York for \$/);
-    expect(lines[1]).toMatch(/^Avery chose a private contract: /);
-    expect(last(lines)).toBe('Avery ended the turn.');
+    expect(lines[0]).toMatch(/^Ran light engine Boston to New York, picked up machinery in Boston & delivered machinery to New York for \$/);
+    expect(lines[1]).toMatch(/^Chose private contract: /);
+    expect(lines.some((l) => /ended/i.test(l))).toBe(false);
   });
 
   test('places the starting engine first if it isn’t on the board', async () => {
     const game = await setUpHostGame({ phase: 'play', contracts: [contract({})], board: { track } });
     await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 });
-    expect(last(botRecord(game).log).lines[0]).toMatch(/^Avery placed the 2-4-0 John Bull in /);
+    expect(last(botRecord(game).log).lines[0]).toMatch(/^Placed 2-4-0 John Bull in /);
   });
 
   test('resumes an interrupted action without repeating moves G already shows', async () => {
@@ -115,7 +115,7 @@ describe('runBotTurn', () => {
         effects: [
           { kind: 'move', move: { name: 'toggleContractFulfilled', args: ['k1'] } },
           { kind: 'boardOp', op: { type: 'moveEngine', playerID: '0', slot: 0, city: 'New York' } },
-          { kind: 'narrate', line: 'Avery delivered machinery to New York.' },
+          { kind: 'narrate', line: 'Delivered machinery to New York' },
         ],
       },
     };
@@ -126,7 +126,7 @@ describe('runBotTurn', () => {
     expect(useGameStore.getState().G.contracts.find((c) => c.id === 'k1')!.fulfilled).toBe(true);
     expect(normalizeBoardState(game.boardAdapter.rows.get(game.code)!.state).engines['0'][0]).toBe('New York');
     const lines = last(botRecord(game).log).lines;
-    expect(lines[0]).toBe('Avery delivered machinery to New York.');
+    expect(lines[0]).toBe('Delivered machinery to New York');
     // The engine already ran this turn, so it doesn't run again.
     expect(lines.filter((l) => l.includes('ran the light engine'))).toEqual([]);
   });

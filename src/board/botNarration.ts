@@ -1,5 +1,5 @@
 /**
- * What a bot's tray card shows (docs/BOT_PLAN.md, Narration): its last turn's narration, and a
+ * What a bot's tray card shows (docs/BOT_PLAN.md, Narration): its latest turn's narration, and a
  * notice when it's the bot's turn but the host's app hasn't been running it lately. Read-only:
  * the board only reads bot_states.
  */
@@ -12,8 +12,9 @@ export const RUNNER_STALE_MS = 30_000;
 const BOT_PHASES = new Set(['setup', 'play']);
 
 export interface BotTrayInfo {
-  /** "This turn" while the bot is playing, "Last turn" after; null before its first turn. */
-  heading: 'This turn' | 'Last turn' | null;
+  /** The bot has played at least one turn. */
+  played: boolean;
+  /** Its latest turn's narration (the current turn while it plays). */
   lines: string[];
   /** It's the bot's turn but the host's app isn't running it. */
   waiting: boolean;
@@ -25,10 +26,9 @@ export function botTrayInfo(states: BotStates | null, ctx: GameContext, now: num
   for (const [playerID, record] of Object.entries(states?.bots ?? {})) {
     const current = ctx.currentPlayer === playerID && BOT_PHASES.has(ctx.phase);
     const last = record.log[record.log.length - 1];
-    const thisTurn = current && !!last && last.turn === ctx.turn && last.round === (ctx.round ?? 0);
     const seen = record.runnerSeenAt ? Date.parse(record.runnerSeenAt) : NaN;
     info[playerID] = {
-      heading: last ? (thisTurn ? 'This turn' : 'Last turn') : null,
+      played: !!last,
       lines: last?.lines ?? [],
       waiting: current && (Number.isNaN(seen) || now - seen > RUNNER_STALE_MS),
     };
