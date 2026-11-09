@@ -8,7 +8,7 @@ import { seedBoardState, canSeedBoard } from '../../board/boardSeed';
 import { saveBoardOp } from '../../board/boardRowOps';
 import { getBoardStateAdapter } from '../../board/boardStateAdapter';
 import * as gameActions from '../../stores/gameActions';
-import { useGameStore } from '../../stores/gameStore';
+import { useGameStore, type GameContext, type GameState } from '../../stores/gameStore';
 import { getCurrentGameCode, saveGameState } from '../../utils/gameManager';
 import { serializeState } from '../../utils/stateSerialization';
 import { getStorageAdapter } from '../../utils/storage';
@@ -29,47 +29,72 @@ export function stableStringify(value: unknown): string {
   return JSON.stringify(value) ?? 'null';
 }
 
-function storeSnapshot(): string {
+type GameSnapshot = { G: GameState; ctx: GameContext };
+
+function snapshotKey(state: { G: unknown; ctx: unknown }): string {
+  return stableStringify(serializeState(state.G as Record<string, unknown>, state.ctx as Record<string, unknown>));
+}
+
+function storeState(): GameSnapshot {
   const { G, ctx } = useGameStore.getState();
-  return stableStringify(serializeState(G as unknown as Record<string, unknown>, ctx as unknown as Record<string, unknown>));
+  return structuredClone({ G, ctx });
+}
+
+/** Put a known-good state back in the store (keeping its other fields). */
+function restoreStore(state: GameSnapshot): void {
+  useGameStore.setState({ G: structuredClone(state.G), ctx: structuredClone(state.ctx) });
 }
 
 export interface WaitForSaveOptions {
   clock: Clock;
   /** Poll interval (ms). */
   intervalMs?: number;
-  /** Re-save the store once if the stored game still differs after this long (ms). */
+  /** Re-save the expected state once if the stored game still differs after this long (ms). */
   resaveAfterMs?: number;
   /** Give up after this long (ms). */
   timeoutMs?: number;
 }
 
 /**
- * Wait until the stored game matches the store. Moves save in the background, and saves are
- * last-write-wins, so an older save can land after a newer one; if the row is still behind after
- * a while, save the store's current state once more.
+ * Wait until the stored game is `expected`, the state a move produced. Moves save in the
+ * background and saves are last-write-wins, so an older save can land after a newer one; if the
+ * row is still different after a while, save `expected` once more. (Never the live store: a late
+ * realtime echo of an older save may have rewound it.)
  */
 export async function waitForSavedGame(
   code: string,
+  expected: GameSnapshot,
   { clock, intervalMs = 150, resaveAfterMs = 3000, timeoutMs = 15000 }: WaitForSaveOptions
 ): Promise<void> {
+  const key = snapshotKey(expected);
   let waited = 0;
   let resaved = false;
   for (;;) {
     const stored = await getStorageAdapter().loadGame(code);
-    const expected = storeSnapshot();
-    if (stored && stableStringify(serializeState(stored.G as Record<string, unknown>, stored.ctx as Record<string, unknown>)) === expected) {
-      return;
-    }
+    if (stored && snapshotKey(stored) === key) return;
     if (!resaved && waited >= resaveAfterMs) {
       resaved = true;
-      const { G, ctx } = useGameStore.getState();
-      await saveGameState(code, G, ctx);
+      await saveGameState(code, expected.G, expected.ctx);
       continue;
     }
-    if (waited >= timeoutMs) throw new Error(`Game ${code} did not save within ${timeoutMs} ms.`);
+    if (waited >= timeoutMs) throw new Error(`Game ${code} did not save within ${timeoutMs / 1000} seconds.`);
     await clock.sleep(intervalMs);
     waited += intervalMs;
+  }
+}
+
+/**
+ * Wait for the store to show `expected`: realtime echoes of this device's own saves may still be
+ * arriving and briefly rewind it. If it hasn't caught up after a while, restore it.
+ */
+export async function settleStore(expected: GameSnapshot, clock: Clock, intervalMs = 150, restoreAfterMs = 2000): Promise<void> {
+  const key = snapshotKey(expected);
+  for (let waited = 0; snapshotKey(useGameStore.getState()) !== key; waited += intervalMs) {
+    if (waited >= restoreAfterMs) {
+      restoreStore(expected);
+      return;
+    }
+    await clock.sleep(intervalMs);
   }
 }
 
@@ -113,7 +138,14 @@ export function createHostPorts(code: string, clock: Clock = browserClock): BotP
     async applyMove(move) {
       if (getCurrentGameCode() !== code) throw new Error(`Game ${code} is no longer the open game.`);
       callMove(move);
-      await waitForSavedGame(code, { clock });
+      // Moves change the store at once; this is the state the move produced.
+      const expected = storeState();
+      await waitForSavedGame(code, expected, { clock });
+      await settleStore(expected, clock);
+    },
+    async settle() {
+      const stored = await getStorageAdapter().loadGame(code);
+      if (stored?.G && stored.ctx) await settleStore(stored as unknown as GameSnapshot, clock);
     },
     privateContractOffers: () => {
       const { G, ctx } = useGameStore.getState();

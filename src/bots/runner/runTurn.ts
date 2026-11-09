@@ -116,6 +116,8 @@ export async function runBotTurn({
   shouldStop = () => false,
   maxSteps = 40,
 }: RunTurnOptions): Promise<TurnOutcome> {
+  // Act only on the stored game: the store may briefly lag or be rewound by a stale echo.
+  await ports.game.settle();
   const id = currentTurn(ports, playerID);
   if (!id) return 'not-my-turn';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { act, render, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { StorageProvider } from '../../providers/StorageProvider';
 import { useGameStore } from '../../stores/gameStore';
 import { addBotSeat, assignPlayerSeat, assignRandomPlayerIDs, createNewGame } from '../../utils/gameManager';
@@ -102,11 +102,23 @@ describe('BotRunner: playing turns', () => {
     await act(async () => {
       render(
         <StorageProvider>
-          <BotRunner gameCode={game.code} ports={game.ports} paceMs={0} />
+          <BotRunner gameCode={game.code} ports={game.ports} paceMs={0} retryMs={20} />
         </StorageProvider>
       );
     });
   }
+
+  test('keeps retrying setup after a failure, showing the host why, then plays', async () => {
+    const game = await setUpHostGame({ phase: 'setup' });
+    const load = game.botAdapter.load.bind(game.botAdapter);
+    let failures = 2;
+    game.botAdapter.load = (code: string) =>
+      failures-- > 0 ? Promise.reject(new Error('The bot_states table does not exist')) : load(code);
+    await renderFor(game);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Bots paused: The bot_states table does not exist.');
+    await waitFor(() => expect(useGameStore.getState().ctx.currentPlayer).toBe('1'));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  });
 
   test('plays the bot’s turn when it is current, then waits for the human', async () => {
     const game = await setUpHostGame({ phase: 'setup' });

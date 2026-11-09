@@ -17,6 +17,7 @@ import { botSeatsByPlayerID, type BotStates } from '../state/botStates';
 import { ensureBotStates } from '../state/botStatesSync';
 import { getBotStatesAdapter } from '../state/botStatesAdapter';
 import { createHostPorts } from './hostPorts';
+import '../../shared/styles/bots.css';
 
 export const HEARTBEAT_MS = 10_000;
 const RETRY_MS = 5_000;
@@ -29,9 +30,17 @@ export interface BotRunnerProps {
   /** For tests: ports and policy other than the host defaults. */
   ports?: BotPorts;
   policy?: Policy;
+  /** Wait before retrying after a failure (ms). */
+  retryMs?: number;
 }
 
-export function BotRunner({ gameCode, paceMs = 1500, ports: portsOverride, policy }: BotRunnerProps): null {
+export function BotRunner({
+  gameCode,
+  paceMs = 1500,
+  ports: portsOverride,
+  policy,
+  retryMs = RETRY_MS,
+}: BotRunnerProps): React.ReactElement | null {
   const storage = useStorage();
   const phase = useGameStore((state) => state.ctx?.phase);
   const currentPlayer = useGameStore((state) => state.ctx?.currentPlayer);
@@ -39,7 +48,9 @@ export function BotRunner({ gameCode, paceMs = 1500, ports: portsOverride, polic
   const [tick, setTick] = React.useState(0);
   const running = React.useRef(false);
   const unmounted = React.useRef(false);
-  const setupFor = React.useRef<string | null>(null);
+  const [setupAttempt, setSetupAttempt] = React.useState(0);
+  /** The last failure, shown to the host until bots run again. */
+  const [error, setError] = React.useState<string | null>(null);
 
   const ports = React.useMemo(() => portsOverride ?? createHostPorts(gameCode), [portsOverride, gameCode]);
 
@@ -50,13 +61,12 @@ export function BotRunner({ gameCode, paceMs = 1500, ports: portsOverride, polic
     };
   }, []);
 
-  // Set up bot state once the game has started (host only).
+  // Set up bot state once the game has started (host only), retrying until it works.
+  const started = !!phase && phase !== 'waiting_for_players';
   React.useEffect(() => {
-    if (!gameCode || !phase || phase === 'waiting_for_players') return;
-    if (setupFor.current === gameCode) return;
-    setupFor.current = gameCode;
-
+    if (!gameCode || !started || botIDs) return;
     let cancelled = false;
+    let retry: ReturnType<typeof setTimeout> | null = null;
     void (async () => {
       try {
         if (!(await storage.amIHost(gameCode))) return;
@@ -64,17 +74,22 @@ export function BotRunner({ gameCode, paceMs = 1500, ports: portsOverride, polic
         const bots = Object.keys(botSeatsByPlayerID(seats));
         if (cancelled || bots.length === 0) return;
         await ensureBotStates(gameCode, seats, { adapter: getBotStatesAdapter() });
-        if (!cancelled) setBotIDs(bots);
+        if (!cancelled) {
+          setBotIDs(bots);
+          setError(null);
+        }
       } catch (e) {
         console.error('[BotRunner] Could not set up bot state:', e);
-        // Allow a retry on the next phase change or remount.
-        if (setupFor.current === gameCode) setupFor.current = null;
+        if (cancelled) return;
+        setError(describe(e));
+        retry = setTimeout(() => setSetupAttempt((n: number) => n + 1), retryMs);
       }
     })();
     return () => {
       cancelled = true;
+      if (retry) clearTimeout(retry);
     };
-  }, [gameCode, phase, storage]);
+  }, [gameCode, started, storage, botIDs, setupAttempt, retryMs]);
 
   // Play the current bot's turn.
   React.useEffect(() => {
@@ -85,18 +100,20 @@ export function BotRunner({ gameCode, paceMs = 1500, ports: portsOverride, polic
       let retry = false;
       try {
         await runBotTurn({ playerID: currentPlayer, ports, policy, paceMs, shouldStop: () => unmounted.current });
+        if (!unmounted.current) setError(null);
       } catch (e) {
         console.error('[BotRunner] Bot turn failed; retrying shortly:', e);
+        if (!unmounted.current) setError(describe(e));
         retry = true;
       } finally {
         running.current = false;
       }
       if (unmounted.current) return;
-      if (retry) await ports.clock.sleep(RETRY_MS);
+      if (retry) await ports.clock.sleep(retryMs);
       // Re-check: the next player may be a bot too, and the store may have changed while we ran.
       if (!unmounted.current) setTick((t: number) => t + 1);
     })();
-  }, [botIDs, phase, currentPlayer, tick, ports, policy, paceMs]);
+  }, [botIDs, phase, currentPlayer, tick, ports, policy, paceMs, retryMs]);
 
   // Heartbeat, so board screens can show when the host's app isn't running the bots.
   React.useEffect(() => {
@@ -116,5 +133,14 @@ export function BotRunner({ gameCode, paceMs = 1500, ports: portsOverride, polic
     return () => clearInterval(interval);
   }, [botIDs, ports]);
 
-  return null;
+  return error ? (
+    <div className="botRunnerNotice" role="alert">
+      <strong>Bots paused:</strong> {error} Retrying every few seconds.
+    </div>
+  ) : null;
+}
+
+function describe(e: unknown): string {
+  const message = e instanceof Error ? e.message : String(e);
+  return /[.!?]$/.test(message) ? message : `${message}.`;
 }

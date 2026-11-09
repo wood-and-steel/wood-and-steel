@@ -16,6 +16,11 @@ export interface GamePort {
   applyMove(move: GameMove): Promise<void>;
   /** Private contract offers for the current player, as the offer dialog generates them. */
   privateContractOffers(): PrivateContractSpec[];
+  /**
+   * Make getState() match the stored game before a turn starts, so a bot never acts on a stale
+   * copy (for example, one a late realtime echo of an older save rewound).
+   */
+  settle(): Promise<void>;
 }
 
 export interface BoardPort {

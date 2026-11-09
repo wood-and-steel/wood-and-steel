@@ -51,7 +51,9 @@ Tuning: valuations are deliberately simple. Change them with `playthrough.test.t
 | `runner/steps.ts` | Step keys (rebuild the turn's actions after a reload) and `isMoveDone` (skip moves `G` already shows when resuming). |
 | `runner/simplePolicy.testHelper.ts` | A small predictable policy for runner tests. Live bots use `heuristicPolicy`. |
 | `host/hostPorts.ts` | Host implementations: moves call the app's move functions, then wait until the stored game matches the store; board ops go through `src/board/boardRowOps.ts`. |
-| `host/BotRunner.tsx` | Lazy-mounted by `App.tsx`. On the host only: creates `bot_states`, plays each bot's turn when it's current, and writes a heartbeat (`runnerSeenAt`) every 10 seconds. |
+| `host/BotRunner.tsx` | Lazy-mounted by `App.tsx`. On the host only: creates `bot_states` (retrying until it works), plays each bot's turn when it's current, and writes a heartbeat (`runnerSeenAt`) every 10 seconds. If setup or a turn fails, it shows the host a "Bots paused" notice with the error and retries every 5 seconds. |
+
+**Realtime echoes:** the host's app applies realtime echoes of its own saves, and a late echo of an older save can briefly rewind the store. So `applyMove` waits for the stored game to equal the state the move produced (re-saving that state, never the live store), then restores the store if it stays rewound, and `runBotTurn` calls `GamePort.settle()` first so a bot never acts on a rewound store.
 
 **Adding a move to the engine:** add it to `GameMove` (`engine/actions.ts`), `callMove` (`host/hostPorts.ts`), and `isMoveDone` (`runner/steps.ts`), so a resumed turn neither skips nor repeats it.
 
