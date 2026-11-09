@@ -4,14 +4,26 @@
  * conflict. Ops never touch G/ctx and never enforce game rules.
  */
 
-export const BOARD_STATE_VERSION = 1;
+import { commodities } from '../data/commodities';
+import {
+  DEFAULT_ENGINE_TYPES,
+  isEngineTypeId,
+  isUpgradeId,
+  type EngineTypeId,
+  type UpgradeId,
+} from './playerBoardData';
+
+/** 2 added player tracking; a version 1 board would silently strip those fields on save. */
+export const BOARD_STATE_VERSION = 2;
 /** Owners per route: one primary plus up to three parallel. */
 export const MAX_ROUTE_OWNERS = 4;
 
+/** 0 is the light engine token, 1 the dark one. */
 export type EngineSlot = 0 | 1;
+export type EngineTypePair = [EngineTypeId | null, EngineTypeId | null];
 
 export interface BoardState {
-  version: 1;
+  version: typeof BOARD_STATE_VERSION;
   seeded: boolean;
   /** routeKey -> owners as playerIDs: [primary, ...parallel], at most MAX_ROUTE_OWNERS */
   track: Record<string, string[]>;
@@ -19,6 +31,12 @@ export interface BoardState {
   engines: Record<string, [string | null, string | null]>;
   /** playerID -> city key or null (one Railyard per player) */
   railyards: Record<string, string | null>;
+  /** playerID -> [lightTokenType, darkTokenType]; null = no engine. Absent = DEFAULT_ENGINE_TYPES. */
+  engineTypes: Record<string, EngineTypePair>;
+  /** playerID -> [lightTokenCargo, darkTokenCargo]; commodity key, or null = empty */
+  cargo: Record<string, [string | null, string | null]>;
+  /** playerID -> upgrades bought */
+  upgrades: Record<string, UpgradeId[]>;
   /** last-seen G.independentRailroads (name -> route keys), for acquisition detection */
   seenIndependentRailroads: Record<string, string[]>;
 }
@@ -29,6 +47,9 @@ export type BoardOp =
   | { type: 'unclaimRoute'; routeKey: string; playerID?: string }
   | { type: 'moveEngine'; playerID: string; slot: EngineSlot; city: string | null }
   | { type: 'moveRailyard'; playerID: string; city: string | null }
+  | { type: 'setEngineType'; playerID: string; slot: EngineSlot; engineType: EngineTypeId | null }
+  | { type: 'setCargo'; playerID: string; slot: EngineSlot; commodity: string | null }
+  | { type: 'setUpgrade'; playerID: string; upgrade: UpgradeId; owned: boolean }
   | { type: 'applyAcquisition'; railroad: string; playerID: string | null; routeKeys: string[] }
   | { type: 'snapshotIndependentRailroads'; railroads: Record<string, string[]> }
   | {
@@ -46,6 +67,9 @@ export function emptyBoardState(): BoardState {
     track: {},
     engines: {},
     railyards: {},
+    engineTypes: {},
+    cargo: {},
+    upgrades: {},
     seenIndependentRailroads: {},
   };
 }
@@ -57,6 +81,11 @@ const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((v) => typeof v === 'string');
 
 const cityOrNull = (value: unknown): string | null => (typeof value === 'string' ? value : null);
+
+const engineTypeOrNull = (value: unknown): EngineTypeId | null => (isEngineTypeId(value) ? value : null);
+
+const commodityOrNull = (value: unknown): string | null =>
+  typeof value === 'string' && commodities.has(value) ? value : null;
 
 /**
  * Coerce a stored row into a BoardState, dropping malformed entries.
@@ -82,6 +111,21 @@ export function normalizeBoardState(raw: unknown): BoardState {
   }
   if (isRecord(raw.railyards)) {
     for (const [id, city] of Object.entries(raw.railyards)) state.railyards[id] = cityOrNull(city);
+  }
+  if (isRecord(raw.engineTypes)) {
+    for (const [id, pair] of Object.entries(raw.engineTypes)) {
+      if (Array.isArray(pair)) state.engineTypes[id] = [engineTypeOrNull(pair[0]), engineTypeOrNull(pair[1])];
+    }
+  }
+  if (isRecord(raw.cargo)) {
+    for (const [id, pair] of Object.entries(raw.cargo)) {
+      if (Array.isArray(pair)) state.cargo[id] = [commodityOrNull(pair[0]), commodityOrNull(pair[1])];
+    }
+  }
+  if (isRecord(raw.upgrades)) {
+    for (const [id, owned] of Object.entries(raw.upgrades)) {
+      if (Array.isArray(owned)) state.upgrades[id] = [...new Set(owned.filter(isUpgradeId))];
+    }
   }
   if (isRecord(raw.seenIndependentRailroads)) {
     for (const [name, keys] of Object.entries(raw.seenIndependentRailroads)) {
@@ -133,6 +177,39 @@ export function moveEngine(state: BoardState, playerID: string, slot: EngineSlot
 /** Put a player's Railyard on a city, or back in its tray with null. */
 export function moveRailyard(state: BoardState, playerID: string, city: string | null): BoardState {
   return { ...state, railyards: { ...state.railyards, [playerID]: city } };
+}
+
+/** A player's engine type per token, defaulting to the starting engine for boards that never set one. */
+export function playerEngineTypes(state: BoardState | null, playerID: string): EngineTypePair {
+  return state?.engineTypes[playerID] ?? [...DEFAULT_ENGINE_TYPES];
+}
+
+/** Set one token's engine type. Clearing it also empties that token's cargo; changing it keeps the cargo. */
+export function setEngineType(
+  state: BoardState,
+  playerID: string,
+  slot: EngineSlot,
+  engineType: EngineTypeId | null
+): BoardState {
+  const pair: EngineTypePair = [...playerEngineTypes(state, playerID)];
+  pair[slot] = engineType;
+  const next = { ...state, engineTypes: { ...state.engineTypes, [playerID]: pair } };
+  return engineType === null ? setCargo(next, playerID, slot, null) : next;
+}
+
+/** Set what one token is carrying, or empty it with null. */
+export function setCargo(state: BoardState, playerID: string, slot: EngineSlot, commodity: string | null): BoardState {
+  const pair: [string | null, string | null] = [...(state.cargo[playerID] ?? [null, null])];
+  pair[slot] = commodity;
+  return { ...state, cargo: { ...state.cargo, [playerID]: pair } };
+}
+
+/** Mark one upgrade as bought or not. Sets an absolute value so re-applying after a conflict can't flip it back. */
+export function setUpgrade(state: BoardState, playerID: string, upgrade: UpgradeId, owned: boolean): BoardState {
+  const current = state.upgrades[playerID] ?? [];
+  if (current.includes(upgrade) === owned) return state;
+  const upgrades = owned ? [...current, upgrade] : current.filter((id) => id !== upgrade);
+  return { ...state, upgrades: { ...state.upgrades, [playerID]: upgrades } };
 }
 
 /**
@@ -190,6 +267,12 @@ export function applyBoardOp(state: BoardState, op: BoardOp): BoardState {
       return moveEngine(state, op.playerID, op.slot, op.city);
     case 'moveRailyard':
       return moveRailyard(state, op.playerID, op.city);
+    case 'setEngineType':
+      return setEngineType(state, op.playerID, op.slot, op.engineType);
+    case 'setCargo':
+      return setCargo(state, op.playerID, op.slot, op.commodity);
+    case 'setUpgrade':
+      return setUpgrade(state, op.playerID, op.upgrade, op.owned);
     case 'applyAcquisition':
       return applyAcquisition(state, op.railroad, op.playerID, op.routeKeys);
     case 'snapshotIndependentRailroads':

@@ -90,6 +90,25 @@ describe('boardSync', () => {
     expect(state().error).toBeNull();
   });
 
+  it("keeps both screens' edits to different slots and upgrades of one player", async () => {
+    adapter.write(CODE, seeded());
+    await openBoard(CODE, adapter);
+    // Another screen edits the dark token and one upgrade just before our save lands.
+    adapter.beforeSave = () => {
+      let theirs = applyBoardOp(stored(adapter)!, { type: 'setEngineType', playerID: '0', slot: 1, engineType: 'mogul' });
+      theirs = applyBoardOp(theirs, { type: 'setCargo', playerID: '0', slot: 1, commodity: 'wood' });
+      adapter.write(CODE, applyBoardOp(theirs, { type: 'setUpgrade', playerID: '0', upgrade: 'timetable', owned: true }));
+    };
+    dispatchBoardOp({ type: 'setEngineType', playerID: '0', slot: 0, engineType: 'american' });
+    dispatchBoardOp({ type: 'setCargo', playerID: '0', slot: 0, commodity: 'coal' });
+    dispatchBoardOp({ type: 'setUpgrade', playerID: '0', upgrade: 'roundhouse', owned: true });
+    await settle();
+    expect(stored(adapter)?.engineTypes['0']).toEqual(['american', 'mogul']);
+    expect(stored(adapter)?.cargo['0']).toEqual(['coal', 'wood']);
+    expect(stored(adapter)?.upgrades['0']).toEqual(['timetable', 'roundhouse']);
+    expect(state().error).toBeNull();
+  });
+
   it('applies realtime updates from other screens', async () => {
     adapter.write(CODE, seeded());
     await openBoard(CODE, adapter);

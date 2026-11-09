@@ -1,4 +1,5 @@
 import {
+  BOARD_STATE_VERSION,
   MAX_ROUTE_OWNERS,
   applyAcquisition,
   applyBoardOp,
@@ -7,7 +8,11 @@ import {
   moveEngine,
   moveRailyard,
   normalizeBoardState,
+  playerEngineTypes,
+  setCargo,
+  setEngineType,
   setRouteOwners,
+  setUpgrade,
   snapshotIndependentRailroads,
   unclaimRoute,
   type BoardState,
@@ -60,6 +65,58 @@ describe('token ops', () => {
   });
 });
 
+describe('player tracking ops', () => {
+  it('defaults to a John Bull on the light token, for a null board too', () => {
+    expect(playerEngineTypes(null, '0')).toEqual(['john-bull', null]);
+    expect(playerEngineTypes(emptyBoardState(), '0')).toEqual(['john-bull', null]);
+  });
+
+  it('sets one token type on top of the default', () => {
+    const s = setEngineType(emptyBoardState(), '0', 1, 'mogul');
+    expect(s.engineTypes['0']).toEqual(['john-bull', 'mogul']);
+  });
+
+  it('keeps an explicitly empty pair instead of falling back to the default', () => {
+    const s = setEngineType(emptyBoardState(), '0', 0, null);
+    expect(playerEngineTypes(s, '0')).toEqual([null, null]);
+  });
+
+  it('sets and empties cargo per token', () => {
+    let s = setCargo(emptyBoardState(), '0', 1, 'coal');
+    expect(s.cargo['0']).toEqual([null, 'coal']);
+    s = setCargo(s, '0', 1, null);
+    expect(s.cargo['0']).toEqual([null, null]);
+  });
+
+  it('changing an engine keeps its cargo', () => {
+    const s = setEngineType(setCargo(emptyBoardState(), '0', 0, 'coal'), '0', 0, 'american');
+    expect(s.cargo['0']).toEqual(['coal', null]);
+  });
+
+  it('clearing an engine empties only that token', () => {
+    let s = setCargo(setCargo(emptyBoardState(), '0', 0, 'coal'), '0', 1, 'wood');
+    s = setEngineType(s, '0', 0, null);
+    expect(s.cargo['0']).toEqual([null, 'wood']);
+  });
+
+  it('sets upgrades absolutely, so re-applying changes nothing', () => {
+    const bought = setUpgrade(emptyBoardState(), '0', 'timetable', true);
+    expect(bought.upgrades['0']).toEqual(['timetable']);
+    expect(setUpgrade(bought, '0', 'timetable', true)).toBe(bought);
+    const sold = setUpgrade(bought, '0', 'timetable', false);
+    expect(sold.upgrades['0']).toEqual([]);
+    expect(setUpgrade(sold, '0', 'timetable', false)).toBe(sold);
+  });
+
+  it('tracks players independently and does not mutate its input', () => {
+    const start = setUpgrade(emptyBoardState(), '0', 'roundhouse', true);
+    const next = setUpgrade(setCargo(start, '1', 0, 'oil'), '1', 'timetable', true);
+    expect(next.upgrades).toEqual({ '0': ['roundhouse'], '1': ['timetable'] });
+    expect(start.upgrades).toEqual({ '0': ['roundhouse'] });
+    expect(start.cargo).toEqual({});
+  });
+});
+
 describe('independent railroad ops', () => {
   it('converts an acquired railroad to track (primary if free, else parallel) and drops it from the snapshot', () => {
     let s: BoardState = snapshotIndependentRailroads(emptyBoardState(), { Erie: [R, 'Boston-New York'], Reading: [] });
@@ -85,35 +142,57 @@ describe('applyBoardOp', () => {
       { type: 'unclaimRoute', routeKey: R, playerID: '0' },
       { type: 'moveEngine', playerID: '1', slot: 0, city: 'Atlanta' },
       { type: 'moveRailyard', playerID: '1', city: 'Birmingham' },
+      { type: 'setEngineType', playerID: '1', slot: 1, engineType: 'pacific' },
+      { type: 'setCargo', playerID: '1', slot: 1, commodity: 'iron ore' },
+      { type: 'setUpgrade', playerID: '1', upgrade: 'service-yard', owned: true },
     ].reduce((state, op) => applyBoardOp(state, op as Parameters<typeof applyBoardOp>[1]), emptyBoardState());
     expect(s.track[R]).toEqual(['1']);
     expect(s.engines['1']).toEqual(['Atlanta', null]);
     expect(s.railyards['1']).toBe('Birmingham');
+    expect(s.engineTypes['1']).toEqual(['john-bull', 'pacific']);
+    expect(s.cargo['1']).toEqual([null, 'iron ore']);
+    expect(s.upgrades['1']).toEqual(['service-yard']);
   });
 });
 
 describe('normalizeBoardState', () => {
   it('keeps valid data and drops malformed entries', () => {
     const s = normalizeBoardState({
-      version: 1,
+      version: BOARD_STATE_VERSION,
       seeded: true,
       track: { [R]: ['0', '0', '1'], bad: 'x', empty: [] },
       engines: { '0': ['Denver', 5], '1': 'x' },
       railyards: { '0': 'Omaha', '1': 3 },
+      engineTypes: { '0': ['mogul', 'hogwarts-express'], '1': 'x' },
+      cargo: { '0': ['coal', 'kryptonite'], '1': 7 },
+      upgrades: { '0': ['timetable', 'timetable', 'hub', 4], '1': 'timetable' },
       seenIndependentRailroads: { Erie: [R], bad: [1] },
     });
     expect(s).toEqual({
-      version: 1,
+      version: BOARD_STATE_VERSION,
       seeded: true,
       track: { [R]: ['0', '1'] },
       engines: { '0': ['Denver', null] },
       railyards: { '0': 'Omaha', '1': null },
+      engineTypes: { '0': ['mogul', null] },
+      cargo: { '0': ['coal', null] },
+      upgrades: { '0': ['timetable'] },
       seenIndependentRailroads: { Erie: [R] },
     });
   });
 
+  it('loads a version 1 row without player tracking', () => {
+    const s = normalizeBoardState({ version: 1, seeded: true, track: { [R]: ['0'] } });
+    expect(s.version).toBe(BOARD_STATE_VERSION);
+    expect(s.track[R]).toEqual(['0']);
+    expect(s.engineTypes).toEqual({});
+    expect(s.cargo).toEqual({});
+    expect(s.upgrades).toEqual({});
+    expect(playerEngineTypes(s, '0')).toEqual(['john-bull', null]);
+  });
+
   it('returns an empty state for junk and rejects newer versions', () => {
     expect(normalizeBoardState(null)).toEqual(emptyBoardState());
-    expect(() => normalizeBoardState({ version: 2 })).toThrow(/newer/);
+    expect(() => normalizeBoardState({ version: BOARD_STATE_VERSION + 1 })).toThrow(/newer/);
   });
 });

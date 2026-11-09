@@ -1,4 +1,5 @@
 import type { GameContext, GameState } from '../stores/gameStore';
+import { BOARD_STATE_VERSION } from './boardOps';
 import { canSeedBoard, findRouteKey, seedBoardState, startingRouteKeys } from './boardSeed';
 
 function game(players: Record<string, string[]>, phase = 'play'): { G: GameState; ctx: GameContext } {
@@ -31,11 +32,14 @@ describe('seeding', () => {
   it("gives each player their starting route, empty trays, and an indie snapshot", () => {
     const { G, ctx } = game({ '0': ['Charleston', 'Savannah', 'Atlanta'], '1': ['Montreal', 'Quebec City'] });
     expect(seedBoardState(G, ctx)).toEqual({
-      version: 1,
+      version: BOARD_STATE_VERSION,
       seeded: true,
       track: { 'Charleston-Savannah': ['0'], 'Montreal-Quebec City': ['1'] },
       engines: { '0': [null, null], '1': [null, null] },
       railyards: { '0': null, '1': null },
+      engineTypes: {},
+      cargo: {},
+      upgrades: {},
       seenIndependentRailroads: { Erie: ['Chicago-Detroit'] },
     });
   });
