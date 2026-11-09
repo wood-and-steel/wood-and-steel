@@ -1,5 +1,5 @@
 /**
- * Static reference data for per-player tracking (docs/BOARD_APP_PHASE_2_PLAN.md): engine types,
+ * Static reference data for per-player tracking (docs/archived/BOARD_APP_PHASE_2_PLAN.md): engine types,
  * the six tracked upgrades, and commodity groups as printed on the player board.
  * Values come from docs/Game rules.md. Only used for display; the board enforces no rules.
  */

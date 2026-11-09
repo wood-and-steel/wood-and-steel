@@ -1,6 +1,8 @@
 # Board App Phase 2 Plan: Player Tracking
 
-Adds per-player tracking to the `/board` trays: which engine type each engine token is, what each engine is carrying, and which of six upgrades the player has bought. Phase 1 is described in [archived/BOARD_APP_PLAN.md](archived/BOARD_APP_PLAN.md); current conventions are in [BOARD_AGENT_GUIDE.md](BOARD_AGENT_GUIDE.md).
+Adds per-player tracking to the `/board` trays: which engine type each engine token is, what each engine is carrying, and which of six upgrades the player has bought. Phase 1 is described in [BOARD_APP_PLAN.md](BOARD_APP_PLAN.md); current conventions are in [BOARD_AGENT_GUIDE.md](../BOARD_AGENT_GUIDE.md).
+
+**Status (2026-11-08):** implemented; milestone notes are below. This plan is kept for its decisions and reasoning, and the agent guide is the current reference.
 
 ## Decisions (from Q&A, 2026-11-08)
 
@@ -128,11 +130,17 @@ Controls are disabled until board state is ready, by passing a nullable `onBoard
 ## Milestones
 
 1. **M1 Data and ops:** `playerBoardData.ts`, new `BoardState` fields, ops, `normalizeBoardState`, version bump. Unit tests only; no UI change.
+   - *Status (2026-11-08):* done as planned.
 2. **M2 Layout:** the `.boardMain` row, `PlayerTrays.tsx`, and column CSS, with the current tray contents. Confirm that fit-to-width, zoom, and token drag to and from the column still work.
+   - *Status (2026-11-08):* done as planned.
 3. **M3 Engine rows:** always-visible tokens, `on <city>` state, name/distance/effects, `useBoardPopover`, `TrayPicker` engine mode, and `setEngineType` wiring.
+   - *Status (2026-11-08):* done as planned.
 4. **M4 Cargo:** `TrayPicker` commodity mode, icon button, and `setCargo` wiring.
+   - *Status (2026-11-08):* done as planned. A long engine name with long cargo (Challenger carrying Precious metals) wraps the cargo button onto its own line.
 5. **M5 Upgrades:** checkboxes, hover details, `setUpgrade` wiring, and the Service Yard distance display.
+   - *Status (2026-11-08):* done. The column went from 17rem to 18rem, because when the column's scrollbar shows, 17rem wraps "Commodities Exchange" and the Service Yard distance text.
 6. **M6 Hardening and docs:** full checks below; update `BOARD_AGENT_GUIDE.md` (file table, data shape, right column); archive this plan with status notes, as in Phase 1.
+   - *Status (2026-11-08):* unit tests (225), typecheck, and `check:board-build` pass. In the browser, RKLMK (four players, with a temporary copy of a card added in the page as a fifth) fits without scrolling at 1920×1080, including with one worst-case card (301px). At 1000×700 the column scrolls and the map keeps 695px. All browser checks faked `board_states` saves in the page to keep test data out of the real Supabase project. For that reason the **two-browser sync check was not run** against Supabase; two-screen edits are covered by `boardSync.test.ts` with the in-memory adapter. No game with five real players existed to check.
 
 ## Tests and verification
 
