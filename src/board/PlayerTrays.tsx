@@ -1,17 +1,17 @@
 /**
  * Player trays: the column beside the map with one card per player, in play order. Each card
- * has a row per engine token (its type, stats, and effects) and the Railyard while unplaced.
+ * has a row per engine token (its type, cargo, stats, and effects) and the Railyard while unplaced.
  * The token stays on its row at full color even when on the map: it is the key to which
  * token is which engine type.
  */
 import React from 'react';
 import { Swatch } from './BoardChrome';
 import type { BoardPlayer } from './boardPlayers';
-import { playerEngineTypes, type BoardOp, type BoardState, type EngineSlot } from './boardOps';
-import { formatSegments, getEngineType, type EngineTypeId } from './playerBoardData';
+import { playerCargo, playerEngineTypes, type BoardOp, type BoardState, type EngineSlot } from './boardOps';
+import { formatCommodity, formatSegments, getEngineType, type EngineTypeId } from './playerBoardData';
 import { TokenIcon } from './TokenIcon';
 import { sameToken, tokenCity, tokenId, tokenLabel, type TokenRef } from './tokens';
-import { EngineOptions, TrayPicker } from './TrayPicker';
+import { CommodityIcon, CommodityOptions, EngineOptions, TrayPicker } from './TrayPicker';
 
 type TokenPointerDown = (token: TokenRef, event: React.PointerEvent<Element>) => void;
 
@@ -30,7 +30,10 @@ interface PlayerTraysProps {
   onBoardOp: ((op: BoardOp) => void) | null;
 }
 
+type PickerKind = 'engine' | 'cargo';
+
 interface OpenPicker {
+  kind: PickerKind;
   playerID: string;
   slot: EngineSlot;
   trigger: HTMLElement;
@@ -65,26 +68,30 @@ interface EngineRowProps {
   player: BoardPlayer;
   token: TokenRef;
   engineType: EngineTypeId | null;
+  cargo: string | null;
   city: string | null;
   dragging: TokenRef | null;
   onTokenPointerDown: TokenPointerDown | null;
-  pickerOpen: boolean;
+  /** Which of this row's pickers is open, if any */
+  openPicker: PickerKind | null;
   /** Null when tray values can't be edited yet */
-  onTogglePicker: ((event: React.MouseEvent<HTMLButtonElement>) => void) | null;
+  onTogglePicker: ((kind: PickerKind, event: React.MouseEvent<HTMLButtonElement>) => void) | null;
 }
 
 function EngineRow({
   player,
   token,
   engineType,
+  cargo,
   city,
   dragging,
   onTokenPointerDown,
-  pickerOpen,
+  openPicker,
   onTogglePicker,
 }: EngineRowProps): React.ReactElement {
   const engine = engineType ? getEngineType(engineType) : null;
   const label = tokenLabel(token);
+  const cargoName = cargo ? formatCommodity(cargo) : 'No commodity';
   const stats = [engine && `Travels ${formatSegments(engine.distance)}`, city && `on ${city}`].filter(Boolean).join(' · ');
   return (
     <div className="boardEngine" role="group" aria-label={`${player.name}'s ${label}`}>
@@ -96,18 +103,35 @@ function EngineRow({
         </span>
       )}
       <div className="boardEngine__details">
-        <button
-          type="button"
-          className={`boardEngine__type${engine ? '' : ' boardEngine__type--none'}`}
-          aria-label={`${player.name}'s ${label} type: ${engine?.name ?? 'No engine'}`}
-          aria-haspopup="dialog"
-          aria-expanded={pickerOpen}
-          data-popover-trigger
-          disabled={!onTogglePicker}
-          onClick={onTogglePicker ?? undefined}
-        >
-          {engine?.name ?? 'No engine'}
-        </button>
+        <div className="boardEngine__head">
+          <button
+            type="button"
+            className={`boardEngine__type${engine ? '' : ' boardEngine__type--none'}`}
+            aria-label={`${player.name}'s ${label} type: ${engine?.name ?? 'No engine'}`}
+            aria-haspopup="dialog"
+            aria-expanded={openPicker === 'engine'}
+            data-popover-trigger
+            disabled={!onTogglePicker}
+            onClick={onTogglePicker ? (event) => onTogglePicker('engine', event) : undefined}
+          >
+            {engine?.name ?? 'No engine'}
+          </button>
+          {engine && (
+            <button
+              type="button"
+              className={`boardEngine__cargo${cargo ? '' : ' boardEngine__cargo--none'}`}
+              aria-label={`${player.name}'s ${label} cargo: ${cargoName}`}
+              aria-haspopup="dialog"
+              aria-expanded={openPicker === 'cargo'}
+              data-popover-trigger
+              disabled={!onTogglePicker}
+              onClick={onTogglePicker ? (event) => onTogglePicker('cargo', event) : undefined}
+            >
+              {cargo && <CommodityIcon commodity={cargo} />}
+              <span>{cargoName}</span>
+            </button>
+          )}
+        </div>
         {stats && <p className="boardEngine__stats">{stats}</p>}
         {engine?.effects && <p className="boardEngine__effects">{engine.effects}</p>}
       </div>
@@ -132,14 +156,19 @@ export function PlayerTrays({
     setPicker(null);
   }, [picker]);
 
-  const togglePicker = (playerID: string, slot: EngineSlot, event: React.MouseEvent<HTMLButtonElement>) => {
-    if (picker?.playerID === playerID && picker.slot === slot) {
+  const togglePicker = (
+    kind: PickerKind,
+    playerID: string,
+    slot: EngineSlot,
+    event: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    if (picker?.kind === kind && picker.playerID === playerID && picker.slot === slot) {
       closePicker();
       return;
     }
     const trigger = event.currentTarget;
     const rect = trigger.getBoundingClientRect();
-    setPicker({ playerID, slot, trigger, clientX: rect.left, clientY: rect.top });
+    setPicker({ kind, playerID, slot, trigger, clientX: rect.left, clientY: rect.top });
   };
 
   // The picker is anchored to screen coordinates, so close it when the column moves.
@@ -151,7 +180,6 @@ export function PlayerTrays({
   }, [picker, closePicker]);
 
   const pickerPlayer = picker && players.find((p) => p.id === picker.playerID);
-  const pickerValue = picker && playerEngineTypes(board, picker.playerID)[picker.slot];
 
   return (
     <>
@@ -163,6 +191,7 @@ export function PlayerTrays({
       >
         {players.map((player) => {
           const engineTypes = playerEngineTypes(board, player.id);
+          const cargo = playerCargo(board, player.id);
           const railyard: TokenRef = { kind: 'railyard', playerID: player.id };
           return (
             <section
@@ -191,11 +220,12 @@ export function PlayerTrays({
                     player={player}
                     token={token}
                     engineType={engineTypes[slot]}
+                    cargo={cargo[slot]}
                     city={tokenCity(board, token)}
                     dragging={dragging}
                     onTokenPointerDown={onTokenPointerDown}
-                    pickerOpen={picker?.playerID === player.id && picker.slot === slot}
-                    onTogglePicker={onBoardOp ? (event) => togglePicker(player.id, slot, event) : null}
+                    openPicker={picker?.playerID === player.id && picker.slot === slot ? picker.kind : null}
+                    onTogglePicker={onBoardOp ? (kind, event) => togglePicker(kind, player.id, slot, event) : null}
                   />
                 );
               })}
@@ -205,21 +235,35 @@ export function PlayerTrays({
       </aside>
       {picker && pickerPlayer && (
         <TrayPicker
-          key={`${picker.playerID}-${picker.slot}`}
-          label={`${pickerPlayer.name}'s ${tokenLabel({ kind: 'engine', playerID: picker.playerID, slot: picker.slot })} type`}
+          key={`${picker.kind}-${picker.playerID}-${picker.slot}`}
+          label={`${pickerPlayer.name}'s ${tokenLabel({ kind: 'engine', playerID: picker.playerID, slot: picker.slot })} ${
+            picker.kind === 'engine' ? 'type' : 'cargo'
+          }`}
           clientX={picker.clientX}
           clientY={picker.clientY}
           onClose={closePicker}
         >
-          <EngineOptions
-            value={pickerValue ?? null}
-            onPick={(engineType) => {
-              if (engineType !== pickerValue) {
-                onBoardOp?.({ type: 'setEngineType', playerID: picker.playerID, slot: picker.slot, engineType });
-              }
-              closePicker();
-            }}
-          />
+          {picker.kind === 'engine' ? (
+            <EngineOptions
+              value={playerEngineTypes(board, picker.playerID)[picker.slot]}
+              onPick={(engineType) => {
+                if (engineType !== playerEngineTypes(board, picker.playerID)[picker.slot]) {
+                  onBoardOp?.({ type: 'setEngineType', playerID: picker.playerID, slot: picker.slot, engineType });
+                }
+                closePicker();
+              }}
+            />
+          ) : (
+            <CommodityOptions
+              value={playerCargo(board, picker.playerID)[picker.slot]}
+              onPick={(commodity) => {
+                if (commodity !== playerCargo(board, picker.playerID)[picker.slot]) {
+                  onBoardOp?.({ type: 'setCargo', playerID: picker.playerID, slot: picker.slot, commodity });
+                }
+                closePicker();
+              }}
+            />
+          )}
         </TrayPicker>
       )}
     </>

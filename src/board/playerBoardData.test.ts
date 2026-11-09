@@ -6,6 +6,7 @@ import {
   ENGINE_TYPES,
   UPGRADES,
   engineDistance,
+  formatCommodity,
   formatSegments,
   getEngineType,
   isEngineTypeId,
@@ -22,6 +23,11 @@ describe('commodity groups', () => {
   it('all have an icon', () => {
     const icons = commodityIcons as Record<string, string>;
     expect(grouped.filter((commodity) => !icons[commodity])).toEqual([]);
+  });
+
+  it('format with only the first word capitalized', () => {
+    expect(formatCommodity('coal')).toBe('Coal');
+    expect(formatCommodity('precious metals')).toBe('Precious metals');
   });
 });
 

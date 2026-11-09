@@ -21,6 +21,7 @@ export const MAX_ROUTE_OWNERS = 4;
 /** 0 is the light engine token, 1 the dark one. */
 export type EngineSlot = 0 | 1;
 export type EngineTypePair = [EngineTypeId | null, EngineTypeId | null];
+export type CargoPair = [string | null, string | null];
 
 export interface BoardState {
   version: typeof BOARD_STATE_VERSION;
@@ -34,7 +35,7 @@ export interface BoardState {
   /** playerID -> [lightTokenType, darkTokenType]; null = no engine. Absent = DEFAULT_ENGINE_TYPES. */
   engineTypes: Record<string, EngineTypePair>;
   /** playerID -> [lightTokenCargo, darkTokenCargo]; commodity key, or null = empty */
-  cargo: Record<string, [string | null, string | null]>;
+  cargo: Record<string, CargoPair>;
   /** playerID -> upgrades bought */
   upgrades: Record<string, UpgradeId[]>;
   /** last-seen G.independentRailroads (name -> route keys), for acquisition detection */
@@ -184,6 +185,11 @@ export function playerEngineTypes(state: BoardState | null, playerID: string): E
   return state?.engineTypes[playerID] ?? [...DEFAULT_ENGINE_TYPES];
 }
 
+/** What each of a player's engine tokens is carrying. */
+export function playerCargo(state: BoardState | null, playerID: string): CargoPair {
+  return state?.cargo[playerID] ?? [null, null];
+}
+
 /** Set one token's engine type. Clearing it also empties that token's cargo; changing it keeps the cargo. */
 export function setEngineType(
   state: BoardState,
@@ -199,7 +205,7 @@ export function setEngineType(
 
 /** Set what one token is carrying, or empty it with null. */
 export function setCargo(state: BoardState, playerID: string, slot: EngineSlot, commodity: string | null): BoardState {
-  const pair: [string | null, string | null] = [...(state.cargo[playerID] ?? [null, null])];
+  const pair: CargoPair = [...playerCargo(state, playerID)];
   pair[slot] = commodity;
   return { ...state, cargo: { ...state.cargo, [playerID]: pair } };
 }

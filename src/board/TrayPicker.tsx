@@ -3,8 +3,20 @@
  * Any option can be chosen for any token, since the board enforces no rules.
  */
 import React from 'react';
-import { ENGINE_TYPES, formatSegments, type EngineTypeId } from './playerBoardData';
+import { commodityIcons } from '../shared/assets/icons';
+import {
+  COMMODITY_GROUPS,
+  ENGINE_TYPES,
+  formatCommodity,
+  formatSegments,
+  type EngineTypeId,
+} from './playerBoardData';
 import { useBoardPopover } from './useBoardPopover';
+
+/** Decorative: always shown next to the commodity's name. */
+export function CommodityIcon({ commodity }: { commodity: string }): React.ReactElement {
+  return <img className="boardCommodityIcon" src={(commodityIcons as Record<string, string>)[commodity]} alt="" />;
+}
 
 interface TrayPickerProps {
   label: string;
@@ -32,15 +44,20 @@ export function TrayPicker({ label, clientX, clientY, onClose, children }: TrayP
 
 interface PickerOptionProps {
   selected: boolean;
+  /** Extra class for this kind of option */
+  className?: string;
   onClick: () => void;
   children: React.ReactNode;
 }
 
-function PickerOption({ selected, onClick, children }: PickerOptionProps): React.ReactElement {
+function PickerOption({ selected, className, onClick, children }: PickerOptionProps): React.ReactElement {
+  const classes = ['trayPicker__option'];
+  if (className) classes.push(className);
+  if (selected) classes.push('trayPicker__option--selected');
   return (
     <button
       type="button"
-      className={`trayPicker__option${selected ? ' trayPicker__option--selected' : ''}`}
+      className={classes.join(' ')}
       aria-pressed={selected}
       onClick={onClick}
     >
@@ -65,6 +82,39 @@ export function EngineOptions({ value, onPick }: EngineOptionsProps): React.Reac
           <span>{engine.name}</span>
           <span className="trayPicker__meta">{formatSegments(engine.distance)}</span>
         </PickerOption>
+      ))}
+    </>
+  );
+}
+
+interface CommodityOptionsProps {
+  value: string | null;
+  onPick: (commodity: string | null) => void;
+}
+
+export function CommodityOptions({ value, onPick }: CommodityOptionsProps): React.ReactElement {
+  return (
+    <>
+      <PickerOption selected={value === null} onClick={() => onPick(null)}>
+        No commodity
+      </PickerOption>
+      {COMMODITY_GROUPS.map((group) => (
+        <div key={group.name} className="trayPicker__group" role="group" aria-label={group.name}>
+          <span className="trayPicker__groupName">{group.name}</span>
+          <div className="trayPicker__groupOptions">
+            {group.commodities.map((commodity) => (
+              <PickerOption
+                key={commodity}
+                selected={value === commodity}
+                className="trayPicker__option--commodity"
+                onClick={() => onPick(commodity)}
+              >
+                <CommodityIcon commodity={commodity} />
+                <span>{formatCommodity(commodity)}</span>
+              </PickerOption>
+            ))}
+          </div>
+        </div>
       ))}
     </>
   );

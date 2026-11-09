@@ -140,6 +140,11 @@ export function getEngineType(typeId: EngineTypeId): EngineType {
   return ENGINE_TYPES[ENGINE_INDEX.get(typeId)!];
 }
 
+/** "iron ore" -> "Iron ore" */
+export function formatCommodity(commodity: string): string {
+  return commodity.charAt(0).toUpperCase() + commodity.slice(1);
+}
+
 /** "1 segment", "3 segments" */
 export function formatSegments(count: number): string {
   return `${count} segment${count === 1 ? '' : 's'}`;

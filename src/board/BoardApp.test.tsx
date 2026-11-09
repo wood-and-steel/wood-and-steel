@@ -7,6 +7,7 @@ import App from '../app/App';
 import { useGameStore } from '../stores/gameStore';
 import { setStorageAdapter } from '../utils/storage';
 import { MemoryStorageAdapter } from '../utils/storage/memoryStorageAdapter.testHelper';
+import { commodityIcons } from '../shared/assets/icons';
 import type { SerializedState } from '../utils/stateSerialization';
 import { emptyBoardState } from './boardOps';
 import { setBoardStateAdapter } from './boardStateAdapter';
@@ -374,6 +375,93 @@ describe('BoardApp (/board)', () => {
       await renderAt('/board?game=BCDFG');
       await screen.findByRole('alert');
       expect(within(screen.getByRole('group', { name: "Ben's Light engine" })).getByRole('button', { name: /type:/ })).toBeDisabled();
+    });
+  });
+
+  describe('cargo', () => {
+    type Saved = ReturnType<typeof emptyBoardState>;
+    const saved = () => boardAdapter.rows.get('BCDFG')?.state as Saved;
+
+    async function openReadyBoard() {
+      const view = await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Board saved')).toBeInTheDocument());
+      return view;
+    }
+    const row = (name: string) => within(screen.getByRole('group', { name }));
+    const cargoButton = (name: string) => row(name).getByRole('button', { name: /cargo:/ });
+
+    function pickCargo(name: string, commodity: RegExp) {
+      fireEvent.click(cargoButton(name));
+      fireEvent.click(within(screen.getByRole('dialog', { name: `${name} cargo` })).getByRole('button', { name: commodity }));
+    }
+
+    it('starts empty, and only an engine has a cargo control', async () => {
+      await openReadyBoard();
+      expect(cargoButton("Ben's Light engine")).toHaveTextContent('No commodity');
+      expect(row("Ben's Dark engine").queryByRole('button', { name: /cargo:/ })).toBeNull();
+    });
+
+    it('offers no commodity and every commodity in its group, with icons', async () => {
+      await openReadyBoard();
+      fireEvent.click(cargoButton("Ben's Light engine"));
+      const dialog = within(screen.getByRole('dialog', { name: "Ben's Light engine cargo" }));
+      expect(dialog.getByRole('button', { name: 'No commodity' })).toHaveAttribute('aria-pressed', 'true');
+      expect(dialog.getAllByRole('button')).toHaveLength(26);
+      expect(dialog.getAllByRole('group').map((g) => g.getAttribute('aria-label'))).toEqual([
+        'Metals',
+        'Mined goods',
+        'Livestock',
+        'Crops',
+        'Finished goods',
+      ]);
+      const ironOre = within(dialog.getByRole('group', { name: 'Mined goods' })).getByRole('button', { name: 'Iron ore' });
+      expect(ironOre.querySelector('img')).toHaveAttribute('src', commodityIcons['iron ore']);
+    });
+
+    it('shows the picked commodity icon and name, and saves it', async () => {
+      await openReadyBoard();
+      pickCargo("Ben's Light engine", /^Coal$/);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      const button = cargoButton("Ben's Light engine");
+      expect(button).toHaveTextContent('Coal');
+      expect(button.querySelector('img')).toHaveAttribute('src', commodityIcons.coal);
+      await waitFor(() => expect(saved().cargo).toEqual({ '1': ['coal', null] }));
+    });
+
+    it('empties an engine with "No commodity"', async () => {
+      await openReadyBoard();
+      pickCargo("Ben's Light engine", /^Coal$/);
+      pickCargo("Ben's Light engine", /^No commodity$/);
+      const button = cargoButton("Ben's Light engine");
+      expect(button).toHaveTextContent('No commodity');
+      expect(button.querySelector('img')).toBeNull();
+      await waitFor(() => expect(saved().cargo).toEqual({ '1': [null, null] }));
+    });
+
+    it('removes the cargo when its engine is cleared, but keeps it when the engine changes', async () => {
+      await openReadyBoard();
+      const pickEngine = (engine: RegExp) => {
+        fireEvent.click(row("Ben's Light engine").getByRole('button', { name: /type:/ }));
+        fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: engine }));
+      };
+      pickCargo("Ben's Light engine", /^Coal$/);
+      pickEngine(/4-4-0 American/);
+      expect(cargoButton("Ben's Light engine")).toHaveTextContent('Coal');
+      pickEngine(/^No engine$/);
+      expect(row("Ben's Light engine").queryByRole('button', { name: /cargo:/ })).toBeNull();
+      await waitFor(() => expect(saved().cargo).toEqual({ '1': [null, null] }));
+    });
+
+    it("switches between one token's engine and cargo pickers", async () => {
+      await openReadyBoard();
+      const type = row("Ben's Light engine").getByRole('button', { name: /type:/ });
+      fireEvent.click(type);
+      const cargo = cargoButton("Ben's Light engine");
+      fireEvent.pointerDown(cargo);
+      fireEvent.click(cargo);
+      expect(screen.getByRole('dialog', { name: "Ben's Light engine cargo" })).toBeInTheDocument();
+      expect(type).toHaveAttribute('aria-expanded', 'false');
+      expect(cargo).toHaveAttribute('aria-expanded', 'true');
     });
   });
 

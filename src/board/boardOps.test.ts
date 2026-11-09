@@ -8,6 +8,7 @@ import {
   moveEngine,
   moveRailyard,
   normalizeBoardState,
+  playerCargo,
   playerEngineTypes,
   setCargo,
   setEngineType,
@@ -82,6 +83,7 @@ describe('player tracking ops', () => {
   });
 
   it('sets and empties cargo per token', () => {
+    expect(playerCargo(null, '0')).toEqual([null, null]);
     let s = setCargo(emptyBoardState(), '0', 1, 'coal');
     expect(s.cargo['0']).toEqual([null, 'coal']);
     s = setCargo(s, '0', 1, null);
