@@ -6,6 +6,8 @@ import {
   ENGINE_TYPES,
   UPGRADES,
   engineDistance,
+  formatSegments,
+  getEngineType,
   isEngineTypeId,
   isUpgradeId,
 } from './playerBoardData';
@@ -29,6 +31,12 @@ describe('engine types', () => {
     expect(new Set(ENGINE_TYPES.map((engine) => engine.id)).size).toBe(10);
     expect(ENGINE_TYPES[0].id).toBe(DEFAULT_ENGINE_TYPES[0]);
     expect(ENGINE_TYPES[9].id).toBe('challenger');
+  });
+
+  it('looks up an engine by id and formats its distance', () => {
+    expect(getEngineType('mikado').name).toBe('2-8-2 Mikado');
+    expect(formatSegments(1)).toBe('1 segment');
+    expect(formatSegments(3)).toBe('3 segments');
   });
 
   it('recognizes only known ids', () => {

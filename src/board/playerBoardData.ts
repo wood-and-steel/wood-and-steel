@@ -136,6 +136,15 @@ export function isUpgradeId(value: unknown): value is UpgradeId {
   return UPGRADE_IDS.has(value as string);
 }
 
+export function getEngineType(typeId: EngineTypeId): EngineType {
+  return ENGINE_TYPES[ENGINE_INDEX.get(typeId)!];
+}
+
+/** "1 segment", "3 segments" */
+export function formatSegments(count: number): string {
+  return `${count} segment${count === 1 ? '' : 's'}`;
+}
+
 export interface EngineDistance {
   base: number;
   bonus: number;

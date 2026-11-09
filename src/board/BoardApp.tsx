@@ -69,7 +69,7 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
     setPopover({ routeKey: click.routeKey, clientX: click.clientX, clientY: click.clientY });
   };
 
-  const canMoveTokens = boardStatus === 'ready' && board !== null;
+  const canEditBoard = boardStatus === 'ready' && board !== null;
   const handleTokenDrop = (token: TokenRef, city: string | null) => {
     const { board: latest, status: latestStatus } = useBoardStore.getState();
     if (latestStatus !== 'ready' || tokenCity(latest, token) === city) return;
@@ -80,7 +80,7 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
     () => layoutTokens(board, players.map((p: BoardPlayer) => p.id)),
     [board, players]
   );
-  const startTokenDrag = canMoveTokens
+  const startTokenDrag = canEditBoard
     ? (token: TokenRef, event: React.PointerEvent<Element>) => {
         setPopover(null);
         startDrag(token, event);
@@ -151,6 +151,7 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
             dragging={drag?.token ?? null}
             dropTarget={drag?.target.kind === 'tray'}
             onTokenPointerDown={startTokenDrag}
+            onBoardOp={canEditBoard ? dispatchBoardOp : null}
           />
         )}
       </div>

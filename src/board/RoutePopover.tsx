@@ -8,9 +8,7 @@ import { routes } from '../data/routes';
 import { getAvatarTextColor, getPlayerInitials } from '../utils/playerAvatar';
 import { MAX_ROUTE_OWNERS } from './boardOps';
 import type { BoardPlayer } from './boardPlayers';
-
-const EDGE_MARGIN = 8;
-const CURSOR_GAP = 12;
+import { useBoardPopover } from './useBoardPopover';
 
 interface RoutePopoverProps {
   routeKey: string;
@@ -70,42 +68,12 @@ export function RoutePopover({
   onClose,
 }: RoutePopoverProps): React.ReactElement {
   const ref = React.useRef<HTMLDivElement>(null);
-  const [placed, setPlaced] = React.useState(false);
+  const placed = useBoardPopover(ref, clientX, clientY, onClose);
   const route = routes.get(routeKey);
   const primary = owners[0] ?? null;
   const parallel = owners.slice(1);
   const full = owners.length >= MAX_ROUTE_OWNERS;
   const suggestParallel = currentPlayer !== null && primary !== null && !owners.includes(currentPlayer) && !full;
-
-  // Place next to the click, kept inside the window.
-  React.useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    let left = clientX + CURSOR_GAP;
-    let top = clientY + CURSOR_GAP;
-    if (left + rect.width > window.innerWidth - EDGE_MARGIN) left = clientX - CURSOR_GAP - rect.width;
-    if (top + rect.height > window.innerHeight - EDGE_MARGIN) top = clientY - CURSOR_GAP - rect.height;
-    el.style.setProperty('--route-popover-left', `${Math.max(EDGE_MARGIN, left)}px`);
-    el.style.setProperty('--route-popover-top', `${Math.max(EDGE_MARGIN, top)}px`);
-    setPlaced(true);
-  }, [clientX, clientY]);
-
-  // Close on Escape or a press outside.
-  React.useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    const onPointerDown = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('pointerdown', onPointerDown, true);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.removeEventListener('pointerdown', onPointerDown, true);
-    };
-  }, [onClose]);
 
   const setPrimary = (id: string) => {
     if (id !== primary) onChange([id, ...parallel.filter((o) => o !== id)]);

@@ -8,6 +8,7 @@ import { useGameStore } from '../stores/gameStore';
 import { setStorageAdapter } from '../utils/storage';
 import { MemoryStorageAdapter } from '../utils/storage/memoryStorageAdapter.testHelper';
 import type { SerializedState } from '../utils/stateSerialization';
+import { emptyBoardState } from './boardOps';
 import { setBoardStateAdapter } from './boardStateAdapter';
 import { CITY_POINTS } from './geometry/cityPoints';
 import { trackPathD } from './geometry/trackPaths';
@@ -271,6 +272,108 @@ describe('BoardApp (/board)', () => {
       fireEvent.keyDown(window, { key: 'Escape' });
       fireEvent.pointerUp(window, toClient('Denver'));
       expect(container.querySelector('.boardMap [data-token="engine-0-1"]')).toBeNull();
+    });
+  });
+
+  describe('engine rows', () => {
+    async function openReadyBoard() {
+      await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Board saved')).toBeInTheDocument());
+      const row = (name: string) => within(screen.getByRole('group', { name }));
+      return { row };
+    }
+    const savedTypes = () => (boardAdapter.rows.get('BCDFG')?.state as ReturnType<typeof emptyBoardState>).engineTypes;
+
+    it('shows a John Bull on the light token and no engine on the dark one by default', async () => {
+      const { row } = await openReadyBoard();
+      const light = row("Ben's Light engine");
+      expect(light.getByRole('button', { name: /type: 2-4-0 John Bull/ })).toBeInTheDocument();
+      expect(light.getByText('Travels 1 segment')).toBeInTheDocument();
+      expect(light.getByText('Must be traded in for the American')).toBeInTheDocument();
+      const dark = row("Ben's Dark engine");
+      expect(dark.getByRole('button', { name: /type: No engine/ })).toBeInTheDocument();
+      expect(dark.queryByText(/Travels/)).toBeNull();
+    });
+
+    it('picks an engine type and saves it', async () => {
+      const { row } = await openReadyBoard();
+      fireEvent.click(row("Ben's Dark engine").getByRole('button', { name: /type:/ }));
+      const dialog = screen.getByRole('dialog', { name: "Ben's Dark engine type" });
+      expect(within(dialog).getByRole('button', { name: 'No engine' })).toHaveAttribute('aria-pressed', 'true');
+      expect(within(dialog).getAllByRole('button')).toHaveLength(11);
+      fireEvent.click(within(dialog).getByRole('button', { name: /2-6-0 Mogul/ }));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      const dark = row("Ben's Dark engine");
+      expect(dark.getByRole('button', { name: /type: 2-6-0 Mogul/ })).toBeInTheDocument();
+      expect(dark.getByText('Travels 3 segments')).toBeInTheDocument();
+      expect(dark.getByText('After buying, player can fulfill market contracts')).toBeInTheDocument();
+      await waitFor(() => expect(savedTypes()).toEqual({ '1': ['john-bull', 'mogul'] }));
+    });
+
+    it('clears an engine with "No engine"', async () => {
+      const { row } = await openReadyBoard();
+      fireEvent.click(row("Ada's Light engine").getByRole('button', { name: /type:/ }));
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'No engine' }));
+      expect(row("Ada's Light engine").getByRole('button', { name: /type: No engine/ })).toBeInTheDocument();
+      await waitFor(() => expect(savedTypes()).toEqual({ '0': [null, null] }));
+    });
+
+    it('closes the picker on Escape, an outside press, and a second press of its button', async () => {
+      const { row } = await openReadyBoard();
+      const button = () => row("Ben's Light engine").getByRole('button', { name: /type:/ });
+
+      fireEvent.click(button());
+      expect(button()).toHaveAttribute('aria-expanded', 'true');
+      fireEvent.keyDown(window, { key: 'Escape' });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      fireEvent.click(button());
+      fireEvent.pointerDown(document.body);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      fireEvent.click(button());
+      fireEvent.pointerDown(button());
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      fireEvent.click(button());
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('switches the picker to another token when that one is pressed', async () => {
+      const { row } = await openReadyBoard();
+      fireEvent.click(row("Ben's Light engine").getByRole('button', { name: /type:/ }));
+      const other = row("Ada's Dark engine").getByRole('button', { name: /type:/ });
+      fireEvent.pointerDown(other);
+      fireEvent.click(other);
+      expect(screen.getByRole('dialog', { name: "Ada's Dark engine type" })).toBeInTheDocument();
+    });
+
+    it('keeps a placed token on its row and shows its city', async () => {
+      boardAdapter.write('BCDFG', { ...emptyBoardState(), seeded: true, engines: { '1': ['Atlanta', null] } });
+      const { container } = await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Board saved')).toBeInTheDocument());
+      const light = screen.getByRole('group', { name: "Ben's Light engine" });
+      expect(within(light).getByText('Travels 1 segment · on Atlanta')).toBeInTheDocument();
+      expect(light.querySelector('.boardToken')).toBeInTheDocument();
+      expect(container.querySelector('.boardTrays [data-token="engine-1-0"]')).toBeNull();
+    });
+
+    it('shows the city alone for a placed token with no engine type', async () => {
+      boardAdapter.write('BCDFG', {
+        ...emptyBoardState(),
+        seeded: true,
+        engines: { '1': [null, 'Denver'] },
+      });
+      await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Board saved')).toBeInTheDocument());
+      expect(within(screen.getByRole('group', { name: "Ben's Dark engine" })).getByText('on Denver')).toBeInTheDocument();
+    });
+
+    it('disables the type controls until board state is ready', async () => {
+      boardAdapter.load = () => Promise.reject(new Error('The board_states table does not exist.'));
+      await renderAt('/board?game=BCDFG');
+      await screen.findByRole('alert');
+      expect(within(screen.getByRole('group', { name: "Ben's Light engine" })).getByRole('button', { name: /type:/ })).toBeDisabled();
     });
   });
 
