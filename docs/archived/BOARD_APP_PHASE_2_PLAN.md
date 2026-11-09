@@ -2,7 +2,7 @@
 
 Adds per-player tracking to the `/board` trays: which engine type each engine token is, what each engine is carrying, and which of six upgrades the player has bought. Phase 1 is described in [BOARD_APP_PLAN.md](BOARD_APP_PLAN.md); current conventions are in [BOARD_AGENT_GUIDE.md](../BOARD_AGENT_GUIDE.md).
 
-**Status (2026-11-08):** implemented; milestone notes are below. This plan is kept for its decisions and reasoning, and the agent guide is the current reference.
+**Status: Completed (2026-11-08).** All six milestones (M1–M6) are implemented; milestone notes are below. This plan is kept for its decisions and reasoning, and the agent guide is the current reference.
 
 ## Decisions (from Q&A, 2026-11-08)
 
