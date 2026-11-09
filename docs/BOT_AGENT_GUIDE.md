@@ -52,12 +52,8 @@ The fingerprint covers `docs/Game rules.md`, `MOVES_BY_PHASE` in `src/stores/mov
 
 ## Rules defaults
 
-The rules were clarified on 2026-11-09 (building must connect, parallel surcharge, John Bull, new-engine pickup, independent railroads, repaying, Service Yard, Upgraded Stations, Hub discount, Regional Office, market contracts, bonuses), and the engine follows them. Where they still leave room, the engine uses these defaults (marked `DEFAULT` in `engine/rulesData.ts` unless noted). Ask Jeff before changing one, and update this list.
+The rules were clarified on 2026-11-09 and the engine follows them, including: track and acquired railroads must connect to the network; a flat parallel surcharge; the John Bull may be kept; pickups any time an empty engine is in a supplying city; the repay threshold; when the Service Yard opens; Upgraded Stations outside the engine bonus; the Hub discount and when it applies; Mountain and Challenger rounding; Regional Office routes; one claimed market contract; and the bonuses.
 
-| Topic | Default |
-|---|---|
-| Parallel surcharge | "$1,000 per segment" alongside existing track is read as $1,000 for **each** track already on the route, so a third owner pays $2,000 extra (doubled if mountainous). |
-| Hub discount | "Connected to one of those segments" means the Hub is next to one of the route's cities on the map. |
-| Mountain and Challenger value | The 1 1/3x contract value is rounded down to $1,000. |
-| Depth bonus | Nothing before the first delivery (otherwise "one plus" would give every player 1 tie at the start). |
-| Picking up | An engine picks up only while running (in any city on its path, including where it starts) or when placed as a new engine. |
+No open defaults remain. If a rules question comes up, mark the engine's choice `DEFAULT` in `engine/rulesData.ts`, list it here, and ask Jeff.
+
+Pickups are modeled two ways: as events of a run (in any city on the path, including where the engine starts) and as the free `pickUp` action for an engine that is stopped or was just placed.

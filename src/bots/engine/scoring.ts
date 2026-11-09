@@ -21,7 +21,7 @@ export interface TieBreakdown {
   breadth: number;
   depth: number;
   monopoly: number;
-  /** End of game: Regional Office and Challenger. */
+  /** End of game: depth (above), Regional Office, and Challenger. */
   regionalOffice: number;
   challenger: number;
   total: number;

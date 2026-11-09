@@ -47,12 +47,12 @@ export function buildLimit(world: BotWorld): number {
   return hasUpgrade(world, 'employment-office') ? BUILD_LIMIT_EMPLOYMENT_OFFICE : BUILD_LIMIT;
 }
 
-/** Cost for the bot to build on a route now: base by length, +$1,000 per track already there, x2 if mountainous, then -$1,000 near its Hub. */
+/** Cost for the bot to build on a route now: base by length, +$1,000 if parallel, x2 if mountainous, then -$1,000 near its Hub. */
 export function trackCost(world: BotWorld, routeKey: string): number {
   const route = routes.get(routeKey);
   if (!route) throw new Error(`Unknown route: ${routeKey}`);
-  const existing = (world.board.track[routeKey] ?? []).filter((id) => id !== world.playerID).length;
-  let cost = baseTrackCost(route.length) + existing * PARALLEL_SURCHARGE;
+  const parallel = (world.board.track[routeKey] ?? []).some((id) => id !== world.playerID);
+  let cost = baseTrackCost(route.length) + (parallel ? PARALLEL_SURCHARGE : 0);
   if (route.mountainous) cost *= MOUNTAIN_MULTIPLIER;
   const hub = playerProps(world)?.hubCity;
   if (hub) {

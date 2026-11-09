@@ -5,7 +5,7 @@
  * Terms: a "segment" in the rules is one route between two cities (moving, building, Hub and
  * Railyard ranges all count routes). A route's `length` (1–5) only sets its building cost.
  *
- * Where the rules are unclear, the default chosen here is marked DEFAULT and listed in
+ * If the rules leave something open, mark the choice made here DEFAULT and list it in
  * docs/BOT_AGENT_GUIDE.md (Rules defaults).
  */
 import type { RegionCode } from '../../stores/gameStore';
@@ -26,16 +26,12 @@ export const BUILD_LIMIT_EMPLOYMENT_OFFICE = 3;
 export function baseTrackCost(length: number): number {
   return (length + 1) * 1000;
 }
-/**
- * Parallel track: "$1,000 per segment" alongside existing track. DEFAULT: $1,000 for each
- * track already on the route (so a third owner pays $2,000 extra). Mountainous doubles the total.
- */
+/** Parallel track (any number of tracks already on the route) costs $1,000 more; mountainous doubles the total. */
 export const PARALLEL_SURCHARGE = 1000;
 export const MOUNTAIN_MULTIPLIER = 2;
 /**
- * Hub: $1,000 less per route "if the Hub city is one of the ends of the segment or connected to
- * one of those segments", applied after mountain and parallel costs. DEFAULT: "connected" means
- * next to one of the route's cities on the map. (The cheapest route costs $2,000, so the floor
+ * Hub: $1,000 less per route when one of its cities is the Hub or next to it on the map,
+ * applied after mountain and parallel costs. (The cheapest route costs $2,000, so the floor
  * below never bites; it's a guard.)
  */
 export const HUB_DISCOUNT = 1000;
@@ -70,8 +66,8 @@ export const MARKET_CONTRACT_MIN_ENGINE: EngineTypeId = 'mogul';
 /** Service Yard can be bought once any player owns a Consolidation or better. */
 export const SERVICE_YARD_UNLOCK_ENGINE: EngineTypeId = 'consolidation';
 /**
- * Mountain and Challenger earn 1 1/3x a contract's value; Upgraded Stations' $3,000 is separate
- * and not multiplied. DEFAULT: the multiplied value is rounded down to $1,000.
+ * Mountain and Challenger earn 1 1/3x a contract's value, rounded down to $1,000; Upgraded
+ * Stations' $3,000 is separate and not multiplied.
  */
 export const BONUS_VALUE_ENGINES: readonly EngineTypeId[] = ['mountain', 'challenger'];
 export const BONUS_VALUE_MULTIPLIER = 4 / 3;
@@ -138,8 +134,8 @@ export function breadthBonus(distinctCommodities: number): number {
   return Math.min(n, 8) + 2 * Math.min(Math.max(n - 8, 0), 4) + 3 * Math.max(n - 12, 0);
 }
 /**
- * Depth bonus: "one plus the number of times you have delivered your most delivered commodity."
- * DEFAULT: nothing before the first delivery.
+ * Depth bonus, awarded at the end of the game: one plus the number of times the player delivered
+ * their most-delivered commodity. (A mid-game estimate with no deliveries yet counts 0.)
  */
 export function depthBonus(mostDeliveredCount: number): number {
   return mostDeliveredCount > 0 ? 1 + mostDeliveredCount : 0;

@@ -157,8 +157,9 @@ Rules constants the board doesn't already hold (prices, cost table, debt service
 |---|---|---|---|
 | Choose starting cities (setup) | `generateStartingContract(pair, playerID)` | Starting route is seeded by the board as today | Cash $10,000 |
 | Run trains | On delivery, `toggleContractFulfilled`. For a private contract, `generatePrivateContractOffers` then `addContract(…, 'private')`, buying a Hub or Regional Office through `claimHubCity` / `claimRegionalOffice` when the policy chooses. For a market contract, the same claim sequence the Contracts tab uses. | `moveEngine`, `setCargo` | Cash, debt service, deliveries |
+| Pick up (free, any time an empty engine is in a supplying city) | `claimMarketContract` if claiming | `setCargo` | (none) |
 | Build track | (none) | `claimRoute` per segment (parallel adds an owner) | Cash |
-| Buy engine | (none) | `setEngineType`; for a new (not traded-in) engine, `moveEngine` to a city on the bot's network | Cash |
+| Buy engine | (none) | `setEngineType`; for a new (not traded-in) engine, `moveEngine` to a city on the bot's network (a trade-in keeps the old engine's city and cargo) | Cash |
 | Acquire independent railroad | `acquireIndependentRailroad(name)` | Board's existing acquisition reconciliation | Cash |
 | Borrow / repay | (none) | (none) | Cash, debt |
 | Buy upgrade | Hub: `claimHubCity`; Regional Office: `claimRegionalOffice` | `setUpgrade` for the six tracked upgrades; Railyard: `moveRailyard` | Cash; exchange commodity |

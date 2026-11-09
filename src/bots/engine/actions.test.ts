@@ -47,7 +47,7 @@ describe('turn order and phase', () => {
     expect(types(listActions(world))).not.toContain('borrow');
     expect(applyAction(world, { type: 'borrow', amount: 5000 }).ok).toBe(false);
     world = apply(world, { type: 'runTrains', runs: [{ slot: 0, path: ['Boston', 'Portland ME'], events: [] }] }).world;
-    expect(listActions(world)).toEqual([{ type: 'endTurn' }]);
+    expect(listActions(world).filter((a) => a.type !== 'pickUp')).toEqual([{ type: 'endTurn' }]);
     expect(applyAction(world, { type: 'repay', amount: 5000 }).ok).toBe(false);
   });
 
@@ -59,7 +59,7 @@ describe('turn order and phase', () => {
 
   test('never offers anything but known actions (no "go first")', () => {
     const world = makeWorld({ bot: { cash: 100000 }, contracts: [{ commodity: 'machinery', destinationKey: 'Philadelphia' }] });
-    const known = ['acquireRailroad', 'borrow', 'buildTrack', 'buyEngine', 'buyUpgrade', 'endTurn', 'redrawPrivateContract', 'repay', 'runTrains'];
+    const known = ['acquireRailroad', 'borrow', 'buildTrack', 'buyEngine', 'buyUpgrade', 'endTurn', 'pickUp', 'redrawPrivateContract', 'repay', 'runTrains'];
     expect(types(listActions(world)).every((t) => known.includes(t))).toBe(true);
   });
 });
@@ -120,25 +120,47 @@ describe('buy an engine', () => {
       board: { engineTypes: { '0': ['american', null] } },
       contracts: [{ id: 'm1', type: 'market', playerID: null, commodity: 'imports', destinationKey: 'Boston' }],
     });
-    const action: Action = { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'New York', pickup: { commodity: 'imports', claim: 'm1' } };
-    expect(listActions(world)).toContainEqual(action);
-    const { world: next, effects } = apply(world, action);
+    const bought = apply(world, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'New York' }).world;
+    const pickUp: Action = { type: 'pickUp', slot: 1, commodity: 'imports', claim: 'm1' };
+    expect(listActions(bought)).toContainEqual(pickUp);
+    const { world: next, effects } = apply(bought, pickUp);
     expect(moves(effects)).toEqual([{ name: 'claimMarketContract', args: ['m1'] }]);
-    expect(ops(effects)).toEqual([
-      { type: 'setEngineType', playerID: '0', slot: 1, engineType: 'mogul' },
-      { type: 'moveEngine', playerID: '0', slot: 1, city: 'New York' },
-      { type: 'setCargo', playerID: '0', slot: 1, commodity: 'imports' },
-    ]);
+    expect(ops(effects)).toEqual([{ type: 'setCargo', playerID: '0', slot: 1, commodity: 'imports' }]);
     expect(next.board.cargo['0']).toEqual([null, 'imports']);
+    expect(next.turnState.actions).toEqual(['buyEngine']);
     expect(lines(effects)).toEqual([
-      'Avery bought a 2-6-0 Mogul for $7,000, placed it in New York, and picked up imports, claiming the market contract for imports to Boston.',
+      'Avery picked up imports in New York with the dark engine, claiming the market contract for imports to Boston.',
     ]);
   });
+});
 
-  test('no pickup where the city doesn’t supply it, or on a trade-in', () => {
-    const world = makeWorld({ board: { engineTypes: { '0': ['american', null] } } });
-    expect(applyAction(world, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'Boston', pickup: { commodity: 'imports' } }).ok).toBe(false);
-    expect(applyAction(world, { type: 'buyEngine', engine: 'mogul', slot: 0, pickup: { commodity: 'machinery' } }).ok).toBe(false);
+describe('picking up', () => {
+  test('free, any time, even with no actions left', () => {
+    let world = makeWorld({ board: { engines: { '0': ['New York', null] } } });
+    world = apply(world, { type: 'borrow', amount: 5000 }).world;
+    world = apply(world, { type: 'buildTrack', routes: ['Boston-Syracuse'] }).world;
+    expect(listActions(world)).toEqual([
+      { type: 'pickUp', slot: 0, commodity: 'imports' },
+      { type: 'pickUp', slot: 0, commodity: 'tourists' },
+      { type: 'endTurn' },
+    ]);
+    const { world: next, effects } = apply(world, { type: 'pickUp', slot: 0, commodity: 'tourists' });
+    expect(next.board.cargo['0']).toEqual(['tourists', null]);
+    expect(lines(effects)).toEqual(['Avery picked up tourists in New York with the light engine.']);
+  });
+
+  test('a stopped engine picks up after it has run', () => {
+    let world = makeWorld();
+    world = apply(world, { type: 'runTrains', runs: [{ slot: 0, path: ['Boston', 'New York'], events: [] }] }).world;
+    expect(listActions(world)).toContainEqual({ type: 'pickUp', slot: 0, commodity: 'imports' });
+  });
+
+  test('not when loaded, not what the city doesn’t supply, and claims need a Mogul', () => {
+    const loaded = makeWorld({ board: { cargo: { '0': ['wood', null] } } });
+    expect(applyAction(loaded, { type: 'pickUp', slot: 0, commodity: 'machinery' }).ok).toBe(false);
+    expect(applyAction(makeWorld(), { type: 'pickUp', slot: 0, commodity: 'coal' }).ok).toBe(false);
+    const market = makeWorld({ contracts: [{ id: 'm2', type: 'market', playerID: null, commodity: 'machinery', destinationKey: 'Philadelphia' }] });
+    expect(applyAction(market, { type: 'pickUp', slot: 0, commodity: 'machinery', claim: 'm2' }).ok).toBe(false);
   });
 });
 

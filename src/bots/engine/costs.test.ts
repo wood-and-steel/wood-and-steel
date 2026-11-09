@@ -19,11 +19,11 @@ describe('trackCost', () => {
     expect(trackCost(world, 'Cleveland-New York')).toBe(10000);
   });
 
-  test('parallel track costs $1,000 more per track already there, before doubling', () => {
+  test('parallel track costs $1,000 more however many tracks are there, before doubling', () => {
     const world = makeWorld({ board: { track: { 'Norfolk-Raleigh': ['1'], 'New York-Syracuse': ['1'], 'Boston-Syracuse': ['1', '2'] } } });
     expect(trackCost(world, 'Norfolk-Raleigh')).toBe(3000);
     expect(trackCost(world, 'New York-Syracuse')).toBe(8000);
-    expect(trackCost(world, 'Boston-Syracuse')).toBe(5000);
+    expect(trackCost(world, 'Boston-Syracuse')).toBe(4000);
   });
 
   test('the Hub discount comes after mountain and parallel costs', () => {
