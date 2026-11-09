@@ -192,7 +192,7 @@ When a train is run, one of the following side effects can happen:
 
 #### Picking up a commodity
 
-A train can either be empty or loaded with one commodity. A train may pick up a commodity when it is in a city that supplies that commodity, whether it moves through the city or is placed there when it is bought. This does not take any actions and the train may continue moving up to its full distance.
+A train can either be empty or loaded with one commodity. A train may pick up a commodity at any time when it is in a city that supplies that commodity, including when it is stopped there, moving through, or just purchased and placed there. This does not take any actions or reduce the number of segments a train can move.
 
 #### Fulfilling a contract
 
@@ -236,7 +236,7 @@ Lay rails between two locations by paying the appropriate amount and laying thei
 
 #### Parallel tracks
 
-Parallel track is possible on every track segment on the board. Building a parallel track alongside an existing segment or segments costs an additional $1,000 per segment. If it’s mountainous track, the cost is doubled to $2,000 per segment.
+Parallel track is possible on every track segment on the board. Building the second or additional segment parallel to any number of existing tracks costs an additional $1,000 per segment. If it’s mountainous track, the cost is doubled to $2,000 per segment.
 
 ### Buy an engine
 
@@ -266,6 +266,8 @@ If you already have the limit of engines you are allowed at this point in the ga
 | 2-8-2 Mikado | 8 | $24,000 |  |
 | 4-8-2 Mountain | 9 | $28,000 | Earn 1 1/3x value when fulfilling a contract |
 | 4-6-6-4 Challenger | 11 | $32,000 | Gain 2 railroad ties at end of game and earn 1 1/3x value when fulfilling a contract |
+
+The Mountain and Challenger multipliers are rounded down to the nearest $1,000.
 
 ### Merge with an independent railroad
 
@@ -302,7 +304,7 @@ Place your Hub marker on a city connected to your railway network. In the app, i
 * You may order engine designs one engine ahead of your current choice by spending an additional $5,000.  
 * You will be offered 3 choices of private contracts instead of two after fulfilling your private contract.  
 * The hub city is more likely to be offered in private contracts. (Designer note: The hub city’s value is raised by the total value of all directly connected cities. If two hubs are in neighboring cities, neither gets the hub bonus city value for the other hub.)  
-* Building track costs $1,000 less per segment if the Hub city is one of the ends of the segment or connected to one of those segments. This discount is applied after the cost of building is calculated, including mountainous or parallel track costs.
+* Building track costs $1,000 less per segment if the track is connected to the hub city or either of the segment's ends has a connection to the hub city. This discount is applied after the cost of building is calculated, including mountainous or parallel track costs.
 
 #### Timetable – $15,000 (early-mid)
 
