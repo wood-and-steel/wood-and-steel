@@ -57,6 +57,10 @@ Tuning: valuations are deliberately simple. Change them with `playthrough.test.t
 
 A "segment" in the rules is one route between two cities: moves, the two-route build limit, and Hub, Railyard, and Roundhouse ranges all count routes. A route's length (1–5) only sets its cost.
 
+## Narration on the board
+
+Each action's narration lines are saved to the bot's `log` in `bot_states` (the last 20 turns). The board reads them read-only (`src/board/useBotNarration.ts`, `botNarration.ts`) and shows the latest turn at the top of the bot's tray card, plus "Waiting for the host's app" when it's the bot's turn and `runnerSeenAt` is over 30 seconds old. The board may import only `bots/state/botStates` and `bots/state/botStatesAdapter`; `botIsolation.test.ts` checks this. New narration goes in `engine/narration.ts` and the action that produces it.
+
 ## Rule changes
 
 The fingerprint covers `docs/Game rules.md`, `MOVES_BY_PHASE` in `src/stores/moveValidation.ts`, `src/data/*.ts` (except `index.ts`), and `src/board/playerBoardData.ts`. When `rulesFingerprint.test.ts` fails:

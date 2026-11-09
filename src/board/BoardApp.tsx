@@ -22,6 +22,8 @@ import { useBoardStore } from './boardStore';
 import { useBoardGameSync } from './useBoardGameSync';
 import { useBoardStateSync } from './useBoardStateSync';
 import { useZoomPan } from './useZoomPan';
+import { useBotNarration } from './useBotNarration';
+import { botTrayInfo } from './botNarration';
 
 const EMPTY_TRACK: Record<string, string[]> = {};
 
@@ -52,6 +54,8 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
   const boardError = useBoardStore((s) => s.error);
   const board = useBoardStore((s) => s.board);
   const pendingCount = useBoardStore((s) => s.pending.length);
+  const { states: botStates, now } = useBotNarration(code ?? null, status === 'live');
+  const bots = React.useMemo(() => botTrayInfo(botStates, ctx, now), [botStates, ctx, now]);
   const [popover, setPopover] = React.useState<{ routeKey: string; clientX: number; clientY: number } | null>(null);
   const closePopover = React.useCallback(() => setPopover(null), []);
 
@@ -152,6 +156,7 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
             dropTarget={drag?.target.kind === 'tray'}
             onTokenPointerDown={startTokenDrag}
             onBoardOp={canEditBoard ? dispatchBoardOp : null}
+            bots={bots}
           />
         )}
       </div>

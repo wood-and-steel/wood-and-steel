@@ -42,4 +42,16 @@ describe('bot isolation', () => {
     expect(runtimeImports).not.toMatch(/from ['"]react['"]|from ['"]@supabase\//);
     expect(source).not.toMatch(/\b(window|document|localStorage|sessionStorage)\b/);
   });
+
+  it('the board imports only the read side of bot state', () => {
+    const boardSources = import.meta.glob(['../board/**/*.{ts,tsx}', '!../board/**/*.test.{ts,tsx}'], {
+      query: '?raw',
+      import: 'default',
+      eager: true,
+    }) as Record<string, string>;
+    const imports = Object.values(boardSources).flatMap((source) => source.match(/from ['"][^'"]*bots\/[^'"]*['"]/g) ?? []);
+    expect(imports.length).toBeGreaterThan(0);
+    for (const line of imports) expect(line).toMatch(/bots\/state\/(botStates|botStatesAdapter)['"]/);
+  });
 });
+

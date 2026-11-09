@@ -14,9 +14,13 @@ import { setBoardStateAdapter } from './boardStateAdapter';
 import { CITY_POINTS } from './geometry/cityPoints';
 import { trackPathD } from './geometry/trackPaths';
 import { MemoryBoardStateAdapter } from './memoryBoardStateAdapter.testHelper';
+import { setBotStatesAdapter } from '../bots/state/botStatesAdapter';
+import { MemoryBotStatesAdapter } from '../bots/state/memoryBotStatesAdapter.testHelper';
+import { createBotRecord } from '../bots/state/botStates';
 
 const adapter = new MemoryStorageAdapter();
 let boardAdapter: MemoryBoardStateAdapter;
+let botAdapter: MemoryBotStatesAdapter;
 
 const state = {
   G: {
@@ -64,7 +68,58 @@ describe('BoardApp (/board)', () => {
     setStorageAdapter(adapter);
     boardAdapter = new MemoryBoardStateAdapter();
     setBoardStateAdapter(boardAdapter);
+    botAdapter = new MemoryBotStatesAdapter();
+    setBotStatesAdapter(botAdapter);
     await adapter.saveGame('BCDFG', state, { gameMode: 'byod' });
+  });
+
+  describe('bot narration (bots M6)', () => {
+    /** Ben (player 1, the current player) is a bot. */
+    function writeBen(lines: string[], seenAt: string | null = new Date().toISOString(), turn = 4) {
+      const bot = createBotRecord({ name: 'Ben', strategy: 'builder' }, 1);
+      botAdapter.write('BCDFG', { version: 1, bots: { '1': { ...bot, log: [{ round: 2, turn, lines }], runnerSeenAt: seenAt } } });
+    }
+
+    it('shows the bot’s turn in its tray, and nothing for humans', async () => {
+      writeBen(['Ben built Boston–Syracuse for $3,000.', 'Ben ended the turn.']);
+      await renderAt('/board?game=BCDFG');
+      const narration = await screen.findByRole('region', { name: "Ben's narration" });
+      expect(within(narration).getByRole('heading', { name: 'This turn' })).toBeInTheDocument();
+      expect(within(narration).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+        'Ben built Boston–Syracuse for $3,000.',
+        'Ben ended the turn.',
+      ]);
+      expect(screen.queryByRole('region', { name: "Ada's narration" })).not.toBeInTheDocument();
+      expect(screen.queryByText("Waiting for the host's app")).not.toBeInTheDocument();
+    });
+
+    it('updates live as the bot plays', async () => {
+      writeBen(['Ben borrowed $5,000.']);
+      await renderAt('/board?game=BCDFG');
+      await screen.findByText('Ben borrowed $5,000.');
+      await act(async () => {
+        writeBen(['Ben borrowed $5,000.', 'Ben bought Upgraded Stations for $10,000.']);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
+      expect(await screen.findByText('Ben bought Upgraded Stations for $10,000.')).toBeInTheDocument();
+    });
+
+    it('says when the host’s app isn’t running the bot', async () => {
+      writeBen(['Ben ended the turn.'], new Date(Date.now() - 120_000).toISOString(), 3);
+      await renderAt('/board?game=BCDFG');
+      const narration = await screen.findByRole('region', { name: "Ben's narration" });
+      expect(within(narration).getByRole('status')).toHaveTextContent("Waiting for the host's app");
+      expect(within(narration).getByRole('heading', { name: 'Last turn' })).toBeInTheDocument();
+    });
+
+    it('a missing bot_states table only means no narration', async () => {
+      botAdapter.load = () => Promise.reject(new Error('The bot_states table does not exist.'));
+      const { container } = await renderAt('/board?game=BCDFG');
+      await waitFor(() => expect(screen.getByText('Live')).toBeInTheDocument());
+      expect(container.querySelectorAll('.boardTray')).toHaveLength(2);
+      expect(container.querySelector('.boardBot')).toBeNull();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
   });
 
   it('lists games when no code is given', async () => {
