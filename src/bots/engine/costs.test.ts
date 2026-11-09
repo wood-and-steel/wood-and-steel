@@ -19,10 +19,19 @@ describe('trackCost', () => {
     expect(trackCost(world, 'Cleveland-New York')).toBe(10000);
   });
 
-  test('parallel track costs $1,000 more, before doubling', () => {
-    const world = makeWorld({ board: { track: { 'Norfolk-Raleigh': ['1'], 'New York-Syracuse': ['1'] } } });
+  test('parallel track costs $1,000 more per track already there, before doubling', () => {
+    const world = makeWorld({ board: { track: { 'Norfolk-Raleigh': ['1'], 'New York-Syracuse': ['1'], 'Boston-Syracuse': ['1', '2'] } } });
     expect(trackCost(world, 'Norfolk-Raleigh')).toBe(3000);
     expect(trackCost(world, 'New York-Syracuse')).toBe(8000);
+    expect(trackCost(world, 'Boston-Syracuse')).toBe(5000);
+  });
+
+  test('the Hub discount comes after mountain and parallel costs', () => {
+    const world = makeWorld({
+      players: { '0': { activeCities: ['New York'], hubCity: 'New York' }, '1': {} },
+      board: { track: { 'New York-Syracuse': ['1'] } },
+    });
+    expect(trackCost(world, 'New York-Syracuse')).toBe(8000 - 1000);
   });
 
   test('a Hub takes $1,000 off routes touching it or its neighbors, never below $1,000', () => {
@@ -42,17 +51,20 @@ describe('buildLimit', () => {
 });
 
 describe('enginePurchases', () => {
-  test('from a John Bull: only an American, trading the John Bull in', () => {
+  test('from a John Bull: an American, trading the John Bull in for $0 or as a second engine', () => {
     expect(enginePurchases(makeWorld())).toEqual([
       { engine: 'american', slot: 0, tradeIn: 'john-bull', skip: false, cost: 5000 },
+      { engine: 'american', slot: 1, tradeIn: null, skip: false, cost: 5000 },
     ]);
   });
 
   test('a Hub allows skipping a level for $5,000 more', () => {
     const world = makeWorld({ players: { '0': { activeCities: ['Boston'], hubCity: 'Boston' }, '1': {} } });
-    expect(enginePurchases(world).map((p) => [p.engine, p.cost])).toEqual([
-      ['american', 5000],
-      ['mogul', 12000],
+    expect(enginePurchases(world).map((p) => [p.engine, p.slot, p.cost])).toEqual([
+      ['american', 0, 5000],
+      ['american', 1, 5000],
+      ['mogul', 0, 12000],
+      ['mogul', 1, 12000],
     ]);
   });
 
@@ -120,7 +132,7 @@ describe('upgradePurchases', () => {
     expect(kinds(world)).toContain('roundhouse');
   });
 
-  test('Regional Office needs 5 uncontested cities in a region', () => {
+  test('Regional Office needs 5 cities in a region where no one else has a route', () => {
     const track = {
       'Boston-Portland ME': ['0'],
       'Boston-New York': ['0'],
@@ -128,7 +140,10 @@ describe('upgradePurchases', () => {
       'Boston-Syracuse': ['0'],
     };
     expect(regionalOfficeRegions(makeWorld({ board: { track } }))).toEqual(['NE']);
-    const contested = { ...track, 'Pittsburgh-Washington': ['1'] };
+    // Pittsburgh is in the Northeast but Washington isn't, so this route isn't in the region.
+    const touching = { ...track, 'Pittsburgh-Washington': ['1'] };
+    expect(regionalOfficeRegions(makeWorld({ board: { track: touching } }))).toEqual(['NE']);
+    const contested = { ...track, 'Philadelphia-Pittsburgh': ['1'] };
     expect(regionalOfficeRegions(makeWorld({ board: { track: contested } }))).toEqual([]);
   });
 

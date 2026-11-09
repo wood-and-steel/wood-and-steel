@@ -16,7 +16,6 @@ import {
   INDIE_MUST_CONNECT,
   INDIE_PRICE_PER_ROUTE,
   INDIE_PRICE_PER_ROUTE_AFTER_WEST,
-  JOHN_BULL_MUST_TRADE_IN,
   MAX_ENGINES,
   MIN_TRACK_COST,
   MONOPOLY_TIES,
@@ -48,12 +47,12 @@ export function buildLimit(world: BotWorld): number {
   return hasUpgrade(world, 'employment-office') ? BUILD_LIMIT_EMPLOYMENT_OFFICE : BUILD_LIMIT;
 }
 
-/** Cost for the bot to build on a route now: base by length, +$1,000 if parallel, x2 if mountainous, -$1,000 near its Hub. */
+/** Cost for the bot to build on a route now: base by length, +$1,000 per track already there, x2 if mountainous, then -$1,000 near its Hub. */
 export function trackCost(world: BotWorld, routeKey: string): number {
   const route = routes.get(routeKey);
   if (!route) throw new Error(`Unknown route: ${routeKey}`);
-  const parallel = (world.board.track[routeKey] ?? []).some((id) => id !== world.playerID);
-  let cost = baseTrackCost(route.length) + (parallel ? PARALLEL_SURCHARGE : 0);
+  const existing = (world.board.track[routeKey] ?? []).filter((id) => id !== world.playerID).length;
+  let cost = baseTrackCost(route.length) + existing * PARALLEL_SURCHARGE;
   if (route.mountainous) cost *= MOUNTAIN_MULTIPLIER;
   const hub = playerProps(world)?.hubCity;
   if (hub) {
@@ -84,7 +83,6 @@ export function enginePurchases(world: BotWorld): EnginePurchase[] {
   const levels = [best + 1];
   if (playerProps(world)?.hubCity) levels.push(best + 2);
   const owned = types.filter((t) => t !== null).length;
-  const johnBullSlot = types.findIndex((t) => t === 'john-bull');
   const options: EnginePurchase[] = [];
   for (const level of levels) {
     const target = ENGINE_TYPES[level];
@@ -93,7 +91,6 @@ export function enginePurchases(world: BotWorld): EnginePurchase[] {
     const price = ENGINE_PRICES[target.id] + (skip ? HUB_ENGINE_SKIP_SURCHARGE : 0);
     for (const slot of [0, 1] as EngineSlot[]) {
       const current = types[slot];
-      if (JOHN_BULL_MUST_TRADE_IN && johnBullSlot !== -1 && slot !== johnBullSlot) continue;
       if (current) {
         options.push({ engine: target.id, slot, tradeIn: current, skip, cost: price - tradeInValue(current) });
       } else if (owned < MAX_ENGINES) {
@@ -169,18 +166,25 @@ export function connectedToAllSuppliers(world: BotWorld, commodity: string, play
 
 const REGIONS: readonly RegionCode[] = ['NW', 'NC', 'NE', 'SW', 'SC', 'SE'];
 
-/** Regions where the bot touches 5+ cities and no other player touches any, and no one else holds the office. */
+/** Whether another player owns track on a route with both cities in `region`. */
+function othersHaveRoutesIn(world: BotWorld, region: RegionCode): boolean {
+  const others = new Set(otherPlayerIDs(world));
+  return Object.entries(world.board.track).some(
+    ([key, owners]) =>
+      owners.some((id) => others.has(id)) && routeCities(key).every((c) => cities.get(c)?.region === region)
+  );
+}
+
+/** Regions where the bot touches 5+ cities, no one else has a route, and no one else holds the office. */
 export function regionalOfficeRegions(world: BotWorld): RegionCode[] {
   const mine = networkCities(world);
-  const others = otherPlayerIDs(world).map((id) => networkCities(world, id));
   const claimed = new Set(
     world.players.filter(([id]) => id !== world.playerID).map(([, p]) => p.regionalOffice).filter(Boolean)
   );
   return REGIONS.filter((region) => {
     if (claimed.has(region)) return false;
     const inRegion = [...mine].filter((c) => cities.get(c)?.region === region).length;
-    const contested = others.some((set) => [...set].some((c) => cities.get(c)?.region === region));
-    return inRegion >= REGIONAL_OFFICE_MIN_CITIES && !contested;
+    return inRegion >= REGIONAL_OFFICE_MIN_CITIES && !othersHaveRoutesIn(world, region);
   });
 }
 

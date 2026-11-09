@@ -52,22 +52,12 @@ The fingerprint covers `docs/Game rules.md`, `MOVES_BY_PHASE` in `src/stores/mov
 
 ## Rules defaults
 
-Where the rules are unclear, the engine follows these defaults (all in `engine/rulesData.ts` unless noted). Ask Jeff before changing one, and update this list.
+The rules were clarified on 2026-11-09 (building must connect, parallel surcharge, John Bull, new-engine pickup, independent railroads, repaying, Service Yard, Upgraded Stations, Hub discount, Regional Office, market contracts, bonuses), and the engine follows them. Where they still leave room, the engine uses these defaults (marked `DEFAULT` in `engine/rulesData.ts` unless noted). Ask Jeff before changing one, and update this list.
 
 | Topic | Default |
 |---|---|
-| Building | New track must touch the builder's network (or a route built earlier in the same action). |
-| Parallel track | Every owner after the first pays the $1,000 parallel surcharge (a route allows four owners). |
-| Hub track discount | A route qualifies if one of its cities is the Hub or next to it. The $1,000 comes off after mountain doubling, never below $1,000. |
-| John Bull | Always the engine traded in by the next purchase. |
-| Service Yard | Open once any player owns a Consolidation **or better**. |
-| Mountain and Challenger value | 1 1/3x the contract value, rounded down to $1,000, before the Upgraded Stations $3,000. |
-| Repaying debt | "Debt cannot be reduced below $15,000" is taken literally: a repayment can't leave less than $15,000, so debt of $15,000 or less can never be repaid. **Rules question for Jeff.** |
-| Depth bonus | Deliveries of the most-delivered commodity beyond the first. **Rules question:** the text also says "one plus the number of times". |
-| Monopoly ties | The table (2, 3, or 4 ties for 4-, 5-, or 6-city commodities), not the "1 or 2" in the prose above it. |
-| Independent railroads | Can be acquired only if one of their cities is on the acquirer's network. |
-| Picking up and delivering | Allowed in the engine's starting city as well as cities it passes through. |
-| Trade-ins | Cargo stays on the token when its engine is traded in. |
-| Market contracts | One claimed, unfulfilled market contract at a time (the Contracts tab enforces this for humans). |
-| Regional Office | "Connections in a region" means track touching a city in that region. |
-| New engine placement | A new (not traded-in) engine goes on any city on the network (rules, Buy an engine). |
+| Parallel surcharge | "$1,000 per segment" alongside existing track is read as $1,000 for **each** track already on the route, so a third owner pays $2,000 extra (doubled if mountainous). |
+| Hub discount | "Connected to one of those segments" means the Hub is next to one of the route's cities on the map. |
+| Mountain and Challenger value | The 1 1/3x contract value is rounded down to $1,000. |
+| Depth bonus | Nothing before the first delivery (otherwise "one plus" would give every player 1 tie at the start). |
+| Picking up | An engine picks up only while running (in any city on its path, including where it starts) or when placed as a new engine. |

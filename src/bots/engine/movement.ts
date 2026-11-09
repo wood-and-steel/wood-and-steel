@@ -79,14 +79,14 @@ export function runnableSlots(world: BotWorld): EngineSlot[] {
 
 // --- Generating runs -------------------------------------------------------------
 
-interface Want {
+export interface Want {
   commodity: string;
   /** Market contract to claim on pickup, if the pickup is for one. */
   claim?: string;
 }
 
 /** Commodities worth picking up: for contracts the bot can deliver, and claimable market contracts. */
-function wants(world: BotWorld): Want[] {
+export function wants(world: BotWorld): Want[] {
   const list: Want[] = deliverableContracts(world).map((c) => ({ commodity: c.commodity }));
   if (canClaimMarket(world)) {
     for (const c of openMarketContracts(world)) list.push({ commodity: c.commodity, claim: c.id });

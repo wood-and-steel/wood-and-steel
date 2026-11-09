@@ -26,18 +26,22 @@ export const BUILD_LIMIT_EMPLOYMENT_OFFICE = 3;
 export function baseTrackCost(length: number): number {
   return (length + 1) * 1000;
 }
-/** A parallel track (the route already has another owner) costs $1,000 more; mountainous doubles the total. */
+/**
+ * Parallel track: "$1,000 per segment" alongside existing track. DEFAULT: $1,000 for each
+ * track already on the route (so a third owner pays $2,000 extra). Mountainous doubles the total.
+ */
 export const PARALLEL_SURCHARGE = 1000;
 export const MOUNTAIN_MULTIPLIER = 2;
 /**
- * Hub: "Building track costs $1,000 less per segment within two links of a hub."
- * DEFAULT: a route qualifies when one of its cities is the Hub or next to it (so the whole
- * route lies within two links). The discount applies after doubling, and never below $1,000.
+ * Hub: $1,000 less per route "if the Hub city is one of the ends of the segment or connected to
+ * one of those segments", applied after mountain and parallel costs. DEFAULT: "connected" means
+ * next to one of the route's cities on the map. (The cheapest route costs $2,000, so the floor
+ * below never bites; it's a guard.)
  */
 export const HUB_DISCOUNT = 1000;
 export const HUB_DISCOUNT_RANGE = 1;
 export const MIN_TRACK_COST = 1000;
-/** DEFAULT: new track must touch a city already in the builder's network (or built earlier in the same action). */
+/** New track must touch the builder's network (or the other route built this turn). */
 export const BUILD_MUST_CONNECT = true;
 
 // --- Engines -----------------------------------------------------------------
@@ -61,13 +65,14 @@ export const HUB_ENGINE_SKIP_SURCHARGE = 5000;
 export function tradeInValue(engine: EngineTypeId): number {
   return Math.floor(ENGINE_PRICES[engine] / 2 / 1000) * 1000;
 }
-/** DEFAULT: a John Bull is always the engine traded in by the next purchase ("must be traded in for the American"). */
-export const JOHN_BULL_MUST_TRADE_IN = true;
 /** Market contracts can be claimed only by owners of a Mogul or better. */
 export const MARKET_CONTRACT_MIN_ENGINE: EngineTypeId = 'mogul';
-/** Service Yard is available to everyone once any player owns a Consolidation (DEFAULT: or better). */
+/** Service Yard can be bought once any player owns a Consolidation or better. */
 export const SERVICE_YARD_UNLOCK_ENGINE: EngineTypeId = 'consolidation';
-/** Mountain and Challenger earn 1 1/3x a contract's value (DEFAULT: rounded down to $1,000, before Upgraded Stations). */
+/**
+ * Mountain and Challenger earn 1 1/3x a contract's value; Upgraded Stations' $3,000 is separate
+ * and not multiplied. DEFAULT: the multiplied value is rounded down to $1,000.
+ */
 export const BONUS_VALUE_ENGINES: readonly EngineTypeId[] = ['mountain', 'challenger'];
 export const BONUS_VALUE_MULTIPLIER = 4 / 3;
 /** The Challenger gains 2 railroad ties at the end of the game. */
@@ -79,10 +84,7 @@ export const BORROW_STEP = 5000;
 /** listActions offers borrowing up to this much in one action (the rules set no limit). */
 export const BORROW_OPTIONS_MAX = 30000;
 export const REPAY_AMOUNTS: readonly number[] = [5000, 10000];
-/**
- * "Debt cannot be reduced below $15,000." Taken literally: a repayment may not leave less than
- * $15,000 of debt, so debt of $15,000 or less can't be repaid. Flagged in the guide as a rules question.
- */
+/** Players with $20,000 or more of debt may repay $5,000 or $10,000, never going below $15,000. */
 export const DEBT_FLOOR = 15000;
 /** Debt service: $1,000 per $5,000 borrowed. */
 export const DEBT_SERVICE_PER_STEP = 1000;
@@ -96,7 +98,7 @@ export const WESTERN_REGIONS: readonly RegionCode[] = ['NW', 'SW'];
 /** Per route, until any player fulfills a contract in a Western region; then $4,000. */
 export const INDIE_PRICE_PER_ROUTE = 3000;
 export const INDIE_PRICE_PER_ROUTE_AFTER_WEST = 4000;
-/** DEFAULT: a railroad can be acquired only if it touches a city in the acquirer's network. */
+/** A railroad can be acquired once the acquirer's network touches one of its cities. */
 export const INDIE_MUST_CONNECT = true;
 
 // --- Upgrades ----------------------------------------------------------------
@@ -119,7 +121,10 @@ export const UPGRADE_PRICES: Record<UpgradeKey, number> = {
 export const ROUNDHOUSE_APPROACH = 4;
 /** Railyard: its city supplies every commodity available within two segments. */
 export const RAILYARD_RANGE = 2;
-/** Regional Office: connections to at least 5 cities in a region where no one else has connections. */
+/**
+ * Regional Office: connections to at least 5 cities in a region where no one else has routes.
+ * A route is in a region when both its cities are.
+ */
 export const REGIONAL_OFFICE_MIN_CITIES = 5;
 export const REGIONAL_OFFICE_END_TIES = 2;
 
@@ -133,12 +138,11 @@ export function breadthBonus(distinctCommodities: number): number {
   return Math.min(n, 8) + 2 * Math.min(Math.max(n - 8, 0), 4) + 3 * Math.max(n - 12, 0);
 }
 /**
- * Depth bonus: "for the number of times beyond the first delivery a railroad delivers a particular
- * commodity ... one plus the number of times you have delivered your most delivered commodity."
- * DEFAULT: deliveries of the most-delivered commodity beyond the first (0 until a repeat).
+ * Depth bonus: "one plus the number of times you have delivered your most delivered commodity."
+ * DEFAULT: nothing before the first delivery.
  */
 export function depthBonus(mostDeliveredCount: number): number {
-  return Math.max(0, mostDeliveredCount - 1);
+  return mostDeliveredCount > 0 ? 1 + mostDeliveredCount : 0;
 }
 /** Monopoly ties by how many cities supply the commodity (4, 5, or 6); other commodities can't be monopolized. */
 export const MONOPOLY_TIES: Record<number, number> = { 4: 2, 5: 3, 6: 4 };

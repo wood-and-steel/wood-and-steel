@@ -109,6 +109,37 @@ describe('buy an engine', () => {
     expect(world.board.engines['0']).toEqual(['Boston', 'New York']);
     expect(applyAction(base, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'Chicago' }).ok).toBe(false);
   });
+
+  test('a John Bull can stay as a second engine', () => {
+    const { world } = apply(makeWorld(), { type: 'buyEngine', engine: 'american', slot: 1, city: 'New York' });
+    expect(world.board.engineTypes['0']).toEqual(['john-bull', 'american']);
+  });
+
+  test('a new engine can pick up where it is placed, and a new Mogul can claim a market contract', () => {
+    const world = makeWorld({
+      board: { engineTypes: { '0': ['american', null] } },
+      contracts: [{ id: 'm1', type: 'market', playerID: null, commodity: 'imports', destinationKey: 'Boston' }],
+    });
+    const action: Action = { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'New York', pickup: { commodity: 'imports', claim: 'm1' } };
+    expect(listActions(world)).toContainEqual(action);
+    const { world: next, effects } = apply(world, action);
+    expect(moves(effects)).toEqual([{ name: 'claimMarketContract', args: ['m1'] }]);
+    expect(ops(effects)).toEqual([
+      { type: 'setEngineType', playerID: '0', slot: 1, engineType: 'mogul' },
+      { type: 'moveEngine', playerID: '0', slot: 1, city: 'New York' },
+      { type: 'setCargo', playerID: '0', slot: 1, commodity: 'imports' },
+    ]);
+    expect(next.board.cargo['0']).toEqual([null, 'imports']);
+    expect(lines(effects)).toEqual([
+      'Avery bought a 2-6-0 Mogul for $7,000, placed it in New York, and picked up imports, claiming the market contract for imports to Boston.',
+    ]);
+  });
+
+  test('no pickup where the city doesn’t supply it, or on a trade-in', () => {
+    const world = makeWorld({ board: { engineTypes: { '0': ['american', null] } } });
+    expect(applyAction(world, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'Boston', pickup: { commodity: 'imports' } }).ok).toBe(false);
+    expect(applyAction(world, { type: 'buyEngine', engine: 'mogul', slot: 0, pickup: { commodity: 'machinery' } }).ok).toBe(false);
+  });
 });
 
 describe('independent railroads', () => {
