@@ -38,7 +38,8 @@
     "test": "vitest",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "bots:ack-rules": "vite-node scripts/ack-bot-rules.ts"
+    "bots:ack-rules": "vite-node scripts/ack-bot-rules.ts",
+    "bots:tournament": "vite-node src/bots/tournament/cli.ts"
   },
   "eslintConfig": {
     "extends": [

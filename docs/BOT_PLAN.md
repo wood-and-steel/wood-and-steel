@@ -272,10 +272,12 @@ The runner appends each line to the turn's `BotTurnLog` as the action completes,
 
 ## Tournament harness (`src/bots/tournament/`)
 
-- Headless bot-only games with in-memory ports. They run in Vitest (jsdom) so the **real** moves and store are exercised, with the store reset between games. A file glob keeps them out of the default `npm test` run.
-- `npm run bots:tournament -- --games 500 --players 4` mixes strategies across seats and writes a Markdown and CSV summary to `src/bots/tournament/results/`: win rate, ties, deliveries, game length, debt, and purchases by strategy.
-- Results are used to tune the weight mappings and narrow any strategy range that produces weak bots, so that every strategy wins a fair share. They also double as a balance check on the game itself.
-- The app never ends the game at 30 ties (`play` has no end condition). The harness stops a game when a bot reaches 30 fulfillment ties, or after a round limit.
+- Headless bot-only games with in-memory ports (`memoryPorts.ts`): the **real** moves, store, runner, and heuristic, with no saving (no current game code) and the board and bot state in plain objects. `Math.random` is seeded per game, so a seed replays a game exactly.
+- `npm run bots:tournament -- --games 300 --players 4 --seed 1 --rounds 80 --markets 3` runs with `vite-node` (it ships with Vitest; the entry is `src/bots/tournament/cli.ts`, because Vite only compiles TypeScript under `src/`). Each game seats a seeded shuffle of the strategies (`seating`), so every strategy meets every other. A game takes about 1.4 seconds.
+- Output: `src/bots/tournament/results/summary.md` (committed, so the last run is the baseline to compare against) and `games.csv` (every seat of every game; ignored by git). The summary has win rate, ties, fulfillment ties, deliveries, routes, debt, cash, borrows, redraws, idle turns, and errors by strategy, plus purchases (upgrades, Hub, Railyard, Regional Office, Commodities Exchange, railroads acquired, best engine).
+- Market contracts appear in the app only when a player presses the market button, so tournament games put three on the table when play starts (`--markets`).
+- The app never ends the game at 30 ties (`play` has no end condition). The harness stops a game when a bot reaches 30 fulfillment ties, or after the round limit. The winner has the most ties including end-of-game bonuses.
+- Results are used to tune the weight mappings and strategy valuations, so that every strategy wins a fair share. They also double as a balance check on the game itself.
 
 ## Milestones
 
