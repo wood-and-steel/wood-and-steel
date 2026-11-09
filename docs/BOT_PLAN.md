@@ -1,0 +1,314 @@
+# Bot Players Plan
+
+Adds computer-controlled players ("bots") that play Wood and Steel alongside humans. The host adds bots on the waiting-for-players screen; they take turns through the same moves a human uses, appear in the app as ordinary players named like "Avery (bot)", and narrate their last turn in their `/board` tray card. Bot-only games (no humans) come later and are not part of this plan, but the design leaves room for them and for running bots on a server.
+
+Current conventions: [BYOD_AGENT_GUIDE.md](BYOD_AGENT_GUIDE.md) (seats), [BOARD_AGENT_GUIDE.md](BOARD_AGENT_GUIDE.md) (board state and trays), [PHASES_AGENT_GUIDE.md](PHASES_AGENT_GUIDE.md) (moves and phases).
+
+## Decisions (from Q&A, 2026-11-09)
+
+| Topic | Decision |
+|---|---|
+| Availability | **Playtest only.** Bots ship where `/board` ships (`__INCLUDE_BOARD__`: `development`, `test`, `board` modes) and never in `npm run build`. The digital `/board` is the map of record in a bot game. |
+| Core game logic | **Unchanged.** No edits to `gameActions`, `moveValidation`, `phaseConfig`, `phaseManager`, `events`, or `Contract`. Bots call the existing moves. |
+| Adding bots | Host only, on the waiting-for-players screen. A bot fills an open seat; the host can remove it before starting. |
+| Strategy choice | Host picks one of six strategies per bot; the default is **Random**. |
+| Names | Drawn from the gender-neutral name list below, shown everywhere as `Name (bot)`. |
+| Who runs bot turns | **The host's app**, for now. Bot logic is written against small interfaces ("ports") so it can move to a server later without a rewrite. |
+| Decision maker | **Heuristic** player built on a shared **bot engine**. An LLM agent player may come later, behind the same interface, using the engine's calculators as tools. |
+| Personalities | Six strategies. Each sets a **range** per weight; a bot's weights are drawn at random within its strategy's ranges. Per-turn variability picks among near-best plans. |
+| Narration | **Templated, plain descriptions.** No character voices. The tray shows the bot's last turn. |
+| Bot-private state | New Supabase table **`bot_states`** (one row per game), not `board_states` and not `G`. |
+| Physical-table state | Bot track, engine positions and types, cargo, Railyard, and upgrades are written to `board_states` with the existing `BoardOp`s, so the phase 2 trays show them with no new code. |
+| Go first next round | Not implemented in the app; **bots never choose it**. |
+| Bankruptcy | Auctions aren't implemented; **bots avoid bankruptcy** (no delivery whose debt service they can't pay). |
+| Undo | Humans can't undo a bot's turn. |
+| Rule changes | Covered by `docs/BOT_AGENT_GUIDE.md`, a move/rule **coverage map** in code, and a **rules fingerprint** test that **fails** when the rules change until the bots are reviewed. Git is the ledger. |
+
+## Architecture
+
+### Layers
+
+```
+                ┌──────────────────────────── src/bots/ ────────────────────────────┐
+                │                                                                   │
+ G/ctx (store) ─┤  ports/      GamePort · BoardPort · BotStatePort · Clock · Rng    │
+ board_states ──┤     │                                                             │
+ bot_states ────┤     ▼                                                             │
+                │  engine/     world model, costs, paths, finances, valuation,      │
+                │              legal actions, action application   (pure)          │
+                │     ▼                                                             │
+                │  heuristic/  strategies, weights, plan generation, scoring,       │
+                │              choice                                (pure)          │
+                │     ▼                                                             │
+                │  runner/     turn loop, pacing, resume, narration log             │
+                │     ▼                                                             │
+                │  host/       port implementations for the host's browser,         │
+                │              BotRunner component, seat controls                   │
+                └───────────────────────────────────────────────────────────────────┘
+```
+
+- **`engine/` and `heuristic/` are pure.** They import no stores, React, Supabase, `localStorage`, or `window`, and take randomness from an injected `Rng`. They read a `BotWorld` snapshot and return decisions and narration lines.
+- **`runner/`** drives one bot turn through the ports. It knows nothing about browsers.
+- **`host/`** is the only browser-specific layer. A future server runner replaces `host/` with Supabase-backed ports and reuses everything else.
+- The tournament harness (M7) supplies in-memory ports.
+
+### Ports
+
+| Port | Host implementation | Purpose |
+|---|---|---|
+| `GamePort` | Reads `useGameStore`; calls the existing moves (`createMoves`) and pure helpers such as `generatePrivateContractOffers`. Resolves each move only once its save has landed (see Risks). | Read `G`/`ctx`; apply moves |
+| `BoardPort` | Loads `board_states`, seeds the row from `G` if missing (`seedBoardState`), applies a `BoardOp` with the same conditional-save and re-apply loop as `boardSync` (factored into a shared helper in `src/board/`). | Read and write board state |
+| `BotStatePort` | `bot_states` adapter with conditional saves and realtime, modeled on `boardStateAdapter`. | Bot-private state and narration |
+| `Clock`, `Rng` | Timers; a seeded generator stored per bot. | Pacing; reproducible choices |
+
+### Isolation and gating
+
+- All bot code lives in **`src/bots/`**. `App.tsx` imports it only through lazy imports behind `__INCLUDE_BOARD__`, exactly as it does for `/board`.
+- `src/bots/` may import from `src/board/` (ops, adapter, `playerBoardData`, seeding) because both are playtest-only.
+- `src/board/` may import only the **read side** of bot state (`bots/state/` types, normalizer, adapter) to show narration. The board still never writes `G`/`ctx`.
+- `scripts/check-board-build.mjs` also checks that the production build contains no bot code.
+- `bot_states` is a documented exception in `AGENTS.md`, like `boardStore`: it holds no `G`/`ctx` data.
+
+## Seats and the waiting screen
+
+**Metadata.** A bot seat is an ordinary entry in `metadata.playerSeats`, keyed `bot:<uuid>` instead of a device ID:
+
+```ts
+interface PlayerSeat {
+  joinedAt: string;
+  playerName: string;        // "Avery (bot)"
+  playerID?: string;
+  bot?: { name: string; strategy: StrategyId };   // new; absent for humans
+}
+```
+
+`allPlayersJoined`, `getNumPlayersJoined`, and `assignRandomPlayerIDs` already count every seat, so bots fill seats and get shuffled play-order IDs with no changes. `handleStartBYODGame` already copies `seat.playerName` into `G.players`, which is how "Avery (bot)" shows everywhere in the app with **no UI changes during play**.
+
+**`gameManager.ts` additions** (the only place seats live, per `AGENTS.md`):
+
+- `addBotSeat(code, hostDeviceId, { name, strategy })` checks that the caller is the host, the game hasn't started, and a seat is open; returns the new seat. It takes the name and strategy as arguments, so `gameManager` imports nothing from `src/bots/`.
+- `removeBotSeat(code, hostDeviceId, seatKey)` is host only, works before start only, and removes bot seats only.
+- `isBotSeat(seat)` helper. Covered in `gameManager.test.ts`.
+
+**`WaitingForPlayersScreen.tsx`:**
+
+- Bot seats show their name and, for the host only, a **Remove** button.
+- A new optional prop holds the host's add-bot control. `App.tsx` lazy-loads `BotSeatControls` from `src/bots/host/` and passes it in when `__INCLUDE_BOARD__` is on and this device is the host. It shows a strategy select (Random, then the six strategies) and an **Add bot** button, and is disabled when no seat is open.
+- **Random** is resolved when the bot is added. Random avoids strategies already in the game until all six are used. The name is drawn from the list, avoiding names already used by any seat, compared case-insensitively and ignoring "(bot)".
+- Humans can't rename bots, and bot seats have no device, so the device-not-playing checks don't apply to them.
+
+**Names** (from the provided list): Adrian, AJ, Alex, Ashley, Ariel, Avery, Baraka, BJ, Brooke, Calypso, Cameron, Carey, Casey, Chris, Cielo, CJ, Dakota, Dana, Darby, DJ, Duri, Eka, Fadhili, Geni, Hao, Hazuki, Hunter, Hye, Imani, Ira, Itsuki, Jamie, Jela, Jesse, Jordan, Kelly, Kim, Kris, Kurumi, Maki, Malaika, Masumi, Max, Midori, Minh, Misha, Mitsuyo, Montana, Morgan, Nanda, Nat, Nata, Panca, Piper, Putu, Quinn, Ren, Riziki, Robin, Rosario, Sage, Sam, Santana, Sidney, Sydney, Sky, Taylor, Toan, Tracey, Trung, Waridi, Yoshika, Zola, Zuri. They live in `src/bots/names.ts`.
+
+## Bot state: `bot_states`
+
+One row per game code (`code`, `state jsonb`, `updated_at`), with SQL in `src/bots/supabase/bot_states.sql`. It has the same anon RLS policies and realtime publication as `board_states`, and saves are conditional on `updated_at`. Jeff applies the SQL by hand in the Supabase dashboard.
+
+```ts
+interface BotStatesRow {
+  version: 1;
+  bots: Record<string /* playerID */, BotRecord>;
+}
+
+interface BotRecord {
+  name: string;                 // "Avery"
+  strategy: StrategyId;
+  weights: Weights;             // drawn once, at first run
+  rngSeed: number;
+  cash: number;                 // $ in thousands, as in the rules
+  debt: number;
+  centralDebtServicePaid: boolean;  // one-time Central-region service
+  westernDeliveryMade: boolean;     // ongoing service from then on
+  deliveries: Record<string /* commodity */, number>;   // breadth and depth bonuses
+  exchangeCommodity: string | null; // Commodities Exchange choice (the board records bought or not, not which)
+  plan: BotPlan | null;         // current multi-turn intent, kept between turns for stickiness
+  turnInProgress: { turn: number; steps: string[] } | null;  // for resume after reload
+  log: BotTurnLog[];            // newest last; keep the last 20 turns
+  runnerSeenAt: string;         // heartbeat from the host's runner
+}
+
+interface BotTurnLog { round: number; turn: number; lines: string[] }
+```
+
+- The row is created by the host's runner when the game first leaves `waiting_for_players`. One record per bot seat is created from the seat's name and strategy. That is when the weights are drawn and $10,000 cash is set, as in setup.
+- `normalizeBotStates` tolerates missing and malformed fields and refuses newer versions, like `normalizeBoardState`.
+- Human money is not tracked anywhere. Bots estimate opponents from `G` (contracts, ties, Hubs, Regional Offices) and the board (track, engines, upgrades).
+
+## Bot engine (`src/bots/engine/`)
+
+The engine builds a `BotWorld` from `G`/`ctx`, the board state, and the bot's record. It answers everything the policy needs with exact numbers:
+
+- **Map and paths:** the route graph from `src/data/routes.ts`, including length, mountainous flags, and shortest and cheapest paths over owned track, buildable routes, and parallel slots. Independent railroad routes can't be built on.
+- **Costs:** the track cost table (mountainous, parallel, Hub discount within two links), engine prices and trade-in values, the one-level-up limit (two with a Hub, +$5,000), upgrade prices, and independent railroad prices ($3,000 or $4,000 per route after the first Western delivery).
+- **Finances:** contract payout (`moneyValue`), Upgraded Stations +$3,000, the Mountain and Challenger 1⅓× bonus, debt service by region history, borrowing in $5,000 steps, and repaying $5,000 or $10,000 down to a $15,000 floor.
+- **Movement:** engine distance (`engineDistance`, including the Service Yard bonus), pickup en route, a delivery ending movement unless the bot has a Timetable, Roundhouse transfers, and Railyard supply within two segments.
+- **Scoring:** fulfillment ties (`railroadTieValue`), commodity breadth and depth bonuses, monopoly ties, Regional Office end-of-game ties, and the Challenger's 2 ties. The app doesn't track the bonuses yet, so the engine scores them itself from the rules.
+- **Availability rules:** market contracts need a Mogul or better; Service Yard needs a Consolidation owned by any player; one Hub per city; Regional Office eligibility; at most two engines; per-turn action limits (one or two actions, only Run Trains repeated, each engine run once).
+- **Legal actions and application:** `listActions(world)` and `applyAction(world, action)` work on a copy, so the policy can try sequences. Each action also yields its **effects**: app moves, board ops, bot-record changes, and narration lines.
+
+Rules constants the board doesn't already hold (prices, cost table, debt service, tie bonuses) live in `engine/rulesData.ts`. Names and distances come from `src/board/playerBoardData.ts`.
+
+### Actions mapped to effects
+
+| Action | App moves (`GamePort`) | Board ops (`BoardPort`) | Bot record |
+|---|---|---|---|
+| Choose starting cities (setup) | `generateStartingContract(pair, playerID)` | Starting route is seeded by the board as today | Cash $10,000 |
+| Run trains | On delivery, `toggleContractFulfilled`. For a private contract, `generatePrivateContractOffers` then `addContract(…, 'private')`, buying a Hub or Regional Office through `claimHubCity` / `claimRegionalOffice` when the policy chooses. For a market contract, the same claim sequence the Contracts tab uses. | `moveEngine`, `setCargo` | Cash, debt service, deliveries |
+| Build track | (none) | `claimRoute` per segment (parallel adds an owner) | Cash |
+| Buy engine | (none) | `setEngineType`, `moveEngine` to place a new token | Cash |
+| Acquire independent railroad | `acquireIndependentRailroad(name)` | Board's existing acquisition reconciliation | Cash |
+| Borrow / repay | (none) | (none) | Cash, debt |
+| Buy upgrade | Hub: `claimHubCity`; Regional Office: `claimRegionalOffice` | `setUpgrade` for the six tracked upgrades; Railyard: `moveRailyard` | Cash; exchange commodity |
+| Discard and redraw private contract | `deleteContract` then offers and `addContract` | (none) | (none) |
+| End turn | `endTurn` | (none) | Log entry finalized |
+| **Go first next round** | **Never chosen** | | |
+
+## Heuristic player (`src/bots/heuristic/`)
+
+Each turn:
+
+1. **Candidate plans.** For each held contract, claimable market contract, and redraw option, the engine builds a delivery plan: pickup city, path, track to build, engine runs, cost, turns to deliver, money, and ties. Investment plans cover each affordable engine, upgrade, Hub site, Railyard site, independent railroad, and borrow or repay option. A candidate is the next one or two actions plus the multi-turn plan they serve.
+2. **Score.** Projected ties and money per turn over the planning horizon, shaped by the bot's weights (table below). Hard constraints: no bankruptcy; never "go first".
+3. **Stickiness.** The current `plan` gets a bonus, so the bot doesn't flip-flop between targets. It drops the plan when it becomes impossible, for example when a market contract is taken or a Hub city is claimed by someone else.
+4. **Choose.** Keep candidates scoring within a band of the best; the band's width grows with the **variability** weight. Pick among them by weighted random using the bot's `Rng`.
+5. **Explain.** Return templated narration lines for the chosen actions.
+
+Search stays shallow: every legal one- or two-action turn is enumerated, then each is valued by the multi-turn plan it advances. No deep game-tree search.
+
+### Weights
+
+Each weight is a number from 0 to 1. Each changes which trade-offs a bot accepts; every bot does the same arithmetic.
+
+| Weight | Low end | High end | Feeds into |
+|---|---|---|---|
+| Debt tolerance | Borrows only to finish a delivery | Borrows early and heavily | Max debt relative to expected income |
+| Planning horizon | Values the next 2–3 turns | Values 10+ turns | Turns counted when valuing plans |
+| Payback patience | Buys only what pays back quickly | Buys long-term capability early | Max payback period for engines and upgrades |
+| Reach | Dense eastern network | Pushes west | Bonus for Central and Western targets |
+| Ties over money | Contracts that pay well | Contracts worth more ties | Mix of ties and money in the score |
+| Independent railroad appetite | Builds its own track | Acquires independent railroads | Bonus for acquisitions |
+| Competitiveness | Ignores others | Races for Hubs and Regional Offices, blocks | Value of denying opponents |
+| Variability | Usually takes the best plan | Often takes a near-best plan | Width of the choice band |
+
+Bands: Low 0.00–0.30, Low–Med 0.15–0.50, Medium 0.35–0.65, Med–High 0.50–0.85, High 0.70–1.00. The exact mapping from each weight to its parameter is set in M5 and tuned in M7.
+
+### Strategies (`heuristic/strategies.ts`)
+
+| Strategy | How it plays |
+|---|---|
+| **Builder** | Grows outward from its starting cities a segment or two at a time and keeps debt near zero. Buys Upgraded Stations and Employment Office once they pay for themselves. Steady and hard to knock off course. |
+| **Speculator** | Borrows early and builds toward the Central and Western regions to chase contracts worth 3–4 ties. Accepts debt service as the cost of reach. Strong or weak game to game. |
+| **Consolidator** | Buys independent railroads to get long networks cheaply, ideally before the price rises to $4,000 per route. Buys a Hub and stacks upgrades on that network. |
+| **Express** | Keeps a compact network but buys the best engines, plus Service Yard, Timetable and Roundhouse. Wins by delivering more often on a few long trunk lines. |
+| **Merchant** | Buys a Mogul early to claim market contracts, and buys Upgraded Stations. Discards and redraws weak private contracts. Builds money first, then turns it into ties late. |
+| **Regionalist** | Commits early to one region, puts its Hub in the middle of it, and aims for five cities there for a Regional Office. Goes after a Commodities Exchange monopoly and races anyone building in its region. |
+
+| Strategy | Debt tolerance | Planning horizon | Payback patience | Reach | Ties over money | Indie appetite | Competitiveness | Variability |
+|---|---|---|---|---|---|---|---|---|
+| Builder | Low | High | Medium | Low | Medium | Low–Med | Low | Low |
+| Speculator | High | Med–High | High | High | High | Low | Medium | Med–High |
+| Consolidator | Medium | High | High | Medium | Medium | High | Med–High | Low–Med |
+| Express | Medium | Low–Med | Med–High | Med–High | Low–Med | Low | Low | Medium |
+| Merchant | Low–Med | Low–Med | Low | Low–Med | Low | Low–Med | Medium | Med–High |
+| Regionalist | Low–Med | High | Medium | Low | High | Medium | High | Low |
+
+Strategy and weights are not shown to players. Only the host sees the chosen strategy, on the waiting screen.
+
+## Narration
+
+Lines are built from templates per action. They are short, plain, and in the third person by name, with no pronouns:
+
+- "Avery built Boston–New York and New York–Philadelphia for $5,000."
+- "Avery ran the light engine from Boston to Syracuse and picked up machinery."
+- "Avery delivered machinery to Chicago for $9,000 and 2 ties."
+- "Avery chose a private contract: coal to Atlanta."
+- "Avery borrowed $5,000."
+- "Avery bought a 2-6-0 Mogul, trading in the American."
+- "Avery bought Timetable for $15,000."
+- "Avery acquired the Erie & Western for $6,000."
+- "Avery ended the turn."
+
+The runner appends each line to the open `BotTurnLog` as the action completes, so the tray fills in live during the turn.
+
+**Tray (`src/board/PlayerTrays.tsx`):** a bot's card gets a **Last turn** section that lists the most recent log entry, or the one in progress. If `runnerSeenAt` is more than about 30 seconds old while it's the bot's turn, the card says **Waiting for the host's app**. The board subscribes to `bot_states` read-only, alongside its existing syncs.
+
+## Runner (`src/bots/runner/`, `src/bots/host/`)
+
+- **Mounting:** `App.tsx` lazy-mounts `BotRunner` when `__INCLUDE_BOARD__` is on, this device is the host, the game has bot seats, and the phase is `setup` or `play`. It renders nothing.
+- **Trigger:** when `ctx.currentPlayer` belongs to a bot, the runner runs that bot's turn. It updates `runnerSeenAt` every 10 seconds while mounted.
+- **Pacing:** about 1.5 seconds between actions, so people can follow along on the board and in the tray. Consecutive bot turns run one after another.
+- **Resume:** before each step the runner records it in `turnInProgress`. After a reload it re-reads `G`, the board, and `bot_states`, skips steps already reflected there, and continues. Moves aren't idempotent (`toggleContractFulfilled` flips), so every step is checked against fresh state before it's applied.
+- **Guards:** before each move, the runner rechecks that `ctx.currentPlayer` is still the bot and `ctx.turn` is unchanged. Any mismatch stops the turn without acting.
+- **Failure:** if a move or save fails, the bot ends its turn after logging "Avery ended the turn early (sync error)." The runner never retries a move blindly.
+- **Host's own turn:** the host plays normally. The runner is idle unless a bot is the current player.
+
+## Rule changes: guide, coverage map, fingerprint
+
+- **`docs/BOT_AGENT_GUIDE.md`**, linked from `AGENTS.md`, covers file layout, ports, invariants, how to add an action or upgrade, how to tune strategies, and the checklist below.
+- **`src/bots/coverage.ts`** labels every move in `MOVES_BY_PHASE` and every action and upgrade heading in `docs/Game rules.md` (the `###` entries under Turn actions and the `####` entries under Buy an upgrade) as `used`, `ignored` (with a reason, for example go-first), or `notInApp`. **`coverage.test.ts`** fails if any move or heading is unlabeled, or if a label names something that no longer exists.
+- **`src/bots/rulesFingerprint.ts`** stores a SHA-256 of `docs/Game rules.md`, `MOVES_BY_PHASE`, `src/data/*.ts`, and `src/board/playerBoardData.ts`. **`rulesFingerprint.test.ts` fails** when the hash differs, with a message pointing to the guide. `npm run bots:ack-rules` rewrites the hash; it is run deliberately after review, and a typo-only change is committed with a note that it has no bot impact.
+- **Diff since the last sync:**
+
+  ```bash
+  git diff $(git log -1 --format=%H -- src/bots/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/board/playerBoardData.ts
+  ```
+
+- **Checklist in the guide:** run the diff; update `rulesData`, the engine, the coverage map, and narration templates; add tests; rerun the tournament and compare with the last results; then acknowledge the fingerprint.
+
+## Tournament harness (`src/bots/tournament/`)
+
+- Headless bot-only games with in-memory ports. They run in Vitest (jsdom) so the **real** moves and store are exercised, with the store reset between games. A file glob keeps them out of the default `npm test` run.
+- `npm run bots:tournament -- --games 500 --players 4` mixes strategies across seats and writes a Markdown and CSV summary to `src/bots/tournament/results/`: win rate, ties, deliveries, game length, debt, and purchases by strategy.
+- Results are used to tune the weight mappings and narrow any strategy range that produces weak bots, so that every strategy wins a fair share. They also double as a balance check on the game itself.
+- The app never ends the game at 30 ties (`play` has no end condition). The harness stops a game when a bot reaches 30 fulfillment ties, or after a round limit.
+
+## Milestones
+
+1. **M1 Seats.** `PlayerSeat.bot`, `addBotSeat`, `removeBotSeat`, `isBotSeat` and tests; names and the strategy list; `BotSeatControls` with lazy wiring in `App.tsx`; Remove on the waiting screen. Bots can be seated and the game starts, but bots don't act yet.
+2. **M2 Bot state.** `bot_states.sql`, adapter, in-memory test adapter, `normalizeBotStates`, row creation at game start.
+3. **M3 Engine.** `BotWorld`, `rulesData`, paths, costs, finances, movement, scoring, `listActions`, and `applyAction` with effects; the coverage map and the rules fingerprint and their tests.
+4. **M4 Runner and plumbing.** Ports and host implementations, the shared board save helper extracted from `boardSync`, and `BotRunner` with pacing, guards, resume, and narration logging. Uses a minimal policy (setup choice, run and deliver, end turn) to prove the loop end to end.
+5. **M5 Heuristic.** Strategies, weight drawing, plan generation, scoring, stickiness, and choice, replacing the minimal policy.
+6. **M6 Tray narration.** Last-turn section and waiting-for-host status in `PlayerTrays`, with realtime subscription to `bot_states`.
+7. **M7 Tournament and tuning.** Harness, summary output, and first tuning pass of the weight mappings and strategy ranges.
+8. **M8 Hardening and docs.** Isolation tests; `check-board-build` covering bot code; `BOT_AGENT_GUIDE.md`; updates to `AGENTS.md` (state map exception and docs list), `BYOD_AGENT_GUIDE.md` (bot seats), and `BOARD_AGENT_GUIDE.md` (narration, bot imports); archive this plan with status notes.
+
+## Tests and verification
+
+| File | Covers |
+|---|---|
+| `src/utils/gameManager.test.ts` | Add and remove bot seats: host only, before start only, full game, remove a human refused; bots counted by `allPlayersJoined` and `assignRandomPlayerIDs` |
+| `src/bots/host/BotSeatControls.test.tsx` | Random default; random avoids repeated strategies and names; disabled when full |
+| `src/bots/state/botStates.test.ts` | Normalization, version refusal, conditional saves and conflicts, row creation |
+| `src/bots/engine/*.test.ts` | Track costs (mountainous, parallel, Hub discount), debt service by region, engine purchase limits and trade-ins, indie pricing before and after a Western delivery, Timetable and Roundhouse movement, bonuses, legal actions, never "go first" |
+| `src/bots/heuristic/*.test.ts` | Weight draws stay in range; each strategy shows its signature behavior in staged worlds; seeded choices are reproducible; no bankrupting delivery |
+| `src/bots/runner/*.test.ts` | Full turns through in-memory ports; pacing; guard stops on turn change; resume after a simulated reload does not repeat a move |
+| `src/bots/coverage.test.ts`, `rulesFingerprint.test.ts` | Every move and rule heading labeled; fingerprint matches |
+| `src/bots/botIsolation.test.ts` | App imports bots only lazily from `App.tsx`; `engine/` and `heuristic/` import no stores, React, Supabase, or browser globals; the board imports only the read side of bot state; the board still never writes `G` |
+| `src/board/BoardApp.test.tsx` | Bot card shows last turn and waiting-for-host status |
+
+Then run unit tests, typecheck, `npm run check:board-build`, and a short tournament. Play a live game in the browser: host plus one human on two devices, two bots, and `/board` open on a third screen. Check that bot turns play out with narration, and that reloading the host mid-bot-turn resumes correctly.
+
+**Rollout:** apply `bot_states.sql` in the Supabase dashboard before using bots, and reload open board screens.
+
+## Risks
+
+- **Back-to-back saves.** Moves save fire-and-forget, with optimistic concurrency on `lastModified`. Rapid consecutive bot moves from one device could race. The host `GamePort` waits for each save to land (the realtime echo, or `getLastModified` advancing) before the next move, and pacing adds margin.
+- **Host app closed or asleep.** Bots pause; the tray says so. A server runner removes this limit later.
+- **Board not open.** The bot's `BoardPort` seeds the board row if needed, so bot track is never lost. Independent railroad acquisitions are reconciled when a board screen sees the change, as for humans, so keep `/board` open during bot games.
+- **Rules ambiguity.** Where the rules are unclear (for example, where a newly bought engine is placed), the engine picks a documented default in `rulesData.ts` and the guide lists it.
+
+## Not in this plan
+
+- Bot-only games, and starting bot games from the lobby
+- A server-side runner (the ports are designed for it)
+- An LLM agent player (it would reuse the engine as tools and need a server-side API proxy)
+- Character voices in narration
+- Go first next round, bankruptcy auctions, and connection bonuses (not in the app)
+- Any change to core game logic, or tracking human money
+
+## Open questions (non-blocking; defaults in brackets)
+
+- **Strategy visibility:** show a bot's strategy to non-host players anywhere? [No.]
+- **New engine placement:** the rules say a replacement goes "in that city" but don't say where a second engine starts. [A city on the bot's network chosen by its plan; documented in `rulesData.ts`.]
+- **Commodities Exchange commodity:** the board records bought or not, not which commodity. [Kept in `bot_states` and named in narration.]
+- **Narration history:** show only the last turn? [Yes. The last 20 turns are stored for debugging.]
