@@ -248,12 +248,12 @@ The runner appends each line to the open `BotTurnLog` as the action completes, s
 ## Rule changes: guide, coverage map, fingerprint
 
 - **`docs/BOT_AGENT_GUIDE.md`**, linked from `AGENTS.md`, covers file layout, ports, invariants, how to add an action or upgrade, how to tune strategies, and the checklist below.
-- **`src/bots/coverage.ts`** labels every move in `MOVES_BY_PHASE` and every action and upgrade heading in `docs/Game rules.md` (the `###` entries under Turn actions and the `####` entries under Buy an upgrade) as `used`, `ignored` (with a reason, for example go-first), or `notInApp`. **`coverage.test.ts`** fails if any move or heading is unlabeled, or if a label names something that no longer exists.
-- **`src/bots/rulesFingerprint.ts`** stores a SHA-256 of `docs/Game rules.md`, `MOVES_BY_PHASE`, `src/data/*.ts`, and `src/board/playerBoardData.ts`. **`rulesFingerprint.test.ts` fails** when the hash differs, with a message pointing to the guide. `npm run bots:ack-rules` rewrites the hash; it is run deliberately after review, and a typo-only change is committed with a note that it has no bot impact.
+- **`src/bots/rules/coverage.ts`** labels every move in `MOVES_BY_PHASE` and every action and upgrade heading in `docs/Game rules.md` (the `###` entries under Turn actions and the `####` entries under Buy an upgrade) as `used`, `ignored` (with a reason, for example go-first), or `notInApp`. **`coverage.test.ts`** fails if any move or heading is unlabeled, or if a label names something that no longer exists.
+- **`src/bots/rules/rulesFingerprint.ts`** stores a SHA-256 of `docs/Game rules.md`, `MOVES_BY_PHASE` (parsed from `moveValidation.ts`, which stays unchanged), `src/data/*.ts`, and `src/board/playerBoardData.ts`; `src/bots/rules/rulesSources.ts` computes it. **`rulesFingerprint.test.ts` fails** when the hash differs, with a message pointing to the guide. `npm run bots:ack-rules` rewrites the hash; it is run deliberately after review, and a typo-only change is committed with a note that it has no bot impact.
 - **Diff since the last sync:**
 
   ```bash
-  git diff $(git log -1 --format=%H -- src/bots/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/board/playerBoardData.ts
+  git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/board/playerBoardData.ts
   ```
 
 - **Checklist in the guide:** run the diff; update `rulesData`, the engine, the coverage map, and narration templates; add tests; rerun the tournament and compare with the last results; then acknowledge the fingerprint.
@@ -270,6 +270,7 @@ The runner appends each line to the open `BotTurnLog` as the action completes, s
 1. **M1 Seats.** `PlayerSeat.bot`, `addBotSeat`, `removeBotSeat`, `isBotSeat` and tests; names and the strategy list; `BotSeatControls` (bot list with Remove, strategy select, Add bot) with lazy wiring in `App.tsx`. Bots can be seated and the game starts, but bots don't act yet.
 2. **M2 Bot state.** `bot_states.sql`, adapter, in-memory test adapter, `normalizeBotStates`, row creation at game start.
 3. **M3 Engine.** `BotWorld`, `rulesData`, paths, costs, finances, movement, scoring, `listActions`, and `applyAction` with effects; the coverage map and the rules fingerprint and their tests.
+   *Done.* `src/bots/engine/` (`world`, `network`, `costs`, `finance`, `movement`, `scoring`, `actions`, `narration`, `rulesData`) and `src/bots/rules/`. Where the rules are unclear the engine uses a documented default (`rulesData.ts`, and the list in `BOT_AGENT_GUIDE.md`). `listActions` checks every generated run with `applyAction`; on a large late-game network it returns about 1,800 actions in about 120 ms, which is fine for live turns but too slow for M7's tournament, so M5's heuristic should generate candidates from `runOptions`, `buildableRoutes`, and the purchase lists directly rather than scoring all of `listActions`.
 4. **M4 Runner and plumbing.** Ports and host implementations, the shared board save helper extracted from `boardSync`, and `BotRunner` with pacing, guards, resume, and narration logging. Uses a minimal policy (setup choice, run and deliver, end turn) to prove the loop end to end.
 5. **M5 Heuristic.** Strategies, weight drawing, plan generation, scoring, stickiness, and choice, replacing the minimal policy.
 6. **M6 Tray narration.** Last-turn section and waiting-for-host status in `PlayerTrays`, with realtime subscription to `bot_states`.
@@ -286,7 +287,7 @@ The runner appends each line to the open `BotTurnLog` as the action completes, s
 | `src/bots/engine/*.test.ts` | Track costs (mountainous, parallel, Hub discount), debt service by region, engine purchase limits and trade-ins, indie pricing before and after a Western delivery, Timetable and Roundhouse movement, bonuses, legal actions, never "go first" |
 | `src/bots/heuristic/*.test.ts` | Weight draws stay in range; each strategy shows its signature behavior in staged worlds; seeded choices are reproducible; no bankrupting delivery |
 | `src/bots/runner/*.test.ts` | Full turns through in-memory ports; pacing; guard stops on turn change; resume after a simulated reload does not repeat a move |
-| `src/bots/coverage.test.ts`, `rulesFingerprint.test.ts` | Every move and rule heading labeled; fingerprint matches |
+| `src/bots/rules/coverage.test.ts`, `rulesFingerprint.test.ts` | Every move and rule heading labeled; fingerprint matches |
 | `src/bots/botIsolation.test.ts` | App imports bots only lazily from `App.tsx`; `engine/` and `heuristic/` import no stores, React, Supabase, or browser globals; the board imports only the read side of bot state; the board still never writes `G` |
 | `src/board/BoardApp.test.tsx` | Bot card shows last turn and waiting-for-host status |
 
