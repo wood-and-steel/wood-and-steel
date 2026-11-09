@@ -29,6 +29,19 @@
 | `actions.ts` | `Action`, `listActions`, `applyAction` → predicted world plus effects (app moves, board ops, `requestOffers`, narration). |
 | `narration.ts` | Plain templates: third person by name, no pronouns. |
 
+## Heuristic player (`src/bots/heuristic/`)
+
+| File | Role |
+|---|---|
+| `strategies.ts` | The six strategies: labels, summaries, and affinities (multipliers on what a kind of purchase is worth). |
+| `weights.ts` | Weight bands per strategy; weights are drawn once, when a bot's record is created. |
+| `params.ts` | Weights → concrete numbers (max debt, horizon, payback, tie value, choice band); `chooseWithinBand` for near-best random choices. |
+| `plans.ts` | `cheapestPath` (own track free, independent routes off limits) and delivery plans: engine, supplier, track to build, turns, utility, rate, affordability. |
+| `invest.ts` | What engines, upgrades, and independent railroads are worth over the horizon; `worthwhile` filters by value and payback. |
+| `policy.ts` | `heuristicPolicy`: required choices → free pickups → deliveries → purchases → the best plan's next step → redraw, repay, or end the turn. |
+
+Tuning: valuations are deliberately simple. Change them with `playthrough.test.ts` (`BOT_LOG=1 npx vitest run src/bots/heuristic/playthrough.test.ts` prints each strategy's results) and, from M7, the tournament.
+
 ## Runner (`src/bots/runner/`, `src/bots/host/`)
 
 | File | Role |
@@ -36,7 +49,7 @@
 | `ports.ts` | `GamePort`, `BoardPort`, `BotStatePort`, `Clock`: everything the runner needs from outside. A server runner implements these instead of `host/hostPorts.ts`. |
 | `runner/runTurn.ts` | `runBotTurn`: one turn. Per action: policy chooses from `listActions`, `applyAction` checks it, the action and its effects are saved as `turnInProgress.pending`, the effects run, then narration is saved and `pending` cleared. |
 | `runner/steps.ts` | Step keys (rebuild the turn's actions after a reload) and `isMoveDone` (skip moves `G` already shows when resuming). |
-| `runner/basicPolicy.ts` | Placeholder policy for M4; replaced by the heuristic in M5. |
+| `runner/simplePolicy.testHelper.ts` | A small predictable policy for runner tests. Live bots use `heuristicPolicy`. |
 | `host/hostPorts.ts` | Host implementations: moves call the app's move functions, then wait until the stored game matches the store; board ops go through `src/board/boardRowOps.ts`. |
 | `host/BotRunner.tsx` | Lazy-mounted by `App.tsx`. On the host only: creates `bot_states`, plays each bot's turn when it's current, and writes a heartbeat (`runnerSeenAt`) every 10 seconds. |
 

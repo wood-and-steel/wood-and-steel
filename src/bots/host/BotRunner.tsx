@@ -10,7 +10,7 @@ import React from 'react';
 import { useStorage } from '../../providers/StorageProvider';
 import { useGameStore } from '../../stores/gameStore';
 import type { PlayerSeat } from '../../utils/gameManager';
-import type { Policy } from '../runner/basicPolicy';
+import type { Policy } from '../policy';
 import { runBotTurn } from '../runner/runTurn';
 import type { BotPorts } from '../ports';
 import { botSeatsByPlayerID, type BotStates } from '../state/botStates';

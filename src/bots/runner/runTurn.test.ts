@@ -4,6 +4,7 @@ import { normalizeBoardState } from '../../board/boardOps';
 import { useGameStore } from '../../stores/gameStore';
 import { normalizeBotStates } from '../state/botStates';
 import { runBotTurn } from './runTurn';
+import { simplePolicy } from './simplePolicy.testHelper';
 import { setUpHostGame, type HostGame } from './hostGame.testHelper';
 import { stableStringify } from '../host/hostPorts';
 import { serializeState } from '../../utils/stateSerialization';
@@ -50,7 +51,7 @@ beforeEach(() => {
 describe('runBotTurn', () => {
   test('setup: chooses starting cities, which ends the turn', async () => {
     const game = await setUpHostGame({ phase: 'setup' });
-    expect(await runBotTurn({ playerID: '0', ports: game.ports, paceMs: 0 })).toBe('done');
+    expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 })).toBe('done');
 
     const { G, ctx } = useGameStore.getState();
     const me = G.players.find(([id]) => id === '0')![1];
@@ -70,7 +71,7 @@ describe('runBotTurn', () => {
       contracts: [contract({})],
       board: { track, engines: { '0': ['Boston', null], '1': [null, null] } },
     });
-    expect(await runBotTurn({ playerID: '0', ports: game.ports, paceMs: 0 })).toBe('done');
+    expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 })).toBe('done');
 
     const { G, ctx } = useGameStore.getState();
     expect(G.contracts.find((c) => c.id === 'k1')!.fulfilled).toBe(true);
@@ -93,7 +94,7 @@ describe('runBotTurn', () => {
 
   test('places the starting engine first if it isn’t on the board', async () => {
     const game = await setUpHostGame({ phase: 'play', contracts: [contract({})], board: { track } });
-    await runBotTurn({ playerID: '0', ports: game.ports, paceMs: 0 });
+    await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 });
     expect(last(botRecord(game).log).lines[0]).toMatch(/^Avery placed the 2-4-0 John Bull in /);
   });
 
@@ -120,7 +121,7 @@ describe('runBotTurn', () => {
     };
     game.botAdapter.write(game.code, states);
 
-    expect(await runBotTurn({ playerID: '0', ports: game.ports, paceMs: 0 })).toBe('done');
+    expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 })).toBe('done');
     // Toggling again would have un-fulfilled it.
     expect(useGameStore.getState().G.contracts.find((c) => c.id === 'k1')!.fulfilled).toBe(true);
     expect(normalizeBoardState(game.boardAdapter.rows.get(game.code)!.state).engines['0'][0]).toBe('New York');
@@ -132,13 +133,13 @@ describe('runBotTurn', () => {
 
   test('does nothing when it isn’t the bot’s turn', async () => {
     const game = await setUpHostGame({ phase: 'play', currentPlayer: '1' });
-    expect(await runBotTurn({ playerID: '0', ports: game.ports, paceMs: 0 })).toBe('not-my-turn');
+    expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 })).toBe('not-my-turn');
     expect(botRecord(game).log).toEqual([]);
   });
 
   test('stops when asked', async () => {
     const game = await setUpHostGame({ phase: 'play', contracts: [contract({})], board: { track } });
-    expect(await runBotTurn({ playerID: '0', ports: game.ports, paceMs: 0, shouldStop: () => true })).toBe('stopped');
+    expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0, shouldStop: () => true })).toBe('stopped');
     expect(useGameStore.getState().ctx.currentPlayer).toBe('0');
   });
 });

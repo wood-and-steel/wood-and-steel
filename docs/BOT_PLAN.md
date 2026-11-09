@@ -216,6 +216,17 @@ Bands: Low 0.00–0.30, Low–Med 0.15–0.50, Medium 0.35–0.65, Med–High 0.
 | Merchant | Low–Med | Low–Med | Low | Low–Med | Low | Low–Med | Medium | Med–High |
 | Regionalist | Low–Med | High | Medium | Low | High | Medium | High | Low |
 
+**Signature purchases (added in M5).** Weights alone didn't produce each strategy's signature moves (Express sat on cash instead of buying engines, for example), so each strategy also has *affinities*: multipliers on what a kind of purchase is worth to it (`STRATEGY_AFFINITIES` in `heuristic/strategies.ts`):
+
+| Strategy | Affinities |
+|---|---|
+| Builder | Upgraded Stations ×1.3, Employment Office ×1.5 |
+| Speculator | Engines ×1.2 |
+| Consolidator | Independent railroads ×1.3, Hub ×1.4, Upgraded Stations ×1.2, movement upgrades ×1.2 |
+| Express | Engines ×2.5, movement upgrades (Service Yard, Timetable, Roundhouse) ×2 |
+| Merchant | Upgraded Stations ×1.5, engines ×1.5 |
+| Regionalist | Hub ×1.4, Regional Office ×2, Commodities Exchange ×2 |
+
 Strategy and weights are not shown to players. Only the host sees the chosen strategy, on the waiting screen.
 
 ## Narration
@@ -275,6 +286,7 @@ The runner appends each line to the open `BotTurnLog` as the action completes, s
 4. **M4 Runner and plumbing.** Ports and host implementations, the shared board save helper extracted from `boardSync`, and `BotRunner` with pacing, guards, resume, and narration logging. Uses a minimal policy (setup choice, run and deliver, end turn) to prove the loop end to end.
    *Done.* `src/bots/ports.ts`, `src/bots/runner/` (`runTurn`, `steps`, `basicPolicy`), `src/bots/host/hostPorts.ts`, and `src/board/boardRowOps.ts` (the shared save-op-to-row helper; `boardSync` keeps its own optimistic queue). Before an action's effects run, they're saved as `turnInProgress.pending` in `bot_states`; a resume re-runs them, skipping moves `G` already shows (`isMoveDone`) and re-applying board ops (they're re-appliable). Narration is saved with the pending action's completion in one write. The host's `GamePort` waits for each move's save by comparing the stored game with the store, and re-saves once if an older background save landed last.
 5. **M5 Heuristic.** Strategies, weight drawing, plan generation, scoring, stickiness, and choice, replacing the minimal policy.
+   *Done.* `heuristic/` (`params`, `plans`, `invest`, `policy`, strategy affinities), `src/bots/policy.ts` (the `Policy` type: it builds its own candidates and returns the bot's plan with each action, which the runner saves), and `runner/simplePolicy.testHelper.ts` (the M4 placeholder, kept for runner tests). Weight mappings: max debt $10,000–$60,000; horizon 3–15 turns; payback 2–12 turns (longer with idle cash over $20,000); a tie worth $2,000–$8,000; the choice band 3–33% of the best score. Bots commit only to plans they can afford, redraw hopeless private contracts (never one whose commodity is aboard, since loads can't be dropped), and may borrow up to $15,000 past their limit only to deliver cargo already aboard. `playthrough.test.ts` plays 20 seeded rounds per strategy through the real runner; across three seeds every strategy delivered 8–18 ties, with distinct purchase patterns. Regional Offices and monopolies haven't appeared in those games yet; M7's tournament will show how often they come up and tune the valuations.
 6. **M6 Tray narration.** Last-turn section and waiting-for-host status in `PlayerTrays`, with realtime subscription to `bot_states`.
 7. **M7 Tournament and tuning.** Harness, summary output, and first tuning pass of the weight mappings and strategy ranges.
 8. **M8 Hardening and docs.** Isolation tests; `check-board-build` covering bot code; `BOT_AGENT_GUIDE.md`; updates to `AGENTS.md` (state map exception and docs list), `BYOD_AGENT_GUIDE.md` (bot seats), and `BOARD_AGENT_GUIDE.md` (narration, bot imports); archive this plan with status notes.

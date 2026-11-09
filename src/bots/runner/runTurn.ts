@@ -4,12 +4,13 @@
  * carried out: app moves, board ops, and narration. After a reload the pending effects are
  * re-run, skipping moves G already shows, so nothing is done twice.
  */
-import { applyAction, listActions, needsPrivateContract, setOffers, type Action, type Effect } from '../engine/actions';
+import { applyAction, needsPrivateContract, setOffers, type Action, type Effect } from '../engine/actions';
 import { buildWorld } from '../engine/world';
 import { createRng } from '../rng';
 import { MAX_LOG_TURNS, type BotRecord, type BotStates, type TurnInProgress } from '../state/botStates';
 import type { BotPorts } from '../ports';
-import { basicPolicy, type Policy } from './basicPolicy';
+import { heuristicPolicy } from '../heuristic/policy';
+import type { Policy } from '../policy';
 import { isMoveDone, stepKey, turnStateFromSteps } from './steps';
 
 export type TurnOutcome =
@@ -110,7 +111,7 @@ function endsTurn(effects: Effect[]): boolean {
 export async function runBotTurn({
   playerID,
   ports,
-  policy = basicPolicy,
+  policy = heuristicPolicy,
   paceMs = 1500,
   shouldStop = () => false,
   maxSteps = 40,
@@ -158,9 +159,8 @@ export async function runBotTurn({
     }
 
     const rng = createRng(record.rngState);
-    const actions = listActions(world);
-    let action: Action =
-      step >= maxSteps || actions.length === 0 ? { type: 'endTurn' } : policy(world, actions, rng);
+    const decision = step >= maxSteps ? { action: { type: 'endTurn' } as Action } : policy(world, rng);
+    let action: Action = decision.action;
     let result = applyAction(world, action);
     if (!result.ok) {
       console.error(`[runBotTurn] ${record.name}: ${result.error}; ending the turn.`, action);
@@ -182,6 +182,7 @@ export async function runBotTurn({
         deliveries: predicted.bot.deliveries,
         exchangeCommodity: predicted.bot.exchangeCommodity,
         rngState: rng.state(),
+        plan: decision.plan === undefined ? r.plan : decision.plan,
         turnInProgress: {
           turn: id.turn,
           playOrderPos: id.playOrderPos,
