@@ -32,7 +32,7 @@ describe('echo-safe saving', () => {
     useGameStore.setState(before);
     await waitForSavedGame(game.code, after, { clock: fastClock, resaveAfterMs: 0 });
     const stored = await game.storage.loadGame(game.code);
-    expect((stored!.ctx as GameContext).currentPlayer).toBe('1');
+    expect((stored!.ctx as unknown as GameContext).currentPlayer).toBe('1');
   });
 
   test('restores the store if it stays rewound', async () => {
