@@ -10,9 +10,20 @@ import {
   createNewGame,
   getPlayerSeats,
 } from '../../utils/gameManager';
+import type { PlayerSeat } from '../../utils/gameManager';
 import { setStorageAdapter } from '../../utils/storage';
 import { MemoryStorageAdapter } from '../../utils/storage/memoryStorageAdapter.testHelper';
 import { BotSeatControls } from './BotSeatControls';
+
+/** The first bot seat, once the async add has landed. */
+async function waitForBotSeat() {
+  let found: PlayerSeat | undefined;
+  await waitFor(async () => {
+    found = Object.values((await getPlayerSeats(code)) ?? {}).find((seat) => seat.bot);
+    expect(found).toBeDefined();
+  });
+  return found!;
+}
 
 const HOST = 'host-device';
 const adapter = new MemoryStorageAdapter();
@@ -46,9 +57,8 @@ describe('BotSeatControls on the waiting screen', () => {
       fireEvent.click(within(bots).getByRole('button', { name: 'Add bot' }));
     });
 
-    const seats = (await getPlayerSeats(code))!;
-    const bot = Object.values(seats).find((seat) => seat.bot);
-    expect(bot?.playerName).toMatch(/^.+ \(bot\)$/);
+    const bot = await waitForBotSeat();
+    expect(bot.playerName).toMatch(/^.+ \(bot\)$/);
     await waitFor(() => expect(within(bots).getByText(bot!.playerName)).toBeInTheDocument());
     // The players list shows the bot like any other player
     expect(screen.getAllByText(bot!.playerName)).toHaveLength(2);
@@ -62,8 +72,8 @@ describe('BotSeatControls on the waiting screen', () => {
       fireEvent.click(within(bots).getByRole('button', { name: 'Add bot' }));
     });
 
-    const bot = Object.values((await getPlayerSeats(code))!).find((seat) => seat.bot);
-    expect(bot?.bot?.strategy).toBe('express');
+    const bot = await waitForBotSeat();
+    expect(bot.bot?.strategy).toBe('express');
     await waitFor(() => expect(within(bots).getByText('Express', { selector: '.botSeats__strategy' })).toBeInTheDocument());
   });
 
@@ -77,7 +87,7 @@ describe('BotSeatControls on the waiting screen', () => {
       fireEvent.click(within(bots).getByRole('button', { name: 'Remove Avery (bot)' }));
     });
 
-    expect(Object.keys((await getPlayerSeats(code))!)).toEqual([HOST]);
+    await waitFor(async () => expect(Object.keys((await getPlayerSeats(code))!)).toEqual([HOST]));
     await waitFor(() => expect(within(bots).queryByText('Avery (bot)')).not.toBeInTheDocument());
   });
 

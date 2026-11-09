@@ -11,9 +11,9 @@ import { join } from 'node:path';
 
 /**
  * Strings that only appear in playtest code: board (table name, board-only CSS classes, background
- * asset) and bots (docs/BOT_PLAN.md; bot-only CSS class).
+ * asset) and bots (docs/BOT_PLAN.md; table name, bot-only CSS class).
  */
-const MARKERS = ['board_states', 'boardTopBar', 'routePopover', 'map-board', 'botSeats'];
+const MARKERS = ['board_states', 'boardTopBar', 'routePopover', 'map-board', 'bot_states', 'botSeats'];
 const DIST = 'dist';
 const expectBoard = process.argv.includes('--expect');
 

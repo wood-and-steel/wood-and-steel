@@ -9,6 +9,13 @@ const appSources = import.meta.glob(
   { query: '?raw', import: 'default', eager: true }
 ) as Record<string, string>;
 
+/** Decision logic that must run anywhere (host browser, tournament, a future server). */
+const pureSources = import.meta.glob(['./rng.ts', './heuristic/**/*.ts', './engine/**/*.ts', '!./**/*.test.ts', '!./**/*.testHelper.ts'], {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
 const BOTS_PATH = /['"][./]*\/?bots\//;
 
 describe('bot isolation', () => {
@@ -26,5 +33,13 @@ describe('bot isolation', () => {
   it('bot styles are not part of the global stylesheet', () => {
     const indexCss = import.meta.glob('../shared/styles/index.css', { query: '?raw', import: 'default', eager: true });
     expect(Object.values(indexCss)[0]).not.toMatch(/bots\.css/);
+  });
+
+  it.each(Object.entries(pureSources))('%s is pure (no stores, React, Supabase, or browser globals)', (_file, source) => {
+    // Type-only imports are erased at build time, so they're allowed.
+    const runtimeImports = source.split('\n').filter((line) => /^import (?!type )/.test(line)).join('\n');
+    expect(runtimeImports).not.toMatch(/from ['"][^'"]*stores\//);
+    expect(runtimeImports).not.toMatch(/from ['"]react['"]|from ['"]@supabase\//);
+    expect(source).not.toMatch(/\b(window|document|localStorage|sessionStorage)\b/);
   });
 });
