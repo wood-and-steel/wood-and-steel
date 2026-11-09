@@ -114,8 +114,8 @@ interface BotRecord {
   name: string;                 // "Avery"
   strategy: StrategyId;
   weights: Weights;             // drawn once, at first run
-  rngSeed: number;
-  cash: number;                 // $ in thousands, as in the rules
+  rngState: number;             // seeded generator state, saved after each use
+  cash: number;                 // dollars, like moneyValue()
   debt: number;
   centralDebtServicePaid: boolean;  // one-time Central-region service
   westernDeliveryMade: boolean;     // ongoing service from then on
@@ -132,6 +132,8 @@ interface BotTurnLog { round: number; turn: number; lines: string[] }
 
 - The row is created by the host's runner when the game first leaves `waiting_for_players`. One record per bot seat is created from the seat's name and strategy. That is when the weights are drawn and $10,000 cash is set, as in setup.
 - `normalizeBotStates` tolerates missing and malformed fields and refuses newer versions, like `normalizeBoardState`.
+- The Supabase adapter is the board's, generalized: `src/board/jsonRowAdapter.ts` holds the one-JSON-row-per-game adapter used by both `board_states` and `bot_states`. `updateBotStates` does read-modify-write with the same conflict, reload and re-apply loop as board saves, so every change to bot state must be re-appliable.
+- Weight bands per strategy (`heuristic/weights.ts`) and the seeded generator (`rng.ts`) land with M2, because a record's weights are drawn when it is created.
 - Human money is not tracked anywhere. Bots estimate opponents from `G` (contracts, ties, Hubs, Regional Offices) and the board (track, engines, upgrades).
 
 ## Bot engine (`src/bots/engine/`)

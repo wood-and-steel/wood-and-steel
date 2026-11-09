@@ -57,6 +57,11 @@ const BotSeatControls = __INCLUDE_BOARD__
     )
   : null;
 
+// Playtest bots: runs bot turns from the host's device while a game is open.
+const BotRunner = __INCLUDE_BOARD__
+  ? React.lazy(() => import('../bots/host/BotRunner').then((mod) => ({ default: mod.BotRunner })))
+  : null;
+
 export interface AppGameManager {
   currentGameCode: string | null;
   onNewGame: (numPlayers?: number) => Promise<void>;
@@ -636,6 +641,11 @@ const AppContent = (): React.ReactElement => {
             gameManager={{ ...gameManager, currentGameCode: gameManager.currentGameCode ?? undefined }}
           />
         </GameProvider>
+        {BotRunner && currentGameCode && (
+          <Suspense fallback={null}>
+            <BotRunner gameCode={currentGameCode} />
+          </Suspense>
+        )}
       </div>
     );
   }

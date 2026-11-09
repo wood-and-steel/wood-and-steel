@@ -36,6 +36,8 @@ npm run build:board
 
 Includes the shared map board at `/board` (`src/board/`, see [BOARD_AGENT_GUIDE.md](BOARD_AGENT_GUIDE.md)). Uses the Vite `board` build mode. The board also needs the `board_states` table: apply `src/board/supabase/board_states.sql` once in the Supabase dashboard's SQL editor. Without it, the board shows a banner and only the read-only game view works.
 
+Playtest bots ([BOT_PLAN.md](BOT_PLAN.md)) ship in the same build and need the `bot_states` table: apply `src/bots/supabase/bot_states.sql` once the same way.
+
 To check that the default build contains no board code (and the board build does):
 
 ```bash
