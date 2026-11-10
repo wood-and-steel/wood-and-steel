@@ -6,7 +6,7 @@
  * src/board/geometry/routePaths.ts via the File System Access API (Chrome/Edge).
  */
 import React from 'react';
-import boardImageUrl from '../../../docs/map-board-full.png';
+import boardImageUrl from '../../../docs/map-board-full.jpg';
 import { routes } from '../../data/routes';
 import { BOARD_HEIGHT, BOARD_WIDTH, CITY_POINTS, REGIONAL_OFFICE_POINTS } from '../geometry/cityPoints';
 import { EDITED_ROUTES, FLAGGED_ROUTES, ROUTE_PATHS } from '../geometry/routePaths';
