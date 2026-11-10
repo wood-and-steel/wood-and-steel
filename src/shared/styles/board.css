@@ -7,12 +7,12 @@
  */
 
 .boardApp {
-  --board-indie-route: #111111;
+  --board-indie-route: #222222;
   --board-token-outline: #ffffff;
-  --board-track-casing: rgba(0, 0, 0, 0.75);
+  --board-track-casing: rgba(255, 255, 255, 0.75);
   --board-route-hover: rgba(255, 255, 255, 0.45);
   --board-bar-height: 2.75rem;
-  --board-trays-width: 18rem;
+  --board-trays-width: 19rem;
 
   display: flex;
   flex-direction: column;

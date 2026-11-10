@@ -28,6 +28,23 @@ describe('getBoardPlayers', () => {
     expect(players[0]).toMatchObject({ color: '#000000', dark: '#000000', regionalOffice: 'NE' });
     expect(players[1]).toMatchObject({ color: PLAYER_AVATAR_COLORS[0], hubCity: 'Atlanta' });
   });
+
+  it('uses the player color for dark and the assigned light color for each seat', () => {
+    const lights = ['#D4B42C', '#FB3F84', '#0D9ABA', '#39AB2E', '#CA07F1'];
+    const G = {
+      players: lights.map((_, i) => [String(i), { name: `P${i}`, activeCities: [], hubCity: null, regionalOffice: null }]),
+    } as unknown as GameState;
+    const players = getBoardPlayers(G, {} as GameContext);
+    expect(players.map((p) => p.dark)).toEqual([...PLAYER_AVATAR_COLORS]);
+    expect(players.map((p) => p.light)).toEqual(lights);
+  });
+
+  it('derives a light color for stored colors outside the palette', () => {
+    const G = {
+      players: [['0', { name: 'Ada', activeCities: [], hubCity: null, regionalOffice: null, avatarColor: '#808080' }]],
+    } as unknown as GameState;
+    expect(getBoardPlayers(G, {} as GameContext)[0]).toMatchObject({ dark: '#808080', light: shadeColor('#808080', 0.45) });
+  });
 });
 
 describe('formatPhase', () => {

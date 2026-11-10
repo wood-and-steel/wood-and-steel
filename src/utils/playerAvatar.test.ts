@@ -20,20 +20,20 @@ describe('playerAvatar', () => {
   });
 
   test('getPlayerAvatarColorForIndex assigns fixed palette colors by player index', () => {
-    expect(getPlayerAvatarColorForIndex(0)).toBe('#f0609e');
-    expect(getPlayerAvatarColorForIndex(1)).toBe('#c9a66b');
-    expect(getPlayerAvatarColorForIndex(2)).toBe('#1e6fd9');
-    expect(getPlayerAvatarColorForIndex(3)).toBe('#2e8b3e');
-    expect(getPlayerAvatarColorForIndex(4)).toBe('#c8202e');
-    expect(getPlayerAvatarColorForIndex(9)).toBe('#c8202e');
+    expect(getPlayerAvatarColorForIndex(0)).toBe('#AE8D00');
+    expect(getPlayerAvatarColorForIndex(1)).toBe('#C43232');
+    expect(getPlayerAvatarColorForIndex(2)).toBe('#21487B');
+    expect(getPlayerAvatarColorForIndex(3)).toBe('#147A0B');
+    expect(getPlayerAvatarColorForIndex(4)).toBe('#8F0AB0');
+    expect(getPlayerAvatarColorForIndex(9)).toBe('#8F0AB0');
     expect(PLAYER_AVATAR_COLORS).toHaveLength(5);
   });
 
   test('getPlayerAvatarColor prefers stored color and falls back by player id', () => {
     const stored = '#123456';
     expect(getPlayerAvatarColor('0', stored)).toBe(stored);
-    expect(getPlayerAvatarColor('0')).toBe('#f0609e');
-    expect(getPlayerAvatarColor('1')).toBe('#c9a66b');
+    expect(getPlayerAvatarColor('0')).toBe('#AE8D00');
+    expect(getPlayerAvatarColor('1')).toBe('#C43232');
   });
 
   test('getOtherPlayerIdsInPlayOrder returns remaining players in play order', () => {

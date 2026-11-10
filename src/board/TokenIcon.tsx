@@ -1,6 +1,6 @@
 /**
- * HTML-side token pictures (tray and drag ghost). Engines are rounded blocks in the light or
- * dark shade of the player hue; the Railyard is a disc in the dark shade.
+ * HTML-side token pictures (tray and drag ghost). Engines are rounded blocks in the player's
+ * light or dark color; the Railyard is a disc in the dark color.
  */
 import React from 'react';
 import type { BoardPlayer } from './boardPlayers';

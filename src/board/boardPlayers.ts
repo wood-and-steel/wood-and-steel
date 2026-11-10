@@ -1,10 +1,17 @@
 /**
  * Player display data for the board, derived read-only from G/ctx.
- * Physical tokens come in a light and a dark shade of each player hue (engines use both;
- * Hub, Railyard and Regional Office upgrade discs use the dark one).
+ * Physical tokens come in a light and a dark version of each player color (engines use both;
+ * Hub, Railyard and Regional Office upgrade discs use the dark one). Dark is the player color itself.
  */
 import type { GameContext, GameState, RegionCode } from '../stores/gameStore';
-import { getPlayerAvatarColor } from '../utils/playerAvatar';
+import { getPlayerAvatarColor, PLAYER_AVATAR_COLORS } from '../utils/playerAvatar';
+
+/** Light token color for each player color, in PLAYER_AVATAR_COLORS order. */
+const PLAYER_LIGHT_COLORS = ['#D4B42C', '#FB3F84', '#0D9ABA', '#39AB2E', '#CA07F1'] as const;
+
+const LIGHT_BY_PLAYER_COLOR = new Map<string, string>(
+  PLAYER_AVATAR_COLORS.map((color, i) => [color, PLAYER_LIGHT_COLORS[i]]),
+);
 
 export interface BoardPlayer {
   id: string;
@@ -43,8 +50,9 @@ export function getBoardPlayers(G: GameState, ctx: GameContext): BoardPlayer[] {
       id,
       name: props.name,
       color,
-      light: shadeColor(color, 0.45),
-      dark: shadeColor(color, -0.35),
+      // Colors stored by games created before this palette have no assigned light color.
+      light: LIGHT_BY_PLAYER_COLOR.get(color) ?? shadeColor(color, 0.45),
+      dark: color,
       hubCity: props.hubCity ?? null,
       regionalOffice: props.regionalOffice ?? null,
     };
