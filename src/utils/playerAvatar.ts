@@ -1,9 +1,9 @@
 /** Player colors by seat: gold, red, blue, green, purple. */
 export const PLAYER_AVATAR_COLORS = [
-  '#AE8D00', // gold
+  '#B99709', // gold
   '#C43232', // red
   '#21487B', // blue
-  '#147A0B', // green
+  '#13A063', // green
   '#8F0AB0', // purple
 ] as const;
 

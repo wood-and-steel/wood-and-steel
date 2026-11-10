@@ -7,7 +7,7 @@ import type { GameContext, GameState, RegionCode } from '../stores/gameStore';
 import { getPlayerAvatarColor, PLAYER_AVATAR_COLORS } from '../utils/playerAvatar';
 
 /** Light token color for each player color, in PLAYER_AVATAR_COLORS order. */
-const PLAYER_LIGHT_COLORS = ['#D4B42C', '#FB3F84', '#0D9ABA', '#39AB2E', '#CA07F1'] as const;
+const PLAYER_LIGHT_COLORS = ['#D49B1F', '#FB3F84', '#0D9ABA', '#39AB2E', '#CA07F1'] as const;
 
 const LIGHT_BY_PLAYER_COLOR = new Map<string, string>(
   PLAYER_AVATAR_COLORS.map((color, i) => [color, PLAYER_LIGHT_COLORS[i]]),
