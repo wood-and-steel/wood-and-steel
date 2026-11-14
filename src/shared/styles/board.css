@@ -10,6 +10,7 @@
   --board-indie-route: #222222;
   --board-token-outline: #ffffff;
   --board-track-casing: rgba(255, 255, 255, 0.75);
+  --board-engine-stroke: #000;
   --board-route-hover: rgba(255, 255, 255, 0.45);
   --board-bar-height: 2.75rem;
   --board-trays-width: 19rem;
@@ -575,18 +576,28 @@
   overflow: visible;
 }
 
-.boardToken--engine {
-  width: 1.875rem;
-}
-
+.boardToken--engine,
 .boardToken--railyard {
   width: 1.25rem;
 }
 
-.boardToken rect,
-.boardToken circle {
+.boardToken polygon,
+.boardToken text {
   stroke: var(--color-border);
   stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.boardToken polygon {
+  stroke: var(--board-engine-stroke);
+}
+
+/* Railyard token: a bold sans-serif R whose baseline sits at the bottom of its box */
+.boardRailyard {
+  font-family: system-ui, sans-serif;
+  font-weight: 700;
+  text-anchor: middle;
+  paint-order: stroke;
 }
 
 /* Tokens: tray buttons, map tokens, drag ghost */
@@ -631,10 +642,15 @@
   touch-action: auto;
 }
 
-.boardMap__token rect,
-.boardMap__token circle {
+.boardMap__token polygon,
+.boardMap__token text {
   stroke: var(--board-track-casing);
   stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+.boardMap__token polygon {
+  stroke: var(--board-engine-stroke);
 }
 
 .boardMap__token--movable {

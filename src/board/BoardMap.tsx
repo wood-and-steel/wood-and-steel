@@ -14,9 +14,10 @@ import type { BoardPlayer } from './boardPlayers';
 import type { ZoomPan } from './useZoomPan';
 import { tokenFill } from './TokenIcon';
 import {
-  ENGINE_HEIGHT,
-  ENGINE_WIDTH,
-  RAILYARD_RADIUS,
+  ENGINE_SIZE,
+  enginePoints,
+  RAILYARD_SIZE,
+  railyardFontSize,
   sameToken,
   tokenId,
   tokenLabel,
@@ -253,16 +254,17 @@ export function BoardMap({
             >
               <title>{`${player.name}'s ${tokenLabel(token)}: ${city}`}</title>
               {token.kind === 'engine' ? (
-                <rect
-                  x={x - ENGINE_WIDTH / 2}
-                  y={y - ENGINE_HEIGHT / 2}
-                  width={ENGINE_WIDTH}
-                  height={ENGINE_HEIGHT}
-                  rx={8}
-                  fill={fill}
-                />
+                <polygon points={enginePoints(x, y, ENGINE_SIZE)} fill={fill} />
               ) : (
-                <circle cx={x} cy={y} r={RAILYARD_RADIUS} fill={fill} />
+                <text
+                  className="boardRailyard"
+                  x={x}
+                  y={y + RAILYARD_SIZE / 2}
+                  fontSize={railyardFontSize(RAILYARD_SIZE)}
+                  fill={fill}
+                >
+                  R
+                </text>
               )}
             </g>
           );

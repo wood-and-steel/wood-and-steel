@@ -1,10 +1,10 @@
 /**
- * HTML-side token pictures (tray and drag ghost). Engines are rounded blocks in the player's
- * light or dark color; the Railyard is a disc in the dark color.
+ * HTML-side token pictures (tray and drag ghost). Engines are right triangles in the player's
+ * light or dark color; the Railyard is a bold R in the dark color.
  */
 import React from 'react';
 import type { BoardPlayer } from './boardPlayers';
-import { tokenLabel, type TokenRef } from './tokens';
+import { enginePoints, railyardFontSize, tokenLabel, type TokenRef } from './tokens';
 
 export function tokenFill(token: TokenRef, player: BoardPlayer): string {
   return token.kind === 'engine' && token.slot === 0 ? player.light : player.dark;
@@ -13,12 +13,14 @@ export function tokenFill(token: TokenRef, player: BoardPlayer): string {
 export function TokenIcon({ token, player }: { token: TokenRef; player: BoardPlayer }): React.ReactElement {
   const fill = tokenFill(token, player);
   return token.kind === 'engine' ? (
-    <svg className="boardToken boardToken--engine" viewBox="0 0 24 16" aria-hidden="true">
-      <rect x="1" y="1" width="22" height="14" rx="3" fill={fill} />
+    <svg className="boardToken boardToken--engine" viewBox="0 0 16 16" aria-hidden="true">
+      <polygon points={enginePoints(8, 8, 14)} fill={fill} />
     </svg>
   ) : (
     <svg className="boardToken boardToken--railyard" viewBox="0 0 16 16" aria-hidden="true">
-      <circle cx="8" cy="8" r="7" fill={fill} />
+      <text className="boardRailyard" x="8" y="15" fontSize={railyardFontSize(14)} fill={fill}>
+        R
+      </text>
     </svg>
   );
 }
