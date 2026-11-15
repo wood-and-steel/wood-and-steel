@@ -21,7 +21,7 @@ import {
 import { TokenIcon } from './TokenIcon';
 import { sameToken, tokenCity, tokenId, tokenLabel, type TokenRef } from './tokens';
 import { CommodityIcon, CommodityOptions, EngineOptions, TrayPicker } from './TrayPicker';
-import type { BotTrayInfo } from './botNarration';
+import { formatBotMoney, type BotTrayInfo } from './botNarration';
 
 type TokenPointerDown = (token: TokenRef, event: React.PointerEvent<Element>) => void;
 
@@ -280,6 +280,7 @@ export function PlayerTrays({
               <header className="boardTray__header">
                 <span className="boardTray__name">
                   <Swatch color={player.color} /> {player.name}
+                  {bots?.[player.id] && <span className="boardTray__money">{formatBotMoney(bots[player.id])}</span>}
                 </span>
                 {tokenCity(board, railyard) === null && (
                   <TrayTokenButton

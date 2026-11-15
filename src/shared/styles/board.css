@@ -423,6 +423,13 @@
   white-space: nowrap;
 }
 
+.boardTray__money {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-weight: 400;
+  text-overflow: ellipsis;
+}
+
 .boardTray__header {
   display: flex;
   align-items: center;

@@ -18,6 +18,21 @@ export interface BotTrayInfo {
   lines: string[];
   /** It's the bot's turn but the host's app isn't running it. */
   waiting: boolean;
+  /** Cash on hand, in dollars. */
+  cash: number;
+  /** Outstanding debt, in dollars. */
+  debt: number;
+}
+
+/** Dollars in thousands, e.g. 13000 → "$13k", -2000 → "-$2k". */
+export function formatThousands(amount: number): string {
+  const k = Math.abs(amount) / 1000;
+  return `${amount < 0 && k > 0 ? '-' : ''}$${k}k`;
+}
+
+/** A bot's money for its tray header, e.g. "$13k ($15k debt)"; debt only when it has some. */
+export function formatBotMoney({ cash, debt }: Pick<BotTrayInfo, 'cash' | 'debt'>): string {
+  return debt > 0 ? `${formatThousands(cash)} (${formatThousands(debt)} debt)` : formatThousands(cash);
 }
 
 /** Tray info for every bot in bot_states, by playerID. */
@@ -31,6 +46,8 @@ export function botTrayInfo(states: BotStates | null, ctx: GameContext, now: num
       played: !!last,
       lines: last?.lines ?? [],
       waiting: current && (Number.isNaN(seen) || now - seen > RUNNER_STALE_MS),
+      cash: record.cash,
+      debt: record.debt,
     };
   }
   return info;
