@@ -259,13 +259,12 @@ If you already have the limit of engines you are allowed at this point in the ga
 | 2-4-0 John Bull | 1 | free at start of game |  |
 | 4-4-0 American | 2 | $5,000 |  |
 | 2-6-0 Mogul | 3 | $7,000 | After buying, player can fulfill market contracts |
-| 2-8-0 Consolidation | 3 | $10,000 | After buying, Service Yard is available to all players for purchase |
-| 4-6-0 Camelback | 4 | $13,000 |  |
-| 2-6-2 Prairie | 5 | $16,000 |  |
-| 4-6-2 Pacific | 7 | $20,000 |  |
-| 2-8-2 Mikado | 8 | $24,000 |  |
-| 4-8-2 Mountain | 9 | $28,000 | Earn 1 1/3x value when fulfilling a contract |
-| 4-6-6-4 Challenger | 11 | $32,000 | Gain 2 railroad ties at end of game and earn 1 1/3x value when fulfilling a contract |
+| 2-8-0 Consolidation | 3 | $10,000 |  |
+| 2-6-2 Prairie | 5 | $14,000 |  |
+| 4-6-2 Pacific | 7 | $18,000 |  |
+| 2-8-2 Mikado | 8 | $22,000 |  |
+| 4-8-2 Mountain | 9 | $26,000 | Earn 1 1/3x value when fulfilling a contract |
+| 4-6-6-4 Challenger | 11 | $30,000 | Gain 2 railroad ties at end of game and earn 1 1/3x value when fulfilling a contract |
 
 The Mountain and Challenger multipliers are rounded down to the nearest $1,000.
 
