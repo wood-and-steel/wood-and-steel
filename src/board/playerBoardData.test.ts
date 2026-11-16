@@ -32,11 +32,11 @@ describe('commodity groups', () => {
 });
 
 describe('engine types', () => {
-  it('lists the ten engines in upgrade order, starting from the default', () => {
-    expect(ENGINE_TYPES).toHaveLength(10);
-    expect(new Set(ENGINE_TYPES.map((engine) => engine.id)).size).toBe(10);
+  it('lists the nine engines in upgrade order, starting from the default', () => {
+    expect(ENGINE_TYPES).toHaveLength(9);
+    expect(new Set(ENGINE_TYPES.map((engine) => engine.id)).size).toBe(9);
     expect(ENGINE_TYPES[0].id).toBe(DEFAULT_ENGINE_TYPES[0]);
-    expect(ENGINE_TYPES[9].id).toBe('challenger');
+    expect(ENGINE_TYPES[8].id).toBe('challenger');
   });
 
   it('looks up an engine by id and formats its distance', () => {

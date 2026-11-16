@@ -9,7 +9,6 @@ export type EngineTypeId =
   | 'american'
   | 'mogul'
   | 'consolidation'
-  | 'camelback'
   | 'prairie'
   | 'pacific'
   | 'mikado'
@@ -30,13 +29,7 @@ export const ENGINE_TYPES: readonly EngineType[] = [
   { id: 'john-bull', name: '2-4-0 John Bull', distance: 1, effects: 'Must be traded in for the American' },
   { id: 'american', name: '4-4-0 American', distance: 2, effects: null },
   { id: 'mogul', name: '2-6-0 Mogul', distance: 3, effects: 'After buying, player can fulfill market contracts' },
-  {
-    id: 'consolidation',
-    name: '2-8-0 Consolidation',
-    distance: 3,
-    effects: 'After buying, Service Yard is available to all players',
-  },
-  { id: 'camelback', name: '4-6-0 Camelback', distance: 4, effects: null },
+  { id: 'consolidation', name: '2-8-0 Consolidation', distance: 3, effects: null },
   { id: 'prairie', name: '2-6-2 Prairie', distance: 5, effects: null },
   { id: 'pacific', name: '4-6-2 Pacific', distance: 7, effects: null },
   { id: 'mikado', name: '2-8-2 Mikado', distance: 8, effects: null },

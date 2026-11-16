@@ -411,7 +411,7 @@ describe('BoardApp (/board)', () => {
       fireEvent.click(row("Ben's Dark engine").getByRole('button', { name: /type:/ }));
       const dialog = screen.getByRole('dialog', { name: "Ben's Dark engine type" });
       expect(within(dialog).getByRole('button', { name: 'No engine' })).toHaveAttribute('aria-pressed', 'true');
-      expect(within(dialog).getAllByRole('button')).toHaveLength(11);
+      expect(within(dialog).getAllByRole('button')).toHaveLength(10);
       fireEvent.click(within(dialog).getByRole('button', { name: /2-6-0 Mogul/ }));
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

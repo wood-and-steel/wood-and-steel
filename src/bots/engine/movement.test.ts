@@ -43,7 +43,7 @@ describe('runOptions', () => {
 
   test('a loaded engine stops at the delivery city without a Timetable', () => {
     const base = {
-      board: { engineTypes: { '0': ['camelback', null] as ['camelback', null] }, engines: { '0': ['Portland ME', null] as [string, null] }, cargo: { '0': ['wood', null] as [string, null] } },
+      board: { engineTypes: { '0': ['prairie', null] as ['prairie', null] }, engines: { '0': ['Portland ME', null] as [string, null] }, cargo: { '0': ['wood', null] as [string, null] } },
       contracts: [{ id: 'k2', commodity: 'wood', destinationKey: 'Boston' }],
     };
     const deliveries = runOptions(makeWorld(base), 0).filter((r) => r.events.length > 0);

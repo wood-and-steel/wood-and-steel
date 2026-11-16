@@ -77,10 +77,10 @@ describe('enginePurchases', () => {
   });
 
   test('with two engines: only trade-ins, rounded down to $1,000', () => {
-    const world = makeWorld({ board: { engineTypes: { '0': ['mogul', 'camelback'] } } });
+    const world = makeWorld({ board: { engineTypes: { '0': ['mogul', 'consolidation'] } } });
     expect(enginePurchases(world)).toEqual([
-      { engine: 'prairie', slot: 0, tradeIn: 'mogul', skip: false, cost: 16000 - 3000 },
-      { engine: 'prairie', slot: 1, tradeIn: 'camelback', skip: false, cost: 16000 - 6000 },
+      { engine: 'prairie', slot: 0, tradeIn: 'mogul', skip: false, cost: 14000 - 3000 },
+      { engine: 'prairie', slot: 1, tradeIn: 'consolidation', skip: false, cost: 14000 - 5000 },
     ]);
   });
 
@@ -112,7 +112,7 @@ describe('upgradePurchases', () => {
 
   test('Service Yard opens once anyone owns a Consolidation or better', () => {
     expect(kinds(makeWorld())).not.toContain('service-yard');
-    expect(kinds(makeWorld({ board: { engineTypes: { '1': ['camelback', null] } } }))).toContain('service-yard');
+    expect(kinds(makeWorld({ board: { engineTypes: { '1': ['prairie', null] } } }))).toContain('service-yard');
   });
 
   test('Hub and Railyard on network cities not taken by others', () => {

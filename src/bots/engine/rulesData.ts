@@ -47,12 +47,11 @@ export const ENGINE_PRICES: Record<EngineTypeId, number> = {
   american: 5000,
   mogul: 7000,
   consolidation: 10000,
-  camelback: 13000,
-  prairie: 16000,
-  pacific: 20000,
-  mikado: 24000,
-  mountain: 28000,
-  challenger: 32000,
+  prairie: 14000,
+  pacific: 18000,
+  mikado: 22000,
+  mountain: 26000,
+  challenger: 30000,
 };
 export const MAX_ENGINES = 2;
 /** With a Hub, a player may order one engine ahead (two levels up) for $5,000 more. */
