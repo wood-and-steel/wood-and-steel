@@ -159,7 +159,7 @@ Players fulfill a contract by running one of their trains to a city that supplie
 
 **Private** Contracts represent requests for the services of a specific railroad. Private Contracts belong to one player and can only be fulfilled by that player. When a Private Contract is fulfilled, the app offers the player new contracts from which the player must choose one.
 
-**Market** Contracts are shared among all players until one player picks up the corresponding commodity and claims the contract. The claimed contract is not fulfilled until the commodity is delivered. A player can only claim one market contract a time. Only players who own a Mogul engine or better can claim a Market Contract when they pick up the commodity in that contract. Claiming that contract takes it off the market, removing it from the tableau of available Market Contracts and triggering the generation of a new one. A player can have only one claimed contract at a time.
+**Market** Contracts are available for all players to claim. Claiming it removes it from the open market.
 
 ## Turn actions
 
@@ -184,7 +184,7 @@ Actions that are not yet available in the game, but will be in the future:
 
 Running your trains is the way you pick up commodities and deliver them to fulfill contracts. This action allows you to move one or both of your engines along the tracks in your railway network up to the number of segments shown on its engine’s card.
 
-When a train is run, one of the following side effects can happen:
+When a train is run, the following side effects can happen:
 
 - Picking up a commodity
 - Fulfilling a contract
@@ -192,6 +192,10 @@ When a train is run, one of the following side effects can happen:
 #### Picking up a commodity
 
 A train can either be empty or loaded with one commodity. A train may pick up a commodity at any time when it is in a city that supplies that commodity, including when it is stopped there, moving through, or just purchased and placed there. This does not take any actions or reduce the number of segments a train can move.
+
+If a player who can fulfill market contracts picks up a commodity on an unclaimed market contract, they may claim that contract. This removes the contract from the public market and reserves it for the player, almost like an additional private contract. A player may only have one claimed market contract at a time.
+
+When a market contract is claimed, a new market contract is created, refilling the tableau available to all players.
 
 #### Fulfilling a contract
 
@@ -217,9 +221,9 @@ Not yet implemented: If they are the first player to fulfill a contract to a Wes
 
 Not yet implemented: If a player has gone bankrupt fulfilling a contract, they earn no railroad ties.
 
-##### Step 3. Draw a new contract
+##### Step 3. Fulfill the contract in the app
 
-The player taps the Fulfilled button on the contract in the app. If a Private Contract was fulfilled, they will be offered two new private contracts and must choose one of them. If a Market Contract was fulfilled, a new market contract will be generated.
+The player performs the Fulfill Contract action on the contract in the app. If a Private Contract was fulfilled, they will be offered new private contracts and must choose one of them. If the player fulfills a Market Contract they had previously claimed, they do not draw any new contracts, but are able again to claim a different market contract.
 
 ### Build track
 
