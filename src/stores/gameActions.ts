@@ -166,6 +166,29 @@ export function generateMarketContract(): void {
   saveCurrentGameState();
 }
 
+/**
+ * A market contract just left the open tableau (claimed, or fulfilled without being claimed):
+ * add one replacement to the front of `contracts`, avoiding duplicates of active contracts.
+ * One-for-one: does not change the number of contracts in the tableau; it only replaces the one that left.
+ 
+ */
+function withReplacementMarketContract(G: GameState, contracts: Contract[]): Contract[] {
+  const activeContractKeys = new Set(
+    contracts.filter((c) => !c.fulfilled).map((c) => `${c.commodity}|${c.destinationKey}`)
+  );
+
+  for (let attempts = 0; attempts < 50; attempts++) {
+    const candidate = generateMarketContractContract(G);
+    if (!candidate) break;
+    if (!activeContractKeys.has(`${candidate.commodity}|${candidate.destinationKey}`)) {
+      return [candidate, ...contracts];
+    }
+  }
+
+  console.error('[withReplacementMarketContract] Failed to generate a replacement market contract');
+  return contracts;
+}
+
 export function claimMarketContract(contractID: string): void {
   const { G, ctx } = useGameStore.getState();
 
@@ -201,33 +224,10 @@ export function claimMarketContract(contractID: string): void {
       c.id === contractID ? { ...c, playerID: ctx.currentPlayer, turnsHeld: 1 } as Contract : c
     );
 
-    const activeContractKeys = new Set(
-      updatedContracts
-        .filter((c) => !c.fulfilled)
-        .map((c) => `${c.commodity}|${c.destinationKey}`)
-    );
-
-    const maxAttempts = 50;
-    let newMarketContract: Contract | undefined;
-
-    for (let attempts = 0; attempts < maxAttempts; attempts++) {
-      const candidate = generateMarketContractContract(state.G);
-      if (!candidate) break;
-      const key = `${candidate.commodity}|${candidate.destinationKey}`;
-      if (!activeContractKeys.has(key)) {
-        newMarketContract = candidate;
-        break;
-      }
-    }
-
-    const contracts = newMarketContract
-      ? [newMarketContract, ...updatedContracts]
-      : updatedContracts;
-
     return {
       G: {
         ...state.G,
-        contracts,
+        contracts: withReplacementMarketContract(state.G, updatedContracts),
       },
     } as Partial<GameStoreState>;
   });
@@ -339,9 +339,17 @@ export function toggleContractFulfilled(contractID: string): void {
       updatedContract.playerID = null;
     }
 
-    const updatedContracts = state.G.contracts.map((c, idx) =>
+    const toggledContracts = state.G.contracts.map((c, idx) =>
       idx === contractIndex ? updatedContract : c
     );
+
+    // Fulfilling an unclaimed market contract takes it off the open tableau: replace it.
+    // (A claimed one was already replaced when it was claimed.)
+    const leftTableau =
+      contract.type === 'market' && contract.playerID === null && updatedContract.fulfilled;
+    const updatedContracts = leftTableau
+      ? withReplacementMarketContract(state.G, toggledContracts)
+      : toggledContracts;
 
     const currentPlayerEntry = state.G.players.find(([id]) => id === ctx.currentPlayer);
     if (!currentPlayerEntry) {
