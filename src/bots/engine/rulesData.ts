@@ -9,7 +9,7 @@
  * docs/BOT_AGENT_GUIDE.md (Rules defaults).
  */
 import type { RegionCode } from '../../stores/gameStore';
-import type { EngineTypeId, UpgradeId } from '../../board/playerBoardData';
+import { ENGINE_TYPES, type EngineTypeId, type UpgradeId } from '../../board/playerBoardData';
 
 // --- Turn -------------------------------------------------------------------
 
@@ -42,17 +42,10 @@ export const BUILD_MUST_CONNECT = true;
 
 // --- Engines -----------------------------------------------------------------
 
-export const ENGINE_PRICES: Record<EngineTypeId, number> = {
-  'john-bull': 0,
-  american: 5000,
-  mogul: 7000,
-  consolidation: 10000,
-  prairie: 14000,
-  pacific: 18000,
-  mikado: 22000,
-  mountain: 26000,
-  challenger: 30000,
-};
+export const ENGINE_PRICES = Object.fromEntries(ENGINE_TYPES.map((engine) => [engine.id, engine.price])) as Record<
+  EngineTypeId,
+  number
+>;
 export const MAX_ENGINES = 2;
 /** With a Hub, a player may order one engine ahead (two levels up) for $5,000 more. */
 export const HUB_ENGINE_SKIP_SURCHARGE = 5000;

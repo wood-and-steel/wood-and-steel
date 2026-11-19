@@ -536,15 +536,10 @@
   color: var(--color-text-muted);
 }
 
-.boardEngine__stats,
-.boardEngine__effects {
+.boardEngine__stats {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.25;
-}
-
-.boardEngine__effects {
-  color: var(--color-text-muted);
 }
 
 .boardUpgrades {

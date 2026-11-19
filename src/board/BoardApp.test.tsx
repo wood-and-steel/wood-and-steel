@@ -400,7 +400,7 @@ describe('BoardApp (/board)', () => {
       const light = row("Ben's Light engine");
       expect(light.getByRole('button', { name: /type: 2-4-0 John Bull/ })).toBeInTheDocument();
       expect(light.getByText('Travels 1 segment')).toBeInTheDocument();
-      expect(light.getByText('Must be traded in for the American')).toBeInTheDocument();
+      expect(light.queryByText(/Must be traded in/)).toBeNull();
       const dark = row("Ben's Dark engine");
       expect(dark.getByRole('button', { name: /type: No engine/ })).toBeInTheDocument();
       expect(dark.queryByText(/Travels/)).toBeNull();
@@ -412,13 +412,20 @@ describe('BoardApp (/board)', () => {
       const dialog = screen.getByRole('dialog', { name: "Ben's Dark engine type" });
       expect(within(dialog).getByRole('button', { name: 'No engine' })).toHaveAttribute('aria-pressed', 'true');
       expect(within(dialog).getAllByRole('button')).toHaveLength(10);
-      fireEvent.click(within(dialog).getByRole('button', { name: /2-6-0 Mogul/ }));
+      const mogul = within(dialog).getByRole('button', { name: /2-6-0 Mogul/ });
+      expect(mogul).toHaveAttribute('title', '$7,000: After buying, player can fulfill market contracts');
+      expect(within(dialog).getByRole('button', { name: /4-4-0 American/ })).toHaveAttribute('title', '$5,000');
+      expect(within(dialog).getByRole('button', { name: /John Bull/ })).toHaveAttribute(
+        'title',
+        'Free at start of game: Must be traded in for the American'
+      );
+      fireEvent.click(mogul);
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       const dark = row("Ben's Dark engine");
       expect(dark.getByRole('button', { name: /type: 2-6-0 Mogul/ })).toBeInTheDocument();
       expect(dark.getByText('Travels 3 segments')).toBeInTheDocument();
-      expect(dark.getByText('After buying, player can fulfill market contracts')).toBeInTheDocument();
+      expect(dark.queryByText(/fulfill market contracts/)).toBeNull();
       await waitFor(() => expect(savedTypes()).toEqual({ '1': ['john-bull', 'mogul'] }));
     });
 

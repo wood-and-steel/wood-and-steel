@@ -7,6 +7,7 @@ import { commodityIcons } from '../shared/assets/icons';
 import {
   COMMODITY_GROUPS,
   ENGINE_TYPES,
+  engineTooltip,
   formatCommodity,
   formatSegments,
   type EngineTypeId,
@@ -46,11 +47,13 @@ interface PickerOptionProps {
   selected: boolean;
   /** Extra class for this kind of option */
   className?: string;
+  /** Hover text */
+  title?: string;
   onClick: () => void;
   children: React.ReactNode;
 }
 
-function PickerOption({ selected, className, onClick, children }: PickerOptionProps): React.ReactElement {
+function PickerOption({ selected, className, title, onClick, children }: PickerOptionProps): React.ReactElement {
   const classes = ['trayPicker__option'];
   if (className) classes.push(className);
   if (selected) classes.push('trayPicker__option--selected');
@@ -59,6 +62,7 @@ function PickerOption({ selected, className, onClick, children }: PickerOptionPr
       type="button"
       className={classes.join(' ')}
       aria-pressed={selected}
+      title={title}
       onClick={onClick}
     >
       {children}
@@ -78,7 +82,12 @@ export function EngineOptions({ value, onPick }: EngineOptionsProps): React.Reac
         No engine
       </PickerOption>
       {ENGINE_TYPES.map((engine) => (
-        <PickerOption key={engine.id} selected={value === engine.id} onClick={() => onPick(engine.id)}>
+        <PickerOption
+          key={engine.id}
+          selected={value === engine.id}
+          title={engineTooltip(engine)}
+          onClick={() => onPick(engine.id)}
+        >
           <span>{engine.name}</span>
           <span className="trayPicker__meta">{formatSegments(engine.distance)}</span>
         </PickerOption>

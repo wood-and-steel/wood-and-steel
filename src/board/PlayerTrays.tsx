@@ -1,6 +1,6 @@
 /**
  * Player trays: the column beside the map with one card per player, in play order. Each card
- * has a row per engine token (its type, cargo, stats, and effects), the upgrades bought, and the
+ * has a row per engine token (its type, cargo, and stats), the upgrades bought, and the
  * Railyard while unplaced.
  * The token stays on its row at full color even when on the map: it is the key to which
  * token is which engine type.
@@ -154,7 +154,6 @@ function EngineRow({
           )}
         </div>
         {stats && <p className="boardEngine__stats">{stats}</p>}
-        {engine?.effects && <p className="boardEngine__effects">{engine.effects}</p>}
       </div>
     </div>
   );

@@ -20,24 +20,39 @@ export interface EngineType {
   name: string;
   /** Segments per Run Trains action, before any Service Yard bonus */
   distance: number;
+  /** Base purchase price in US dollars; 0 for the John Bull, which every player starts with */
+  price: number;
   /** Effects noted in the rules, or null */
   effects: string | null;
 }
 
 /** In upgrade order. */
 export const ENGINE_TYPES: readonly EngineType[] = [
-  { id: 'john-bull', name: '2-4-0 John Bull', distance: 1, effects: 'Must be traded in for the American' },
-  { id: 'american', name: '4-4-0 American', distance: 2, effects: null },
-  { id: 'mogul', name: '2-6-0 Mogul', distance: 3, effects: 'After buying, player can fulfill market contracts' },
-  { id: 'consolidation', name: '2-8-0 Consolidation', distance: 3, effects: null },
-  { id: 'prairie', name: '2-6-2 Prairie', distance: 5, effects: null },
-  { id: 'pacific', name: '4-6-2 Pacific', distance: 7, effects: null },
-  { id: 'mikado', name: '2-8-2 Mikado', distance: 8, effects: null },
-  { id: 'mountain', name: '4-8-2 Mountain', distance: 9, effects: 'Earn 1 1/3x value when fulfilling a contract' },
+  { id: 'john-bull', name: '2-4-0 John Bull', distance: 1, price: 0, effects: 'Must be traded in for the American' },
+  { id: 'american', name: '4-4-0 American', distance: 2, price: 5000, effects: null },
+  {
+    id: 'mogul',
+    name: '2-6-0 Mogul',
+    distance: 3,
+    price: 7000,
+    effects: 'After buying, player can fulfill market contracts',
+  },
+  { id: 'consolidation', name: '2-8-0 Consolidation', distance: 3, price: 10000, effects: null },
+  { id: 'prairie', name: '2-6-2 Prairie', distance: 5, price: 14000, effects: null },
+  { id: 'pacific', name: '4-6-2 Pacific', distance: 7, price: 18000, effects: null },
+  { id: 'mikado', name: '2-8-2 Mikado', distance: 8, price: 22000, effects: null },
+  {
+    id: 'mountain',
+    name: '4-8-2 Mountain',
+    distance: 9,
+    price: 26000,
+    effects: 'Earn 1 1/3x value when fulfilling a contract',
+  },
   {
     id: 'challenger',
     name: '4-6-6-4 Challenger',
     distance: 11,
+    price: 30000,
     effects: 'Gain 2 railroad ties at end of game and earn 1 1/3x value when fulfilling a contract',
   },
 ];
@@ -136,6 +151,12 @@ export function getEngineType(typeId: EngineTypeId): EngineType {
 /** "iron ore" -> "Iron ore" */
 export function formatCommodity(commodity: string): string {
   return commodity.charAt(0).toUpperCase() + commodity.slice(1);
+}
+
+/** "$7,000: After buying, …"; the John Bull is "Free at start of game". For the engine picker's tooltip. */
+export function engineTooltip(engine: EngineType): string {
+  const price = engine.price === 0 ? 'Free at start of game' : `$${engine.price.toLocaleString('en-US')}`;
+  return engine.effects ? `${price}: ${engine.effects}` : price;
 }
 
 /** "1 segment", "3 segments" */
