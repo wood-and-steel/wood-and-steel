@@ -69,7 +69,6 @@ wood-and-steel/
 │   │   ├── IndependentRailroads.js
 │   │   ├── MarketContracts.js
 │   │   ├── PlayerBoard.js
-│   │   ├── ReferenceTables.js
 │   │   ├── ThemeToggle.js
 │   │   └── TopButtonBar.js
 │   ├── config/          # Configuration files

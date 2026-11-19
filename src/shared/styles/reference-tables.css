@@ -6,44 +6,9 @@
   flex-wrap: wrap;
 }
 
-.referenceTable__title {
-  font-weight: bold;
-  padding-top: 0;
-  margin-bottom: var(--spacing-sm);
-}
-
-.cityTable {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, 7.5rem);
-  gap: var(--spacing-xs, 0.5rem);
-}
-
 .commodityTable {
   flex-wrap: nowrap;
   height: auto;
-}
-
-.cityCell {
-  width: 7.5rem;
-  color: var(--color-text-subtle);
-}
-
-.cityCell:hover {
-  background-color: var(--color-bg-hover);
-}
-
-.cityCell__name {
-  padding-right: 0.375rem;
-  cursor: default;
-}
-
-.cityCell__name--active {
-  color: var(--color-primary);
-  font-weight: bold;
-}
-
-.cityCell__value {
-  font-weight: 600;
 }
 
 .commodityRow {
