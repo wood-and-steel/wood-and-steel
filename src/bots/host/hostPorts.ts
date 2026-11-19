@@ -98,6 +98,25 @@ export async function settleStore(expected: GameSnapshot, clock: Clock, interval
   }
 }
 
+/**
+ * Wait for the store and the stored game to agree before a bot acts. Either may be ahead: a late
+ * realtime echo can rewind the store, and the host's own last move (e.g. ending the turn) may
+ * still be saving. So re-read the row while waiting, and if they still differ, restore the store
+ * to the newest row (never the first one read, which may predate the host's move).
+ */
+export async function settleOnStoredGame(code: string, clock: Clock, intervalMs = 150, restoreAfterMs = 2000): Promise<void> {
+  for (let waited = 0; ; waited += intervalMs) {
+    const stored = (await getStorageAdapter().loadGame(code)) as unknown as GameSnapshot | null;
+    if (!stored?.G || !stored.ctx) return;
+    if (snapshotKey(stored) === snapshotKey(useGameStore.getState())) return;
+    if (waited >= restoreAfterMs) {
+      restoreStore(stored);
+      return;
+    }
+    await clock.sleep(intervalMs);
+  }
+}
+
 /** Call an app move by name, exactly as the UI would. */
 export function callMove(move: GameMove): void {
   switch (move.name) {
@@ -143,10 +162,7 @@ export function createHostPorts(code: string, clock: Clock = browserClock): BotP
       await waitForSavedGame(code, expected, { clock });
       await settleStore(expected, clock);
     },
-    async settle() {
-      const stored = await getStorageAdapter().loadGame(code);
-      if (stored?.G && stored.ctx) await settleStore(stored as unknown as GameSnapshot, clock);
-    },
+    settle: () => settleOnStoredGame(code, clock),
     privateContractOffers: () => {
       const { G, ctx } = useGameStore.getState();
       return generatePrivateContractOffers(G, ctx);

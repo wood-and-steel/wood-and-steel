@@ -53,4 +53,21 @@ describe('settling before a turn', () => {
     expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 })).toBe('not-my-turn');
     expect(useGameStore.getState().ctx.currentPlayer).toBe('1');
   });
+
+  test('a bot plays when the host’s own end-turn save lands after settling starts', async () => {
+    // Stored: still the human's turn. Store: the human just ended the turn; the save is in flight.
+    const before = withTurn(snapshot(), '1', 1);
+    await saveGameState(game.code, before.G, before.ctx);
+    const after = withTurn(snapshot(), '0', 0);
+    useGameStore.setState(after);
+    const loadGame = game.storage.loadGame.bind(game.storage);
+    let loads = 0;
+    game.storage.loadGame = async (code: string) => {
+      const stored = await loadGame(code);
+      if (++loads === 1) await saveGameState(game.code, after.G, after.ctx);
+      return stored;
+    };
+    await game.ports.game.settle();
+    expect(useGameStore.getState().ctx.currentPlayer).toBe('0');
+  });
 });
