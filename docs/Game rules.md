@@ -42,12 +42,11 @@ Wood and Steel is played with physical tabletop components and a web app. On the
 
 The app is responsible for all the random behavior in the game, similar to virtual decks of cards. It also tracks some elements of player progress. The goal is that players keep track of the things that are interesting and fun (track, engines, upgrades, money), while the grunt work is delegated to the app (e.g. generating a random contract based on board state).
 
-Once the game is started, each player sees four tabs in the app:
+Once the game is started, each player sees three tabs in the app:
 
 - Contracts, where they see and manage their private contracts and the shared market contracts
 - Commodities, a reference to which commodities are available in which cities
 - Railroads, a list of the independent railroads and their routes
-- Cities, a reference list of cities in the game; this tab is only 
 
 
 #### Global state information

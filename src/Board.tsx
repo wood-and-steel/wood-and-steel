@@ -4,7 +4,6 @@ import { PlayerBoard } from './components/PlayerBoard';
 import { PlayerToolbar } from './components/PlayerToolbar';
 import { PrivateContractOfferModal } from './components/PrivateContractOfferModal';
 import { CommoditiesPage } from './components/CommoditiesPage';
-import { CitiesPage } from './components/CitiesPage';
 import { IndependentRailroadsPage } from './components/IndependentRailroadsPage';
 import { EditPlaytestDialog } from './components/EditPlaytestDialog';
 import type { Contract } from './Contract';
@@ -21,7 +20,7 @@ export interface WoodAndSteelStateProps {
   gameManager?: GameManagerProps;
 }
 
-type TabId = 'board' | 'commodities' | 'cities' | 'indies';
+type TabId = 'board' | 'commodities' | 'indies';
 
 /** Main game board: tabs, NavBar, and form-driven moves. */
 export function WoodAndSteelState({
@@ -257,9 +256,6 @@ export function WoodAndSteelState({
             />
           )}
           {activeTab === 'commodities' && <CommoditiesPage />}
-          {activeTab === 'cities' && (
-            <CitiesPage G={G} ctx={ctx} playerID={playerID ?? ''} />
-          )}
           {activeTab === 'indies' && <IndependentRailroadsPage />}
         </div>
       </form>
