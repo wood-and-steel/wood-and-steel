@@ -44,7 +44,7 @@ All paths under `src/board/` unless noted.
 | `boardPlayers.ts` | Player display data (play order, light/dark shades), `formatPhase`. |
 | `BoardMap.tsx` | The SVG map and all its layers; route click handling. |
 | `BoardChrome.tsx` | Top bar. |
-| `PlayerTrays.tsx` | Right column with one card per player: engine rows (token, type, cargo, distance, effects), upgrade checkboxes, unplaced Railyard. Owns which picker is open. |
+| `PlayerTrays.tsx` | Right column with one card per player: engine rows (token, type, cargo, distance, effects), upgrade checkboxes, unplaced Railyard, and the player's unfulfilled private and claimed market contracts (read from `G.contracts`). Owns which picker is open. |
 | `TrayPicker.tsx` | Popover and option lists for choosing an engine type or commodity; `CommodityIcon`. |
 | `playerBoardData.ts` | Static engine, upgrade, and commodity-group data from the rules; `engineDistance` and formatting helpers. |
 | `useBoardPopover.ts` | Shared popover placement and dismissal (Escape, outside press). Used by `RoutePopover` and `TrayPicker`. |

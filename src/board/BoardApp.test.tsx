@@ -11,6 +11,7 @@ import { commodityIcons } from '../shared/assets/icons';
 import type { SerializedState } from '../utils/stateSerialization';
 import { emptyBoardState } from './boardOps';
 import { setBoardStateAdapter } from './boardStateAdapter';
+import { moneyValue } from '../Contract';
 import { CITY_POINTS } from './geometry/cityPoints';
 import { trackPathD } from './geometry/trackPaths';
 import { MemoryBoardStateAdapter } from './memoryBoardStateAdapter.testHelper';
@@ -214,6 +215,27 @@ describe('BoardApp (/board)', () => {
       track: { 'Charleston-Savannah': ['0'], 'Boston-Portland ME': ['1'] },
       seenIndependentRailroads: { Erie: ['Chicago-Cleveland', 'Chicago-Detroit'] },
     });
+  });
+
+  it("lists each player's unfulfilled private and claimed market contracts", async () => {
+    const base = { creationTime: 0, turnsHeld: 0, fulfilled: false };
+    const contracts = [
+      { ...base, id: 'm1', type: 'market', playerID: '0', commodity: 'coal', destinationKey: 'Boston' },
+      { ...base, id: 'p1', type: 'private', playerID: '0', commodity: 'cotton', destinationKey: 'Chicago' },
+      { ...base, id: 'p2', type: 'private', playerID: '0', commodity: 'steel', destinationKey: 'Denver', fulfilled: true },
+      { ...base, id: 'm2', type: 'market', playerID: null, commodity: 'wood', destinationKey: 'Atlanta' },
+    ];
+    await adapter.saveGame('BCDFG', { ...state, G: { ...state.G, contracts } } as unknown as SerializedState, {
+      gameMode: 'byod',
+    });
+    await renderAt('/board?game=BCDFG');
+    const ada = within(await screen.findByRole('region', { name: "Ada's contracts" }));
+    const items = ada.getAllByRole('listitem');
+    expect(items.map((li) => li.textContent)).toEqual([
+      `Cotton to Chicago$${moneyValue(contracts[1]) / 1000}KPrivate`,
+      `Coal to Boston$${moneyValue(contracts[0]) / 1000}KMarket`,
+    ]);
+    expect(within(screen.getByRole('region', { name: "Ben's contracts" })).getByText('No contracts')).toBeInTheDocument();
   });
 
   it('shows a board error without hiding the game when board state fails to load', async () => {

@@ -1,11 +1,13 @@
 /**
  * Player trays: the column beside the map with one card per player, in play order. Each card
  * has a row per engine token (its type, cargo, and stats), the upgrades bought, and the
- * Railyard while unplaced.
+ * Railyard while unplaced, and the player's unfulfilled private and claimed market contracts.
  * The token stays on its row at full color even when on the map: it is the key to which
  * token is which engine type.
  */
 import React from 'react';
+import { moneyValue, type Contract } from '../Contract';
+import { useGameStore } from '../stores/gameStore';
 import { Swatch } from './BoardChrome';
 import type { BoardPlayer } from './boardPlayers';
 import { playerCargo, playerEngineTypes, type BoardOp, type BoardState, type EngineSlot } from './boardOps';
@@ -190,6 +192,39 @@ function UpgradeChecks({ player, owned, onBoardOp }: UpgradeChecksProps): React.
   );
 }
 
+/** Private contracts first, then market; oldest first within each. */
+function activeContracts(contracts: readonly Contract[], playerID: string): Contract[] {
+  return contracts
+    .filter((c) => c.playerID === playerID && !c.fulfilled)
+    .sort((a, b) => (a.type === b.type ? a.creationTime - b.creationTime : a.type === 'private' ? -1 : 1));
+}
+
+/** The player's unfulfilled private and claimed market contracts, read from G. */
+function ContractList({ player, contracts }: { player: BoardPlayer; contracts: Contract[] }): React.ReactElement {
+  return (
+    <section className="boardContracts" aria-label={`${player.name}'s contracts`}>
+      {contracts.length > 0 ? (
+        <ul className="boardContracts__list">
+          {contracts.map((contract) => (
+            <li key={contract.id} className="boardContracts__item">
+              <CommodityIcon commodity={contract.commodity} />
+              <span className="boardContracts__route">
+                {formatCommodity(contract.commodity)} to {contract.destinationKey}
+              </span>
+              <span className="boardContracts__value">${moneyValue(contract) / 1000}K</span>
+              <span className={`boardContracts__type boardContracts__type--${contract.type}`}>
+                {contract.type === 'private' ? 'Private' : 'Market'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="boardContracts__none">No contracts</p>
+      )}
+    </section>
+  );
+}
+
 /** A bot's narration: its latest turn's moves, and whether the host's app is running it. */
 function BotTurn({ player, info }: { player: BoardPlayer; info: BotTrayInfo }): React.ReactElement {
   return (
@@ -224,6 +259,7 @@ export function PlayerTrays({
   onBoardOp,
   bots,
 }: PlayerTraysProps): React.ReactElement {
+  const contracts = useGameStore((state) => state.G.contracts);
   const trayColumnRef = React.useRef<HTMLElement>(null);
   const [picker, setPicker] = React.useState<OpenPicker | null>(null);
 
@@ -309,6 +345,7 @@ export function PlayerTrays({
                   />
                 );
               })}
+              <ContractList player={player} contracts={activeContracts(contracts, player.id)} />
               <UpgradeChecks player={player} owned={upgrades} onBoardOp={onBoardOp} />
             </section>
           );

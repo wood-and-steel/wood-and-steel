@@ -469,6 +469,56 @@
   color: var(--color-text-muted);
 }
 
+.boardContracts {
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+.boardContracts__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.boardContracts__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.boardContracts__route {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boardContracts__value {
+  font-variant-numeric: tabular-nums;
+}
+
+.boardContracts__type {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.boardContracts__type--private {
+  color: var(--color-contract-private);
+}
+
+.boardContracts__type--market {
+  color: var(--color-contract-market);
+}
+
+.boardContracts__none {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
 .boardEngine {
   display: flex;
   align-items: flex-start;
