@@ -11,7 +11,7 @@ import { commodityIcons } from '../shared/assets/icons';
 import type { SerializedState } from '../utils/stateSerialization';
 import { emptyBoardState } from './boardOps';
 import { setBoardStateAdapter } from './boardStateAdapter';
-import { moneyValue } from '../Contract';
+import { moneyValue, railroadTieValue } from '../Contract';
 import { CITY_POINTS } from './geometry/cityPoints';
 import { trackPathD } from './geometry/trackPaths';
 import { MemoryBoardStateAdapter } from './memoryBoardStateAdapter.testHelper';
@@ -236,6 +236,12 @@ describe('BoardApp (/board)', () => {
       `Coal to Boston$${moneyValue(contracts[0]) / 1000}KMarket`,
     ]);
     expect(within(screen.getByRole('region', { name: "Ben's contracts" })).getByText('No contracts')).toBeInTheDocument();
+
+    // Ties earned from fulfilled contracts sit beside each player's name.
+    const adaTies = railroadTieValue(contracts[2]);
+    const adaTray = screen.getByRole('region', { name: "Ada's tray" });
+    expect(adaTray.querySelector('.boardTray__name .boardTray__ties')).toHaveTextContent(String(adaTies));
+    expect(screen.getByRole('region', { name: "Ben's tray" }).querySelector('.boardTray__ties')).toHaveTextContent('0');
   });
 
   it('shows a board error without hiding the game when board state fails to load', async () => {

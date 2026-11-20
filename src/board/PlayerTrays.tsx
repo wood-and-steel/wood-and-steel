@@ -6,7 +6,7 @@
  * token is which engine type.
  */
 import React from 'react';
-import { moneyValue, type Contract } from '../Contract';
+import { moneyValue, railroadTieValue, type Contract } from '../Contract';
 import { useGameStore } from '../stores/gameStore';
 import { Swatch } from './BoardChrome';
 import type { BoardPlayer } from './boardPlayers';
@@ -199,6 +199,22 @@ function activeContracts(contracts: readonly Contract[], playerID: string): Cont
     .sort((a, b) => (a.type === b.type ? a.creationTime - b.creationTime : a.type === 'private' ? -1 : 1));
 }
 
+/** Railroad ties earned: the tie value of every contract the player has fulfilled, as the app scores it. */
+function earnedTies(contracts: readonly Contract[], playerID: string): number {
+  return contracts
+    .filter((c) => c.playerID === playerID && c.fulfilled)
+    .reduce((sum, c) => sum + railroadTieValue(c), 0);
+}
+
+function TieCount({ ties }: { ties: number }): React.ReactElement {
+  const label = `${ties} railroad ${ties === 1 ? 'tie' : 'ties'}`;
+  return (
+    <span className="boardTray__ties" title={label} aria-label={label}>
+      {ties} RR ties
+    </span>
+  );
+}
+
 /** The player's unfulfilled private and claimed market contracts, read from G. */
 function ContractList({ player, contracts }: { player: BoardPlayer; contracts: Contract[] }): React.ReactElement {
   return (
@@ -315,7 +331,13 @@ export function PlayerTrays({
               <header className="boardTray__header">
                 <span className="boardTray__name">
                   <Swatch color={player.color} /> {player.name}
-                  {bots?.[player.id] && <span className="boardTray__money">{formatBotMoney(bots[player.id])}</span>}
+                  <TieCount ties={earnedTies(contracts, player.id)} />
+                  {bots?.[player.id] && (
+                    <>
+                      <span className="boardTray__separator" aria-hidden="true">·</span>
+                      <span className="boardTray__money">{formatBotMoney(bots[player.id])}</span>
+                    </>
+                  )}
                 </span>
                 {tokenCity(board, railyard) === null && (
                   <TrayTokenButton

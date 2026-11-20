@@ -48,7 +48,7 @@ describe('botTrayInfo', () => {
 
 describe('formatBotMoney', () => {
   it('abbreviates in thousands and shows debt only when there is some', () => {
-    expect(formatBotMoney({ cash: 13000, debt: 15000 })).toBe('$13k ($15k debt)');
+    expect(formatBotMoney({ cash: 13000, debt: 15000 })).toBe('$13k ($15k)');
     expect(formatBotMoney({ cash: 10000, debt: 0 })).toBe('$10k');
     expect(formatThousands(13500)).toBe('$13.5k');
     expect(formatThousands(0)).toBe('$0k');

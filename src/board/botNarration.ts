@@ -30,9 +30,9 @@ export function formatThousands(amount: number): string {
   return `${amount < 0 && k > 0 ? '-' : ''}$${k}k`;
 }
 
-/** A bot's money for its tray header, e.g. "$13k ($15k debt)"; debt only when it has some. */
+/** A bot's money for its tray header, e.g. "$13k ($15k)" with the debt in parentheses; debt only when it has some. */
 export function formatBotMoney({ cash, debt }: Pick<BotTrayInfo, 'cash' | 'debt'>): string {
-  return debt > 0 ? `${formatThousands(cash)} (${formatThousands(debt)} debt)` : formatThousands(cash);
+  return debt > 0 ? `${formatThousands(cash)} (${formatThousands(debt)})` : formatThousands(cash);
 }
 
 /** Tray info for every bot in bot_states, by playerID. */

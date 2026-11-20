@@ -423,6 +423,19 @@
   white-space: nowrap;
 }
 
+.boardTray__ties {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.boardTray__separator {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
 .boardTray__money {
   overflow: hidden;
   color: var(--color-text-muted);
@@ -470,6 +483,7 @@
 }
 
 .boardContracts {
+  margin: 4px 0;
   font-size: 0.8125rem;
   line-height: 1.25;
 }
@@ -503,7 +517,6 @@
 
 .boardContracts__type {
   font-size: 0.75rem;
-  font-weight: 600;
 }
 
 .boardContracts__type--private {
