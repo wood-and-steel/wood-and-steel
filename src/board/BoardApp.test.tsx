@@ -235,6 +235,12 @@ describe('BoardApp (/board)', () => {
       `Cotton to Chicago$${moneyValue(contracts[1]) / 1000}KPrivate`,
       `Coal to Boston$${moneyValue(contracts[0]) / 1000}KMarket`,
     ]);
+    expect(
+      items.map((li) => li.querySelector('.boardContracts__ties')?.getAttribute('alt'))
+    ).toEqual([contracts[1], contracts[0]].map((c) => {
+      const ties = railroadTieValue(c);
+      return `${ties} railroad ${ties === 1 ? 'tie' : 'ties'}`;
+    }));
     expect(within(screen.getByRole('region', { name: "Ben's contracts" })).getByText('No contracts')).toBeInTheDocument();
 
     // Ties earned from fulfilled contracts sit beside each player's name.

@@ -7,6 +7,7 @@
  */
 import React from 'react';
 import { moneyValue, railroadTieValue, type Contract } from '../Contract';
+import { contractTieIcons } from '../shared/assets/icons';
 import { useGameStore } from '../stores/gameStore';
 import { Swatch } from './BoardChrome';
 import type { BoardPlayer } from './boardPlayers';
@@ -215,6 +216,19 @@ function TieCount({ ties }: { ties: number }): React.ReactElement {
   );
 }
 
+/** A contract's tie value, as the app's 1–4 tie icon. */
+function ContractTies({ ties }: { ties: number }): React.ReactElement {
+  const label = `${ties} railroad ${ties === 1 ? 'tie' : 'ties'}`;
+  return (
+    <img
+      className="boardContracts__ties"
+      src={(contractTieIcons as Record<string, string>)[String(ties)]}
+      alt={label}
+      title={label}
+    />
+  );
+}
+
 /** The player's unfulfilled private and claimed market contracts, read from G. */
 function ContractList({ player, contracts }: { player: BoardPlayer; contracts: Contract[] }): React.ReactElement {
   return (
@@ -228,6 +242,7 @@ function ContractList({ player, contracts }: { player: BoardPlayer; contracts: C
                 {formatCommodity(contract.commodity)} to {contract.destinationKey}
               </span>
               <span className="boardContracts__value">${moneyValue(contract) / 1000}K</span>
+              <ContractTies ties={railroadTieValue(contract)} />
               <span className={`boardContracts__type boardContracts__type--${contract.type}`}>
                 {contract.type === 'private' ? 'Private' : 'Market'}
               </span>

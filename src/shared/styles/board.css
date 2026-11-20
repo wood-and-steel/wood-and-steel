@@ -515,6 +515,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.boardContracts__ties {
+  height: 12px;
+  width: auto;
+  flex-shrink: 0;
+}
+
 .boardContracts__type {
   font-size: 0.75rem;
 }
