@@ -3,6 +3,7 @@
  * turn's counted actions and run engines are rebuilt after a reload.
  */
 import type { EngineSlot } from '../../board/boardOps';
+import { MARKET_TABLEAU_SIZE } from '../../Contract';
 import type { GameContext, GameState } from '../../stores/gameStore';
 import { actionKind, type Action, type GameMove } from '../engine/actions';
 import { emptyTurnState, type ActionKind, type TurnState } from '../engine/world';
@@ -42,6 +43,11 @@ export function isMoveDone(
       return contract(move.args[0])?.fulfilled === true;
     case 'claimMarketContract':
       return contract(move.args[0])?.playerID === playerID;
+    case 'fillMarketTableau':
+      return (
+        G.contracts.filter((c) => c.type === 'market' && c.playerID === null && !c.fulfilled).length >=
+        MARKET_TABLEAU_SIZE
+      );
     case 'addContract': {
       const [commodity, destination] = move.args;
       return G.contracts.some(

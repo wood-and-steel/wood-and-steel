@@ -6,4 +6,4 @@
  * What changed since the last review:
  *   git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/board/playerBoardData.ts
  */
-export const RULES_FINGERPRINT = 'ad329a3c5b359037591e22ad0c78ad2845e00c91e88aa035af1f531767aaea6a';
+export const RULES_FINGERPRINT = '5c568103013f6160021b62223b98be74cfbea9b5daf7d6ad38a39f9c6612ddf3';

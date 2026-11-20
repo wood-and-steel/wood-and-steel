@@ -137,7 +137,7 @@ export function WoodAndSteelState({
         setInput('');
         break;
       case 'marketContract':
-        moves.generateMarketContract();
+        moves.fillMarketTableau();
         break;
       case 'manualContract':
         moves.addContract(

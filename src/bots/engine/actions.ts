@@ -15,6 +15,7 @@ import {
   buildLimit,
   enginePurchases,
   indiePurchases,
+  ownsEngineAtLeast,
   trackCost,
   unplacedEngineSlots,
   upgradePurchases,
@@ -35,13 +36,14 @@ import {
 } from './movement';
 import { canBuildRoute, networkCities, routeCities } from './network';
 import { commodityName, engineName, line, list, money, regionName, routeLabel, slotLabel, upgradeLabel } from './narration';
-import { ROUNDHOUSE_APPROACH, UPGRADE_PRICES, type UpgradeKey } from './rulesData';
+import { MARKET_CONTRACT_MIN_ENGINE, ROUNDHOUSE_APPROACH, UPGRADE_PRICES, type UpgradeKey } from './rulesData';
 import {
   actionsLeft,
   cargo,
   deliverableContracts,
   emptyTurnState,
   engineCities,
+  engineLevel,
   engineTypes,
   hasUpgrade,
   openMarketContracts,
@@ -81,6 +83,7 @@ export type GameMove =
   | { name: 'generateStartingContract'; args: [[string, string], string] }
   | { name: 'toggleContractFulfilled'; args: [string] }
   | { name: 'claimMarketContract'; args: [string] }
+  | { name: 'fillMarketTableau'; args: [] }
   | { name: 'addContract'; args: [string, string, 'private'] }
   | { name: 'deleteContract'; args: [string] }
   | { name: 'acquireIndependentRailroad'; args: [string] }
@@ -439,6 +442,15 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
         setEngineCity(next, action.slot, action.city);
         boardOp({ type: 'moveEngine', playerID: world.playerID, slot: action.slot, city: action.city });
         narrate(`bought ${label} for ${money(purchase.cost)} & placed in ${action.city}`);
+      }
+      // The first Mogul (or better) on the table opens the market: fill the tableau.
+      // The next action's world is rebuilt from G, so the new contracts aren't predicted here.
+      const opensMarket =
+        engineLevel(action.engine) >= engineLevel(MARKET_CONTRACT_MIN_ENGINE) &&
+        !world.players.some(([id]) => ownsEngineAtLeast(world, MARKET_CONTRACT_MIN_ENGINE, id));
+      if (opensMarket) {
+        move({ name: 'fillMarketTableau', args: [] });
+        narrate('opened market contracts');
       }
       return { ok: true, world: next, effects };
     }

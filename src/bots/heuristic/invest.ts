@@ -20,7 +20,7 @@ import {
 import { mapDistance, networkCities, routeCities } from '../engine/network';
 import { MARKET_CONTRACT_MIN_ENGINE, MONOPOLY_TIES, UPGRADED_STATIONS_BONUS } from '../engine/rulesData';
 import { engineTypes, fulfilledContracts, hasUpgrade, openMarketContracts, type BotWorld } from '../engine/world';
-import { moneyValue, railroadTieValue } from '../../Contract';
+import { MARKET_TABLEAU_SIZE, moneyValue, railroadTieValue } from '../../Contract';
 import { engineLevel } from '../engine/world';
 import type { Params } from './params';
 import { affinity, type Affinity } from './strategies';
@@ -81,7 +81,9 @@ function engineValue(world: BotWorld, p: Params, w: BotWorld['bot']['weights'], 
   }
   // The Mogul opens market contracts; money-minded bots care more.
   if (!ownsEngineAtLeast(world, MARKET_CONTRACT_MIN_ENGINE) && engineLevel(purchase.engine) >= engineLevel(MARKET_CONTRACT_MIN_ENGINE)) {
-    const markets = openMarketContracts(world).length;
+    // The first Mogul (or better) on the table fills the market tableau.
+    const opensMarket = !world.players.some(([id]) => ownsEngineAtLeast(world, MARKET_CONTRACT_MIN_ENGINE, id));
+    const markets = opensMarket ? MARKET_TABLEAU_SIZE : openMarketContracts(world).length;
     value += perTurn * p.horizon * 0.15 * (2 - w.tiesOverMoney) * Math.min(1, markets);
   }
   if (purchase.engine === 'mountain' || purchase.engine === 'challenger') value += perTurn * p.horizon * 0.2;

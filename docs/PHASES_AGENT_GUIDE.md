@@ -70,7 +70,7 @@ Phase transitions are triggered by **`checkPhaseTransition(G, ctx)`** in `src/st
 - **Purpose:** Main game; all normal actions.
 - **Flow:** Turn-based play; after the last player’s turn, `turn.onEnd` runs (e.g. `growIndependentRailroads`). No phase end condition yet (`endIf` returns false).
 - **UI:** “Phase: Play”; full UI including “End Turn”, market contracts, independent railroads, manual contract input.
-- **Moves allowed:** Listed in `MOVES_BY_PHASE.play` in `moveValidation.js` (e.g. `generatePrivateContract`, `generateMarketContract`, `addContract`, `toggleContractFulfilled`, `deleteContract`, `acquireIndependentRailroad`, `addCityToPlayer`, `endTurn`).
+- **Moves allowed:** Listed in `MOVES_BY_PHASE.play` in `moveValidation.js` (e.g. `generatePrivateContract`, `generateMarketContract`, `fillMarketTableau`, `addContract`, `toggleContractFulfilled`, `deleteContract`, `acquireIndependentRailroad`, `addCityToPlayer`, `endTurn`).
 
 ### 4. Scoring phase (`scoring`)
 

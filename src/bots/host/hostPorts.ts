@@ -126,6 +126,8 @@ export function callMove(move: GameMove): void {
       return gameActions.toggleContractFulfilled(move.args[0]);
     case 'claimMarketContract':
       return gameActions.claimMarketContract(move.args[0]);
+    case 'fillMarketTableau':
+      return gameActions.fillMarketTableau();
     case 'addContract':
       return gameActions.addContract(move.args[0], move.args[1], move.args[2]);
     case 'deleteContract':

@@ -110,6 +110,21 @@ describe('buy an engine', () => {
     expect(applyAction(base, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'Chicago' }).ok).toBe(false);
   });
 
+  test('the first Mogul on the table fills the market tableau', () => {
+    const base = makeWorld({ board: { engineTypes: { '0': ['american', null] } } });
+    const { effects } = apply(base, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'New York' });
+    expect(moves(effects)).toEqual([{ name: 'fillMarketTableau', args: [] }]);
+    expect(lines(effects)).toContain('Opened market contracts');
+  });
+
+  test('a later Mogul does not fill the market tableau', () => {
+    const base = makeWorld({ board: { engineTypes: { '0': ['american', null], '1': ['mogul', null] } } });
+    const { effects } = apply(base, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'New York' });
+    expect(moves(effects)).toEqual([]);
+    const cheaper = apply(makeWorld(), { type: 'buyEngine', engine: 'american', slot: 0 });
+    expect(moves(cheaper.effects)).toEqual([]);
+  });
+
   test('a John Bull can stay as a second engine', () => {
     const { world } = apply(makeWorld(), { type: 'buyEngine', engine: 'american', slot: 1, city: 'New York' });
     expect(world.board.engineTypes['0']).toEqual(['john-bull', 'american']);

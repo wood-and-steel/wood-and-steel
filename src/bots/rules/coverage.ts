@@ -21,8 +21,9 @@ export const MOVE_COVERAGE: Record<string, Coverage> = {
   },
   generateMarketContract: {
     status: 'ignored',
-    reason: 'A playtest button; claimMarketContract already replaces a claimed market contract.',
+    reason: 'Adds one market contract; bots open the market with fillMarketTableau instead.',
   },
+  fillMarketTableau: { status: 'used', where: 'engine/actions.ts buyEngine (first Mogul or better)' },
   claimMarketContract: { status: 'used', where: 'engine/actions.ts runOne (pickup with claim)' },
   addContract: { status: 'used', where: 'engine/actions.ts choosePrivateContract' },
   toggleContractFulfilled: { status: 'used', where: 'engine/actions.ts runOne (deliver)' },

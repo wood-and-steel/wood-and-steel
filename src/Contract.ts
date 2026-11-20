@@ -285,6 +285,9 @@ export function generatePrivateContract(
   });
 }
 
+/** Number of open (unclaimed, unfulfilled) market contracts the tableau holds once filled. */
+export const MARKET_TABLEAU_SIZE = 3;
+
 /**
  * Create a market contract from the given active cities
  *

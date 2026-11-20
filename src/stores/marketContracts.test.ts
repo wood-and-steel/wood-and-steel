@@ -3,7 +3,7 @@
  * replaces it one-for-one, and Undo restores the start-of-turn tableau.
  */
 import { beforeEach, describe, expect, test } from 'vitest';
-import { claimMarketContract, generateMarketContract, toggleContractFulfilled } from './gameActions';
+import { claimMarketContract, fillMarketTableau, generateMarketContract, toggleContractFulfilled } from './gameActions';
 import { useGameStore } from './gameStore';
 
 const openMarket = () =>
@@ -65,6 +65,26 @@ describe('market contract tableau', () => {
   test('nothing is created before the market is seeded', () => {
     setUp(0);
     expect(openMarket()).toHaveLength(0);
+  });
+
+  test('fillMarketTableau fills an empty tableau to 3', () => {
+    setUp(0);
+    fillMarketTableau();
+    expect(openMarket()).toHaveLength(3);
+  });
+
+  test('fillMarketTableau keeps existing open contracts and tops up to 3', () => {
+    setUp(1);
+    const [existing] = openMarket();
+    fillMarketTableau();
+    expect(openMarket()).toHaveLength(3);
+    expect(marketIds()).toContain(existing.id);
+  });
+
+  test('fillMarketTableau does nothing when the tableau is full', () => {
+    const before = useGameStore.getState().G.contracts;
+    fillMarketTableau();
+    expect(useGameStore.getState().G.contracts).toBe(before);
   });
 
   test('Undo restores the start-of-turn tableau and drops replacements', () => {

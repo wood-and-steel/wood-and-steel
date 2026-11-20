@@ -13,6 +13,7 @@ const MOVES_BY_PHASE: Record<PhaseName, readonly string[]> = {
   play: [
     'generatePrivateContract',
     'generateMarketContract',
+    'fillMarketTableau',
     'claimMarketContract',
     'addContract',
     'toggleContractFulfilled',
