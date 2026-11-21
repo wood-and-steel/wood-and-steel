@@ -6,7 +6,7 @@ import { buildWorld } from './world';
 const G = {
   contracts: [],
   players: [
-    ['0', { name: 'Avery (bot)', activeCities: ['Boston', 'Portland ME'], hubCity: null, regionalOffice: null }],
+    ['0', { name: 'Avery 🤖', activeCities: ['Boston', 'Portland ME'], hubCity: null, regionalOffice: null }],
     ['1', { name: 'Ben', activeCities: ['Norfolk', 'Raleigh'], hubCity: null, regionalOffice: null }],
   ],
   independentRailroads: {},

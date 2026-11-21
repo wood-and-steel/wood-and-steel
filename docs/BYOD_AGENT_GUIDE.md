@@ -98,7 +98,7 @@ Returns: `{ success: boolean, error?: string, seat?: { joinedAt, playerName } }`
 
 ### Bot seats (playtest only)
 
-The host can fill open seats with bots before starting ([BOT_PLAN.md](BOT_PLAN.md)). A bot seat is a normal `playerSeats` entry keyed `bot:<uuid>` with `playerName: 'Name (bot)'` and a `bot: { name, strategy }` field. Seat counting, `allPlayersJoined`, and `assignRandomPlayerIDs` treat it like any seat, and the start-game flow copies its name into `G.players`.
+The host can fill open seats with bots before starting ([BOT_PLAN.md](BOT_PLAN.md)). A bot seat is a normal `playerSeats` entry keyed `bot:<uuid>` with `playerName: 'Name 🤖'` and a `bot: { name, strategy }` field. Seat counting, `allPlayersJoined`, and `assignRandomPlayerIDs` treat it like any seat, and the start-game flow copies its name into `G.players`.
 
 - `addBotSeat(code, hostDeviceId, { name, strategy })` → `{ success, error?, seat?, seatKey? }`: host only, waiting phase only, needs an open seat. Errors: `NOT_HOST`, `GAME_STARTED`, `GAME_FULL`, `INVALID_BOT`, `GAME_NOT_FOUND`, `WRONG_GAME_MODE`, `UPDATE_FAILED`.
 - `removeBotSeat(code, hostDeviceId, seatKey)` → `{ success, error? }`: host only, waiting phase only, bot seats only (`NOT_A_BOT` for a human seat, `NOT_JOINED` for a missing one).

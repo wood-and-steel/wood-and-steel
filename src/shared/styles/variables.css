@@ -4,6 +4,7 @@
   --font-body: Judson, Georgia, 'Times New Roman', serif;
 
   /* Body and heading sizes (rem; h4/h5/h6 match body; rounded per CSS_ARCHITECTURE) */
+  --font-size-sm: 0.875rem;
   --font-size-body: 1rem;
   --font-weight-body: 400;
   --font-size-h1: 1.5rem;
@@ -43,7 +44,7 @@
   /* Sizes */
   --button-height: 1.75rem;
   --icon-size: 1.5rem;
-  --avatar-size: 1.75rem;
+  --avatar-size: 2.2rem;
   
   /* Opacity */
   --opacity-disabled: 0.6;

@@ -1,6 +1,6 @@
 # Bot Players Plan
 
-Adds computer-controlled players ("bots") that play Wood and Steel alongside humans. The host adds bots on the waiting-for-players screen; they take turns through the same moves a human uses, appear in the app as ordinary players named like "Avery (bot)", and narrate their last turn in their `/board` tray card. Bot-only games (no humans) come later and are not part of this plan, but the design leaves room for them and for running bots on a server.
+Adds computer-controlled players ("bots") that play Wood and Steel alongside humans. The host adds bots on the waiting-for-players screen; they take turns through the same moves a human uses, appear in the app as ordinary players named like "Avery 🤖", and narrate their last turn in their `/board` tray card. Bot-only games (no humans) come later and are not part of this plan, but the design leaves room for them and for running bots on a server.
 
 Current conventions: [BYOD_AGENT_GUIDE.md](BYOD_AGENT_GUIDE.md) (seats), [BOARD_AGENT_GUIDE.md](BOARD_AGENT_GUIDE.md) (board state and trays), [PHASES_AGENT_GUIDE.md](PHASES_AGENT_GUIDE.md) (moves and phases).
 
@@ -12,7 +12,7 @@ Current conventions: [BYOD_AGENT_GUIDE.md](BYOD_AGENT_GUIDE.md) (seats), [BOARD_
 | Core game logic | **Unchanged.** No edits to `gameActions`, `moveValidation`, `phaseConfig`, `phaseManager`, `events`, or `Contract`. Bots call the existing moves. |
 | Adding bots | Host only, on the waiting-for-players screen. A bot fills an open seat; the host can remove it before starting. |
 | Strategy choice | Host picks one of six strategies per bot; the default is **Random**. |
-| Names | Drawn from the gender-neutral name list below, shown everywhere as `Name (bot)`. |
+| Names | Drawn from the gender-neutral name list below, shown everywhere as `Name 🤖`. |
 | Who runs bot turns | **The host's app**, for now. Bot logic is written against small interfaces ("ports") so it can move to a server later without a rewrite. |
 | Decision maker | **Heuristic** player built on a shared **bot engine**. An LLM agent player may come later, behind the same interface, using the engine's calculators as tools. |
 | Personalities | Six strategies. Each sets a **range** per weight; a bot's weights are drawn at random within its strategy's ranges. Per-turn variability picks among near-best plans. |
@@ -77,13 +77,13 @@ Current conventions: [BYOD_AGENT_GUIDE.md](BYOD_AGENT_GUIDE.md) (seats), [BOARD_
 ```ts
 interface PlayerSeat {
   joinedAt: string;
-  playerName: string;        // "Avery (bot)"
+  playerName: string;        // "Avery 🤖"
   playerID?: string;
   bot?: { name: string; strategy: StrategyId };   // new; absent for humans
 }
 ```
 
-`allPlayersJoined`, `getNumPlayersJoined`, and `assignRandomPlayerIDs` already count every seat, so bots fill seats and get shuffled play-order IDs with no changes. `handleStartBYODGame` already copies `seat.playerName` into `G.players`, which is how "Avery (bot)" shows everywhere in the app with **no UI changes during play**.
+`allPlayersJoined`, `getNumPlayersJoined`, and `assignRandomPlayerIDs` already count every seat, so bots fill seats and get shuffled play-order IDs with no changes. `handleStartBYODGame` already copies `seat.playerName` into `G.players`, which is how "Avery 🤖" shows everywhere in the app with **no UI changes during play**.
 
 **`gameManager.ts` additions** (the only place seats live, per `AGENTS.md`):
 
@@ -93,12 +93,12 @@ interface PlayerSeat {
 
 **`WaitingForPlayersScreen.tsx`:**
 
-- Bot seats appear in the players list like any other seat, by name ("Avery (bot)").
+- Bot seats appear in the players list like any other seat, by name ("Avery 🤖").
 - A new optional prop, `botSeatControls`, takes the host's bot controls. `App.tsx` lazy-loads `BotSeatControls` from `src/bots/host/` behind `__INCLUDE_BOARD__` and passes it in; the screen renders it for the host only. The control is a **Bots** section listing each bot with its strategy and a **Remove** button, then a strategy select (Random, then the six strategies) and an **Add bot** button, disabled when no seat is open. Keeping the list in the bot component keeps strategy labels out of core code.
-- **Random** is resolved when the bot is added. Random avoids strategies already in the game until all six are used. The name is drawn from the list, avoiding names already used by any seat, compared case-insensitively and ignoring "(bot)".
+- **Random** is resolved when the bot is added. Random avoids strategies already in the game until all six are used. The name is drawn from the list, avoiding names already used by any seat, compared case-insensitively and ignoring "🤖".
 - Humans can't rename bots, and bot seats have no device, so the device-not-playing checks don't apply to them.
 
-**Names** (from the provided list): Adrian, AJ, Alex, Ashley, Ariel, Avery, Baraka, BJ, Brooke, Calypso, Cameron, Carey, Casey, Chris, Cielo, CJ, Dakota, Dana, Darby, DJ, Duri, Eka, Fadhili, Geni, Hao, Hazuki, Hunter, Hye, Imani, Ira, Itsuki, Jamie, Jela, Jesse, Jordan, Kelly, Kim, Kris, Kurumi, Maki, Malaika, Masumi, Max, Midori, Minh, Misha, Mitsuyo, Montana, Morgan, Nanda, Nat, Nata, Panca, Piper, Putu, Quinn, Ren, Riziki, Robin, Rosario, Sage, Sam, Santana, Sidney, Sydney, Sky, Taylor, Toan, Tracey, Trung, Waridi, Yoshika, Zola, Zuri. They live in `src/bots/names.ts`.
+**Names** (from the provided list): Avery, Brooke, Calypso, Darby, Eka, Fadhili, Geni, Hazuki, Imani, Jordan, Kelly, Maki, Nata, Piper, Quinn, Robin, Sage, Taylor, Waridi, Yoshika, Zola. They live in `src/bots/names.ts`.
 
 ## Bot state: `bot_states`
 

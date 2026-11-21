@@ -27,10 +27,10 @@ export function getPlayerInitials(name: string): string {
   if (!trimmed) return "?";
 
   const words = trimmed.split(/\s+/);
-  const firstInitial = words[0][0].toUpperCase();
+  const firstInitial = Array.from(words[0])[0].toUpperCase();
   if (words.length === 1) return firstInitial;
 
-  return firstInitial + words[1][0].toUpperCase();
+  return firstInitial + Array.from(words[1])[0].toUpperCase();
 }
 
 export function getOtherPlayerIdsInPlayOrder(

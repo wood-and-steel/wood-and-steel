@@ -38,7 +38,7 @@ export function contract(fields: Partial<Contract>): Contract {
 
 export function makeWorld(spec: WorldSpec = {}): BotWorld {
   const players: Record<string, Partial<PlayerProps>> = spec.players ?? {
-    '0': { name: 'Avery (bot)', activeCities: ['Boston', 'Portland ME'] },
+    '0': { name: 'Avery 🤖', activeCities: ['Boston', 'Portland ME'] },
     '1': { name: 'Ben', activeCities: ['Norfolk', 'Raleigh'] },
   };
   const board: BoardState = {

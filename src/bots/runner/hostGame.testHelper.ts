@@ -19,7 +19,7 @@ import { MemoryBotStatesAdapter } from '../state/memoryBotStatesAdapter.testHelp
 export const HOST = 'host-device';
 export const BOT_SEATS: Record<string, PlayerSeat> = {
   [HOST]: { joinedAt: 'T', playerName: 'Hana', playerID: '1' },
-  'bot:a': { joinedAt: 'T', playerName: 'Avery (bot)', playerID: '0', bot: { name: 'Avery', strategy: 'builder' } },
+  'bot:a': { joinedAt: 'T', playerName: 'Avery 🤖', playerID: '0', bot: { name: 'Avery', strategy: 'builder' } },
 };
 
 /** Sleeps yield to the event loop but take no real time. */
@@ -65,7 +65,7 @@ export async function setUpHostGame(spec: HostGameSpec): Promise<HostGame> {
     contracts: spec.contracts ?? [],
     players: Object.entries(players).map(([id, p]) => [
       id,
-      { name: id === '0' ? 'Avery (bot)' : 'Hana', activeCities: [], hubCity: null, regionalOffice: null, ...p },
+      { name: id === '0' ? 'Avery 🤖' : 'Hana', activeCities: [], hubCity: null, regionalOffice: null, ...p },
     ]),
     independentRailroads: {},
     byodGameStarted: true,

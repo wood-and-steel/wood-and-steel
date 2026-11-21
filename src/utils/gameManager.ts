@@ -33,7 +33,7 @@ export interface PlayerSeat {
   bot?: BotSeatInfo;
 }
 
-/** A bot's base name ("Avery", shown as "Avery (bot)") and strategy ID. */
+/** A bot's base name ("Avery", shown as "Avery 🤖") and strategy ID. */
 export interface BotSeatInfo {
   name: string;
   strategy: string;
@@ -672,9 +672,9 @@ export function isBotSeat(seat: PlayerSeat | null | undefined): boolean {
   return seat?.bot != null;
 }
 
-/** Display name for a bot seat: "Avery (bot)". */
+/** Display name for a bot seat: "Avery 🤖". */
 export function botSeatName(name: string): string {
-  return `${name} (bot)`;
+  return `${name} 🤖`;
 }
 
 function newBotSeatKey(): string {
@@ -716,7 +716,7 @@ async function loadForBotSeatChange(
 
 /**
  * Host only, before the game starts: fill an open seat with a bot (playtest-only, docs/BOT_PLAN.md).
- * The caller chooses the bot's name and strategy; the seat is named "Name (bot)".
+ * The caller chooses the bot's name and strategy; the seat is named "Name 🤖".
  */
 export async function addBotSeat(
   code: string,

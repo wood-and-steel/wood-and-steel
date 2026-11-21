@@ -9,7 +9,7 @@ let adapter: MemoryBotStatesAdapter;
 
 const seats: Record<string, PlayerSeat> = {
   host: { joinedAt: 'T', playerName: 'Hana', playerID: '1' },
-  'bot:a': { joinedAt: 'T', playerName: 'Avery (bot)', playerID: '0', bot: { name: 'Avery', strategy: 'builder' } },
+  'bot:a': { joinedAt: 'T', playerName: 'Avery 🤖', playerID: '0', bot: { name: 'Avery', strategy: 'builder' } },
 };
 
 beforeEach(() => {

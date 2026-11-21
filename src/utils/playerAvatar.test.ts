@@ -19,6 +19,12 @@ describe('playerAvatar', () => {
     expect(getPlayerInitials('')).toBe('?');
   });
 
+  test('getPlayerInitials preserves emoji in either initial', () => {
+    expect(getPlayerInitials('🤖 Alex')).toBe('🤖A');
+    expect(getPlayerInitials('Alex 🤖')).toBe('A🤖');
+    expect(getPlayerInitials('🤖')).toBe('🤖');
+  });
+
   test('getPlayerAvatarColorForIndex assigns fixed palette colors by player index', () => {
     expect(getPlayerAvatarColorForIndex(0)).toBe('#B99709');
     expect(getPlayerAvatarColorForIndex(1)).toBe('#C43232');

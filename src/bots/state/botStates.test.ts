@@ -14,9 +14,9 @@ import {
 
 const seats: Record<string, PlayerSeat> = {
   host: { joinedAt: 'T', playerName: 'Hana', playerID: '1' },
-  'bot:a': { joinedAt: 'T', playerName: 'Avery (bot)', playerID: '0', bot: { name: 'Avery', strategy: 'builder' } },
-  'bot:b': { joinedAt: 'T', playerName: 'Sage (bot)', playerID: '2', bot: { name: 'Sage', strategy: 'merchant' } },
-  'bot:waiting': { joinedAt: 'T', playerName: 'Quinn (bot)', bot: { name: 'Quinn', strategy: 'express' } },
+  'bot:a': { joinedAt: 'T', playerName: 'Avery 🤖', playerID: '0', bot: { name: 'Avery', strategy: 'builder' } },
+  'bot:b': { joinedAt: 'T', playerName: 'Sage 🤖', playerID: '2', bot: { name: 'Sage', strategy: 'merchant' } },
+  'bot:waiting': { joinedAt: 'T', playerName: 'Quinn 🤖', bot: { name: 'Quinn', strategy: 'express' } },
 };
 
 describe('createBotRecord', () => {

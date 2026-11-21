@@ -83,7 +83,7 @@ export async function playGame({ strategies, seed, maxRounds = 80, markets = 3, 
         contracts: [],
         players: ids.map((id, i) => [
           id,
-          { name: `${names[i]} (bot)`, activeCities: [], hubCity: null, regionalOffice: null, avatarColor: getPlayerAvatarColorForIndex(i) },
+          { name: `${names[i]} 🤖`, activeCities: [], hubCity: null, regionalOffice: null, avatarColor: getPlayerAvatarColorForIndex(i) },
         ]),
         independentRailroads: initializeIndependentRailroads(),
         byodGameStarted: true,

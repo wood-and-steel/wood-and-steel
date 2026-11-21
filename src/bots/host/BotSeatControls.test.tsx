@@ -58,7 +58,7 @@ describe('BotSeatControls on the waiting screen', () => {
     });
 
     const bot = await waitForBotSeat();
-    expect(bot.playerName).toMatch(/^.+ \(bot\)$/);
+    expect(bot.playerName).toMatch(/^.+ 🤖$/);
     await waitFor(() => expect(within(bots).getByText(bot!.playerName)).toBeInTheDocument());
     // The players list shows the bot like any other player
     expect(screen.getAllByText(bot!.playerName)).toHaveLength(2);
@@ -84,11 +84,11 @@ describe('BotSeatControls on the waiting screen', () => {
     await waitFor(() => expect(within(bots).getByText('Builder', { selector: '.botSeats__strategy' })).toBeInTheDocument());
 
     await act(async () => {
-      fireEvent.click(within(bots).getByRole('button', { name: 'Remove Avery (bot)' }));
+      fireEvent.click(within(bots).getByRole('button', { name: 'Remove Avery 🤖' }));
     });
 
     await waitFor(async () => expect(Object.keys((await getPlayerSeats(code))!)).toEqual([HOST]));
-    await waitFor(() => expect(within(bots).queryByText('Avery (bot)')).not.toBeInTheDocument());
+    await waitFor(() => expect(within(bots).queryByText('Avery 🤖')).not.toBeInTheDocument());
   });
 
   test('Add bot is disabled when every seat is filled', async () => {

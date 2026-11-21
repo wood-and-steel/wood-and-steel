@@ -28,7 +28,7 @@ function pick<T>(items: readonly T[], random: RandomFn): T {
   return items[Math.min(items.length - 1, Math.floor(random() * items.length))];
 }
 
-/** A name from BOT_NAMES that no seat already uses (case-insensitive, ignoring "(bot)"). */
+/** A name from BOT_NAMES that no seat already uses (case-insensitive, ignoring "🤖"). */
 export function pickBotName(seats: Record<string, SeatLike>, random: RandomFn = Math.random): string {
   const taken = new Set(Object.values(seats).map(baseName));
   const available = BOT_NAMES.filter((name) => !taken.has(name.toLowerCase()));

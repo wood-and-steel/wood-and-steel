@@ -1332,10 +1332,10 @@ describe('9. Bot seats (playtest)', () => {
 
     expect(result.success).toBe(true);
     expect(result.seatKey!.startsWith(BOT_SEAT_PREFIX)).toBe(true);
-    expect(result.seat).toMatchObject({ playerName: 'Avery (bot)', bot: { name: 'Avery', strategy: 'builder' } });
+    expect(result.seat).toMatchObject({ playerName: 'Avery 🤖', bot: { name: 'Avery', strategy: 'builder' } });
 
     const seats = await getPlayerSeats(gameCode);
-    expect(seats![result.seatKey!]).toMatchObject({ playerName: 'Avery (bot)' });
+    expect(seats![result.seatKey!]).toMatchObject({ playerName: 'Avery 🤖' });
     expect(isBotSeat(seats![result.seatKey!])).toBe(true);
     expect(isBotSeat(seats![TEST_HOST_DEVICE])).toBe(false);
   });
