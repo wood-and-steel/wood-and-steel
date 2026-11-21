@@ -348,15 +348,20 @@ export function applyAction(world: BotWorld, action: Action): ApplyResult {
   if (world.phase !== 'play') return fail(`no bot actions in phase ${world.phase}`);
 
   if (action.type === 'choosePrivateContract') {
-    const offer = world.turnState.offers?.find(
+    const offers = world.turnState.offers ?? [];
+    const chosenIndex = offers.findIndex(
       (o) => o.commodity === action.offer.commodity && o.destinationKey === action.offer.destinationKey
     );
-    if (!offer) return fail('not one of the offers');
+    if (chosenIndex < 0) return fail('not one of the offers');
+    const offer = offers[chosenIndex];
+    const discarded = offers.filter((_, i) => i !== chosenIndex).map(contractLabel);
     next.contracts.unshift(placeholderContract(offer, world.playerID));
     ts.offers = null;
     ts.awaitingOffers = false;
     move({ name: 'addContract', args: [offer.commodity, offer.destinationKey, 'private'] });
-    narrate(`chose private contract: ${contractLabel(offer)}`);
+    narrate(
+      `chose private contract` + (discarded.length > 0 ? `, discarding ${discarded.join(', ')}` : '')
+    );
     return { ok: true, world: next, effects };
   }
   if (world.turnState.offers || world.turnState.awaitingOffers) return fail('choose a private contract first');

@@ -279,7 +279,7 @@ describe('running trains and contracts', () => {
     expect(types(listActions(offered))).toEqual(['choosePrivateContract']);
     const chosen = apply(offered, { type: 'choosePrivateContract', offer: { commodity: 'wood', destinationKey: 'New York' } });
     expect(moves(chosen.effects)).toEqual([{ name: 'addContract', args: ['wood', 'New York', 'private'] }]);
-    expect(lines(chosen.effects)).toEqual(['Chose private contract: wood to New York']);
+    expect(lines(chosen.effects)).toEqual(['Chose private contract, discarding coal to Boston']);
     expect(types(listActions(chosen.world))).toContain('endTurn');
   });
 
