@@ -77,7 +77,7 @@ export const ContractCard = React.forwardRef<HTMLButtonElement, ContractCardProp
       >
         <div className="contract__header">
           {formatContractTieValue(spec)}
-          <div className="contract__moneyValue">${reward / 1000}K</div>
+          <div className="contract__moneyValue">{variant === "market" ? "M · " : ""}${reward / 1000}K</div>
         </div>
         <div className="contract__body">
           <CommodityRichName commodity={commodity} />
