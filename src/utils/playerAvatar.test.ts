@@ -26,7 +26,7 @@ describe('playerAvatar', () => {
   });
 
   test('getPlayerAvatarColorForIndex assigns fixed palette colors by player index', () => {
-    expect(getPlayerAvatarColorForIndex(0)).toBe('#B99709');
+    expect(getPlayerAvatarColorForIndex(0)).toBe('#856C04');
     expect(getPlayerAvatarColorForIndex(1)).toBe('#C43232');
     expect(getPlayerAvatarColorForIndex(2)).toBe('#21487B');
     expect(getPlayerAvatarColorForIndex(3)).toBe('#13A063');
@@ -38,7 +38,7 @@ describe('playerAvatar', () => {
   test('getPlayerAvatarColor prefers stored color and falls back by player id', () => {
     const stored = '#123456';
     expect(getPlayerAvatarColor('0', stored)).toBe(stored);
-    expect(getPlayerAvatarColor('0')).toBe('#B99709');
+    expect(getPlayerAvatarColor('0')).toBe('#856C04');
     expect(getPlayerAvatarColor('1')).toBe('#C43232');
   });
 

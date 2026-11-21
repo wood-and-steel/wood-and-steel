@@ -30,7 +30,7 @@ describe('getBoardPlayers', () => {
   });
 
   it('uses the player color for dark and the assigned light color for each seat', () => {
-    const lights = ['#D49B1F','#FB3F84', '#0D9ABA', '#39AB2E', '#CA07F1'];
+    const lights = ['#E7CB2C','#FB3F84', '#0D9ABA', '#39AB2E', '#CA07F1'];
     const G = {
       players: lights.map((_, i) => [String(i), { name: `P${i}`, activeCities: [], hubCity: null, regionalOffice: null }]),
     } as unknown as GameState;
