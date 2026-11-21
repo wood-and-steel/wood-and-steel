@@ -69,31 +69,6 @@ export function BotSeatControls({
     <section className="botSeats" aria-label="Bots">
       <h2 className="waitingScreen__playersTitle">Bots</h2>
 
-      {botSeats.length > 0 && (
-        <ul className="botSeats__list">
-          {botSeats.map(([seatKey, seat]) => {
-            const strategy = seat.bot && isStrategyId(seat.bot.strategy) ? getStrategy(seat.bot.strategy) : null;
-            return (
-              <li key={seatKey} className="botSeats__item">
-                <span className="botSeats__name">{seat.playerName}</span>
-                <span className="botSeats__strategy" title={strategy?.summary}>
-                  {strategy?.label ?? seat.bot?.strategy}
-                </span>
-                <button
-                  type="button"
-                  className="button botSeats__remove"
-                  onClick={() => void handleRemove(seatKey)}
-                  disabled={busy}
-                  aria-label={`Remove ${seat.playerName}`}
-                >
-                  Remove
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
       <div className="botSeats__add">
         <label className="botSeats__label" htmlFor="botStrategy">
           Strategy
@@ -121,6 +96,31 @@ export function BotSeatControls({
           Add bot
         </button>
       </div>
+
+      {botSeats.length > 0 && (
+        <ul className="botSeats__list">
+          {botSeats.map(([seatKey, seat]) => {
+            const strategy = seat.bot && isStrategyId(seat.bot.strategy) ? getStrategy(seat.bot.strategy) : null;
+            return (
+              <li key={seatKey} className="botSeats__item">
+                <span className="botSeats__name">{seat.playerName}</span>
+                <span className="botSeats__strategy" title={strategy?.summary}>
+                  {strategy?.label ?? seat.bot?.strategy}
+                </span>
+                <button
+                  type="button"
+                  className="button botSeats__remove"
+                  onClick={() => void handleRemove(seatKey)}
+                  disabled={busy}
+                  aria-label={`Remove ${seat.playerName}`}
+                >
+                  Remove
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       {openSeats <= 0 && <p className="botSeats__hint">Every seat is filled.</p>}
       {error && <div className="waitingScreen__error">{error}</div>}
