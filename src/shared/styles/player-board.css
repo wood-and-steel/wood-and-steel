@@ -58,6 +58,7 @@
   font-size: var(--font-size-sm);
   font-family: Arial, Helvetica, sans-serif;
   font-weight: 600;
+  text-wrap: nowrap;
   line-height: 1;
   box-sizing: border-box;
   border: var(--border-width-lg) solid transparent;
