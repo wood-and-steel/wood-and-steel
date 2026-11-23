@@ -9,7 +9,7 @@ describe('engine reach', () => {
   test('engine distance, +1 with a Service Yard from the Consolidation on', () => {
     expect(engineReach(makeWorld(), 0)).toBe(1);
     expect(engineReach(makeWorld({ board: { engineTypes: { '0': ['mogul', null] }, upgrades: { '0': ['service-yard'] } } }), 0)).toBe(3);
-    expect(engineReach(makeWorld({ board: { engineTypes: { '0': ['consolidation', null] }, upgrades: { '0': ['service-yard'] } } }), 0)).toBe(4);
+    expect(engineReach(makeWorld({ board: { engineTypes: { '0': ['consolidation', null] }, upgrades: { '0': ['service-yard'] } } }), 0)).toBe(5);
   });
 });
 

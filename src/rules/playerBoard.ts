@@ -38,7 +38,7 @@ export const ENGINE_TYPES: readonly EngineType[] = [
     price: 7000,
     effects: 'After buying, player can fulfill market contracts',
   },
-  { id: 'consolidation', name: '2-8-0 Consolidation', distance: 3, price: 10000, effects: null },
+  { id: 'consolidation', name: '2-8-0 Consolidation', distance: 4, price: 10000, effects: null },
   { id: 'prairie', name: '2-6-2 Prairie', distance: 5, price: 14000, effects: null },
   { id: 'pacific', name: '4-6-2 Pacific', distance: 7, price: 18000, effects: null },
   { id: 'mikado', name: '2-8-2 Mikado', distance: 8, price: 22000, effects: null },

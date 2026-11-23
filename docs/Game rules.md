@@ -273,7 +273,7 @@ If you already have the limit of engines you are allowed at this point in the ga
 | 2-4-0 John Bull | 1 | free at start of game |  |
 | 4-4-0 American | 2 | $5,000 |  |
 | 2-6-0 Mogul | 3 | $7,000 | After buying, player can fulfill market contracts |
-| 2-8-0 Consolidation | 3 | $10,000 |  |
+| 2-8-0 Consolidation | 4 | $10,000 |  |
 | 2-6-2 Prairie | 5 | $14,000 |  |
 | 4-6-2 Pacific | 7 | $18,000 |  |
 | 2-8-2 Mikado | 8 | $22,000 |  |
