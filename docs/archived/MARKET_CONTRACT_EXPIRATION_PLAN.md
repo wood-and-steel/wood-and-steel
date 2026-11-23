@@ -1,5 +1,7 @@
 # Plan: Market contract expiration
 
+**Status (2026-11-23):** implemented. Shared market-contract helpers (`drawMarketContract`, `withReplacementMarketContract`, `openMarketContracts`) moved into `src/stores/marketExpiration.ts`. `stateSerialization.ts` also saves `marketRoundsWithoutExpirationStart`. The expiry badge has no `aria-label`, since its visible text already says the same thing.
+
 Goal: keep the market tableau fresh. Unclaimed market contracts occasionally start a countdown, and when it runs out they leave the tableau and a new one replaces them. Alongside this, contracts in the tableau can only be claimed, not fulfilled directly, and no contract, private or market, can be unfulfilled.
 
 "In the tableau" means open market contracts: `type === 'market'`, `playerID === null`, `!fulfilled` (same as `openMarketContracts` in `src/stores/gameActions.ts`).
