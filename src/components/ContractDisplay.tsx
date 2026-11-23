@@ -17,7 +17,9 @@ export interface ContractDisplayProps {
 
 /**
  * Displays a single contract card with commodity, destination, reward value, and railroad ties.
- * Clicking the card opens a popup menu for fulfilling or deleting the contract.
+ * Clicking the card opens a popup menu: Claim and Discard for an open market contract,
+ * Fulfill and Discard for the player's own unfulfilled contracts. Fulfilled contracts have
+ * no actions (they can't be unfulfilled), so their cards are not clickable.
  */
 export function ContractDisplay({
   contract,
@@ -31,7 +33,8 @@ export function ContractDisplay({
   claimMarketDisabled,
 }: ContractDisplayProps): React.ReactElement {
   const cardRef = React.useRef<HTMLButtonElement>(null);
-  const isClickable = typeof onCardClick === "function";
+  const isClickable = typeof onCardClick === "function" && !contract.fulfilled;
+  const isOpenMarket = contract.type === "market" && contract.playerID == null;
 
   const handleToggle = () => {
     onToggleFulfilled(contract.id);
@@ -79,19 +82,16 @@ export function ContractDisplay({
           anchorRef={cardRef}
           placement={{ side: "bottom", align: "center" }}
         >
-          <PopupMenuItem onClick={handleToggle}>
-            {contract.fulfilled ? "Unfulfill Contract" : "Fulfill Contract"}
-          </PopupMenuItem>
-          {contract.type === "market" &&
-            contract.playerID == null &&
+          {isOpenMarket ? (
             onClaimContract != null && (
               <PopupMenuItem onClick={handleClaim} disabled={claimMarketDisabled}>
                 Claim Contract
               </PopupMenuItem>
-            )}
-          {!contract.fulfilled && (
-            <PopupMenuItem onClick={handleDelete}>Discard</PopupMenuItem>
+            )
+          ) : (
+            <PopupMenuItem onClick={handleToggle}>Fulfill Contract</PopupMenuItem>
           )}
+          <PopupMenuItem onClick={handleDelete}>Discard</PopupMenuItem>
         </PopupMenu>
       )}
     </>

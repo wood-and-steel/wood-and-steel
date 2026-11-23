@@ -159,7 +159,7 @@ Players fulfill a contract by running one of their trains to a city that supplie
 
 **Private** Contracts represent requests for the services of a specific railroad. Private Contracts belong to one player and can only be fulfilled by that player. When a Private Contract is fulfilled, the app offers the player new contracts from which the player must choose one.
 
-**Market** Contracts are available for all players to claim. Claiming it removes it from the open market.
+**Market** Contracts are available for all players to claim. Claiming it removes it from the open market. A market contract must be claimed before it can be fulfilled; contracts in the open market can only be claimed.
 
 ## Turn actions
 
@@ -199,7 +199,9 @@ When a market contract is claimed, a new market contract is created, refilling t
 
 #### Fulfilling a contract
 
-If a train carrying a commodity goes to a city with an open contract for that commodity, the player may fulfill that contract. When a contract is fulfilled, the train’s movement ends in that city.
+If a train carrying a commodity goes to a city with an open contract for that commodity, the player may fulfill that contract. The contract must be the player's private contract or the market contract they have claimed. When a contract is fulfilled, the train’s movement ends in that city.
+
+A fulfilled contract, private or market, can't be unfulfilled. A player who fulfills a contract by mistake can use Undo to return to the start of their turn.
 
 To fulfill a contract, follow these steps.
 

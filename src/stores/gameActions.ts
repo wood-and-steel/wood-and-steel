@@ -184,7 +184,7 @@ function drawMarketContract(G: GameState, contracts: Contract[]): Contract | und
 }
 
 /**
- * A market contract just left the open tableau (claimed, or fulfilled without being claimed):
+ * A market contract just left the open tableau (claimed):
  * add one replacement to the front of `contracts`, avoiding duplicates of active contracts.
  * One-for-one: does not change the number of contracts in the tableau; it only replaces the one that left.
  */
@@ -312,7 +312,7 @@ export function addContract(
     return;
   }
 
-  // Private: set playerID to current player; market: leave playerID null until fulfilled
+  // Private: set playerID to current player; market: leave playerID null until claimed
   const contract = newContract(destinationKey, commodity, {
     type,
     playerID: type === 'private' ? ctx.currentPlayer : null,
@@ -338,6 +338,12 @@ export function addContract(
   saveCurrentGameState();
 }
 
+/**
+ * Fulfil one of the current player's unfulfilled contracts: their private contract or the
+ * market contract they claimed. Open market contracts must be claimed first, and a fulfilled
+ * contract can't be unfulfilled (Undo restores the start-of-turn state instead).
+ * The name is historical; the move only ever fulfils.
+ */
 export function toggleContractFulfilled(contractID: string): void {
   const { G, ctx } = useGameStore.getState();
 
@@ -359,44 +365,21 @@ export function toggleContractFulfilled(contractID: string): void {
 
   const contract = G.contracts[contractIndex];
 
-  // Current player's contract, or unfulfilled market contract, or market contract they fulfilled
-  const canToggle =
-    contract.playerID === ctx.currentPlayer ||
-    (contract.type === 'market' && !contract.fulfilled) ||
-    (contract.type === 'market' && contract.fulfilled && contract.playerID === ctx.currentPlayer);
+  if (contract.fulfilled) {
+    console.warn(`[toggleContractFulfilled] Contract "${contractID}" is already fulfilled`);
+    return;
+  }
 
-  if (!canToggle) {
+  if (contract.playerID !== ctx.currentPlayer) {
     console.warn(
-      `[toggleContractFulfilled] Contract "${contractID}" cannot be toggled by current player`
+      contract.type === 'market' && contract.playerID === null
+        ? `[toggleContractFulfilled] Market contract "${contractID}" must be claimed before it can be fulfilled`
+        : `[toggleContractFulfilled] Contract "${contractID}" does not belong to the current player`
     );
     return;
   }
 
   useGameStore.setState((state) => {
-    const updatedContract: Contract = {
-      ...contract,
-      fulfilled: !contract.fulfilled,
-    };
-
-    // Market contract: assign playerID when fulfilled, clear when unfulfilled
-    if (updatedContract.fulfilled && updatedContract.type === 'market') {
-      updatedContract.playerID = ctx.currentPlayer;
-    } else if (!updatedContract.fulfilled && updatedContract.type === 'market') {
-      updatedContract.playerID = null;
-    }
-
-    const toggledContracts = state.G.contracts.map((c, idx) =>
-      idx === contractIndex ? updatedContract : c
-    );
-
-    // Fulfilling an unclaimed market contract takes it off the open tableau: replace it.
-    // (A claimed one was already replaced when it was claimed.)
-    const leftTableau =
-      contract.type === 'market' && contract.playerID === null && updatedContract.fulfilled;
-    const updatedContracts = leftTableau
-      ? withReplacementMarketContract(state.G, toggledContracts)
-      : toggledContracts;
-
     const currentPlayerEntry = state.G.players.find(([id]) => id === ctx.currentPlayer);
     if (!currentPlayerEntry) {
       console.error(
@@ -405,30 +388,14 @@ export function toggleContractFulfilled(contractID: string): void {
       return state;
     }
 
+    const updatedContracts = state.G.contracts.map((c, idx) =>
+      idx === contractIndex ? ({ ...contract, fulfilled: true } as Contract) : c
+    );
+
     const [, playerProps] = currentPlayerEntry;
-    let updatedActiveCities = [...playerProps.activeCities];
-
-    if (updatedContract.fulfilled) {
-      if (!updatedActiveCities.includes(updatedContract.destinationKey)) {
-        updatedActiveCities = [...updatedActiveCities, updatedContract.destinationKey];
-      }
-    } else {
-      // Remove destination from activeCities only if no other fulfilled contract has that destination
-      const hasOtherFulfilledContract = updatedContracts.some(
-        (c) =>
-          c.id !== contractID &&
-          c.playerID === ctx.currentPlayer &&
-          c.fulfilled &&
-          c.destinationKey === updatedContract.destinationKey
-      );
-
-      if (!hasOtherFulfilledContract) {
-        // Remove all instances of this city (in case of duplicates)
-        updatedActiveCities = updatedActiveCities.filter(
-          (city) => city !== updatedContract.destinationKey
-        );
-      }
-    }
+    const updatedActiveCities = playerProps.activeCities.includes(contract.destinationKey)
+      ? playerProps.activeCities
+      : [...playerProps.activeCities, contract.destinationKey];
 
     const updatedPlayers = state.G.players.map(([id, props]) =>
       id === ctx.currentPlayer

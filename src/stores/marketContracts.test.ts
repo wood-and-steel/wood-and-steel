@@ -1,9 +1,10 @@
 /**
- * Market contract tableau: once seeded, claiming or fulfilling an unclaimed market contract
- * replaces it one-for-one, and Undo restores the start-of-turn tableau.
+ * Market contract tableau: once seeded, claiming an open market contract replaces it
+ * one-for-one, open contracts can't be fulfilled directly, fulfilled contracts can't be
+ * unfulfilled, and Undo restores the start-of-turn tableau.
  */
 import { beforeEach, describe, expect, test } from 'vitest';
-import { claimMarketContract, fillMarketTableau, generateMarketContract, toggleContractFulfilled } from './gameActions';
+import { addContract, claimMarketContract, fillMarketTableau, generateMarketContract, toggleContractFulfilled } from './gameActions';
 import { useGameStore } from './gameStore';
 
 const openMarket = () =>
@@ -39,11 +40,11 @@ describe('market contract tableau', () => {
     expect(marketIds()).not.toContain(target.id);
   });
 
-  test('fulfilling an unclaimed market contract keeps 3 open market contracts', () => {
+  test('fulfilling an open market contract is refused and changes nothing', () => {
     const [target] = openMarket();
+    const before = useGameStore.getState().G;
     toggleContractFulfilled(target.id);
-    expect(openMarket()).toHaveLength(3);
-    expect(marketIds()).not.toContain(target.id);
+    expect(useGameStore.getState().G).toBe(before);
   });
 
   test('fulfilling a claimed market contract does not add another', () => {
@@ -53,6 +54,27 @@ describe('market contract tableau', () => {
     toggleContractFulfilled(target.id);
     expect(useGameStore.getState().G.contracts).toHaveLength(before);
     expect(openMarket()).toHaveLength(3);
+  });
+
+  test('a fulfilled claimed market contract cannot be unfulfilled', () => {
+    const [target] = openMarket();
+    claimMarketContract(target.id);
+    toggleContractFulfilled(target.id);
+    const before = useGameStore.getState().G;
+    toggleContractFulfilled(target.id);
+    expect(useGameStore.getState().G).toBe(before);
+    expect(before.contracts.find((c) => c.id === target.id)).toMatchObject({ fulfilled: true, playerID: '0' });
+  });
+
+  test('a fulfilled private contract cannot be unfulfilled and keeps its active city', () => {
+    addContract('coal', 'Chicago', 'private');
+    const contract = useGameStore.getState().G.contracts.find((c) => c.type === 'private')!;
+    toggleContractFulfilled(contract.id);
+    const before = useGameStore.getState().G;
+    expect(before.players[0][1].activeCities).toContain('Chicago');
+    toggleContractFulfilled(contract.id);
+    expect(useGameStore.getState().G).toBe(before);
+    expect(useGameStore.getState().G.players[0][1].activeCities).toContain('Chicago');
   });
 
   test('replacement is one-for-one, not a top-up to 3', () => {
@@ -89,9 +111,9 @@ describe('market contract tableau', () => {
 
   test('Undo restores the start-of-turn tableau and drops replacements', () => {
     const original = marketIds();
-    const [a, b] = openMarket();
+    const [a] = openMarket();
     claimMarketContract(a.id);
-    toggleContractFulfilled(b.id);
+    toggleContractFulfilled(a.id);
     expect(marketIds()).not.toEqual(original);
 
     useGameStore.getState().undoCurrentTurn();
