@@ -351,6 +351,8 @@ After all players have taken a turn, the round is over.
 
 The app determines how each of the independent railroads are expanding. Players add the corresponding track segments on the central map board.
 
+Independent railroads never start on or expand into mountainous routes of length 4 or more.
+
 ### Monopolies
 
 Railroads were often built around transporting certain commodities. If the commodities were delivered in large enough quantities, they became part of the financial backbone of a railroad. (Designer note: To reflect this in gameplay, we've decided to include monopolies as part of how you build your railroad. The intention is that not all players will have monopolies at game end.)

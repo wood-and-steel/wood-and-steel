@@ -26,9 +26,35 @@ function routesWithoutTheseCities(citiesToAvoid: Set<string>): Set<string> {
   return routesFound;
 }
 
+/** Routes at least this long that are also mountainous are never occupied by independent railroads. */
+const MAX_INDIE_MOUNTAINOUS_LENGTH = 3;
+
+/**
+ * Whether an independent railroad may start on or expand into a route.
+ * Long mountainous routes (length >= 4) are off-limits.
+ *
+ * @param routeKey - Route key
+ * @returns True if an independent railroad may occupy the route
+ */
+export function canIndependentRailroadOccupy(routeKey: string): boolean {
+  const route = routes.get(routeKey);
+  if (!route) return false;
+  return !(route.mountainous && route.length > MAX_INDIE_MOUNTAINOUS_LENGTH);
+}
+
+/**
+ * Route keys from a set that independent railroads may occupy.
+ *
+ * @param routeKeys - Set of route keys
+ * @returns Subset that passes canIndependentRailroadOccupy
+ */
+function occupiableByIndies(routeKeys: Set<string>): Set<string> {
+  return new Set([...routeKeys].filter(canIndependentRailroadOccupy));
+}
+
 /**
  * Initialize independent railroads: assign ~10% of eligible routes to new companies.
- * Eligible = routes not within 2 hops of possible starting cities.
+ * Eligible = routes not within 2 hops of possible starting cities and not mountainous with length >= 4.
  *
  * @returns Record of company name to { name, routes }
  */
@@ -56,8 +82,9 @@ export function initializeIndependentRailroads(): Record<
       includeFromCities: true,
     }
   );
-  const routesAvailableToIndies =
-    routesWithoutTheseCities(withinTwoOfStartingCities);
+  const routesAvailableToIndies = occupiableByIndies(
+    routesWithoutTheseCities(withinTwoOfStartingCities)
+  );
 
   // Calculate how many routes we want to assign (10% of total)
   const numberOfRoutesToAssign = Math.ceil(routesAvailableToIndies.size * 0.1);
@@ -189,9 +216,11 @@ export function growIndependentRailroads(
     includeFromCities: true,
   });
 
-  // Indies grow only into routes not adjacent to player routes (approx. via 1-hop from active cities).
-  const routesNotNearActiveCities =
-    routesWithoutTheseCities(activeCitiesPlusOneHop);
+  // Indies grow only into routes not adjacent to player routes (approx. via 1-hop from active cities)
+  // and never into long mountainous routes.
+  const routesNotNearActiveCities = occupiableByIndies(
+    routesWithoutTheseCities(activeCitiesPlusOneHop)
+  );
   const startingRouteCount = Object.values(G.independentRailroads).reduce(
     (acc, rr) => acc + rr.routes.length,
     0
