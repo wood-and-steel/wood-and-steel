@@ -149,6 +149,34 @@ describe('ActionsSheet', () => {
     expect(payForTrack).toHaveBeenCalledWith(7000);
   });
 
+  test("Enter in the track field pays, and doesn't submit the game page's form (+M or End Turn)", () => {
+    const payForTrack = vi.fn(() => true);
+    const onSubmit = vi.fn((e: { preventDefault: () => void }) => e.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <button type="submit" name="marketContract">
+          +M
+        </button>
+        <ActionsSheet
+          G={G}
+          playerID="0"
+          player={player()}
+          moves={{ payForTrack } as unknown as Moves}
+          onAcquireRailroad={() => {}}
+          onNewPrivateContract={() => {}}
+          onClose={() => {}}
+        />
+      </form>
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Pay for track/ }));
+    const input = screen.getByRole('textbox', { name: 'Track cost in thousands of dollars' });
+    fireEvent.change(input, { target: { value: '4' } });
+    expect(input.closest('form')).toBeNull();
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(payForTrack).toHaveBeenCalledWith(4000);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   test('lists engine purchases with their price and what they trade in', () => {
     render(
       <ActionsSheet

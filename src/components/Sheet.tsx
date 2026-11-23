@@ -1,4 +1,5 @@
 import React from "react";
+import ReactDOM from "react-dom";
 
 export interface SheetProps {
   title: string;
@@ -10,7 +11,9 @@ export interface SheetProps {
 
 /**
  * A dialog over the game for one task (loans, actions, a delivery). Closes on the Close
- * button, a backdrop click, or Escape.
+ * button, a backdrop click, or Escape. Rendered into document.body: the game page is one big
+ * form, and pressing Enter in a field inside it would submit the form with its first submit
+ * button (+M or End Turn).
  */
 export function Sheet({ title, onClose, onBack, children }: SheetProps): React.ReactElement {
   const titleId = React.useId();
@@ -23,7 +26,7 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  return (
+  return ReactDOM.createPortal(
     <div
       className="modal"
       role="dialog"
@@ -49,7 +52,8 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

@@ -108,6 +108,10 @@ export function EditPlaytestDialog({
       pattern="[0-9]*"
       value={value}
       onChange={(e) => onChange(e.target.value.replace(/[^0-9]/g, ""))}
+      // The dialog sits inside the game page's form; Enter would submit it with +M or End Turn.
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.preventDefault();
+      }}
     />
   );
 

@@ -415,7 +415,10 @@ function PayForTrackView({ player, moves, onBack, onClose }: ViewProps): React.R
               setError(null);
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") pay();
+              if (e.key === "Enter") {
+                e.preventDefault();
+                pay();
+              }
             }}
           />
           <span className="sheet__label">,000</span>
@@ -430,7 +433,7 @@ function PayForTrackView({ player, moves, onBack, onClose }: ViewProps): React.R
         <BeforeAfter
           label="Cash"
           before={formatMoney(player.cash)}
-          after={formatMoney(player.cash - (Number.isFinite(amount) ? amount : 0))}
+          after={formatMoney(amount > 0 && amount <= player.cash ? player.cash - amount : player.cash)}
         />
       </div>
       <button type="button" className="button sheet__primary" onClick={pay}>

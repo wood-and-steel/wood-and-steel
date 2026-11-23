@@ -34,6 +34,8 @@
 
 .independentRailroads__button {
   margin-right: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
   background-color: var(--color-bg-primary);
 }
 
