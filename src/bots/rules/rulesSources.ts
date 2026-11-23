@@ -13,7 +13,7 @@ export const FINGERPRINT_FILES = [
   'src/data/commodities.ts',
   'src/data/routes.ts',
   'src/data/startingRoutes.ts',
-  'src/board/playerBoardData.ts',
+  'src/rules/playerBoard.ts',
 ] as const;
 
 export const MOVE_VALIDATION_FILE = 'src/stores/moveValidation.ts';

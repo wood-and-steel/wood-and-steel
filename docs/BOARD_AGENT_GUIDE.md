@@ -46,7 +46,7 @@ All paths under `src/board/` unless noted.
 | `BoardChrome.tsx` | Top bar. |
 | `PlayerTrays.tsx` | Right column with one card per player: engine rows (token, type, cargo, distance, effects), upgrade checkboxes, unplaced Railyard, and the player's unfulfilled private and claimed market contracts (read from `G.contracts`). Owns which picker is open. |
 | `TrayPicker.tsx` | Popover and option lists for choosing an engine type or commodity; `CommodityIcon`. |
-| `playerBoardData.ts` | Static engine, upgrade, and commodity-group data from the rules; `engineDistance` and formatting helpers. |
+| `playerBoardData.ts` | Re-exports `src/rules/playerBoard.ts`: static engine, upgrade, and commodity-group data from the rules; `engineDistance` and formatting helpers. Shared with the player app. |
 | `useBoardPopover.ts` | Shared popover placement and dismissal (Escape, outside press). Used by `RoutePopover` and `TrayPicker`. |
 | `RoutePopover.tsx` | Owner / Parallel / Unclaim popover for a route. |
 | `tokens.ts`, `useTokenDrag.ts`, `TokenIcon.tsx` | Token identity and layout, pointer-event drag and drop, tray icons and drag ghost. |
@@ -130,7 +130,7 @@ SVG coordinates and colors are attributes, never style objects. The HTML overlay
 | File | Covers |
 |------|--------|
 | `boardOps.test.ts` | Every op, replay, normalization, version 1 rows |
-| `playerBoardData.test.ts` | Engine, upgrade, and commodity-group data; `engineDistance` |
+| `src/rules/playerBoard.test.ts` | Engine, upgrade, and commodity-group data; `engineDistance` |
 | `boardSeed.test.ts` | Starting-route seeding, setup gating, mid-game ambiguity |
 | `boardAcquisitions.test.ts` | Acquirer choice, diff, growth, idempotence |
 | `boardSync.test.ts` | Load, seed, queued saves, conflict re-apply, realtime (incl. stale), errors, two-screen acquisition and player tracking |

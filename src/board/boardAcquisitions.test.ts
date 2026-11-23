@@ -1,6 +1,7 @@
 import type { GameContext, GameState } from '../stores/gameStore';
 import { findAcquirer, reconcileOp } from './boardAcquisitions';
 import { applyBoardOp, emptyBoardState, setRouteOwners, type BoardState } from './boardOps';
+import { startingPlayerBoard } from '../stores/playerDefaults';
 
 const ERIE = ['Chicago-Cleveland', 'Chicago-Detroit'];
 
@@ -13,7 +14,7 @@ function game(
   return {
     G: {
       contracts: [],
-      players: ids.map((id) => [id, { name: `P${id}`, activeCities: active[id], hubCity: null, regionalOffice: null }]),
+      players: ids.map((id) => [id, { ...startingPlayerBoard(), name: `P${id}`, activeCities: active[id], hubCity: null, regionalOffice: null }]),
       independentRailroads: Object.fromEntries(
         Object.entries(railroads).map(([name, keys]) => [name, { name, routes: keys.map((key) => ({ key, addedInRound: 0 })) }])
       ),

@@ -9,6 +9,7 @@ import {
 } from './Contract';
 import { cities, commodities } from './data';
 import type { GameContext, GameState, PlayerProps, RegionCode } from './stores/gameStore';
+import { startingPlayerBoard } from './stores/playerDefaults';
 
 /** Minimal game context for contract tests; only currentPlayer matters. */
 function makeCtx(currentPlayer: string): GameContext {
@@ -39,8 +40,8 @@ function makeGameState(
       contracts,
       independentRailroads: {},
       players: [
-        ['0', { name: 'P0', activeCities, hubCity, regionalOffice }],
-        ['1', { name: 'P1', activeCities: ['Chicago', 'Detroit'], hubCity: null, regionalOffice: null }],
+        ['0', { ...startingPlayerBoard(), name: 'P0', activeCities, hubCity, regionalOffice }],
+        ['1', { ...startingPlayerBoard(), name: 'P1', activeCities: ['Chicago', 'Detroit'], hubCity: null, regionalOffice: null }],
       ],
     },
     ctx: makeCtx(currentPlayer),
@@ -217,8 +218,8 @@ describe('generateMarketContract', () => {
     const G = {
       contracts: [] as Contract[],
       players: [
-        ['0', { name: 'P0', activeCities: ['New York', 'Philadelphia', 'Pittsburgh'], hubCity: null, regionalOffice: null }],
-        ['1', { name: 'P1', activeCities: ['Raleigh', 'Norfolk'], hubCity: null, regionalOffice: null }],
+        ['0', { ...startingPlayerBoard(), name: 'P0', activeCities: ['New York', 'Philadelphia', 'Pittsburgh'], hubCity: null, regionalOffice: null }],
+        ['1', { ...startingPlayerBoard(), name: 'P1', activeCities: ['Raleigh', 'Norfolk'], hubCity: null, regionalOffice: null }],
       ] as [string, PlayerProps][],
       independentRailroads: {},
     };

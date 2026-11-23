@@ -8,6 +8,7 @@ import type { PlayerProps } from '../../stores/gameStore';
 import { emptyBoardState, type BoardState } from '../../board/boardOps';
 import { createBotRecord, type BotRecord } from '../state/botStates';
 import { emptyTurnState, type BotWorld, type TurnState } from './world';
+import { startingPlayerBoard } from '../../stores/playerDefaults';
 
 export interface WorldSpec {
   phase?: string;
@@ -62,7 +63,7 @@ export function makeWorld(spec: WorldSpec = {}): BotWorld {
     contracts: (spec.contracts ?? []).map((c) => contract(c)),
     players: Object.entries(players).map(([id, p]) => [
       id,
-      { name: `Player ${id}`, activeCities: [], hubCity: null, regionalOffice: null, ...p },
+      { ...startingPlayerBoard(), name: `Player ${id}`, activeCities: [], hubCity: null, regionalOffice: null, ...p } as PlayerProps,
     ]),
     independentRailroads: spec.independentRailroads ?? {},
     board,

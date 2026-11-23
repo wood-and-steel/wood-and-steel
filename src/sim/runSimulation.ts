@@ -10,6 +10,7 @@ import type {
 } from '../stores/gameStore';
 import { citiesConnectedTo } from '../utils/graph';
 import { getPlayerAvatarColorForIndex } from '../utils/playerAvatar';
+import { newPlayerProps } from '../stores/playerDefaults';
 import { randomArrayItem, shuffleArray } from '../utils/random';
 
 export const STARTING_CITY_PAIRS: readonly [string, string][] = [
@@ -88,13 +89,7 @@ function createStubGame(
     contracts: [],
     players: Array.from({ length: numPlayers }, (_, i) => [
       String(i),
-      {
-        name: `Player ${i}`,
-        activeCities: [],
-        hubCity: null,
-        regionalOffice: null,
-        avatarColor: getPlayerAvatarColorForIndex(i),
-      },
+      newPlayerProps(`Player ${i}`, getPlayerAvatarColorForIndex(i)),
     ]),
     independentRailroads: initializeIndependentRailroads(),
   };

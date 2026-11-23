@@ -15,6 +15,7 @@ import type { BotPorts, Clock } from '../ports';
 import { setBotStatesAdapter } from '../state/botStatesAdapter';
 import { ensureBotStates } from '../state/botStatesSync';
 import { MemoryBotStatesAdapter } from '../state/memoryBotStatesAdapter.testHelper';
+import { startingPlayerBoard } from '../../stores/playerDefaults';
 
 export const HOST = 'host-device';
 export const BOT_SEATS: Record<string, PlayerSeat> = {
@@ -65,7 +66,7 @@ export async function setUpHostGame(spec: HostGameSpec): Promise<HostGame> {
     contracts: spec.contracts ?? [],
     players: Object.entries(players).map(([id, p]) => [
       id,
-      { name: id === '0' ? 'Avery 🤖' : 'Hana', activeCities: [], hubCity: null, regionalOffice: null, ...p },
+      { ...startingPlayerBoard(), name: id === '0' ? 'Avery 🤖' : 'Hana', activeCities: [], hubCity: null, regionalOffice: null, ...p },
     ]),
     independentRailroads: {},
     byodGameStarted: true,

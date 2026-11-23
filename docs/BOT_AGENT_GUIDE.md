@@ -19,11 +19,11 @@
 
 | File | Role |
 |---|---|
-| `rulesData.ts` | Rules numbers the app doesn't hold: costs, prices, debt service, limits, bonuses. Rules defaults are marked `DEFAULT`. |
+| `rulesData.ts` | Re-exports `src/rules/rulesData.ts`: costs, prices, debt service, limits, bonuses, shared with the player app. Rules defaults are marked `DEFAULT`. |
 | `world.ts` | `BotWorld` (one bot's view: `G`/`ctx` slice, whole board, its `bot_states` record, turn bookkeeping) and `buildWorld`. |
 | `network.ts` | Map and own-track graphs: BFS, paths, network cities, buildable routes. |
-| `costs.ts` | Track cost, engine purchases and trade-ins, independent railroad prices, upgrade availability. |
-| `finance.ts` | Delivery payment, debt service, borrow and repay options. |
+| `costs.ts` | Track cost, engine purchases and trade-ins, independent railroad prices, upgrade availability. Engine purchase options, the Service Yard gate and monopolizable commodities come from `src/rules/engines.ts`. |
+| `finance.ts` | Re-exports `src/rules/finance.ts`: delivery payment, debt service, borrow and repay options. |
 | `movement.ts` | Engine runs: generating them (`runOptions`, `roundhouseOptions`) and checking paths. |
 | `scoring.ts` | Railroad ties, including the bonuses the app doesn't show. |
 | `actions.ts` | `Action`, `listActions`, `applyAction` → predicted world plus effects (app moves, board ops, `requestOffers`, narration). |
@@ -65,12 +65,12 @@ Each action's narration lines are saved to the bot's `log` in `bot_states` (the 
 
 ## Rule changes
 
-The fingerprint covers `docs/Game rules.md`, `MOVES_BY_PHASE` in `src/stores/moveValidation.ts`, `src/data/*.ts` (except `index.ts`), and `src/board/playerBoardData.ts`. When `rulesFingerprint.test.ts` fails:
+The fingerprint covers `docs/Game rules.md`, `MOVES_BY_PHASE` in `src/stores/moveValidation.ts`, `src/data/*.ts` (except `index.ts`), and `src/rules/playerBoard.ts`. When `rulesFingerprint.test.ts` fails:
 
 1. **See what changed since the bots were last reviewed:**
 
    ```bash
-   git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/board/playerBoardData.ts
+   git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/rules/playerBoard.ts
    ```
 
 2. **Decide the bot impact** of each change:

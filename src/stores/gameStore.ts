@@ -2,15 +2,69 @@ import { create } from 'zustand';
 import type { Contract } from '../Contract';
 import { getCurrentGameCode, saveGameState } from '../utils/gameManager';
 import { getPlayerAvatarColorForIndex } from '../utils/playerAvatar';
+import type { CargoPair, EngineTypePair, PlayerUpgradeId } from '../rules/playerBoard';
+import { newPlayerProps } from './playerDefaults';
 
 export type RegionCode = 'NW' | 'NC' | 'NE' | 'SW' | 'SC' | 'SE';
 
-export interface PlayerProps {
+/**
+ * What the tabletop player board used to track, plus money (docs/PLAYER_APP_REDESIGN_PLAN.md,
+ * Data model). Start values and normalization of old saves are in playerDefaults.ts.
+ */
+export interface PlayerBoardFields {
+  /** Dollars; never negative. */
+  cash: number;
+  /** Dollars, in $5,000 steps. */
+  debt: number;
+  /** Engine type on the light and dark tokens. */
+  engines: EngineTypePair;
+  /** Commodity each engine carries, if the player recorded it (optional; null = not recorded). */
+  cargo: CargoPair;
+  upgrades: PlayerUpgradeId[];
+  /** The commodity a Commodities Exchange covers, once bought. */
+  exchangeCommodity: string | null;
+  /** A delivery to a Central region has been made (its one-time debt service is settled). */
+  centralDebtServicePaid: boolean;
+  /** A delivery to a Western region has been made; debt service is due on every delivery from then on. */
+  westernDeliveryMade: boolean;
+}
+
+export interface PlayerProps extends PlayerBoardFields {
   name: string;
   activeCities: string[];
   hubCity: string | null;
   regionalOffice: RegionCode | null;
   avatarColor?: string;
+}
+
+/** One change to a player's cash or debt this turn, for the money log. */
+export interface LedgerEntry {
+  label: string;
+  /** Dollars; positive adds to cash. */
+  amount: number;
+}
+
+/** The current player's money changes this turn; cleared when the turn ends. */
+export interface TurnLedger {
+  playerID: string;
+  entries: LedgerEntry[];
+}
+
+/** A contract named in the round report; kept as a copy since expired contracts leave `contracts`. */
+export interface ReportedContract {
+  id: string;
+  commodity: string;
+  destinationKey: string;
+}
+
+/** What changed at the end of the last round, for the round report. */
+export interface RoundReport {
+  /** The round that just ended. */
+  round: number;
+  /** Railroad name -> route keys it gained. */
+  routesAdded: Record<string, string[]>;
+  marketExpired: ReportedContract[];
+  marketAdded: ReportedContract[];
 }
 
 /** A route owned by an independent railroad, with the round it was added. */
@@ -34,6 +88,10 @@ export interface GameState {
    * Absent until the market opens (first round-end with any open market contract).
    */
   marketRoundsWithoutExpirationStart?: number;
+  /** Money changes in the current turn. Absent until the first one. */
+  turnLedger?: TurnLedger;
+  /** What changed at the last round end. Absent until a round ends. */
+  roundReport?: RoundReport;
 }
 
 /** Game context (ctx): phase, player, turn info. All player references are by ID. */
@@ -81,13 +139,7 @@ function getInitialState(
       contracts: [],
       players: Array.from({ length: numPlayers }, (_, i) => [
         String(i),
-        {
-          name: `Player ${i}`,
-          activeCities: [],
-          hubCity: null,
-          regionalOffice: null,
-          avatarColor: getPlayerAvatarColorForIndex(i),
-        },
+        newPlayerProps(`Player ${i}`, getPlayerAvatarColorForIndex(i)),
       ]),
       independentRailroads: {},
     },

@@ -3,6 +3,7 @@ import { applyBoardOp, emptyBoardState, type BoardState } from './boardOps';
 import { useBoardStore } from './boardStore';
 import { closeBoard, dispatchBoardOp, openBoard, trySeedBoard } from './boardSync';
 import { MemoryBoardStateAdapter } from './memoryBoardStateAdapter.testHelper';
+import { startingPlayerBoard } from '../stores/playerDefaults';
 
 const CODE = 'BCDFG';
 const R1 = 'Atlanta-Birmingham';
@@ -10,7 +11,7 @@ const R2 = 'Boston-New York';
 
 const G = {
   contracts: [],
-  players: [['0', { name: 'Ada', activeCities: ['Boston', 'Portland ME'], hubCity: null, regionalOffice: null }]],
+  players: [['0', { ...startingPlayerBoard(), name: 'Ada', activeCities: ['Boston', 'Portland ME'], hubCity: null, regionalOffice: null }]],
   independentRailroads: {},
 } as GameState;
 const ctx = { phase: 'play', currentPlayer: '0', numPlayers: 1, playOrder: ['0'], playOrderPos: 0, turn: 0, round: 1 } as GameContext;

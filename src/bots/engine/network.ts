@@ -153,6 +153,4 @@ export function routeCities(routeKey: string): [string, string] {
   return [route.cities[0], route.cities[1]];
 }
 
-export function cityRegion(city: string): string | undefined {
-  return cities.get(city)?.region;
-}
+export { cityRegion } from '../../rules/regions';

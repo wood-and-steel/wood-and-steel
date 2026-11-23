@@ -12,7 +12,8 @@ import type { Effect } from '../engine/actions';
 
 export const BOT_STATES_VERSION = 1;
 /** Every player starts with $10,000 (rules, Set Up). Money is in dollars, like moneyValue(). */
-export const STARTING_CASH = 10_000;
+export { STARTING_CASH } from '../../rules/rulesData';
+import { STARTING_CASH } from '../../rules/rulesData';
 /** Turns of narration kept per bot; the board shows only the last. */
 export const MAX_LOG_TURNS = 20;
 

@@ -4,6 +4,6 @@
  * docs/BOT_AGENT_GUIDE.md (Rule changes), then run `npm run bots:ack-rules`.
  *
  * What changed since the last review:
- *   git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/board/playerBoardData.ts
+ *   git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/rules/playerBoard.ts
  */
-export const RULES_FINGERPRINT = '69f58ff04d42f8211ad8334418be4e4bda2d80c98c61eb39093690c8e0c2c0a3';
+export const RULES_FINGERPRINT = '6ee0770aa00d9b560cda773842fd4335ca1705a1c4dff6ecddb00648070a40cd';
