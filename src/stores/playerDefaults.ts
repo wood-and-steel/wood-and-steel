@@ -3,7 +3,7 @@
  * player board moved into the app (docs/PLAYER_APP_REDESIGN_PLAN.md, Data model). Pure: no store.
  */
 import { DEFAULT_ENGINE_TYPES, isEngineTypeId, isPlayerUpgradeId } from '../rules/playerBoard';
-import { STARTING_CASH } from '../rules/rulesData';
+import { BORROW_STEP, STARTING_CASH } from '../rules/rulesData';
 import { commodities } from '../data/commodities';
 import type { PlayerBoardFields, PlayerProps, RegionCode } from './gameStore';
 
@@ -38,9 +38,12 @@ export function newPlayerProps(name: string, avatarColor?: string): PlayerProps 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-/** A whole number of dollars at least 0, or the fallback. */
-const dollars = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback;
+/** The game's smallest unit of money. */
+const MONEY_UNIT = 1000;
+
+/** A nonnegative multiple of `step` dollars, or the fallback. */
+const dollars = (value: unknown, step: number, fallback: number): number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0 && value % step === 0 ? value : fallback;
 
 const commodityOrNull = (value: unknown): string | null =>
   typeof value === 'string' && commodities.has(value) ? value : null;
@@ -67,8 +70,9 @@ export function normalizePlayerProps(raw: unknown): PlayerProps {
     hubCity: typeof p.hubCity === 'string' ? p.hubCity : null,
     regionalOffice: REGION_CODES.includes(p.regionalOffice as RegionCode) ? (p.regionalOffice as RegionCode) : null,
     ...(typeof p.avatarColor === 'string' && { avatarColor: p.avatarColor }),
-    cash: dollars(p.cash, start.cash),
-    debt: dollars(p.debt, start.debt),
+    cash: dollars(p.cash, MONEY_UNIT, start.cash),
+    // Debt comes only in borrowing steps; anything else would understate debt service.
+    debt: dollars(p.debt, BORROW_STEP, start.debt),
     engines: pairOf(p.engines, (v) => (isEngineTypeId(v) ? v : null), start.engines),
     cargo: pairOf(p.cargo, commodityOrNull, start.cargo),
     upgrades,

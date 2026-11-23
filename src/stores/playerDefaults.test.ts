@@ -89,6 +89,11 @@ describe('normalizePlayerProps', () => {
     });
   });
 
+  it('accepts debt only in $5,000 steps and cash only in $1,000 units', () => {
+    expect(normalizePlayerProps({ name: 'Ada', debt: 7500, cash: 2500 })).toMatchObject({ debt: 0, cash: 10000 });
+    expect(normalizePlayerProps({ name: 'Ada', debt: 20000, cash: 3000 })).toMatchObject({ debt: 20000, cash: 3000 });
+  });
+
   it('keeps fields it does not know about', () => {
     expect(normalizePlayerProps({ name: 'Ada', futureField: 3 })).toHaveProperty('futureField', 3);
   });
