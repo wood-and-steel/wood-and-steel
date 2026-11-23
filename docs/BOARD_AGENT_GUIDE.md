@@ -4,7 +4,7 @@
 **Purpose:** Where the board's code lives, the invariants it must keep, and how to change it safely.
 Design history and decisions: [BOARD_APP_PLAN.md](archived/BOARD_APP_PLAN.md) and [BOARD_APP_PHASE_2_PLAN.md](archived/BOARD_APP_PHASE_2_PLAN.md) (archived).
 
-The board is a shared, playtest-only digital copy of the physical map board and player boards: player track, engine and Railyard tokens, Hubs, Regional Offices, independent railroads, and each player's engine types, cargo, and upgrades. It runs on one shared screen or several synced browsers.
+The board is a shared, playtest-only digital copy of the physical map board and player boards: player track, engine and Railyard tokens, Hubs, Regional Offices, independent railroads, and each player's money, engine types, cargo, and upgrades. It runs on one shared screen or several synced browsers. Money, engine types, cargo, and upgrades are read from `G` (players set them in the player app); the board shows them read-only.
 
 ---
 
@@ -15,7 +15,7 @@ The board is a shared, playtest-only digital copy of the physical map board and 
 | **Read-only toward the game** | The board never calls moves (`stores/gameActions`, `stores/moves`) or `saveGameState`. It reads `G`/`ctx` and hydrates the existing `useGameStore`; only the app changes `G`/`ctx`. Enforced by `boardIsolation.test.ts`. |
 | **Isolated** | All code lives in `src/board/`. The main app imports nothing from it except two lazy imports in `src/app/App.tsx`: `BoardApp` behind `__INCLUDE_BOARD__`, and the dev-only `/board/edit-paths` page behind `import.meta.env.DEV`. Deleting `src/board/` and those branches leaves the app working. Enforced by `boardIsolation.test.ts`. |
 | **Not in production builds** | `__INCLUDE_BOARD__` is true only in `development`, `test`, and `board` modes. `npm run build` must contain no board code; `npm run check:board-build` verifies it. |
-| **Board-only state is separate** | Track, engine positions, Railyards, engine types, cargo, upgrades, and the independent-railroad snapshot live in `boardStore` and the `board_states` table, never in `G`/`ctx`. |
+| **Board-only state is separate** | Track, engine positions, Railyard cities, and the independent-railroad snapshot live in `boardStore` and the `board_states` table, never in `G`/`ctx`. `board_states` still has `engineTypes`, `cargo`, and `upgrades` fields from before they moved to `G`; nothing writes them, and the bots' `buildWorld` overwrites them from `G`. |
 | **Every edit is an op** | Edits are serializable `BoardOp`s applied by pure functions in `boardOps.ts`. Ops must stay **re-appliable**: after a save conflict the same op is applied to fresh state from another screen. |
 | **Silent rules** | No rule enforcement, warnings, or confirms. Rules only inform defaults (e.g. the current player claims). Anything is allowed. |
 | **Board errors stay local** | If `board_states` is missing or a save fails, the board shows a banner; the game view (indie routes, hubs, top bar) keeps working. |
@@ -39,15 +39,13 @@ All paths under `src/board/` unless noted.
 | `jsonRowAdapter.ts` | One JSON row per game code in a Supabase table: conditional saves on `updated_at`, realtime. Also used by playtest bots for `bot_states` ([BOT_PLAN.md](BOT_PLAN.md)). |
 | `memoryBoardStateAdapter.testHelper.ts` | In-memory adapter for tests (conditional saves, realtime, `beforeSave` hook to simulate another screen). |
 | `boardSeed.ts` | First-open seeding from `G`: starting routes, empty trays, indie snapshot. |
-| `boardDeliveries.ts` | `deliveryCargoOps`: when a contract becomes fulfilled, clears the cargo of the player's engine standing in the destination city with that commodity. Run from `useBoardStateSync` on every `G` change; contracts already fulfilled when the board opened are only remembered. |
 | `boardAcquisitions.ts` | `findAcquirer`, `reconcileOp`: converts acquired indie railroads to track. |
 | `boardPlayers.ts` | Player display data (play order, light/dark shades), `formatPhase`. |
 | `BoardMap.tsx` | The SVG map and all its layers; route click handling. |
 | `BoardChrome.tsx` | Top bar. |
-| `PlayerTrays.tsx` | Right column with one card per player: engine rows (token, type, cargo, distance, effects), upgrade checkboxes, unplaced Railyard, and the player's unfulfilled private and claimed market contracts (read from `G.contracts`). Owns which picker is open. |
-| `TrayPicker.tsx` | Popover and option lists for choosing an engine type or commodity; `CommodityIcon`. |
+| `PlayerTrays.tsx` | Right column with one card per player: money, engine rows (token, type, cargo, distance), read-only upgrade checkboxes, unplaced Railyard, and the player's unfulfilled private and claimed market contracts. Money, engines, cargo, upgrades, and contracts are read from `G`. |
 | `playerBoardData.ts` | Re-exports `src/rules/playerBoard.ts`: static engine, upgrade, and commodity-group data from the rules; `engineDistance` and formatting helpers. Shared with the player app. |
-| `useBoardPopover.ts` | Shared popover placement and dismissal (Escape, outside press). Used by `RoutePopover` and `TrayPicker`. |
+| `useBoardPopover.ts` | Shared popover placement and dismissal (Escape, outside press). Used by `RoutePopover`. |
 | `RoutePopover.tsx` | Owner / Parallel / Unclaim popover for a route. |
 | `tokens.ts`, `useTokenDrag.ts`, `TokenIcon.tsx` | Token identity and layout, pointer-event drag and drop, tray icons and drag ghost. |
 | `useZoomPan.ts` | Scroll-container zoom (50–400%, fit width = 100%) and drag-to-pan. |
@@ -112,7 +110,7 @@ upgrades: Record<string, UpgradeId[]>;                                   // upgr
 6. Route hit areas (invisible wide strokes; click, hover, tooltip)
 7. Snap-target ring and tokens. These sit **above** the hit areas so tokens stay grabbable where routes meet at a city.
 
-SVG coordinates and colors are attributes, never style objects. The HTML overlays placed at screen coordinates (`RoutePopover`, `TrayPicker`, `TokenGhost`) are positioned with CSS custom properties set from a ref, not inline `style={}`.
+SVG coordinates and colors are attributes, never style objects. The HTML overlays placed at screen coordinates (`RoutePopover`, `TokenGhost`) are positioned with CSS custom properties set from a ref, not inline `style={}`.
 
 ---
 
@@ -136,7 +134,7 @@ SVG coordinates and colors are attributes, never style objects. The HTML overlay
 | `boardSync.test.ts` | Load, seed, queued saves, conflict re-apply, realtime (incl. stale), errors, two-screen acquisition and player tracking |
 | `boardStateAdapter.test.ts` | Supabase adapter with a fake client: conditional insert/update, conflicts, missing-table error, realtime |
 | `tokens.test.ts`, `geometry/trackPaths.test.ts` | Token layout and snapping; track geometry |
-| `BoardApp.test.tsx` | Integration through `App`: picker, rendering, seeding, click-claim, popover, token drag (stubbed layout + `PointerEvent`), engine rows, cargo, upgrades, acquisitions, zoom, error banner |
+| `BoardApp.test.tsx` | Integration through `App`: picker, rendering, seeding, click-claim, popover, token drag (stubbed layout + `PointerEvent`), player board from `G` (engines, cargo, money, upgrades), acquisitions, zoom, error banner |
 | `boardIsolation.test.ts` | Read-only and isolation guards |
 
 Tests must call `setBoardStateAdapter(new MemoryBoardStateAdapter())` (and `setStorageAdapter` for games). Vitest loads `.env`, so a test that renders the board without them would talk to the real Supabase project.

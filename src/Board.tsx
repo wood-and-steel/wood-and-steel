@@ -6,7 +6,12 @@ import { PrivateContractOfferModal } from './components/PrivateContractOfferModa
 import { CommoditiesPage } from './components/CommoditiesPage';
 import { IndependentRailroadsPage } from './components/IndependentRailroadsPage';
 import { EditPlaytestDialog } from './components/EditPlaytestDialog';
-import type { Contract } from './Contract';
+import { LoansSheet } from './components/LoansSheet';
+import { ActionsSheet } from './components/ActionsSheet';
+import { DeliveryReceipt } from './components/DeliveryReceipt';
+import { railroadTieValue, type Contract } from './Contract';
+import { independentRailroadPrice } from './stores/gameActions';
+import { formatMoney } from './utils/money';
 import { useGame } from './hooks/useGame';
 import { useGameStore } from './stores/gameStore';
 import { useLobbyStore } from './stores/lobbyStore';
@@ -33,6 +38,8 @@ export function WoodAndSteelState({
     React.useState(false);
   const [isPrivateContractModalOpen, setIsPrivateContractModalOpen] =
     React.useState(false);
+  const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | null>(null);
+  const [receiptContractId, setReceiptContractId] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState<TabId>('board');
   const [showRailroadHint, setShowRailroadHint] = React.useState(false);
   const prevPhaseRef = React.useRef(ctx.phase);
@@ -95,10 +102,14 @@ export function WoodAndSteelState({
     [moves, playerID]
   );
 
-  const handleToggleFulfilled = React.useCallback(
-    (contractId: string) => moves.toggleContractFulfilled(contractId),
-    [moves]
-  );
+  // Fulfilling opens the delivery receipt; the move runs when the player confirms there.
+  const handleToggleFulfilled = React.useCallback((contractId: string) => setReceiptContractId(contractId), []);
+  const myProps = G.players.find(([id]) => id === playerID)?.[1];
+  const isMyTurn = playerID === ctx.currentPlayer;
+  const receiptContract = receiptContractId ? G.contracts.find((c: Contract) => c.id === receiptContractId) : undefined;
+  const myTies = G.contracts
+    .filter((c: Contract) => c.playerID === playerID && c.fulfilled)
+    .reduce((sum: number, c: Contract) => sum + railroadTieValue(c), 0);
 
   const handleDelete = React.useCallback(
     (contractId: string) => {
@@ -149,10 +160,15 @@ export function WoodAndSteelState({
       case 'acquireIndependentRailroad': {
         const railroadName = id;
         const railroad = G.independentRailroads[railroadName];
-        if (
-          railroad &&
-          window.confirm(`Is the current player buying ${railroad.name}?`)
-        ) {
+        const price = independentRailroadPrice(G, railroadName);
+        if (!railroad || !myProps) break;
+        if (price > myProps.cash) {
+          window.alert(
+            `${railroad.name} costs ${formatMoney(price)}; you have ${formatMoney(myProps.cash)}. Borrow first using Loans.`
+          );
+          break;
+        }
+        if (window.confirm(`Acquire ${railroad.name} for ${formatMoney(price)}?`)) {
           moves.acquireIndependentRailroad(railroadName);
         }
         break;
@@ -227,7 +243,6 @@ export function WoodAndSteelState({
               moves.addContract(commodity, destinationKey, 'private');
               setIsPrivateContractModalOpen(false);
             }}
-            moves={moves}
           />
           <PlayerToolbar
             G={G}
@@ -235,10 +250,42 @@ export function WoodAndSteelState({
             playerID={playerID}
             startingContractExists={startingContractExists}
             currentPhase={currentPhase}
-            onOpenPrivateContractModal={() =>
-              setIsPrivateContractModalOpen(true)
-            }
+            onOpenActions={() => setOpenSheet('actions')}
+            onOpenLoans={() => setOpenSheet('loans')}
           />
+          {openSheet === 'loans' && myProps && (
+            <LoansSheet
+              player={myProps}
+              isMyTurn={isMyTurn}
+              onBorrow={moves.borrow}
+              onRepay={moves.repay}
+              onClose={() => setOpenSheet(null)}
+            />
+          )}
+          {openSheet === 'actions' && myProps && playerID && isMyTurn && (
+            <ActionsSheet
+              G={G}
+              playerID={playerID}
+              player={myProps}
+              moves={moves}
+              onAcquireRailroad={() => handleTabChange('indies')}
+              onNewPrivateContract={() => setIsPrivateContractModalOpen(true)}
+              onClose={() => setOpenSheet(null)}
+            />
+          )}
+          {receiptContract && myProps && isMyTurn && (
+            <DeliveryReceipt
+              contract={receiptContract}
+              player={myProps}
+              ties={myTies}
+              onDeliver={(engineSlot) => {
+                const delivered = moves.toggleContractFulfilled(receiptContract.id, engineSlot);
+                if (delivered && receiptContract.type === 'private') setIsPrivateContractModalOpen(true);
+                return delivered;
+              }}
+              onClose={() => setReceiptContractId(null)}
+            />
+          )}
           {activeTab === 'board' && (
             <PlayerBoard
               G={G}
@@ -253,6 +300,7 @@ export function WoodAndSteelState({
               onToggleFulfilled={handleToggleFulfilled}
               onDelete={handleDelete}
               onClaimContract={handleClaimContract}
+              onSetCargo={moves.setCargo}
             />
           )}
           {activeTab === 'commodities' && <CommoditiesPage />}

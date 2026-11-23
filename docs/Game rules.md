@@ -44,9 +44,11 @@ The app is responsible for all the random behavior in the game, similar to virtu
 
 Once the game is started, each player sees three tabs in the app:
 
-- Contracts, where they see and manage their private contracts and the shared market contracts
+- Contracts, where they see their engines and cargo, and manage their private contracts and the shared market contracts
 - Commodities, a reference to which commodities are available in which cities
-- Railroads, a list of the independent railroads and their routes
+- Railroads, a list of the independent railroads, their routes, and their price
+
+Above the tabs, each player sees their cash and debt, with a Loans button for borrowing and repaying. On their turn, an Actions button lists the turn actions that involve the app: buying an engine or an upgrade, acquiring a railroad, paying for track (the player enters what it cost), and drawing a new private contract. Fulfilling a contract shows a receipt of what it pays before the player confirms.
 
 
 #### Global state information
@@ -68,7 +70,10 @@ Once the game is started, each player sees three tabs in the app:
 * Name
 * Color
 * Active cities: starting cities and all cities they have fulfilled contracts for
-* Hub city, once the player has purchased a hub
+* Cash and debt. Cash can't go negative: a purchase the player can't afford is refused, and they borrow first from Loans.
+* Engine type on the light and dark engine tokens, and the cargo each carries if the player records it (optional)
+* Upgrades bought; the Hub city, Regional Office region, and Commodities Exchange commodity
+* Debt-service progress: whether they have delivered to a Central region and to a Western region
 
 #### Per-contract state information
 
@@ -216,6 +221,8 @@ Collect the money value of the contract, minus any debt service that is due.
 * When a player fulfills their first contract in either Western region, they pay debt service with that delivery and **every** delivery after that, regardless of destination. Debt service is the same: $1,000 per $5,000 borrowed.
 
 If the debt service is greater than the contract’s value, the player must pay the difference. If a player does not have enough money to make this payment, they go bankrupt after finishing the Run a Train action. See [Bankruptcy](#bankruptcy) for more details.
+
+Not yet implemented: bankruptcy. Until it is, the app doesn't allow a delivery that would bankrupt the player; they must borrow first.
 
 ##### Step 2. Collect railroad ties
 

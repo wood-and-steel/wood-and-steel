@@ -12,7 +12,7 @@
 | **Playtest only** | Bots ship where `/board` ships (`__INCLUDE_BOARD__`). `App.tsx` reaches `src/bots/` only through lazy imports; `botIsolation.test.ts` and `npm run check:board-build` enforce it. |
 | **No core logic changes** | Bots change `G`/`ctx` only by calling the existing moves. Never edit `gameActions`, `moveValidation`, `phaseConfig`, `phaseManager`, `events`, or `Contract` for the bots. |
 | **Pure engine** | `src/bots/engine/`, `src/bots/heuristic/`, and `src/bots/rng.ts` import no stores (type-only imports are fine), React, Supabase, or browser globals, so they can run on a server. Enforced by `botIsolation.test.ts`. |
-| **Bot-private state** | Cash, debt, plans, and narration live in `bot_states` (`src/bots/state/`). Physical-table state (track, engines, cargo, upgrades, Railyard) goes to `board_states` as ordinary `BoardOp`s. Every change to either must be re-appliable after a save conflict. |
+| **Bot-private state** | Plans, delivery counts, and narration live in `bot_states` (`src/bots/state/`). Cash, debt, engine types, cargo, and upgrades live in `G` like every player's and change only through moves (`borrow`, `repay`, `payForTrack`, `buyEngine`, `buyUpgrade`, `setCargo`, and the payment in `toggleContractFulfilled`). Physical-table state (track, engine positions, the Railyard's city) goes to `board_states` as ordinary `BoardOp`s. Every change must be re-appliable after a reload or save conflict: each money move happens at most once a turn and `isMoveDone` finds it in `G.turnLedger`. |
 | **Rules tripwire** | `src/bots/rules/rulesFingerprint.test.ts` fails whenever the rules, moves, or game data change. See [Rule changes](#rule-changes). |
 
 ## Engine map (`src/bots/engine/`)
@@ -20,7 +20,7 @@
 | File | Role |
 |---|---|
 | `rulesData.ts` | Re-exports `src/rules/rulesData.ts`: costs, prices, debt service, limits, bonuses, shared with the player app. Rules defaults are marked `DEFAULT`. |
-| `world.ts` | `BotWorld` (one bot's view: `G`/`ctx` slice, whole board, its `bot_states` record, turn bookkeeping) and `buildWorld`. |
+| `world.ts` | `BotWorld` (one bot's view: `G`/`ctx` slice, whole board, its `bot_states` record plus its money from `G` as `BotView`, turn bookkeeping) and `buildWorld`, which fills the board's engine types, cargo, and upgrades from `G`. |
 | `network.ts` | Map and own-track graphs: BFS, paths, network cities, buildable routes. |
 | `costs.ts` | Track cost, engine purchases and trade-ins, independent railroad prices, upgrade availability. Engine purchase options, the Service Yard gate and monopolizable commodities come from `src/rules/engines.ts`. |
 | `finance.ts` | Re-exports `src/rules/finance.ts`: delivery payment, debt service, borrow and repay options. |

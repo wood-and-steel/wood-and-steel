@@ -1,5 +1,7 @@
 import React from "react";
 import { useGame } from "../hooks/useGame";
+import { independentRailroadPrice } from "../stores/gameActions";
+import { formatMoney } from "../utils/money";
 
 /**
  * Page component displaying all independent railroad companies with their routes.
@@ -25,7 +27,7 @@ export function IndependentRailroadsPage(): React.ReactElement {
                     id={railroad.name}
                     className="button independentRailroads__button"
                   >
-                    Acquire
+                    Acquire · {formatMoney(independentRailroadPrice(G, railroad.name))}
                   </button>
                 )}
               </div>

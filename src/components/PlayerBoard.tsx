@@ -1,6 +1,8 @@
 import React from "react";
 import { railroadTieValue } from "../Contract";
 import { ContractsList } from "./ContractsList";
+import { EnginesPanel } from "./EnginesPanel";
+import type { EngineSlot } from "../rules/playerBoard";
 import type { GameState, GameContext } from "../stores/gameStore";
 import { STARTING_CITY_PAIRS } from "../data/startingRoutes";
 
@@ -17,6 +19,7 @@ export interface PlayerBoardProps {
   onToggleFulfilled: (contractID: string) => void;
   onDelete: (contractID: string) => void;
   onClaimContract?: (contractID: string) => void;
+  onSetCargo?: (slot: EngineSlot, commodity: string | null) => boolean;
 }
 
 /**
@@ -33,6 +36,7 @@ export function PlayerBoard({
   onToggleFulfilled,
   onDelete,
   onClaimContract,
+  onSetCargo,
 }: PlayerBoardProps): React.ReactElement | null {
   const effectivePlayerID = playerID ?? ctx.currentPlayer;
   const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
@@ -40,7 +44,7 @@ export function PlayerBoard({
 
   if (!activePlayer) return null;
 
-  const [key, { name }] = activePlayer;
+  const [key, playerProps] = activePlayer;
   const contracts = G.contracts;
   const playerScore = contracts
     .filter((contract) => contract.playerID === key && contract.fulfilled)
@@ -85,6 +89,13 @@ export function PlayerBoard({
               );
             })}
           </div>
+        )}
+        {currentPhase === "play" && (
+          <EnginesPanel
+            player={playerProps}
+            canEdit={isPlayerTurn && playerID === key}
+            onSetCargo={(slot, commodity) => onSetCargo?.(slot, commodity) ?? false}
+          />
         )}
         <div className={`playerBoard__contracts ${currentPhase === "play" ? "" : "hidden"}`}>
           <h3 className="playerBoard__contractsTitle">Private</h3>
