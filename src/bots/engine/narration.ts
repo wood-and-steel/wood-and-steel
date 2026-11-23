@@ -22,6 +22,9 @@ export function list(items: string[]): string {
   return `${items.slice(0, -1).join(', ')} & ${items[items.length - 1]}`;
 }
 
+/** Starts the first line of an action that uses one of the turn's two actions (Run Trains, Build Track, ...). */
+export const TURN_ACTION_MARK = '→ ';
+
 /** Capitalize the first letter of a narration line. */
 export function line(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);

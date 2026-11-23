@@ -35,7 +35,18 @@ import {
   type RunTrains,
 } from './movement';
 import { canBuildRoute, networkCities, routeCities } from './network';
-import { commodityName, engineName, line, list, money, regionName, routeLabel, slotLabel, upgradeLabel } from './narration';
+import {
+  commodityName,
+  engineName,
+  line,
+  list,
+  money,
+  regionName,
+  routeLabel,
+  slotLabel,
+  TURN_ACTION_MARK,
+  upgradeLabel,
+} from './narration';
 import { MARKET_CONTRACT_MIN_ENGINE, ROUNDHOUSE_APPROACH, UPGRADE_PRICES, type UpgradeKey } from './rulesData';
 import {
   actionsLeft,
@@ -319,8 +330,20 @@ function upgradeFields(p: UpgradePurchase): Omit<Extract<Action, { type: 'buyUpg
 
 // --- applyAction -----------------------------------------------------------------
 
-/** Check an action and return the predicted world and its effects. Doesn't change `world`. */
+/**
+ * Check an action and return the predicted world and its effects. Doesn't change `world`.
+ * The first narration line of a counted action starts with TURN_ACTION_MARK.
+ */
 export function applyAction(world: BotWorld, action: Action): ApplyResult {
+  const result = checkAndApply(world, action);
+  if (result.ok && actionKind(action)) {
+    const first = result.effects.find((e): e is Extract<Effect, { kind: 'narrate' }> => e.kind === 'narrate');
+    if (first) first.line = TURN_ACTION_MARK + first.line;
+  }
+  return result;
+}
+
+function checkAndApply(world: BotWorld, action: Action): ApplyResult {
   if (world.currentPlayer !== world.playerID) return fail('not this bot’s turn');
   const next = structuredClone(world);
   const effects: Effect[] = [];

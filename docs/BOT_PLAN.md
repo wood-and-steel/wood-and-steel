@@ -231,17 +231,16 @@ Strategy and weights are not shown to players. Only the host sees the chosen str
 
 ## Narration
 
-Lines are built from templates per action (`engine/narration.ts` and the actions that use it). They are terse (changed after M6 on Jeff's request): no subject, since they appear in the bot's own tray card; no articles; "&" for "and"; no final period; and ending the turn isn't narrated. For example:
+Lines are built from templates per action (`engine/narration.ts` and the actions that use it). They are terse (changed after M6 on Jeff's request): no subject, since they appear in the bot's own tray card; no articles; "&" for "and"; no final period; and ending the turn isn't narrated. Actions that count as one of the player's two turn actions are prefixed with a →. For example:
 
-- "Built Boston–New York & New York–Philadelphia for $5,000"
-- "Ran light engine Raleigh to Cincinnati & delivered textiles to Cincinnati for $3,000 less $1,000 debt service"
+- "→ Built Boston–New York & New York–Philadelphia for $5,000"
+- "→ Ran light engine Raleigh to Cincinnati & delivered textiles to Cincinnati for $3,000 less $1,000 debt service"
 - "Picked up tourists in New York with light engine, claiming market contract: tourists to Atlanta"
-- "Chose private contract: textiles to Chicago"
-- "Discarded private contract: coal to Boston"
-- "Borrowed $5,000"
-- "Bought 2-6-0 Mogul for $7,000, trading in 4-4-0 American"
-- "Bought Hub in New York for $15,000"
-- "Acquired Erie & Western for $6,000"
+- "Chose private contract, discarded coal to Boston"
+- "→ Borrowed $5,000"
+- "→ Bought 2-6-0 Mogul for $7,000, trading in 4-4-0 American"
+- "→ Bought Hub in New York for $15,000"
+- "→ Acquired Erie & Western for $6,000"
 
 The runner appends each line to the turn's `BotTurnLog` as the action completes, so the tray fills in live during the turn.
 

@@ -51,6 +51,18 @@ describe('turn order and phase', () => {
     expect(applyAction(world, { type: 'repay', amount: 5000 }).ok).toBe(false);
   });
 
+  test('only the first line of a counted action is marked as a turn action', () => {
+    const world = makeWorld({ board: { engineTypes: { '0': ['american', 'american'] }, engines: { '0': ['Boston', 'New York'] } } });
+    const { effects } = apply(world, {
+      type: 'runTrains',
+      runs: [
+        { slot: 0, path: ['Boston', 'Portland ME'], events: [] },
+        { slot: 1, path: ['New York', 'Philadelphia'], events: [] },
+      ],
+    });
+    expect(lines(effects)).toEqual(['→ Ran light engine Boston to Portland ME', 'Ran dark engine New York to Philadelphia']);
+  });
+
   test('ending the turn', () => {
     const { effects } = apply(makeWorld(), { type: 'endTurn' });
     expect(moves(effects)).toEqual([{ name: 'endTurn', args: [] }]);
@@ -73,7 +85,7 @@ describe('build track', () => {
     ]);
     expect(world.bot.cash).toBe(10000 - 5000);
     expect(world.board.track['Syracuse-Toronto']).toEqual(['0']);
-    expect(lines(effects)).toEqual(['Built Boston–Syracuse & Syracuse–Toronto for $5,000']);
+    expect(lines(effects)).toEqual(['→ Built Boston–Syracuse & Syracuse–Toronto for $5,000']);
   });
 
   test('refuses unconnected track, too many routes, and too little cash', () => {
@@ -96,7 +108,7 @@ describe('buy an engine', () => {
     const { world, effects } = apply(makeWorld(), { type: 'buyEngine', engine: 'american', slot: 0 });
     expect(ops(effects)).toEqual([{ type: 'setEngineType', playerID: '0', slot: 0, engineType: 'american' }]);
     expect(world.bot.cash).toBe(5000);
-    expect(lines(effects)).toEqual(['Bought 4-4-0 American for $5,000, trading in 2-4-0 John Bull']);
+    expect(lines(effects)).toEqual(['→ Bought 4-4-0 American for $5,000, trading in 2-4-0 John Bull']);
   });
 
   test('a second engine goes on a network city', () => {
@@ -189,7 +201,7 @@ describe('independent railroads', () => {
     expect(ops(effects)).toEqual([{ type: 'reconcileIndependentRailroads', railroads: {}, acquirers: { Erie: '0' } }]);
     expect(next.board.track['Boston-Syracuse']).toEqual(['0']);
     expect(next.bot.cash).toBe(7000);
-    expect(lines(effects)).toEqual(['Acquired Erie for $3,000']);
+    expect(lines(effects)).toEqual(['→ Acquired Erie for $3,000']);
   });
 });
 
@@ -197,7 +209,7 @@ describe('money', () => {
   test('borrow and repay', () => {
     const borrowed = apply(makeWorld({ bot: { debt: 15000 } }), { type: 'borrow', amount: 10000 });
     expect(borrowed.world.bot).toMatchObject({ cash: 20000, debt: 25000 });
-    expect(lines(borrowed.effects)).toEqual(['Borrowed $10,000']);
+    expect(lines(borrowed.effects)).toEqual(['→ Borrowed $10,000']);
     const repaid = apply(makeWorld({ bot: { debt: 25000 } }), { type: 'repay', amount: 10000 });
     expect(repaid.world.bot).toMatchObject({ cash: 0, debt: 15000 });
     expect(applyAction(makeWorld({ bot: { debt: 15000 } }), { type: 'repay', amount: 5000 }).ok).toBe(false);
@@ -211,7 +223,7 @@ describe('upgrades', () => {
     const { world, effects } = apply(makeWorld(rich), { type: 'buyUpgrade', upgrade: 'hub', city: 'New York' });
     expect(moves(effects)).toEqual([{ name: 'claimHubCity', args: ['New York'] }]);
     expect(world.bot.cash).toBe(35000);
-    expect(lines(effects)).toEqual(['Bought Hub in New York for $15,000']);
+    expect(lines(effects)).toEqual(['→ Bought Hub in New York for $15,000']);
   });
 
   test('a Railyard is placed on the board', () => {
@@ -223,14 +235,14 @@ describe('upgrades', () => {
     const { world, effects } = apply(makeWorld(rich), { type: 'buyUpgrade', upgrade: 'timetable' });
     expect(ops(effects)).toEqual([{ type: 'setUpgrade', playerID: '0', upgrade: 'timetable', owned: true }]);
     expect(world.board.upgrades['0']).toEqual(['timetable']);
-    expect(lines(effects)).toEqual(['Bought Timetable for $15,000']);
+    expect(lines(effects)).toEqual(['→ Bought Timetable for $15,000']);
   });
 
   test('a Regional Office is claimed in the app', () => {
     const track = { 'Boston-Portland ME': ['0'], 'Boston-New York': ['0'], 'New York-Philadelphia': ['0'], 'Boston-Syracuse': ['0'] };
     const { effects } = apply(makeWorld({ ...rich, board: { track } }), { type: 'buyUpgrade', upgrade: 'regional-office', region: 'NE' });
     expect(moves(effects)).toEqual([{ name: 'claimRegionalOffice', args: ['NE'] }]);
-    expect(lines(effects)).toEqual(['Bought Regional Office in Northeast for $20,000']);
+    expect(lines(effects)).toEqual(['→ Bought Regional Office in Northeast for $20,000']);
   });
 
   test('refused when not open to the bot', () => {
@@ -270,7 +282,7 @@ describe('running trains and contracts', () => {
     expect(world.bot.cash).toBe(10000 + value);
     expect(world.bot.deliveries).toEqual({ machinery: 1 });
     expect(lines(effects)).toEqual([
-      `Ran light engine Boston to Philadelphia, picked up machinery in Boston & delivered machinery to Philadelphia for $${value.toLocaleString('en-US')}`,
+      `→ Ran light engine Boston to Philadelphia, picked up machinery in Boston & delivered machinery to Philadelphia for $${value.toLocaleString('en-US')}`,
     ]);
 
     // Nothing else until the runner fetches offers; then only the offers.
@@ -345,7 +357,7 @@ describe('running trains and contracts', () => {
     const { world: next, effects } = apply(world, { type: 'redrawPrivateContract', contractId: 'k9' });
     expect(moves(effects)).toEqual([{ name: 'deleteContract', args: ['k9'] }]);
     expect(effects.some((e) => e.kind === 'requestOffers')).toBe(true);
-    expect(lines(effects)).toEqual(['Discarded private contract: coal to Boston']);
+    expect(lines(effects)).toEqual(['→ Discarded private contract: coal to Boston']);
     expect(next.turnState.awaitingOffers).toBe(true);
   });
 });

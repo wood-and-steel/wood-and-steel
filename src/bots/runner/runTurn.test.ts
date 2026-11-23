@@ -87,7 +87,7 @@ describe('runBotTurn', () => {
     expect(record.deliveries).toEqual({ machinery: 1 });
     expect(record.turnInProgress).toBeNull();
     const lines = last(record.log).lines;
-    expect(lines[0]).toMatch(/^Ran light engine Boston to New York, picked up machinery in Boston & delivered machinery to New York for \$/);
+    expect(lines[0]).toMatch(/^→ Ran light engine Boston to New York, picked up machinery in Boston & delivered machinery to New York for \$/);
     expect(lines[1]).toMatch(/^Chose private contract, discarding /);
     expect(lines.some((l) => /ended/i.test(l))).toBe(false);
   });
