@@ -15,9 +15,10 @@ import {
   type EngineTypePair,
 } from '../../board/boardOps';
 import { seedBoardState } from '../../board/boardSeed';
-import { ENGINE_TYPES, type EngineTypeId, type UpgradeId } from '../../board/playerBoardData';
+import type { UpgradeId } from '../../board/playerBoardData';
 import type { BotRecord } from '../state/botStates';
 import { ACTIONS_PER_TURN } from './rulesData';
+import { bestEngineLevel as bestLevelOf } from '../../rules/engines';
 
 /** Action kinds that count toward the two actions per turn. */
 export type ActionKind =
@@ -113,13 +114,11 @@ export function hasUpgrade(world: BotWorld, upgrade: UpgradeId, playerID: string
   return upgrades(world, playerID).includes(upgrade);
 }
 
-export function engineLevel(engine: EngineTypeId): number {
-  return ENGINE_TYPES.findIndex((e) => e.id === engine);
-}
+export { engineLevel } from '../../rules/engines';
 
 /** The player's best engine level, or -1 with no engines. */
 export function bestEngineLevel(world: BotWorld, playerID: string = world.playerID): number {
-  return Math.max(-1, ...engineTypes(world, playerID).map((t) => (t ? engineLevel(t) : -1)));
+  return bestLevelOf(engineTypes(world, playerID));
 }
 
 export function otherPlayerIDs(world: BotWorld): string[] {

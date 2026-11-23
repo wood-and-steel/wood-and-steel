@@ -3,33 +3,33 @@
  * independent railroads (docs/Game rules.md, Turn actions).
  */
 import { cities, commodities, routes } from '../../data';
-import { ENGINE_TYPES, type EngineTypeId } from '../../board/playerBoardData';
+import type { EngineTypeId } from '../../board/playerBoardData';
 import type { EngineSlot } from '../../board/boardOps';
 import type { RegionCode } from '../../stores/gameStore';
 import {
   HUB_DISCOUNT,
   HUB_DISCOUNT_RANGE,
-  HUB_ENGINE_SKIP_SURCHARGE,
   BUILD_LIMIT,
   BUILD_LIMIT_EMPLOYMENT_OFFICE,
-  ENGINE_PRICES,
   INDIE_MUST_CONNECT,
   INDIE_PRICE_PER_ROUTE,
   INDIE_PRICE_PER_ROUTE_AFTER_WEST,
-  MAX_ENGINES,
   MIN_TRACK_COST,
-  MONOPOLY_TIES,
   MOUNTAIN_MULTIPLIER,
   PARALLEL_SURCHARGE,
   REGIONAL_OFFICE_MIN_CITIES,
-  SERVICE_YARD_UNLOCK_ENGINE,
   UPGRADE_PRICES,
   WESTERN_REGIONS,
   baseTrackCost,
-  tradeInValue,
   type UpgradeKey,
 } from './rulesData';
 import { citiesWithin, networkCities, routeCities } from './network';
+import {
+  enginePurchaseOptions,
+  monopolizableCommodities,
+  serviceYardOpen,
+  type EnginePurchase,
+} from '../../rules/engines';
 import {
   bestEngineLevel,
   engineCities,
@@ -64,41 +64,11 @@ export function trackCost(world: BotWorld, routeKey: string): number {
 
 // --- Engines -----------------------------------------------------------------
 
-export interface EnginePurchase {
-  engine: EngineTypeId;
-  /** Token the new engine goes on. */
-  slot: EngineSlot;
-  /** Engine traded in from that token, or null for a new token. */
-  tradeIn: EngineTypeId | null;
-  /** Two levels up with a Hub, for $5,000 more. */
-  skip: boolean;
-  /** Net cost after any trade-in credit. */
-  cost: number;
-}
+export type { EnginePurchase } from '../../rules/engines';
 
 /** Engine purchases open to the bot, ignoring cash. A new token is placed later on any network city. */
 export function enginePurchases(world: BotWorld): EnginePurchase[] {
-  const types = engineTypes(world);
-  const best = bestEngineLevel(world);
-  const levels = [best + 1];
-  if (playerProps(world)?.hubCity) levels.push(best + 2);
-  const owned = types.filter((t) => t !== null).length;
-  const options: EnginePurchase[] = [];
-  for (const level of levels) {
-    const target = ENGINE_TYPES[level];
-    if (!target) continue;
-    const skip = level === best + 2;
-    const price = ENGINE_PRICES[target.id] + (skip ? HUB_ENGINE_SKIP_SURCHARGE : 0);
-    for (const slot of [0, 1] as EngineSlot[]) {
-      const current = types[slot];
-      if (current) {
-        options.push({ engine: target.id, slot, tradeIn: current, skip, cost: price - tradeInValue(current) });
-      } else if (owned < MAX_ENGINES) {
-        options.push({ engine: target.id, slot, tradeIn: null, skip, cost: price });
-      }
-    }
-  }
-  return options;
+  return enginePurchaseOptions(engineTypes(world), Boolean(playerProps(world)?.hubCity));
 }
 
 /** Whether the bot owns an engine at least as good as `engine`. */
@@ -150,13 +120,7 @@ export interface UpgradePurchase {
   commodity?: string;
 }
 
-/** Commodities supplied by 4, 5, or 6 cities. */
-export function monopolizableCommodities(): string[] {
-  return [...commodities.entries()]
-    .filter(([, c]) => MONOPOLY_TIES[c.cities.length] !== undefined)
-    .map(([key]) => key)
-    .sort();
-}
+export { monopolizableCommodities } from '../../rules/engines';
 
 /** Whether a player's network reaches every city supplying the commodity. */
 export function connectedToAllSuppliers(world: BotWorld, commodity: string, playerID: string = world.playerID): boolean {
@@ -196,8 +160,8 @@ export function upgradePurchases(world: BotWorld): UpgradePurchase[] {
   const add = (upgrade: UpgradeKey, extra: Omit<UpgradePurchase, 'upgrade' | 'cost'> = {}) =>
     options.push({ upgrade, cost: UPGRADE_PRICES[upgrade], ...extra });
 
-  const serviceYardOpen = world.players.some(([id]) => ownsEngineAtLeast(world, SERVICE_YARD_UNLOCK_ENGINE, id));
-  if (serviceYardOpen && !hasUpgrade(world, 'service-yard')) add('service-yard');
+  const yardOpen = serviceYardOpen(world.players.map(([id]) => engineTypes(world, id)));
+  if (yardOpen && !hasUpgrade(world, 'service-yard')) add('service-yard');
   for (const upgrade of ['upgraded-stations', 'timetable', 'roundhouse', 'employment-office'] as const) {
     if (!hasUpgrade(world, upgrade)) add(upgrade);
   }

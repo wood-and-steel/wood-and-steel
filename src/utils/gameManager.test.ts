@@ -48,6 +48,7 @@ import { endTurn as endTurnEvent } from '../stores/events';
 import { checkPhaseTransition } from '../stores/phaseManager';
 import { setStorageAdapter } from './storage';
 import { MemoryStorageAdapter } from './storage/memoryStorageAdapter.testHelper';
+import { startingPlayerBoard } from '../stores/playerDefaults';
 
 const TEST_HOST_DEVICE = 'test-host-device';
 const memoryAdapter = new MemoryStorageAdapter();
@@ -102,8 +103,8 @@ describe('Persistence Tests', () => {
         G: {
           ...useGameStore.getState().G,
           players: [
-            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia'], hubCity: null, regionalOffice: null }],
-            ['1', { name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
+            ['0', { ...startingPlayerBoard(), name: 'Player 0', activeCities: ['New York', 'Philadelphia'], hubCity: null, regionalOffice: null }],
+            ['1', { ...startingPlayerBoard(), name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: {
@@ -167,8 +168,8 @@ describe('Persistence Tests', () => {
         G: {
           ...useGameStore.getState().G,
           players: [
-            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia', 'Pittsburgh'], hubCity: null, regionalOffice: null }],
-            ['1', { name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
+            ['0', { ...startingPlayerBoard(), name: 'Player 0', activeCities: ['New York', 'Philadelphia', 'Pittsburgh'], hubCity: null, regionalOffice: null }],
+            ['1', { ...startingPlayerBoard(), name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: {
@@ -196,8 +197,8 @@ describe('Persistence Tests', () => {
         G: {
           ...useGameStore.getState().G,
           players: [
-            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia'], hubCity: null, regionalOffice: null }],
-            ['1', { name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
+            ['0', { ...startingPlayerBoard(), name: 'Player 0', activeCities: ['New York', 'Philadelphia'], hubCity: null, regionalOffice: null }],
+            ['1', { ...startingPlayerBoard(), name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: {
@@ -225,8 +226,8 @@ describe('Persistence Tests', () => {
         G: {
           ...useGameStore.getState().G,
           players: [
-            ['0', { name: 'Player 0', activeCities: ['New York', 'Chicago'], hubCity: 'Chicago' as const, regionalOffice: null }],
-            ['1', { name: 'Player 1', activeCities: ['Philadelphia'], hubCity: null, regionalOffice: null }],
+            ['0', { ...startingPlayerBoard(), name: 'Player 0', activeCities: ['New York', 'Chicago'], hubCity: 'Chicago' as const, regionalOffice: null }],
+            ['1', { ...startingPlayerBoard(), name: 'Player 1', activeCities: ['Philadelphia'], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: {
@@ -255,8 +256,8 @@ describe('Persistence Tests', () => {
         G: {
           ...useGameStore.getState().G,
           players: [
-            ['0', { name: 'Player 0', activeCities: ['New York'], hubCity: null, regionalOffice: null }],
-            ['1', { name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
+            ['0', { ...startingPlayerBoard(), name: 'Player 0', activeCities: ['New York'], hubCity: null, regionalOffice: null }],
+            ['1', { ...startingPlayerBoard(), name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: {
@@ -283,8 +284,8 @@ describe('Persistence Tests', () => {
         G: {
           ...useGameStore.getState().G,
           players: [
-            ['0', { name: 'Player 0', activeCities: ['New York'], hubCity: null, regionalOffice: 'NW' as const }],
-            ['1', { name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
+            ['0', { ...startingPlayerBoard(), name: 'Player 0', activeCities: ['New York'], hubCity: null, regionalOffice: 'NW' as const }],
+            ['1', { ...startingPlayerBoard(), name: 'Player 1', activeCities: [] as string[], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: {
@@ -701,8 +702,8 @@ describe('Persistence Tests', () => {
         G: {
           ...useGameStore.getState().G,
           players: [
-            ['0', { name: 'Player 0', activeCities: ['New York', 'Philadelphia'], hubCity: null, regionalOffice: null }],
-            ['1', { name: 'Player 1', activeCities: ['Chicago', 'Detroit'], hubCity: null, regionalOffice: null }],
+            ['0', { ...startingPlayerBoard(), name: 'Player 0', activeCities: ['New York', 'Philadelphia'], hubCity: null, regionalOffice: null }],
+            ['1', { ...startingPlayerBoard(), name: 'Player 1', activeCities: ['Chicago', 'Detroit'], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: { ...useGameStore.getState().ctx, phase: 'play', currentPlayer: '0' },
@@ -754,13 +755,14 @@ describe('Persistence Tests', () => {
             [
               '0',
               {
+                ...startingPlayerBoard(),
                 name: 'Player 0',
                 activeCities: ['New York', 'Philadelphia', 'Chicago'],
                 hubCity: null,
                 regionalOffice: null,
               },
             ],
-            ['1', { name: 'Player 1', activeCities: ['Boston', 'Detroit'], hubCity: null, regionalOffice: null }],
+            ['1', { ...startingPlayerBoard(), name: 'Player 1', activeCities: ['Boston', 'Detroit'], hubCity: null, regionalOffice: null }],
           ],
         },
         ctx: {

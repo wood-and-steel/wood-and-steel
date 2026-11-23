@@ -3,6 +3,9 @@
  * Serialize and deserialize game state (G) and context (ctx) for localStorage, server sync, etc.
  */
 
+import type { LedgerEntry, ReportedContract, RoundReport, TurnLedger } from '../stores/gameStore';
+import { normalizePlayers } from '../stores/playerDefaults';
+
 /** Serialized state shape: G and ctx as stored (validated by isValidSerializedState). */
 export interface SerializedState {
   G: {
@@ -11,6 +14,8 @@ export interface SerializedState {
     independentRailroads: Record<string, unknown>;
     lastRoundRoutesAdded?: number;
     marketRoundsWithoutExpirationStart?: number;
+    turnLedger?: unknown;
+    roundReport?: unknown;
   };
   ctx: Record<string, unknown>;
 }
@@ -40,6 +45,8 @@ export function serializeState(
     ...(typeof G.marketRoundsWithoutExpirationStart === 'number' && {
       marketRoundsWithoutExpirationStart: G.marketRoundsWithoutExpirationStart,
     }),
+    ...(isRecord(G.turnLedger) && { turnLedger: deepClone(G.turnLedger) }),
+    ...(isRecord(G.roundReport) && { roundReport: deepClone(G.roundReport) }),
   };
 
   const serializedCtx: Record<string, unknown> = {};
@@ -99,15 +106,62 @@ export function deserializeState(data: unknown): SerializedState {
       ? gObj.marketRoundsWithoutExpirationStart
       : undefined;
 
+  const turnLedger = normalizeTurnLedger(gObj.turnLedger);
+  const roundReport = normalizeRoundReport(gObj.roundReport);
+
   return {
     G: {
       contracts: deepClone(gObj.contracts || []) as unknown[],
-      players: deepClone(gObj.players || []) as unknown[],
+      // Fills in money, engines and upgrades for players saved before the app tracked them.
+      players: normalizePlayers(deepClone(gObj.players || [])),
       independentRailroads,
       ...(lastRoundRoutesAdded !== undefined && { lastRoundRoutesAdded }),
       ...(marketRoundsWithoutExpirationStart !== undefined && { marketRoundsWithoutExpirationStart }),
+      ...(turnLedger && { turnLedger }),
+      ...(roundReport && { roundReport }),
     },
     ctx: deepClone(ctx) as Record<string, unknown>,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** A saved turn ledger, or undefined if it's missing or malformed. Bad entries are dropped. */
+function normalizeTurnLedger(raw: unknown): TurnLedger | undefined {
+  if (!isRecord(raw) || typeof raw.playerID !== 'string' || !Array.isArray(raw.entries)) return undefined;
+  const entries = raw.entries.filter(
+    (e): e is LedgerEntry =>
+      isRecord(e) && typeof e.label === 'string' && typeof e.amount === 'number' && Number.isFinite(e.amount)
+  );
+  return { playerID: raw.playerID, entries: entries.map((e) => ({ label: e.label, amount: e.amount })) };
+}
+
+function reportedContracts(raw: unknown): ReportedContract[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(
+      (c): c is ReportedContract =>
+        isRecord(c) && typeof c.id === 'string' && typeof c.commodity === 'string' && typeof c.destinationKey === 'string'
+    )
+    .map((c) => ({ id: c.id, commodity: c.commodity, destinationKey: c.destinationKey }));
+}
+
+/** A saved round report, or undefined if it's missing or malformed. */
+function normalizeRoundReport(raw: unknown): RoundReport | undefined {
+  if (!isRecord(raw) || typeof raw.round !== 'number') return undefined;
+  const routesAdded: Record<string, string[]> = {};
+  if (isRecord(raw.routesAdded)) {
+    for (const [name, keys] of Object.entries(raw.routesAdded)) {
+      if (Array.isArray(keys)) routesAdded[name] = keys.filter((k): k is string => typeof k === 'string');
+    }
+  }
+  return {
+    round: raw.round,
+    routesAdded,
+    marketExpired: reportedContracts(raw.marketExpired),
+    marketAdded: reportedContracts(raw.marketAdded),
   };
 }
 

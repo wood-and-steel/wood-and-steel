@@ -11,7 +11,7 @@ import {
   getEngineType,
   isEngineTypeId,
   isUpgradeId,
-} from './playerBoardData';
+} from './playerBoard';
 
 describe('commodity groups', () => {
   const grouped = COMMODITY_GROUPS.flatMap((group) => [...group.commodities]);

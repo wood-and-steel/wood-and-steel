@@ -8,6 +8,7 @@ import { initializeIndependentRailroads } from '../../independentRailroads';
 import { generateMarketContract, endTurn } from '../../stores/gameActions';
 import { useGameStore, type GameState } from '../../stores/gameStore';
 import { getPlayerAvatarColorForIndex } from '../../utils/playerAvatar';
+import { newPlayerProps } from '../../stores/playerDefaults';
 import { GAME_END_TIES } from '../engine/rulesData';
 import { tieBreakdown } from '../engine/scoring';
 import { buildWorld, engineLevel, type BotWorld } from '../engine/world';
@@ -83,7 +84,7 @@ export async function playGame({ strategies, seed, maxRounds = 80, markets = 3, 
         contracts: [],
         players: ids.map((id, i) => [
           id,
-          { name: `${names[i]} 🤖`, activeCities: [], hubCity: null, regionalOffice: null, avatarColor: getPlayerAvatarColorForIndex(i) },
+          newPlayerProps(`${names[i]} 🤖`, getPlayerAvatarColorForIndex(i)),
         ]),
         independentRailroads: initializeIndependentRailroads(),
         byodGameStarted: true,

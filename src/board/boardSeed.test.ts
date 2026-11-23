@@ -1,13 +1,14 @@
 import type { GameContext, GameState } from '../stores/gameStore';
 import { BOARD_STATE_VERSION } from './boardOps';
 import { canSeedBoard, findRouteKey, seedBoardState, startingRouteKeys } from './boardSeed';
+import { startingPlayerBoard } from '../stores/playerDefaults';
 
 function game(players: Record<string, string[]>, phase = 'play'): { G: GameState; ctx: GameContext } {
   const ids = Object.keys(players);
   return {
     G: {
       contracts: [],
-      players: ids.map((id) => [id, { name: `P${id}`, activeCities: players[id], hubCity: null, regionalOffice: null }]),
+      players: ids.map((id) => [id, { ...startingPlayerBoard(), name: `P${id}`, activeCities: players[id], hubCity: null, regionalOffice: null }]),
       independentRailroads: {
         Erie: { name: 'Erie', routes: [{ key: 'Chicago-Detroit', addedInRound: 0 }] },
       },

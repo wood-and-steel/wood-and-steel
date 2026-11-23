@@ -22,6 +22,7 @@ import {
 import { checkPhaseTransition } from '../stores/phaseManager';
 import { initializeIndependentRailroads } from '../independentRailroads';
 import { getPlayerAvatarColorForIndex } from '../utils/playerAvatar';
+import { newPlayerProps } from '../stores/playerDefaults';
 
 const NOT_PLAYING_MESSAGE = 'This device is not playing this game.';
 const UNSUPPORTED_GAME_MESSAGE = 'This game was created by an older version and can no longer be opened.';
@@ -457,13 +458,7 @@ const AppContent = (): React.ReactElement => {
             const seat = deviceId ? playerSeats[deviceId] : null;
             const playerName = seat?.playerName ?? `Player ${i}`;
 
-            return [playerID, {
-              name: playerName,
-              activeCities: [] as string[],
-              hubCity: null,
-              regionalOffice: null,
-              avatarColor: getPlayerAvatarColorForIndex(i),
-            }];
+            return [playerID, newPlayerProps(playerName, getPlayerAvatarColorForIndex(i))];
           });
 
           console.info('[App] Initialized players for BYOD game:', players);

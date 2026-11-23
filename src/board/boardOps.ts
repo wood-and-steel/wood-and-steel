@@ -9,19 +9,19 @@ import {
   DEFAULT_ENGINE_TYPES,
   isEngineTypeId,
   isUpgradeId,
+  type CargoPair,
+  type EngineSlot,
   type EngineTypeId,
+  type EngineTypePair,
   type UpgradeId,
-} from './playerBoardData';
+} from '../rules/playerBoard';
 
 /** 2 added player tracking; a version 1 board would silently strip those fields on save. */
 export const BOARD_STATE_VERSION = 2;
 /** Owners per route: one primary plus up to three parallel. */
 export const MAX_ROUTE_OWNERS = 4;
 
-/** 0 is the light engine token, 1 the dark one. */
-export type EngineSlot = 0 | 1;
-export type EngineTypePair = [EngineTypeId | null, EngineTypeId | null];
-export type CargoPair = [string | null, string | null];
+export type { CargoPair, EngineSlot, EngineTypePair } from '../rules/playerBoard';
 
 export interface BoardState {
   version: typeof BOARD_STATE_VERSION;
