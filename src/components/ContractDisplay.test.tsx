@@ -1,12 +1,14 @@
 /// <reference types="@testing-library/jest-dom" />
 /**
  * ContractDisplay menu: open market contracts can only be claimed (or discarded), the player's
- * own unfulfilled contracts can be fulfilled, and fulfilled contracts have no menu at all.
+ * own unfulfilled contracts can be fulfilled, fulfilled contracts have no menu at all, and
+ * open market contracts show their expiration countdown.
  */
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ContractDisplay } from './ContractDisplay';
+import { ContractCard } from './ContractCard';
 import type { Contract } from '../Contract';
 
 function contract(overrides: Partial<Contract>): Contract {
@@ -65,5 +67,25 @@ describe('ContractDisplay menu', () => {
     renderDisplay(c);
     expect(screen.queryByRole('menu', { hidden: true })).toBeNull();
     expect(screen.getByRole('button')).toBeDisabled();
+  });
+});
+
+describe('ContractCard expiry badge', () => {
+  test.each([
+    [3, '3⏱️'],
+    [1, '1⏱️'],
+  ])('shows the badge for %i', (roundsLeft, text) => {
+    render(<ContractCard commodity="coal" destinationKey="Chicago" variant="market" roundsLeft={roundsLeft} />);
+    expect(screen.getByText(text)).toBeInTheDocument();
+  });
+
+  test('shows no badge when roundsLeft is absent', () => {
+    const { container } = render(<ContractCard commodity="coal" destinationKey="Chicago" variant="market" />);
+    expect(container.querySelector('.contract__expiry')).toBeNull();
+  });
+
+  test('ContractDisplay passes roundsLeft only for open market contracts', () => {
+    renderDisplay(contract({ type: 'market', playerID: null, roundsLeft: 2 }));
+    expect(screen.getByText('2⏱️')).toBeInTheDocument();
   });
 });

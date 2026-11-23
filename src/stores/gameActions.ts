@@ -9,6 +9,7 @@
 import { useGameStore } from './gameStore';
 import type { GameStoreState, GameState, GameContext, PlayerProps, RegionCode } from './gameStore';
 import { isMoveAllowed, isMoveAllowedForPlayer } from './moveValidation';
+import { drawMarketContract, openMarketContracts, withReplacementMarketContract } from './marketExpiration';
 import {
   generateStartingContract as generateStartingContractContract,
   generatePrivateContract as generatePrivateContractContract,
@@ -167,41 +168,6 @@ export function generateMarketContract(): void {
   saveCurrentGameState();
 }
 
-/** Draw a market contract that doesn't duplicate an active contract in `contracts`, or undefined after 50 tries. */
-function drawMarketContract(G: GameState, contracts: Contract[]): Contract | undefined {
-  const activeContractKeys = new Set(
-    contracts.filter((c) => !c.fulfilled).map((c) => `${c.commodity}|${c.destinationKey}`)
-  );
-
-  for (let attempts = 0; attempts < 50; attempts++) {
-    const candidate = generateMarketContractContract(G);
-    if (!candidate) return undefined;
-    if (!activeContractKeys.has(`${candidate.commodity}|${candidate.destinationKey}`)) {
-      return candidate;
-    }
-  }
-  return undefined;
-}
-
-/**
- * A market contract just left the open tableau (claimed):
- * add one replacement to the front of `contracts`, avoiding duplicates of active contracts.
- * One-for-one: does not change the number of contracts in the tableau; it only replaces the one that left.
- */
-function withReplacementMarketContract(G: GameState, contracts: Contract[]): Contract[] {
-  const replacement = drawMarketContract(G, contracts);
-  if (!replacement) {
-    console.error('[withReplacementMarketContract] Failed to generate a replacement market contract');
-    return contracts;
-  }
-  return [replacement, ...contracts];
-}
-
-/** Open market contracts: unclaimed and unfulfilled. */
-function openMarketContracts(contracts: Contract[]): Contract[] {
-  return contracts.filter((c) => c.type === 'market' && c.playerID === null && !c.fulfilled);
-}
-
 /**
  * Fill the market tableau up to MARKET_TABLEAU_SIZE open market contracts, keeping the ones
  * already there. Does nothing if it is already full. The +M button calls this.
@@ -266,9 +232,12 @@ export function claimMarketContract(contractID: string): void {
   }
 
   useGameStore.setState((state) => {
-    const updatedContracts = state.G.contracts.map((c) =>
-      c.id === contractID ? { ...c, playerID: ctx.currentPlayer, turnsHeld: 1 } as Contract : c
-    );
+    // Claiming cancels any expiration countdown.
+    const updatedContracts = state.G.contracts.map((c) => {
+      if (c.id !== contractID) return c;
+      const { roundsLeft: _roundsLeft, ...rest } = c;
+      return { ...rest, playerID: ctx.currentPlayer, turnsHeld: 1 } as Contract;
+    });
 
     return {
       G: {

@@ -6,6 +6,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 import { addContract, claimMarketContract, fillMarketTableau, generateMarketContract, toggleContractFulfilled } from './gameActions';
 import { useGameStore } from './gameStore';
+import { endTurn } from './events';
 
 const openMarket = () =>
   useGameStore.getState().G.contracts.filter((c) => c.type === 'market' && c.playerID === null);
@@ -120,4 +121,43 @@ describe('market contract tableau', () => {
     expect(marketIds()).toEqual(original);
     expect(useGameStore.getState().G.contracts.filter((c) => c.type === 'market')).toHaveLength(3);
   });
+
+  test('claiming an expiring contract clears roundsLeft', () => {
+    const [target] = openMarket();
+    setRoundsLeft(target.id, 2);
+    claimMarketContract(target.id);
+    const claimed = useGameStore.getState().G.contracts.find((c) => c.id === target.id)!;
+    expect(claimed.playerID).toBe('0');
+    expect('roundsLeft' in claimed).toBe(false);
+  });
+
+  test('Undo after claiming an expiring contract restores the countdown', () => {
+    const [target] = openMarket();
+    setRoundsLeft(target.id, 2);
+    const { G, ctx } = useGameStore.getState();
+    useGameStore.getState().setTurnStartSnapshot({ G, ctx });
+    claimMarketContract(target.id);
+    useGameStore.getState().undoCurrentTurn();
+    const restored = useGameStore.getState().G.contracts.find((c) => c.id === target.id)!;
+    expect(restored.playerID).toBeNull();
+    expect(restored.roundsLeft).toBe(2);
+  });
+
+  test('ending the last turn of a round in play runs expiration', () => {
+    const [target] = openMarket();
+    setRoundsLeft(target.id, 1);
+    endTurn(); // player 0
+    expect(useGameStore.getState().G.contracts.find((c) => c.id === target.id)?.roundsLeft).toBe(1);
+    endTurn(); // player 1: round-end
+    const { G } = useGameStore.getState();
+    expect(G.contracts.find((c) => c.id === target.id)).toBeUndefined();
+    expect(openMarket()).toHaveLength(3);
+    expect(G.marketRoundsWithoutExpirationStart).toBeDefined();
+  });
 });
+
+function setRoundsLeft(id: string, roundsLeft: number) {
+  useGameStore.setState((s) => ({
+    G: { ...s.G, contracts: s.G.contracts.map((c) => (c.id === id ? { ...c, roundsLeft } : c)) },
+  }));
+}

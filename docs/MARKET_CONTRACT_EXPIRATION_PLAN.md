@@ -41,7 +41,7 @@ Confirmed:
 4. **Round-ends where nothing could start** (every open contract already counting down) count as "nothing started", so the next eligible round-end is guaranteed if two in a row were skipped.
 5. **Replacement placement.** The list sorts by `creationTime`, so a replacement shows at the end of the tableau rather than in the expired contract's slot. This matches how claim replacements behave today.
 6. **Notice to players.** No NavBar hint or toast. The countdown on the card is the only signal.
-7. **Card wording.** "3 rounds left" / "1 round left" in the card header, styled as a small badge.
+7. **Card wording.** "3⏱️" in the card header, centered between other content.
 8. **Unfulfilling.** Removed for both private and market contracts.
 9. **Move name.** Keep `toggleContractFulfilled` even though it now only fulfils. Renaming it would touch `MOVES_BY_PHASE`, the bot coverage list, bot effects and their tests for no behaviour change. A rename to `fulfillContract` can be a separate cleanup.
 

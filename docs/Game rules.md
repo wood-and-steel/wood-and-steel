@@ -161,6 +161,8 @@ Players fulfill a contract by running one of their trains to a city that supplie
 
 **Market** Contracts are available for all players to claim. Claiming it removes it from the open market. A market contract must be claimed before it can be fulfilled; contracts in the open market can only be claimed.
 
+Market contracts don't stay in the open market forever. Once the market has opened, at the end of each round there is a chance that one unclaimed market contract starts to expire, and if none has started in the last two rounds one always does. An expiring contract shows how many rounds it has left, starting at 5. At the end of the round in which it shows 1 round left, it leaves the market and a new market contract replaces it. Claiming an expiring contract stops its countdown.
+
 ## Turn actions
 
 On a player’s turn, they may do one or two actions. No action other than running trains may be done more than once per turn, and each engine in a player's fleet can only be run once per turn.

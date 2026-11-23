@@ -1,4 +1,5 @@
 import { growIndependentRailroads } from '../independentRailroads';
+import { advanceMarketExpirations } from './marketExpiration';
 import type { PhaseName } from './moveValidation';
 import type { GameState, GameContext } from './gameStore';
 
@@ -72,6 +73,7 @@ export const phaseConfig: Record<PhaseName, PhaseConfigEntry> = {
         );
         // End-of-round actions when last player's turn ends
         if (ctx.playOrderPos === ctx.playOrder.length - 1) {
+          advanceMarketExpirations(G);
           if (ctx.round >= 1) {
             const addedRoutes = growIndependentRailroads(G, ctx);
             if (addedRoutes?.size) {

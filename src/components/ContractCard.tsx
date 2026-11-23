@@ -24,6 +24,8 @@ function formatContractTieValue(spec: ContractCardSpec): React.ReactElement {
 export interface ContractCardProps extends ContractCardSpec {
   variant: "market" | "private";
   fulfilled?: boolean;
+  /** Rounds left before this open market contract expires; no badge when absent. */
+  roundsLeft?: number;
   className?: string;
   disabled?: boolean;
   onClick?: () => void;
@@ -44,6 +46,7 @@ export const ContractCard = React.forwardRef<HTMLButtonElement, ContractCardProp
       destinationKey,
       variant,
       fulfilled = false,
+      roundsLeft,
       className,
       disabled = false,
       onClick,
@@ -77,6 +80,11 @@ export const ContractCard = React.forwardRef<HTMLButtonElement, ContractCardProp
       >
         <div className="contract__header">
           {formatContractTieValue(spec)}
+          {roundsLeft !== undefined && (
+            <div className={`contract__expiry${roundsLeft <= 1 ? " contract__expiry--last" : ""}`}>
+              {roundsLeft}⏱️
+            </div>
+          )}
           <div className="contract__moneyValue">{variant === "market" ? "M · " : ""}${reward / 1000}K</div>
         </div>
         <div className="contract__body">

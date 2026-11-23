@@ -32,6 +32,7 @@ export interface GameState {
   >;
   byodGameStarted?: boolean;          // true once host starts the game (waiting_for_players → setup)
   lastRoundRoutesAdded?: number;      // UI hint; set when growIndependentRailroads adds routes
+  marketRoundsWithoutExpirationStart?: number; // market round-ends in a row with no expiration countdown started; absent until the market opens
 }
 ```
 
@@ -41,6 +42,7 @@ export interface GameState {
 | `players` | Array of `[playerID, PlayerProps]` tuples — **not** a plain object; find with `G.players.find(([id]) => id === playerID)` |
 | `players[].activeCities` | Cities the player has expanded into; last entry drives contract generation ("current city") |
 | `players[].hubCity` / `.regionalOffice` | Optional player upgrades; `regionalOffice` gates commodity region in contract generation |
+| `marketRoundsWithoutExpirationStart` | Set to 0 at the first round-end with any open market contract; reset to 0 when a countdown starts, else +1. At 2 or more, the next round-end always starts one. See `src/stores/marketExpiration.ts` |
 | `independentRailroads` | Keyed by generated company name; grown over time by `growIndependentRailroads` (see `src/independentRailroads.ts`) |
 
 ### `Contract` (in `G.contracts`)
@@ -57,10 +59,11 @@ export interface Contract {
   playerID: string | null;       // null only for unclaimed market contracts
   creationTime: number;          // Date.now() at creation
   turnsHeld: number | null;      // null iff playerID is null; else non-negative integer
+  roundsLeft?: number;           // open market contracts only: rounds before it expires; absent when not expiring
 }
 ```
 
-- **Market contracts**: `type: "market"`, start with `playerID: null`, claimable by any player.
+- **Market contracts**: `type: "market"`, start with `playerID: null`, claimable by any player. Must be claimed before they can be fulfilled. An open one may carry `roundsLeft`; it leaves `G.contracts` (and is replaced) when that reaches 0, and claiming it removes the field.
 - **Private contracts**: `type: "private"`, always have a `playerID` (generated for/assigned to that player).
 - **Value when fulfilled** is *derived*, not stored: `moneyValue(contract)` = shortest distance (in route segments) from destination to the nearest commodity-producing city × $3,000; `railroadTieValue(contract)` = 1–4, from a destination-region × commodity-region matrix. Both in `src/Contract.ts`.
 

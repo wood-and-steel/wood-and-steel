@@ -15,6 +15,8 @@ export interface Contract {
   creationTime: number;
   /** Number of turns the current holder has held it, or null if unassigned. Must be null when playerID is null; may be a non-negative integer when playerID is set. */
   turnsHeld: number | null;
+  /** Rounds left before this open market contract leaves the tableau; absent when not expiring. */
+  roundsLeft?: number;
 }
 
 /** Spec for a private contract before it is assigned to a player. */
@@ -287,6 +289,13 @@ export function generatePrivateContract(
 
 /** Number of open (unclaimed, unfulfilled) market contracts the tableau holds once filled. */
 export const MARKET_TABLEAU_SIZE = 3;
+
+/** Rounds an open market contract shows once its expiration countdown starts. */
+export const MARKET_EXPIRATION_ROUNDS = 5;
+/** Chance per market round-end that a new expiration countdown starts (unless guaranteed). */
+export const MARKET_EXPIRATION_START_CHANCE = 0.35;
+/** After this many market round-ends in a row with no countdown started, one always starts. */
+export const MARKET_EXPIRATION_GUARANTEE_ROUNDS = 2;
 
 /**
  * Create a market contract from the given active cities

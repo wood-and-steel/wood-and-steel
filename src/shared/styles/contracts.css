@@ -84,6 +84,17 @@
   font-weight: bold;
 }
 
+/* Expiration countdown badge on open market contracts */
+.contract__expiry {
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}
+
+.contract__expiry--last {
+  color: var(--color-danger);
+  font-weight: bold;
+}
+
 .contract__body {
   display: flex;
   flex-direction: column;

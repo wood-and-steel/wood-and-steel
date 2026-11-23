@@ -59,6 +59,7 @@ export function ContractDisplay({
         destinationKey={contract.destinationKey}
         variant={contract.type === "market" ? "market" : "private"}
         fulfilled={contract.fulfilled}
+        roundsLeft={isOpenMarket ? contract.roundsLeft : undefined}
         disabled={!isClickable}
         onClick={isClickable ? onCardClick : undefined}
         onKeyDown={

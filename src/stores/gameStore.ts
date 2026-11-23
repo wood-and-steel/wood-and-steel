@@ -29,6 +29,11 @@ export interface GameState {
   byodGameStarted?: boolean;
   /** Set at end-of-round when growIndependentRailroads adds routes; cleared when user dismisses NavBar hint. */
   lastRoundRoutesAdded?: number;
+  /**
+   * Market round-ends in a row with no expiration countdown started.
+   * Absent until the market opens (first round-end with any open market contract).
+   */
+  marketRoundsWithoutExpirationStart?: number;
 }
 
 /** Game context (ctx): phase, player, turn info. All player references are by ID. */
