@@ -670,6 +670,11 @@ function runOne(from: BotWorld, next: BotWorld, run: EngineRun, effects: Effect[
   const events = [...run.events].sort((a, b) => a.at - b.at);
   const initialLoad = cargo(next)[run.slot];
   let carrying = initialLoad;
+  /**
+   * The engine's cargo in G once this run's moves are made: no cargo move happens mid-run, but
+   * delivering clears G's cargo when it matches the delivered commodity.
+   */
+  let cargoInG = initialLoad;
   const timetable = hasUpgrade(from, 'timetable');
   const lines: string[] = [];
   let end = run.path[run.path.length - 1];
@@ -704,6 +709,7 @@ function runOne(from: BotWorld, next: BotWorld, run: EngineRun, effects: Effect[
       contract.fulfilled = true;
       addActiveCity(next, city);
       carrying = null;
+      if (cargoInG === contract.commodity) cargoInG = null;
       effects.push({ kind: 'move', move: { name: 'toggleContractFulfilled', args: [contract.id, run.slot] } });
       const paid = service.service > 0 ? `${money(payment)} less ${money(service.service)} debt service` : money(payment);
       lines.push(`delivered ${commodityName(contract.commodity)} to ${city} for ${paid}`);
@@ -721,7 +727,7 @@ function runOne(from: BotWorld, next: BotWorld, run: EngineRun, effects: Effect[
   next.turnState.enginesRun.push(run.slot);
   boardOp({ type: 'moveEngine', playerID: from.playerID, slot: run.slot, city: end });
   // The final load, set once after the run's moves, so replaying the effects after a reload is safe.
-  if (initialLoad !== carrying) effects.push({ kind: 'move', move: { name: 'setCargo', args: [run.slot, carrying] } });
+  if (cargoInG !== carrying) effects.push({ kind: 'move', move: { name: 'setCargo', args: [run.slot, carrying] } });
   const moved = run.path.length > 1 ? `ran ${slotLabel(run.slot)} engine ${run.path[0]} to ${end}` : `used ${slotLabel(run.slot)} engine in ${end}`;
   narrate(list([moved, ...lines]));
   return null;

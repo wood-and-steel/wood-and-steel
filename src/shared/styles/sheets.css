@@ -269,3 +269,7 @@ button.sheet__option {
   border-top: var(--border-width-md) solid var(--color-border-light);
   font-weight: 600;
 }
+
+.sheet:focus {
+  outline: none;
+}

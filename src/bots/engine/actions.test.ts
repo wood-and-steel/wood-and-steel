@@ -331,6 +331,37 @@ describe('running trains and contracts', () => {
     expect(next.contracts.find((c) => c.id === 'm1')).toMatchObject({ playerID: '0', fulfilled: true });
   });
 
+  test('with a Timetable, delivering and then picking up the same commodity still records the new load', () => {
+    const world = makeWorld({
+      board: {
+        engineTypes: { '0': ['american', null] },
+        engines: { '0': ['New York', null] },
+        cargo: { '0': ['machinery', null] },
+        upgrades: { '0': ['timetable'] },
+      },
+      contracts: [{ id: 'k1', commodity: 'machinery', destinationKey: 'New York' }],
+    });
+    const { world: next, effects } = apply(world, {
+      type: 'runTrains',
+      runs: [
+        {
+          slot: 0,
+          path: ['New York', 'Boston'],
+          events: [
+            { at: 0, kind: 'deliver', contractId: 'k1' },
+            { at: 1, kind: 'pickup', commodity: 'machinery' },
+          ],
+        },
+      ],
+    });
+    // The delivery move clears the cargo in G, so the final load is written even though it matches the first.
+    expect(moves(effects)).toEqual([
+      { name: 'toggleContractFulfilled', args: ['k1', 0] },
+      { name: 'setCargo', args: [0, 'machinery'] },
+    ]);
+    expect(next.board.cargo['0']).toEqual(['machinery', null]);
+  });
+
   test('refuses moving off own track, too far, or delivering mid-path without a Timetable', () => {
     const world = deliverWorld();
     const run = (path: string[], events: never[] = []) => applyAction(world, { type: 'runTrains', runs: [{ slot: 0, path, events }] });

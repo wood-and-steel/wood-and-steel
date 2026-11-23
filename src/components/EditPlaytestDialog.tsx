@@ -58,6 +58,8 @@ export function EditPlaytestDialog({
       setSelectedDestination("");
       setSelectedType("Private");
       setSelectedCity("");
+      // Players change between openings; choosing a player again loads their current board.
+      setBoardPlayer("");
     }
   }, [isOpen]);
 

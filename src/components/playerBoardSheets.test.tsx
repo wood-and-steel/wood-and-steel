@@ -6,7 +6,7 @@
  */
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { moneyValue, type Contract } from '../Contract';
 import { newPlayerProps } from '../stores/playerDefaults';
 import type { PlayerProps } from '../stores/gameStore';
@@ -15,6 +15,8 @@ import { DeliveryReceipt } from './DeliveryReceipt';
 import { LoansSheet } from './LoansSheet';
 import { ActionsSheet } from './ActionsSheet';
 import { formatMoney } from '../utils/money';
+import { Sheet } from './Sheet';
+import { EditPlaytestDialog } from './EditPlaytestDialog';
 
 const player = (props: Partial<PlayerProps> = {}): PlayerProps => ({ ...newPlayerProps('Ada'), ...props });
 
@@ -193,5 +195,62 @@ describe('ActionsSheet', () => {
     expect(screen.getAllByRole('button', { name: 'Buy for $5K' })).toHaveLength(2);
     expect(screen.getByText(/trades in your light 2-4-0 John Bull/)).toBeInTheDocument();
     expect(screen.getByText(/on your empty dark token/)).toBeInTheDocument();
+  });
+});
+
+describe('Sheet', () => {
+  function Harness() {
+    const [open, setOpen] = React.useState(false);
+    return (
+      <>
+        <button type="button" onClick={() => setOpen(true)}>
+          Open
+        </button>
+        <button type="button">End Turn</button>
+        {open && (
+          <Sheet title="Loans" onClose={() => setOpen(false)}>
+            <button type="button">Borrow</button>
+          </Sheet>
+        )}
+      </>
+    );
+  }
+
+  test('takes focus, keeps Tab inside, and gives focus back to its opener when it closes', async () => {
+    render(<Harness />);
+    const opener = screen.getByRole('button', { name: 'Open' });
+    opener.focus();
+    fireEvent.click(opener);
+    expect(screen.getByRole('dialog', { name: 'Loans' }).contains(document.activeElement)).toBe(true);
+
+    const close = screen.getByRole('button', { name: 'Close' });
+    const borrow = screen.getByRole('button', { name: 'Borrow' });
+    borrow.focus();
+    fireEvent.keyDown(borrow, { key: 'Tab' });
+    expect(document.activeElement).toBe(close);
+    fireEvent.keyDown(close, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(borrow);
+
+    fireEvent.click(close);
+    await waitFor(() => expect(document.activeElement).toBe(opener));
+  });
+});
+
+describe('EditPlaytestDialog player board', () => {
+  test('forgets the chosen player when closed, so reopening shows current values, not stale ones', () => {
+    const G = (cash: number) =>
+      ({ contracts: [], players: [['0', { ...player(), cash }]], independentRailroads: {} }) as never;
+    const ctx = { phase: 'play', currentPlayer: '0' } as never;
+    const moves = {} as Moves;
+    const { rerender } = render(<EditPlaytestDialog isOpen onClose={() => {}} G={G(10000)} ctx={ctx} moves={moves} />);
+    fireEvent.change(screen.getByLabelText('Player board:'), { target: { value: '0' } });
+    expect(screen.getByLabelText('Cash ($K):')).toHaveValue('10');
+
+    rerender(<EditPlaytestDialog isOpen={false} onClose={() => {}} G={G(4000)} ctx={ctx} moves={moves} />);
+    rerender(<EditPlaytestDialog isOpen onClose={() => {}} G={G(4000)} ctx={ctx} moves={moves} />);
+    expect(screen.getByLabelText('Player board:')).toHaveValue('');
+    expect(screen.queryByLabelText('Cash ($K):')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Player board:'), { target: { value: '0' } });
+    expect(screen.getByLabelText('Cash ($K):')).toHaveValue('4');
   });
 });
