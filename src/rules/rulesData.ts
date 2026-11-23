@@ -109,6 +109,21 @@ export const UPGRADE_PRICES: Record<UpgradeKey, number> = {
   'regional-office': 20000,
   'commodities-exchange': 20000,
 };
+/** Display names for every upgrade, in player-board order. */
+export const UPGRADE_NAMES: Record<UpgradeKey, string> = {
+  'service-yard': 'Service Yard',
+  'upgraded-stations': 'Upgraded Stations',
+  roundhouse: 'Roundhouse',
+  'employment-office': 'Employment Office',
+  timetable: 'Timetable',
+  'commodities-exchange': 'Commodities Exchange',
+  hub: 'Hub',
+  railyard: 'Railyard',
+  'regional-office': 'Regional Office',
+};
+/** Every upgrade, in player-board order. */
+export const UPGRADE_KEYS = Object.keys(UPGRADE_NAMES) as UpgradeKey[];
+
 /** Roundhouse: the second engine moves at most 4 segments to meet the first. */
 export const ROUNDHOUSE_APPROACH = 4;
 /** Railyard: its city supplies every commodity available within two segments. */

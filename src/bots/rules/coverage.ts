@@ -23,7 +23,10 @@ export const MOVE_COVERAGE: Record<string, Coverage> = {
     status: 'ignored',
     reason: 'Adds one market contract; bots open the market with fillMarketTableau instead.',
   },
-  fillMarketTableau: { status: 'used', where: 'engine/actions.ts buyEngine (first Mogul or better)' },
+  fillMarketTableau: {
+    status: 'ignored',
+    reason: 'The +M playtest button; the buyEngine move fills the tableau when the first Mogul or better is bought.',
+  },
   claimMarketContract: { status: 'used', where: 'engine/actions.ts runOne (pickup with claim)' },
   addContract: { status: 'used', where: 'engine/actions.ts choosePrivateContract' },
   toggleContractFulfilled: { status: 'used', where: 'engine/actions.ts runOne (deliver)' },
@@ -33,9 +36,25 @@ export const MOVE_COVERAGE: Record<string, Coverage> = {
     status: 'ignored',
     reason: 'A manual playtest edit; active cities change through the moves bots use.',
   },
-  claimHubCity: { status: 'used', where: 'engine/actions.ts buyUpgrade (hub)' },
-  claimRegionalOffice: { status: 'used', where: 'engine/actions.ts buyUpgrade (regional-office)' },
+  claimHubCity: {
+    status: 'ignored',
+    reason: 'A free playtest edit; bots buy the Hub with buyUpgrade, which charges for it.',
+  },
+  claimRegionalOffice: {
+    status: 'ignored',
+    reason: 'A free playtest edit; bots buy the Regional Office with buyUpgrade, which charges for it.',
+  },
   endTurn: { status: 'used', where: 'engine/actions.ts endTurn' },
+  borrow: { status: 'used', where: 'engine/actions.ts borrow' },
+  repay: { status: 'used', where: 'engine/actions.ts repay' },
+  payForTrack: { status: 'used', where: 'engine/actions.ts buildTrack (pays the total)' },
+  buyEngine: { status: 'used', where: 'engine/actions.ts buyEngine' },
+  buyUpgrade: { status: 'used', where: 'engine/actions.ts buyUpgrade' },
+  setCargo: { status: 'used', where: 'engine/actions.ts pickUp, runOne (final load), Roundhouse hand-over' },
+  setPlayerBoard: {
+    status: 'ignored',
+    reason: 'A playtest fix-up for games started before the app tracked money and engines.',
+  },
 };
 
 /** Every "###" heading under "## Turn actions" in docs/Game rules.md. */

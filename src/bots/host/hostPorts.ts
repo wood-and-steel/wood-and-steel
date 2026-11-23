@@ -123,9 +123,11 @@ export function callMove(move: GameMove): void {
     case 'generateStartingContract':
       return gameActions.generateStartingContract(move.args[0], move.args[1]);
     case 'toggleContractFulfilled':
-      return gameActions.toggleContractFulfilled(move.args[0]);
+      gameActions.toggleContractFulfilled(move.args[0], move.args[1]);
+      return;
     case 'claimMarketContract':
-      return gameActions.claimMarketContract(move.args[0]);
+      gameActions.claimMarketContract(move.args[0]);
+      return;
     case 'fillMarketTableau':
       return gameActions.fillMarketTableau();
     case 'addContract':
@@ -133,7 +135,8 @@ export function callMove(move: GameMove): void {
     case 'deleteContract':
       return gameActions.deleteContract(move.args[0]);
     case 'acquireIndependentRailroad':
-      return gameActions.acquireIndependentRailroad(move.args[0]);
+      gameActions.acquireIndependentRailroad(move.args[0]);
+      return;
     case 'claimHubCity':
       gameActions.claimHubCity(move.args[0]);
       return;
@@ -142,6 +145,24 @@ export function callMove(move: GameMove): void {
       return;
     case 'endTurn':
       return gameActions.endTurn();
+    case 'borrow':
+      gameActions.borrow(move.args[0]);
+      return;
+    case 'repay':
+      gameActions.repay(move.args[0]);
+      return;
+    case 'payForTrack':
+      gameActions.payForTrack(move.args[0]);
+      return;
+    case 'buyEngine':
+      gameActions.buyEngine(move.args[0], move.args[1]);
+      return;
+    case 'buyUpgrade':
+      gameActions.buyUpgrade(move.args[0], move.args[1]);
+      return;
+    case 'setCargo':
+      gameActions.setCargo(move.args[0], move.args[1]);
+      return;
   }
 }
 

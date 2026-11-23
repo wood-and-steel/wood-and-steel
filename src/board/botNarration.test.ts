@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { GameContext } from '../stores/gameStore';
-import { STARTING_CASH, createBotRecord, emptyBotStates, type BotStates } from '../bots/state/botStates';
-import { RUNNER_STALE_MS, botTrayInfo, formatBotMoney, formatThousands } from './botNarration';
+import { createBotRecord, emptyBotStates, type BotStates } from '../bots/state/botStates';
+import { RUNNER_STALE_MS, botTrayInfo, formatMoney, formatThousands } from './botNarration';
 
 const NOW = Date.parse('2026-11-09T12:00:00Z');
 const ctx = { phase: 'play', currentPlayer: '1', turn: 4, round: 2, playOrder: ['1', '0'], playOrderPos: 0, numPlayers: 2 } as GameContext;
@@ -29,10 +29,6 @@ describe('botTrayInfo', () => {
     expect(botTrayInfo(states([], 1000), { ...ctx, currentPlayer: '0' }, NOW)['1']).toMatchObject({ played: false, lines: [], waiting: false });
   });
 
-  it('carries the bot’s cash and debt', () => {
-    expect(botTrayInfo(states([], 1000), ctx, NOW)['1']).toMatchObject({ cash: STARTING_CASH, debt: 0 });
-  });
-
   it('waiting for the host’s app when it’s the bot’s turn and the heartbeat is stale or missing', () => {
     expect(botTrayInfo(states([], RUNNER_STALE_MS + 1), ctx, NOW)['1'].waiting).toBe(true);
     expect(botTrayInfo(states([], null), ctx, NOW)['1'].waiting).toBe(true);
@@ -46,10 +42,10 @@ describe('botTrayInfo', () => {
   });
 });
 
-describe('formatBotMoney', () => {
+describe('formatMoney', () => {
   it('abbreviates in thousands and shows debt only when there is some', () => {
-    expect(formatBotMoney({ cash: 13000, debt: 15000 })).toBe('$13k ($15k)');
-    expect(formatBotMoney({ cash: 10000, debt: 0 })).toBe('$10k');
+    expect(formatMoney({ cash: 13000, debt: 15000 })).toBe('$13k ($15k)');
+    expect(formatMoney({ cash: 10000, debt: 0 })).toBe('$10k');
     expect(formatThousands(13500)).toBe('$13.5k');
     expect(formatThousands(0)).toBe('$0k');
     expect(formatThousands(-2000)).toBe('-$2k');

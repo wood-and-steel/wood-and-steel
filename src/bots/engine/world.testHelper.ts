@@ -6,8 +6,8 @@
 import type { Contract } from '../../Contract';
 import type { PlayerProps } from '../../stores/gameStore';
 import { emptyBoardState, type BoardState } from '../../board/boardOps';
-import { createBotRecord, type BotRecord } from '../state/botStates';
-import { emptyTurnState, type BotWorld, type TurnState } from './world';
+import { createBotRecord } from '../state/botStates';
+import { emptyTurnState, type BotView, type BotWorld, type TurnState } from './world';
 import { startingPlayerBoard } from '../../stores/playerDefaults';
 
 export interface WorldSpec {
@@ -17,7 +17,8 @@ export interface WorldSpec {
   board?: Partial<BoardState>;
   contracts?: Partial<Contract>[];
   independentRailroads?: BotWorld['independentRailroads'];
-  bot?: Partial<BotRecord>;
+  /** The bot's record and money ($10,000 and no debt unless given). */
+  bot?: Partial<BotView>;
   turnState?: Partial<TurnState>;
 }
 
@@ -67,7 +68,15 @@ export function makeWorld(spec: WorldSpec = {}): BotWorld {
     ]),
     independentRailroads: spec.independentRailroads ?? {},
     board,
-    bot: { ...createBotRecord({ name: 'Avery', strategy: 'builder' }, 1), ...spec.bot },
+    bot: {
+      ...createBotRecord({ name: 'Avery', strategy: 'builder' }, 1),
+      cash: 10000,
+      debt: 0,
+      centralDebtServicePaid: false,
+      westernDeliveryMade: false,
+      exchangeCommodity: null,
+      ...spec.bot,
+    },
     turnState: { ...emptyTurnState(), ...spec.turnState },
   };
 }

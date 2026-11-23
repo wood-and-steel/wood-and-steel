@@ -15,7 +15,7 @@ import {
   type EngineTypePair,
 } from '../../board/boardOps';
 import { seedBoardState } from '../../board/boardSeed';
-import type { UpgradeId } from '../../board/playerBoardData';
+import { isUpgradeId, type UpgradeId } from '../../board/playerBoardData';
 import type { BotRecord } from '../state/botStates';
 import { ACTIONS_PER_TURN } from './rulesData';
 import { bestEngineLevel as bestLevelOf } from '../../rules/engines';
@@ -42,6 +42,13 @@ export interface TurnState {
   offers: PrivateContractSpec[] | null;
 }
 
+/**
+ * The bot's record plus its money and debt-service progress, which live in G like every
+ * player's. buildWorld copies them from G; applyAction updates them in its predicted world.
+ */
+export type BotView = BotRecord &
+  Pick<PlayerProps, 'cash' | 'debt' | 'centralDebtServicePaid' | 'westernDeliveryMade' | 'exchangeCommodity'>;
+
 export interface BotWorld {
   playerID: string;
   phase: string;
@@ -53,7 +60,7 @@ export interface BotWorld {
   independentRailroads: GameState['independentRailroads'];
   /** Whole board (every player), so costs and competition can be judged. */
   board: BoardState;
-  bot: BotRecord;
+  bot: BotView;
   turnState: TurnState;
 }
 
@@ -73,6 +80,13 @@ export interface BuildWorldInput {
 
 export function buildWorld({ G, ctx, board, bot, playerID, turnState }: BuildWorldInput): BotWorld {
   const boardState = board == null ? seedBoardState(G, { ...ctx, phase: 'play' }) : normalizeBoardState(board);
+  // Engine types, cargo and upgrades live in G; the board keeps only positions and track.
+  for (const [id, p] of G.players ?? []) {
+    boardState.engineTypes[id] = [p.engines[0], p.engines[1]];
+    boardState.cargo[id] = [p.cargo[0], p.cargo[1]];
+    boardState.upgrades[id] = p.upgrades.filter(isUpgradeId);
+  }
+  const me = G.players?.find(([id]) => id === playerID)?.[1];
   return {
     playerID,
     phase: ctx.phase,
@@ -83,7 +97,14 @@ export function buildWorld({ G, ctx, board, bot, playerID, turnState }: BuildWor
     players: structuredClone(G.players ?? []),
     independentRailroads: structuredClone(G.independentRailroads ?? {}),
     board: structuredClone(boardState),
-    bot: structuredClone(bot),
+    bot: {
+      ...structuredClone(bot),
+      cash: me?.cash ?? 0,
+      debt: me?.debt ?? 0,
+      centralDebtServicePaid: me?.centralDebtServicePaid ?? false,
+      westernDeliveryMade: me?.westernDeliveryMade ?? false,
+      exchangeCommodity: me?.exchangeCommodity ?? null,
+    },
     turnState: turnState ? structuredClone(turnState) : emptyTurnState(),
   };
 }

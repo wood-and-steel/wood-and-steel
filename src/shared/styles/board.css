@@ -202,8 +202,7 @@
 
 /* Popovers (positioned via --board-popover-left/top, set from a ref) */
 
-.routePopover,
-.trayPicker {
+.routePopover {
   position: fixed;
   top: var(--board-popover-top, 0);
   left: var(--board-popover-left, 0);
@@ -217,77 +216,13 @@
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
 }
 
-.routePopover--placed,
-.trayPicker--placed {
+.routePopover--placed {
   visibility: visible;
 }
 
 .routePopover {
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-}
-
-.trayPicker {
-  min-width: 16rem;
-  max-height: calc(100vh - 1rem);
-  padding: var(--spacing-xs);
-  overflow-y: auto;
-}
-
-.trayPicker__option {
-  display: flex;
-  flex-shrink: 0;
-  justify-content: space-between;
-  gap: var(--spacing-md);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.trayPicker__option:hover {
-  background: var(--color-bg-hover);
-}
-
-.trayPicker__option--selected {
-  background: var(--color-bg-hover);
-  font-weight: 700;
-}
-
-.trayPicker__meta {
-  font-size: 0.875rem;
-  font-weight: 400;
-  color: var(--color-text-muted);
-}
-
-.trayPicker__option--commodity {
-  align-items: center;
-  justify-content: flex-start;
-  gap: var(--spacing-xs);
-}
-
-.trayPicker__group {
-  display: flex;
-  flex-shrink: 0;
-  flex-direction: column;
-  margin-top: var(--spacing-xs);
-}
-
-.trayPicker__groupName {
-  padding: 0 var(--spacing-sm);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-text-muted);
-}
-
-.trayPicker__groupOptions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(9.5rem, 1fr));
 }
 
 .boardCommodityIcon {
@@ -561,16 +496,6 @@
   width: 100%;
 }
 
-.boardEngine__type,
-.boardEngine__cargo {
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
 
 .boardEngine__type {
   font-weight: 600;
@@ -581,22 +506,6 @@
   align-items: center;
   gap: var(--spacing-xs);
   font-size: 0.8125rem;
-}
-
-.boardEngine__type::after,
-.boardEngine__cargo::after {
-  content: ' ▾';
-  color: var(--color-text-muted);
-}
-
-.boardEngine__type:hover:not(:disabled),
-.boardEngine__cargo:hover:not(:disabled) {
-  text-decoration: underline;
-}
-
-.boardEngine__type:disabled,
-.boardEngine__cargo:disabled {
-  cursor: default;
 }
 
 .boardEngine__type--none,

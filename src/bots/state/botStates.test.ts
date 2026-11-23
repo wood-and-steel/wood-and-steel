@@ -20,9 +20,10 @@ const seats: Record<string, PlayerSeat> = {
 };
 
 describe('createBotRecord', () => {
-  test('starts with $10,000, no debt, and weights within its strategy', () => {
+  test('starts with no deliveries, an empty log, and weights within its strategy; money lives in G', () => {
     const record = createBotRecord({ name: 'Avery', strategy: 'speculator' }, 5);
-    expect(record).toMatchObject({ name: 'Avery', strategy: 'speculator', cash: STARTING_CASH, debt: 0, log: [] });
+    expect(record).toMatchObject({ name: 'Avery', strategy: 'speculator', deliveries: {}, log: [] });
+    expect(record).not.toHaveProperty('cash');
     for (const key of WEIGHT_KEYS) {
       const [lo, hi] = BANDS[STRATEGY_BANDS.speculator[key]];
       expect(record.weights[key]).toBeGreaterThanOrEqual(lo);
@@ -49,9 +50,9 @@ describe('botSeatsByPlayerID and addMissingBots', () => {
   });
 
   test('keeps existing records as they are', () => {
-    const existing = { ...emptyBotStates(), bots: { '0': { ...createBotRecord({ name: 'Avery', strategy: 'builder' }, 1), cash: 3000 } } };
+    const existing = { ...emptyBotStates(), bots: { '0': { ...createBotRecord({ name: 'Avery', strategy: 'builder' }, 1), deliveries: { coal: 3 } } } };
     const result = addMissingBots(existing, seats, () => 2);
-    expect(result.bots['0'].cash).toBe(3000);
+    expect(result.bots['0'].deliveries).toEqual({ coal: 3 });
     expect(result.bots['2'].name).toBe('Sage');
   });
 });
@@ -105,10 +106,11 @@ describe('normalizeBotStates', () => {
     const sage = states.bots['2'];
     expect(sage.weights.debtTolerance).toBe(0.2);
     expect(sage.weights.reach).toBe(0.325); // lowMed midpoint
-    expect(sage.cash).toBe(STARTING_CASH);
-    expect(sage.debt).toBe(0);
+    // Money saved by older versions is dropped: it lives in G now.
+    expect(sage).not.toHaveProperty('cash');
+    expect(sage).not.toHaveProperty('debt');
+    expect(sage).not.toHaveProperty('exchangeCommodity');
     expect(sage.deliveries).toEqual({ coal: 2 });
-    expect(sage.exchangeCommodity).toBeNull();
     expect(sage.plan).toBeNull();
     expect(sage.turnInProgress).toBeNull();
     expect(sage.log).toEqual([{ round: 1, turn: 1, lines: ['ok'] }]);

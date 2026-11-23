@@ -2,12 +2,13 @@ import { describe, expect, test } from 'vitest';
 import type { GameContext, GameState } from '../../stores/gameStore';
 import { createBotRecord } from '../state/botStates';
 import { buildWorld } from './world';
+import { startingPlayerBoard } from '../../stores/playerDefaults';
 
 const G = {
   contracts: [],
   players: [
-    ['0', { name: 'Avery 🤖', activeCities: ['Boston', 'Portland ME'], hubCity: null, regionalOffice: null }],
-    ['1', { name: 'Ben', activeCities: ['Norfolk', 'Raleigh'], hubCity: null, regionalOffice: null }],
+    ['0', { ...startingPlayerBoard(), name: 'Avery 🤖', activeCities: ['Boston', 'Portland ME'], hubCity: null, regionalOffice: null }],
+    ['1', { ...startingPlayerBoard(), name: 'Ben', activeCities: ['Norfolk', 'Raleigh'], hubCity: null, regionalOffice: null }],
   ],
   independentRailroads: {},
 } as unknown as GameState;
@@ -29,5 +30,35 @@ describe('buildWorld', () => {
     world.players[0][1].activeCities.push('Chicago');
     expect(board.track['Boston-New York']).toEqual(['0']);
     expect((G.players[0][1] as { activeCities: string[] }).activeCities).toEqual(['Boston', 'Portland ME']);
+  });
+
+  test('takes money, engines, cargo and upgrades from G, not from the board or the bot record', () => {
+    const withBoard = {
+      ...G,
+      players: [
+        [
+          '0',
+          {
+            ...G.players[0][1],
+            cash: 4000,
+            debt: 15000,
+            westernDeliveryMade: true,
+            engines: ['mogul', 'american'],
+            cargo: ['coal', null],
+            upgrades: ['timetable', 'railyard'],
+            exchangeCommodity: 'grain',
+          },
+        ],
+        G.players[1],
+      ],
+    } as GameState;
+    const board = { version: 2, seeded: true, engineTypes: { '0': ['prairie', null] }, upgrades: { '0': ['roundhouse'] } };
+    const world = buildWorld({ G: withBoard, ctx, board, bot, playerID: '0' });
+    expect(world.bot).toMatchObject({ cash: 4000, debt: 15000, westernDeliveryMade: true, exchangeCommodity: 'grain' });
+    expect(world.board.engineTypes['0']).toEqual(['mogul', 'american']);
+    expect(world.board.cargo['0']).toEqual(['coal', null]);
+    // The Railyard's ownership is in G, its city on the board; board.upgrades keeps the six checkbox upgrades.
+    expect(world.board.upgrades['0']).toEqual(['timetable']);
+    expect(world.board.engineTypes['1']).toEqual(['john-bull', null]);
   });
 });

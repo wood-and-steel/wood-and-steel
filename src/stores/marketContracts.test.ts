@@ -13,7 +13,7 @@ const openMarket = () =>
 
 const marketIds = () => openMarket().map((c) => c.id).sort();
 
-/** Two players in play with starting cities; `seeded` market contracts on the table; snapshot taken. */
+/** Two players in play with starting cities and a Mogul each; `seeded` market contracts on the table; snapshot taken. */
 function setUp(seeded: number) {
   useGameStore.getState().resetState(2);
   useGameStore.setState((s) => ({
@@ -21,7 +21,8 @@ function setUp(seeded: number) {
       ...s.G,
       players: s.G.players.map(([id, p], i) => [
         id,
-        { ...p, activeCities: i === 0 ? ['Boston', 'Portland ME'] : ['Norfolk', 'Raleigh'] },
+        // A Mogul lets a player claim market contracts.
+        { ...p, activeCities: i === 0 ? ['Boston', 'Portland ME'] : ['Norfolk', 'Raleigh'], engines: ['mogul', null] },
       ]),
     },
     ctx: { ...s.ctx, phase: 'play' },

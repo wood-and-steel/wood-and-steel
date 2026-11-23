@@ -23,6 +23,13 @@ const MOVES_BY_PHASE: Record<PhaseName, readonly string[]> = {
     'claimHubCity',
     'claimRegionalOffice',
     'endTurn',
+    'borrow',
+    'repay',
+    'payForTrack',
+    'buyEngine',
+    'buyUpgrade',
+    'setCargo',
+    'setPlayerBoard',
   ],
   scoring: [],
 };

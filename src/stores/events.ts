@@ -24,8 +24,10 @@ export function endTurn(): void {
   // Update state immutably; set turn-start snapshot for the next player so they can undo their turn
   // Note: If turn.onEnd hook mutated G, we need to update G as well
   useGameStore.setState((currentState) => {
+    // The money log covers one turn; the next player starts a new one.
+    const { turnLedger: _turnLedger, ...restG } = currentState.G;
     const newG = {
-      ...currentState.G,
+      ...restG,
       independentRailroads: { ...currentState.G.independentRailroads },
     };
     const newCtx = {

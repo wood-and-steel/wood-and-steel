@@ -106,7 +106,8 @@ describe('build track', () => {
 describe('buy an engine', () => {
   test('trading in keeps the city', () => {
     const { world, effects } = apply(makeWorld(), { type: 'buyEngine', engine: 'american', slot: 0 });
-    expect(ops(effects)).toEqual([{ type: 'setEngineType', playerID: '0', slot: 0, engineType: 'american' }]);
+    expect(moves(effects)).toEqual([{ name: 'buyEngine', args: [0, 'american'] }]);
+    expect(ops(effects)).toEqual([]);
     expect(world.bot.cash).toBe(5000);
     expect(lines(effects)).toEqual(['→ Bought 4-4-0 American for $5,000, trading in 2-4-0 John Bull']);
   });
@@ -114,27 +115,25 @@ describe('buy an engine', () => {
   test('a second engine goes on a network city', () => {
     const base = makeWorld({ board: { engineTypes: { '0': ['american', null] } } });
     const { world, effects } = apply(base, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'New York' });
-    expect(ops(effects)).toEqual([
-      { type: 'setEngineType', playerID: '0', slot: 1, engineType: 'mogul' },
-      { type: 'moveEngine', playerID: '0', slot: 1, city: 'New York' },
-    ]);
+    expect(moves(effects)).toEqual([{ name: 'buyEngine', args: [1, 'mogul'] }]);
+    expect(ops(effects)).toEqual([{ type: 'moveEngine', playerID: '0', slot: 1, city: 'New York' }]);
     expect(world.board.engines['0']).toEqual(['Boston', 'New York']);
     expect(applyAction(base, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'Chicago' }).ok).toBe(false);
   });
 
-  test('the first Mogul on the table fills the market tableau', () => {
+  test('the first Mogul on the table opens the market (the buyEngine move fills the tableau)', () => {
     const base = makeWorld({ board: { engineTypes: { '0': ['american', null] } } });
     const { effects } = apply(base, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'New York' });
-    expect(moves(effects)).toEqual([{ name: 'fillMarketTableau', args: [] }]);
+    expect(moves(effects)).toEqual([{ name: 'buyEngine', args: [1, 'mogul'] }]);
     expect(lines(effects)).toContain('Opened market contracts');
   });
 
   test('a later Mogul does not fill the market tableau', () => {
     const base = makeWorld({ board: { engineTypes: { '0': ['american', null], '1': ['mogul', null] } } });
     const { effects } = apply(base, { type: 'buyEngine', engine: 'mogul', slot: 1, city: 'New York' });
-    expect(moves(effects)).toEqual([]);
+    expect(lines(effects)).not.toContain('Opened market contracts');
     const cheaper = apply(makeWorld(), { type: 'buyEngine', engine: 'american', slot: 0 });
-    expect(moves(cheaper.effects)).toEqual([]);
+    expect(lines(cheaper.effects)).not.toContain('Opened market contracts');
   });
 
   test('a John Bull can stay as a second engine', () => {
@@ -151,8 +150,11 @@ describe('buy an engine', () => {
     const pickUp: Action = { type: 'pickUp', slot: 1, commodity: 'imports', claim: 'm1' };
     expect(listActions(bought)).toContainEqual(pickUp);
     const { world: next, effects } = apply(bought, pickUp);
-    expect(moves(effects)).toEqual([{ name: 'claimMarketContract', args: ['m1'] }]);
-    expect(ops(effects)).toEqual([{ type: 'setCargo', playerID: '0', slot: 1, commodity: 'imports' }]);
+    expect(moves(effects)).toEqual([
+      { name: 'claimMarketContract', args: ['m1'] },
+      { name: 'setCargo', args: [1, 'imports'] },
+    ]);
+    expect(ops(effects)).toEqual([]);
     expect(next.board.cargo['0']).toEqual([null, 'imports']);
     expect(next.turnState.actions).toEqual(['buyEngine']);
     expect(lines(effects)).toEqual([
@@ -209,9 +211,11 @@ describe('money', () => {
   test('borrow and repay', () => {
     const borrowed = apply(makeWorld({ bot: { debt: 15000 } }), { type: 'borrow', amount: 10000 });
     expect(borrowed.world.bot).toMatchObject({ cash: 20000, debt: 25000 });
+    expect(moves(borrowed.effects)).toEqual([{ name: 'borrow', args: [10000] }]);
     expect(lines(borrowed.effects)).toEqual(['→ Borrowed $10,000']);
     const repaid = apply(makeWorld({ bot: { debt: 25000 } }), { type: 'repay', amount: 10000 });
     expect(repaid.world.bot).toMatchObject({ cash: 0, debt: 15000 });
+    expect(moves(repaid.effects)).toEqual([{ name: 'repay', args: [10000] }]);
     expect(applyAction(makeWorld({ bot: { debt: 15000 } }), { type: 'repay', amount: 5000 }).ok).toBe(false);
   });
 });
@@ -219,29 +223,31 @@ describe('money', () => {
 describe('upgrades', () => {
   const rich = { bot: { cash: 50000 } };
 
-  test('a Hub is claimed in the app', () => {
+  test('a Hub is bought in the app', () => {
     const { world, effects } = apply(makeWorld(rich), { type: 'buyUpgrade', upgrade: 'hub', city: 'New York' });
-    expect(moves(effects)).toEqual([{ name: 'claimHubCity', args: ['New York'] }]);
+    expect(moves(effects)).toEqual([{ name: 'buyUpgrade', args: ['hub', 'New York'] }]);
     expect(world.bot.cash).toBe(35000);
     expect(lines(effects)).toEqual(['→ Bought Hub in New York for $15,000']);
   });
 
-  test('a Railyard is placed on the board', () => {
+  test('a Railyard is bought in the app and placed on the board', () => {
     const { effects } = apply(makeWorld(rich), { type: 'buyUpgrade', upgrade: 'railyard', city: 'Boston' });
+    expect(moves(effects)).toEqual([{ name: 'buyUpgrade', args: ['railyard'] }]);
     expect(ops(effects)).toEqual([{ type: 'moveRailyard', playerID: '0', city: 'Boston' }]);
   });
 
-  test('tracked upgrades are checked on the board', () => {
+  test('other upgrades are bought in the app', () => {
     const { world, effects } = apply(makeWorld(rich), { type: 'buyUpgrade', upgrade: 'timetable' });
-    expect(ops(effects)).toEqual([{ type: 'setUpgrade', playerID: '0', upgrade: 'timetable', owned: true }]);
+    expect(moves(effects)).toEqual([{ name: 'buyUpgrade', args: ['timetable'] }]);
+    expect(ops(effects)).toEqual([]);
     expect(world.board.upgrades['0']).toEqual(['timetable']);
     expect(lines(effects)).toEqual(['→ Bought Timetable for $15,000']);
   });
 
-  test('a Regional Office is claimed in the app', () => {
+  test('a Regional Office is bought in the app', () => {
     const track = { 'Boston-Portland ME': ['0'], 'Boston-New York': ['0'], 'New York-Philadelphia': ['0'], 'Boston-Syracuse': ['0'] };
     const { effects } = apply(makeWorld({ ...rich, board: { track } }), { type: 'buyUpgrade', upgrade: 'regional-office', region: 'NE' });
-    expect(moves(effects)).toEqual([{ name: 'claimRegionalOffice', args: ['NE'] }]);
+    expect(moves(effects)).toEqual([{ name: 'buyUpgrade', args: ['regional-office', 'NE'] }]);
     expect(lines(effects)).toEqual(['→ Bought Regional Office in Northeast for $20,000']);
   });
 
@@ -276,7 +282,7 @@ describe('running trains and contracts', () => {
   test('delivering a private contract pays, fulfills it, and asks for offers', () => {
     expect(listActions(deliverWorld())).toContainEqual(delivery);
     const { world, effects } = apply(deliverWorld(), delivery);
-    expect(moves(effects)).toEqual([{ name: 'toggleContractFulfilled', args: ['k1'] }]);
+    expect(moves(effects)).toEqual([{ name: 'toggleContractFulfilled', args: ['k1', 0] }]);
     expect(effects.some((e) => e.kind === 'requestOffers')).toBe(true);
     expect(ops(effects)).toEqual([{ type: 'moveEngine', playerID: '0', slot: 0, city: 'Philadelphia' }]);
     expect(world.bot.cash).toBe(10000 + value);
@@ -319,7 +325,7 @@ describe('running trains and contracts', () => {
     const { world: next, effects } = apply(world, action);
     expect(moves(effects)).toEqual([
       { name: 'claimMarketContract', args: ['m1'] },
-      { name: 'toggleContractFulfilled', args: ['m1'] },
+      { name: 'toggleContractFulfilled', args: ['m1', 0] },
     ]);
     expect(effects.some((e) => e.kind === 'requestOffers')).toBe(false);
     expect(next.contracts.find((c) => c.id === 'm1')).toMatchObject({ playerID: '0', fulfilled: true });
