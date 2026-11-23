@@ -1,0 +1,648 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Copy of the "Player App Redesign" sketches; published version: https://claude.ai/artifact/9vz33EYYa2mos4WSsckoUf -->
+<title>Player App Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Judson:wght@400;700&family=Playfair+Display:wght@500;600&display=swap">
+<style>
+/* Layout: a single-column design review doc; each section pairs a row of phone sketches with short notes. */
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --stage: #f0ece8;
+  --ink: #241d1a;
+  --muted: #6b605a;
+  --faint: #978c85;
+  --line: #e5ded8;
+  --line-strong: #c8bdb5;
+  --accent: #6b2a12;
+  --accent-bg: #f5e9e2;
+  --up: #2f6b2a;
+  --up-bg: #e6f0e1;
+  --danger: #a3302a;
+  --danger-bg: #fbe9e7;
+  --warn: #85560a;
+  --warn-bg: #faefd9;
+  --fill: #2a211d;
+  --on-fill: #ffffff;
+  --tok-light: #e98f80;
+  --tok-dark: #9c2a22;
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-app: "Judson", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171311; --surface: #221c19; --stage: #1d1815; --ink: #efe8e3; --muted: #b3a79f; --faint: #877c75;
+    --line: #3a312c; --line-strong: #574b44; --accent: #e5a585; --accent-bg: #3b251b;
+    --up: #92cf88; --up-bg: #1f3320; --danger: #f08d84; --danger-bg: #3e1e1b; --warn: #e9b65c; --warn-bg: #3a2c13;
+    --fill: #efe8e3; --on-fill: #1b1513; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171311; --surface: #221c19; --stage: #1d1815; --ink: #efe8e3; --muted: #b3a79f; --faint: #877c75;
+  --line: #3a312c; --line-strong: #574b44; --accent: #e5a585; --accent-bg: #3b251b;
+  --up: #92cf88; --up-bg: #1f3320; --danger: #f08d84; --danger-bg: #3e1e1b; --warn: #e9b65c; --warn-bg: #3a2c13;
+  --fill: #efe8e3; --on-fill: #1b1513; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 2.5rem 4rem;
+}
+.doc { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 3.5rem; }
+h1, h2 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1.1; }
+h2 { font-size: 1.6rem; line-height: 1.2; }
+.eyebrow { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.lede { max-width: 65ch; color: var(--muted); font-size: 1.05rem; margin: 0; }
+header.top { display: flex; flex-direction: column; gap: 0.75rem; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0.75rem 2rem; padding: 0; margin: 0; list-style: none; counter-reset: r; }
+.rules li { border-top: 1px solid var(--line); padding-top: 0.6rem; min-width: 0; }
+.rules b { display: block; font-weight: 600; }
+.rules span { color: var(--muted); font-size: 0.92rem; }
+section { display: flex; flex-direction: column; gap: 1.25rem; }
+.sec-head { display: flex; flex-direction: column; gap: 0.35rem; }
+.sec-head p { margin: 0; color: var(--muted); max-width: 65ch; }
+.stage { background: var(--stage); border-radius: 18px; padding: 1.25rem; display: flex; flex-wrap: wrap; gap: 1.25rem; justify-content: center; }
+.shot { display: flex; flex-direction: column; gap: 0.5rem; width: 272px; max-width: 100%; }
+.shot figcaption { font-size: 0.8rem; color: var(--muted); text-align: center; }
+figure { margin: 0; }
+.notes { margin: 0; padding-left: 1.1rem; max-width: 70ch; display: flex; flex-direction: column; gap: 0.4rem; }
+.notes li { min-width: 0; }
+code { font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; font-size: 0.85em; background: var(--accent-bg); color: var(--accent); padding: 0.05em 0.35em; border-radius: 4px; }
+
+/* phone UI */
+.phone { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 24px; padding: 12px; font-family: var(--font-app); font-size: 14px; line-height: 1.3; display: flex; flex-direction: column; gap: 7px; font-variant-numeric: tabular-nums; }
+.phone b { font-weight: 700; }
+.hdr { display: grid; grid-template-columns: 1fr 1fr 0.7fr auto; gap: 4px; align-items: end; padding-bottom: 7px; border-bottom: 1px solid var(--line); }
+.hdr .k { display: block; font-size: 11px; color: var(--muted); }
+.hdr b { font-size: 19px; }
+.neg { color: var(--danger); }
+.pos { color: var(--up); }
+.loan { font-size: 12px; border: 1px solid var(--line-strong); border-radius: 8px; padding: 4px 8px; align-self: center; }
+.loan.on { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.t { font-size: 16px; font-weight: 700; }
+.s { font-size: 12px; color: var(--muted); }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.box { border: 1px solid var(--line); border-radius: 9px; padding: 6px 9px; }
+.box.stack { display: flex; flex-direction: column; gap: 4px; }
+.list > .row { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.list > .row:last-child { border-bottom: 0; }
+.label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.chip { display: inline-block; border-radius: 6px; padding: 1px 6px; font-size: 12px; background: var(--stage); color: var(--muted); white-space: nowrap; }
+.chip.cargo { background: var(--warn-bg); color: var(--warn); }
+.chip.ok { background: var(--up-bg); color: var(--up); }
+.chip.late { background: var(--danger-bg); color: var(--danger); }
+.chip.price { background: transparent; border: 1px solid var(--line-strong); color: var(--ink); }
+.chip.short { background: transparent; color: var(--warn); }
+.tok { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.tok.l { background: var(--tok-light); }
+.tok.d { background: var(--tok-dark); }
+.strike { text-decoration: line-through; color: var(--faint); font-size: 12px; }
+.opp { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+.av { display: inline-flex; width: 18px; height: 18px; border-radius: 50%; align-items: center; justify-content: center; font-size: 11px; margin-right: 3px; font-family: var(--font-body); }
+.av.a { background: #b9d4f0; color: #0d3f6e; }
+.av.m { background: #c4dd9f; color: #2b4f0d; }
+.av.r { background: #e6c9ef; color: #57206a; }
+.fold { border-top: 1px dashed var(--line-strong); text-align: center; font-size: 11px; color: var(--faint); padding-top: 2px; font-family: var(--font-body); }
+.btn { text-align: center; border-radius: 9px; padding: 7px; background: var(--fill); color: var(--on-fill); font-size: 14px; }
+.btn2 { text-align: center; border-radius: 9px; padding: 7px; border: 1px solid var(--line-strong); font-size: 14px; }
+.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.total { border-top: 1px solid var(--line); padding-top: 4px; font-weight: 700; }
+.note { font-size: 12px; color: var(--muted); }
+.alert { border-radius: 9px; padding: 6px 9px; font-size: 13px; background: var(--danger-bg); color: var(--danger); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line-strong); border-radius: 9px; overflow: hidden; font-size: 13px; text-align: center; }
+.seg > div { padding: 5px; }
+.seg .on { background: var(--accent-bg); color: var(--accent); }
+.pick { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+.act { padding: 7px 0; border-bottom: 1px solid var(--line); }
+.act:last-of-type { border-bottom: 0; }
+.field { display: flex; align-items: baseline; gap: 2px; border: 1px solid var(--line-strong); border-radius: 9px; padding: 8px 12px; font-size: 26px; font-weight: 700; }
+.field.err { border-color: var(--danger); }
+.field .u { font-size: 16px; font-weight: 400; color: var(--muted); }
+.caret { display: inline-block; width: 2px; height: 22px; background: var(--accent); align-self: center; margin-left: 1px; }
+.kbd { border-radius: 9px; background: var(--stage); color: var(--faint); font-family: var(--font-body); font-size: 11px; text-align: center; padding: 2.2rem 0.5rem; }
+.step { display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--line-strong); border-radius: 9px; padding: 5px 12px; font-size: 20px; }
+.step span:not(.v) { color: var(--muted); }
+.v { font-weight: 700; }
+.up { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.up:last-child { border-bottom: 0; }
+svg.map { width: 100%; height: auto; display: block; }
+.map .old { stroke: var(--muted); stroke-width: 2; fill: none; }
+.map .new { stroke: var(--accent); stroke-width: 4.5; stroke-linecap: round; fill: none; }
+.map .city { fill: var(--ink); }
+.map text { fill: var(--muted); font-family: var(--font-body); font-size: 11px; }
+.legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted); font-family: var(--font-body); }
+.legend i { display: inline-block; width: 14px; vertical-align: middle; margin-right: 4px; }
+.mapwrap { background: var(--stage); border-radius: 18px; padding: 1rem; overflow-x: auto; }
+svg.flow { display: block; min-width: 1000px; width: 100%; height: auto; font-family: var(--font-body); }
+.flow .band { fill: none; stroke: var(--line-strong); stroke-dasharray: 6 5; }
+.flow .scr rect { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.3; }
+.flow .sht rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.2; }
+.flow .pil rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.2; }
+.flow .ft { fill: var(--ink); font-size: 14px; font-weight: 600; }
+.flow .fh { fill: var(--ink); font-size: 16px; font-weight: 600; }
+.flow .fs { fill: var(--muted); font-size: 12px; }
+.flow .fe { stroke: var(--muted); stroke-width: 1.4; fill: none; }
+.flow .fa { fill: var(--muted); }
+.sw { display: inline-block; width: 34px; height: 20px; border-radius: 10px; background: var(--fill); position: relative; flex: none; }
+.sw::after { content: ""; position: absolute; right: 2px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--on-fill); }
+footer { color: var(--faint); font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+</style>
+
+<div class="doc">
+
+<header class="top">
+  <div class="eyebrow">Wood and Steel · design sketches</div>
+  <h1>Player app redesign</h1>
+  <p class="lede">The player app takes over everything on the tabletop player board: which engine is on each token, what each engine carries, and which upgrades you own. It also tracks cash and debt, which players now keep on paper. Game rules and existing app moves stay as they are. These are low-fidelity sketches for discussion, shown at phone size with sample data.</p>
+</header>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Ground rules</div>
+    <h2>What shaped these sketches</h2>
+  </div>
+  <ul class="rules">
+    <li><b>Nothing gets recorded twice</b><span>If the table already tracks it, the app doesn't ask for it. Players never report track they build or where engines stand. Recording cargo is optional, and a contract can be fulfilled without it.</span></li>
+    <li><b>The app knows active cities, not networks</b><span>The board app listens to the player app, never the other way around. So the player app never shows player routes or engine positions. It learns one engine's city only when that engine delivers.</span></li>
+    <li><b>Cash never goes negative</b><span>A purchase you can't afford says so and stops. The Loans button in the header, on every screen, is the way out. No screen combines borrowing with buying, because players often borrow more than one purchase needs.</span></li>
+    <li><b>What's on your board is public</b><span>Every player's cash and debt shows on the home screen. Tapping a player shows the rest of their board: engines, recorded cargo and upgrades.</span></li>
+    <li><b>The app doesn't count actions</b><span>Players keep track of their two actions per turn themselves.</span></li>
+    <li><b>Only what changes the outcome</b><span>Receipts and summaries list a bonus or a charge only when it changes the number.</span></li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Screen map</div>
+    <h2>What connects to what</h2>
+    <p>Every screen and sheet in these sketches, and the tap that opens each one. Three tabs (Home, Commodities, Railroads) and the controls across the top are on every screen. Everything else opens from Home.</p>
+  </div>
+  <div class="mapwrap">
+    <svg class="flow" viewBox="0 0 1080 720" role="img" aria-labelledby="flowTitle flowDesc">
+      <title id="flowTitle">Player app screen map</title>
+      <desc id="flowDesc">Controls on every screen lead to Loans, the round report, the menu, and the three tabs. Home leads to another player's details, the cargo picker, claiming a contract, the delivery receipt, the actions sheet and upgrades. The actions sheet leads to buying an engine, paying for track, acquiring a railroad, a new private contract and upgrades. Upgrades lead to choosing a hub city, choosing an exchange commodity, or a plain confirmation.</desc>
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fa"/></marker>
+      </defs>
+
+      <rect class="band" x="20" y="20" width="1040" height="84" rx="12"/>
+      <text class="fs" x="36" y="42">On every screen</text>
+      <g class="pil"><rect x="40" y="54" width="150" height="36" rx="18"/><text class="ft" x="115" y="77" text-anchor="middle">Loans button</text></g>
+      <g class="pil"><rect x="210" y="54" width="150" height="36" rx="18"/><text class="ft" x="285" y="77" text-anchor="middle">Round label</text></g>
+      <g class="pil"><rect x="380" y="54" width="150" height="36" rx="18"/><text class="ft" x="455" y="77" text-anchor="middle">Menu</text></g>
+      <g class="pil"><rect x="552" y="54" width="316" height="36" rx="18"/><text class="ft" x="710" y="77" text-anchor="middle">Tabs: Home · Commodities · Railroads</text></g>
+      <g class="pil"><rect x="880" y="54" width="160" height="36" rx="18"/><text class="ft" x="960" y="77" text-anchor="middle">Cash · debt · ties</text></g>
+
+      <path class="fe" d="M115 90 V148" marker-end="url(#ah)"/>
+      <path class="fe" d="M285 90 V148" marker-end="url(#ah)"/>
+      <path class="fe" d="M455 90 V148" marker-end="url(#ah)"/>
+      <path class="fe" d="M620 90 V268" marker-end="url(#ah)"/>
+      <path class="fe" d="M760 90 L785 148" marker-end="url(#ah)"/>
+      <path class="fe" d="M830 90 L935 148" marker-end="url(#ah)"/>
+
+      <g class="scr"><rect x="40" y="150" width="150" height="52" rx="9"/><text class="ft" x="115" y="172" text-anchor="middle">Loans</text><text class="fs" x="115" y="190" text-anchor="middle">borrow or repay</text></g>
+      <g class="scr"><rect x="210" y="150" width="150" height="52" rx="9"/><text class="ft" x="285" y="172" text-anchor="middle">Round report</text><text class="fs" x="285" y="190" text-anchor="middle">opens at round end</text></g>
+      <g class="sht"><rect x="380" y="150" width="150" height="52" rx="9"/><text class="ft" x="455" y="172" text-anchor="middle">Menu</text><text class="fs" x="455" y="190" text-anchor="middle">lobby, code, settings</text></g>
+      <g class="scr"><rect x="720" y="150" width="150" height="52" rx="9"/><text class="ft" x="795" y="172" text-anchor="middle">Commodities</text><text class="fs" x="795" y="190" text-anchor="middle">where goods come from</text></g>
+      <g class="scr"><rect x="890" y="150" width="150" height="52" rx="9"/><text class="ft" x="965" y="172" text-anchor="middle">Railroads</text><text class="fs" x="965" y="190" text-anchor="middle">independents</text></g>
+
+      <path class="fe" d="M440 292 L289 204" marker-end="url(#ah)"/>
+      <text class="fs" x="336" y="252" text-anchor="end">round ends</text>
+
+      <g class="scr"><rect x="440" y="270" width="200" height="64" rx="10"/><text class="fh" x="540" y="297" text-anchor="middle">Your railroad</text><text class="fs" x="540" y="317" text-anchor="middle">home: engines, contracts</text></g>
+
+      <path class="fe" d="M470 334 L97 408" marker-end="url(#ah)"/>
+      <path class="fe" d="M500 334 L267 408" marker-end="url(#ah)"/>
+      <path class="fe" d="M525 334 L437 408" marker-end="url(#ah)"/>
+      <path class="fe" d="M555 334 L603 408" marker-end="url(#ah)"/>
+      <path class="fe" d="M585 334 L773 408" marker-end="url(#ah)"/>
+      <path class="fe" d="M615 334 L943 408" marker-end="url(#ah)"/>
+
+      <g class="sht"><rect x="20" y="410" width="150" height="52" rx="9"/><text class="ft" x="95" y="432" text-anchor="middle">Another player</text><text class="fs" x="95" y="450" text-anchor="middle">tap their money</text></g>
+      <g class="sht"><rect x="190" y="410" width="150" height="52" rx="9"/><text class="ft" x="265" y="432" text-anchor="middle">Cargo picker</text><text class="fs" x="265" y="450" text-anchor="middle">tap an engine</text></g>
+      <g class="sht"><rect x="360" y="410" width="150" height="52" rx="9"/><text class="ft" x="435" y="432" text-anchor="middle">Claim contract</text><text class="fs" x="435" y="450" text-anchor="middle">tap a market row</text></g>
+      <g class="sht"><rect x="530" y="410" width="150" height="52" rx="9"/><text class="ft" x="605" y="432" text-anchor="middle">Delivery receipt</text><text class="fs" x="605" y="450" text-anchor="middle">tap your contract</text></g>
+      <g class="sht"><rect x="700" y="410" width="150" height="52" rx="9"/><text class="ft" x="775" y="432" text-anchor="middle">Actions</text><text class="fs" x="775" y="450" text-anchor="middle">Actions button</text></g>
+      <g class="scr"><rect x="870" y="410" width="150" height="52" rx="9"/><text class="ft" x="945" y="432" text-anchor="middle">Upgrades</text><text class="fs" x="945" y="450" text-anchor="middle">upgrades row</text></g>
+
+      <path class="fe" d="M360 436 H343" marker-end="url(#ah)"/>
+      <path class="fe" d="M850 436 H867" marker-end="url(#ah)"/>
+      <path class="fe" d="M605 462 V518" marker-end="url(#ah)"/>
+
+      <g class="sht"><rect x="530" y="520" width="150" height="52" rx="9"/><text class="ft" x="605" y="542" text-anchor="middle">Choose a contract</text><text class="fs" x="605" y="560" text-anchor="middle">new private contract</text></g>
+
+      <path class="fe" d="M715 462 V632"/>
+      <path class="fe" d="M715 520 H733" marker-end="url(#ah)"/>
+      <path class="fe" d="M715 576 H733" marker-end="url(#ah)"/>
+      <path class="fe" d="M715 632 H733" marker-end="url(#ah)"/>
+      <path class="fe" d="M715 546 H683" marker-end="url(#ah)"/>
+      <g class="sht"><rect x="735" y="498" width="130" height="44" rx="9"/><text class="ft" x="800" y="525" text-anchor="middle">Buy an engine</text></g>
+      <g class="sht"><rect x="735" y="554" width="130" height="44" rx="9"/><text class="ft" x="800" y="581" text-anchor="middle">Pay for track</text></g>
+      <g class="sht"><rect x="735" y="610" width="130" height="44" rx="9"/><text class="ft" x="800" y="628" text-anchor="middle">Acquire railroad</text><text class="fs" x="800" y="645" text-anchor="middle">uses Railroads list</text></g>
+
+      <path class="fe" d="M880 462 V632"/>
+      <path class="fe" d="M880 520 H893" marker-end="url(#ah)"/>
+      <path class="fe" d="M880 576 H893" marker-end="url(#ah)"/>
+      <path class="fe" d="M880 632 H893" marker-end="url(#ah)"/>
+      <g class="sht"><rect x="895" y="498" width="150" height="44" rx="9"/><text class="ft" x="970" y="516" text-anchor="middle">Hub</text><text class="fs" x="970" y="533" text-anchor="middle">choose a city</text></g>
+      <g class="sht"><rect x="895" y="554" width="150" height="44" rx="9"/><text class="ft" x="970" y="572" text-anchor="middle">Exchange</text><text class="fs" x="970" y="589" text-anchor="middle">choose a commodity</text></g>
+      <g class="sht"><rect x="895" y="610" width="150" height="44" rx="9"/><text class="ft" x="970" y="628" text-anchor="middle">Everything else</text><text class="fs" x="970" y="645" text-anchor="middle">confirm the price</text></g>
+
+      <g class="scr"><rect x="40" y="682" width="28" height="18" rx="5"/></g><text class="fs" x="76" y="695">Screen</text>
+      <g class="sht"><rect x="140" y="682" width="28" height="18" rx="5"/></g><text class="fs" x="176" y="695">Sheet over a screen</text>
+      <g class="pil"><rect x="310" y="682" width="28" height="18" rx="9"/></g><text class="fs" x="346" y="695">Control on every screen</text>
+    </svg>
+  </div>
+  <ul class="notes">
+    <li>Commodities and Railroads stay as tabs: they're the reference players check while planning, and Railroads is also where acquisitions happen.</li>
+    <li>The menu holds what's rare: going to the lobby, copying the game code, the round report setting, and the existing playtest tools.</li>
+    <li>Upgrades opens from both the Upgrades row on Home and the Actions sheet. Choose a contract opens after a private delivery and from the Actions sheet's discard.</li>
+    <li>Claiming a market contract can also open the cargo picker, to record what was just picked up.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">1 · Home</div>
+    <h2>Your railroad</h2>
+    <p>The screen a player keeps open all game. Everything needed to plan track and run engines fits above the fold on a small phone, market included.</p>
+  </div>
+  <div class="stage">
+    <figure class="shot">
+      <div class="phone">
+        <div class="row s"><span><b style="color:var(--ink)">Your turn</b> · round 6</span><span>Menu</span></div>
+        <div class="hdr"><div><span class="k">Cash</span><b>$14K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>7</b></div><span class="loan">Loans</span></div>
+        <div class="opp"><span><span class="av a">A</span>$8K · $15K</span><span><span class="av m">M</span>$21K · $0</span><span><span class="av r">R</span>$3K · $5K</span></div>
+        <div class="box stack">
+          <div class="row"><span><span class="tok l"></span>American · 2</span><span class="chip cargo">Coal</span></div>
+          <div class="row"><span><span class="tok d"></span>Mogul · 3</span><span class="chip">Set cargo</span></div>
+        </div>
+        <div class="label">Yours</div>
+        <div class="list">
+          <div class="row"><span>Coal to Chicago</span><span><span class="strike">$12K</span> <b>$10K</b></span></div>
+          <div class="row"><span>Cotton to Atlanta <span class="chip">M</span></span><b>$8K</b></div>
+        </div>
+        <div class="label">Market</div>
+        <div class="list">
+          <div class="row"><span>Wine to Denver</span><span><span class="strike">$14K</span> <b>$12K</b></span></div>
+          <div class="row"><span>Lead to St. Louis</span><b>$9K</b></div>
+          <div class="row"><span>Cattle to Boston <span class="chip late">2 rounds</span></span><b>$6K</b></div>
+        </div>
+        <div class="fold">fold on a small phone</div>
+        <div class="label">Upgrades</div>
+        <div><span class="chip ok">Hub · Pittsburgh</span></div>
+        <div class="btns"><div class="btn2">Actions</div><div class="btn">End turn</div></div>
+      </div>
+      <figcaption>Home during your turn</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$14K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>7</b></div><span class="loan">Loans</span></div>
+        <div class="row"><span class="t"><span class="av a">A</span>Ana</span><span class="s">Close</span></div>
+        <div class="box" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+          <div><span class="s">Cash</span><div><b>$8K</b></div></div>
+          <div><span class="s">Debt</span><div><b class="neg">$15K</b></div></div>
+          <div><span class="s">Ties</span><div><b>11</b></div></div>
+        </div>
+        <div class="label">Engines</div>
+        <div class="box stack">
+          <div class="row"><span><span class="tok" style="background:#9cc3ea"></span>American · 2</span><span class="chip cargo">Grain</span></div>
+          <div class="row"><span><span class="tok" style="background:#2f6aa3"></span>Mogul · 3</span><span class="s">not recorded</span></div>
+        </div>
+        <div class="label">Claimed contract</div>
+        <div class="box row"><span>Imports to Richmond</span><b>$7K</b></div>
+        <div class="label">Upgrades</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px"><span class="chip ok">Upgraded Stations</span><span class="chip ok">Railyard</span></div>
+        <div class="label">Debt service</div>
+        <div class="box row"><span>Central paid</span><span class="s">West not yet</span></div>
+      </div>
+      <figcaption>Tap another player's money to see their board</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$14K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>7</b></div><span class="loan">Loans</span></div>
+        <div class="t">Claim lead to St. Louis</div>
+        <div class="box row"><span class="s">Worth to you</span><span><b>$9K</b> · 2 ties</span></div>
+        <div class="s">Record the lead on an engine? This is optional.</div>
+        <div class="box"><div class="row"><span><span class="tok l"></span>American</span><span class="s">replaces coal</span></div></div>
+        <div class="box pick"><div class="row"><span><span class="tok d"></span>Mogul</span><span>✓</span></div><div style="font-size:12px">no cargo recorded</div></div>
+        <div class="box"><span>Don't record cargo</span></div>
+        <div class="btn">Claim contract</div>
+        <div class="note">A new market contract replaces this one for everyone.</div>
+      </div>
+      <figcaption>Claiming offers to record the cargo</figcaption>
+    </figure>
+  </div>
+  <ul class="notes">
+    <li>The header (cash, debt, ties and <b>Loans</b>) stays on every screen, so borrowing is always one tap away.</li>
+    <li>Under it, each other player's cash and debt.</li>
+    <li>Engines show the token color, engine name and range. Cargo is a plain commodity picker and entirely optional. <em>Set cargo</em> means nothing recorded, not "empty".</li>
+    <li>Contracts are rows, not cards. Each shows its net value to you, with the base value struck through when debt service lowers it. Market rows show the same personal value, plus an expiry badge.</li>
+    <li>Tapping your contract opens the delivery receipt. Tapping a market contract claims it, and the claim offers to record that commodity on an engine. Skipping that is fine.</li>
+    <li>Tapping another player's money opens their details: cash, debt, engines, any recorded cargo, their claimed contract, upgrades, and how far their debt service has advanced. It's the digital version of glancing at their board. Their private contract stays private.</li>
+    <li>The claim sheet lists both engines, says when recording would replace cargo already noted, and offers to skip. If the player already holds a claimed contract, the sheet says only one can be held and offers nothing else. (The claim sketch shows a player who holds none.)</li>
+    <li>Upgrades sit below the fold because players check them less often than contracts.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">2 · Delivering</div>
+    <h2>The delivery receipt</h2>
+    <p>Debt service depends on the player, so the receipt shows exactly where the money goes before the player confirms.</p>
+  </div>
+  <div class="stage">
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$14K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>7</b></div><span class="loan">Loans</span></div>
+        <div class="t">Deliver coal to Chicago</div>
+        <div class="box stack">
+          <div class="row"><span>Contract value</span><span>$12K</span></div>
+          <div class="row neg"><span>Debt service</span><span>−$2K</span></div>
+          <div class="note">First Central delivery: one-time charge of $1K for every $5K of your $10K debt.</div>
+          <div class="row total"><span>To your cash</span><span class="pos">+$10K</span></div>
+        </div>
+        <div class="box row"><span class="s">Cash</span><span>$14K → <b>$24K</b></span></div>
+        <div class="box row"><span class="s">Ties</span><span>7 → <b>9</b></span></div>
+        <div class="btn">Deliver</div>
+      </div>
+      <figcaption>No bonuses apply, so there are three lines</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$6K</b></div><div><span class="k">Debt</span><b class="neg">$15K</b></div><div><span class="k">Ties</span><b>19</b></div><span class="loan">Loans</span></div>
+        <div class="t">Deliver wine to Denver</div>
+        <div class="s">Which engine made the delivery?</div>
+        <div class="seg"><div class="on"><span class="tok d"></span>Mountain</div><div><span class="tok l"></span>Prairie</div></div>
+        <div class="box stack">
+          <div class="row"><span>Contract value</span><span>$14K</span></div>
+          <div class="row"><span>Mountain ×1⅓</span><span>+$4K</span></div>
+          <div class="row"><span>Upgraded Stations</span><span>+$3K</span></div>
+          <div class="row neg"><span>Debt service</span><span>−$3K</span></div>
+          <div class="note">Western service applies to every delivery: $1K for every $5K of your $15K debt.</div>
+          <div class="row total"><span>To your cash</span><span class="pos">+$18K</span></div>
+        </div>
+        <div class="box row"><span class="s">Cash</span><span>$6K → <b>$24K</b></span></div>
+        <div class="btn">Deliver</div>
+      </div>
+      <figcaption>Bonus lines appear only when they apply</figcaption>
+    </figure>
+  </div>
+  <ul class="notes">
+    <li>The app asks which engine delivered only when the answer changes the payout (a Mountain or Challenger against any other engine). That answer is also the one time the app learns where an engine stands.</li>
+    <li>Engine multipliers round down to the nearest $1K before Upgraded Stations is added, as the rules say.</li>
+    <li>If the delivery costs more than the player has, the receipt turns red and says so before they confirm. Bankruptcy is handled by the existing rules.</li>
+    <li>A private contract still leads straight into choosing the next one, as it does today.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">3 · Actions</div>
+    <h2>Actions and paying for track</h2>
+    <p>One sheet lists the turn actions that involve the app, each with its price up front. Track is the only cost the app can't know, so the player types the amount in.</p>
+  </div>
+  <div class="stage">
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$14K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>7</b></div><span class="loan">Loans</span></div>
+        <div class="t">Actions</div>
+        <div>
+          <div class="act"><div>Buy an engine</div><div class="s">Consolidation $10K, or $7K trading in your Mogul</div></div>
+          <div class="act"><div>Buy an upgrade</div><div class="s">4 you can afford</div></div>
+          <div class="act"><div>Acquire a railroad</div><div class="s">$3K per route</div></div>
+          <div class="act"><div>Pay for track</div><div class="s">Enter what you spent</div></div>
+          <div class="act"><div>New private contract</div><div class="s">Discard and choose from 3</div></div>
+        </div>
+        <div class="box stack">
+          <div class="row s"><span>Money this turn</span><span>Undo reverts all</span></div>
+          <div class="row"><span>Borrowed</span><span>+$5K</span></div>
+          <div class="row"><span>Paid for track</span><span>−$4K</span></div>
+        </div>
+      </div>
+      <figcaption>The actions sheet, text only</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$14K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>7</b></div><span class="loan">Loans</span></div>
+        <div class="t">Pay for track</div>
+        <div class="s">What did this turn's track cost?</div>
+        <div class="field"><span>$</span><span>7</span><span class="caret"></span><span class="u">,000</span></div>
+        <div class="box row"><span class="s">Cash</span><span>$14K → <b>$7K</b></span></div>
+        <div class="btn">Pay $7K</div>
+        <div class="kbd">Phone's own number keyboard<br><code>inputmode="numeric"</code></div>
+      </div>
+      <figcaption>Amount in thousands, typed on the phone's own keyboard</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$14K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>7</b></div><span class="loan">Loans</span></div>
+        <div class="t">Pay for track</div>
+        <div class="s">What did this turn's track cost?</div>
+        <div class="field err"><span>$</span><span>18</span><span class="caret"></span><span class="u">,000</span></div>
+        <div class="alert">That's more than your $14K cash. To spend more, borrow first using Loans at the top.</div>
+        <div class="btn">Pay $18K</div>
+        <div class="kbd">Phone's own number keyboard</div>
+      </div>
+      <figcaption>Too much: the sheet explains and stops</figcaption>
+    </figure>
+  </div>
+  <ul class="notes">
+    <li>Borrowing isn't in the actions sheet: it has its own button in the header.</li>
+    <li>Engine buying offers only what the rules allow: one level above your best engine, or two with a Hub for $5K more. The sheet shows the trade-in price next to the full price.</li>
+    <li>The money log lists every change to cash and debt this turn, and the existing turn Undo reverses all of it.</li>
+    <li>The amount field is a plain text input with <code>inputmode="numeric"</code> and <code>pattern="[0-9]*"</code>, so phones bring up their own number pad. The <code>,000</code> suffix keeps entries in the game's $1K unit.</li>
+    <li>Pay stays tappable even when the amount is too high; tapping it shows the message rather than leaving a greyed-out button with no explanation.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">4 · Upgrades</div>
+    <h2>Buying upgrades</h2>
+    <p>The upgrade spaces on the player board become a list. Each row shows its effect in a few words, and its price is the buy button.</p>
+  </div>
+  <div class="stage">
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$14K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>7</b></div><span class="loan">Loans</span></div>
+        <div class="t">Upgrades</div>
+        <div>
+          <div class="up"><div class="row"><span>Hub</span><span class="chip ok">Pittsburgh</span></div><div class="s">Cheaper track, 3 contract choices</div></div>
+          <div class="up"><div class="row"><span>Upgraded Stations</span><span class="chip price">$10K</span></div><div class="s">+$3K on every delivery</div></div>
+          <div class="up"><div class="row"><span>Roundhouse</span><span class="chip price">$10K</span></div><div class="s">Hand cargo between engines</div></div>
+          <div class="up"><div class="row"><span>Employment Office</span><span class="chip price">$10K</span></div><div class="s">Build 3 segments, not 2</div></div>
+          <div class="up"><div class="row"><span>Railyard</span><span class="chip price">$10K</span></div><div class="s">A city supplies goods within 2</div></div>
+          <div class="up"><div class="row"><span>Service Yard</span><span class="chip">Locked</span></div><div class="s">Opens once anyone owns a Consolidation</div></div>
+          <div class="up"><div class="row"><span>Timetable</span><span class="chip short">$15K · $1K short</span></div><div class="s">Keep moving after a delivery</div></div>
+          <div class="up"><div class="row"><span>Commodities Exchange</span><span class="chip short">$20K · $6K short</span></div><div class="s">Claim a monopoly</div></div>
+          <div class="up"><div class="row"><span>Regional Office</span><span class="chip short">$20K · $6K short</span></div><div class="s">+2 ties at game end</div></div>
+        </div>
+      </div>
+      <figcaption>Owned, buyable, locked, and too expensive</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$14K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>7</b></div><span class="loan">Loans</span></div>
+        <div class="t">Buy a Railyard</div>
+        <div class="s">Place your Railyard disc on a city in your network. That city supplies you every commodity within 2 segments.</div>
+        <div class="box row"><span class="s">Cash</span><span>$14K → <b>$4K</b></span></div>
+        <div class="btn">Buy Railyard for $10K</div>
+        <div class="btn2">Cancel</div>
+      </div>
+      <figcaption>A plain confirmation, no city picker</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$24K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>9</b></div><span class="loan">Loans</span></div>
+        <div class="t">Buy a Commodities Exchange</div>
+        <div class="s">Choose the commodity. Your track must reach every city that supplies it.</div>
+        <div class="label">4 cities · +2 ties</div>
+        <div class="list">
+          <div class="row"><span>Cattle, copper, iron ore</span><span></span></div>
+          <div class="row"><span>Lead, textiles</span><span></span></div>
+        </div>
+        <div class="label">5 cities · +3 ties</div>
+        <div class="list">
+          <div class="row pick" style="border-radius:7px;padding-inline:6px"><span>Grain</span><span>✓</span></div>
+          <div class="row"><span>Imports</span><span></span></div>
+        </div>
+        <div class="label">6 cities · +4 ties</div>
+        <div class="list">
+          <div class="row" style="color:var(--faint)"><span>Coal</span><span style="font-size:12px">Maya's monopoly</span></div>
+          <div class="row"><span>Machinery, wood</span><span></span></div>
+        </div>
+        <div class="box row"><span class="s">Cash</span><span>$24K → <b>$4K</b></span></div>
+        <div class="note">The monopoly's 3 ties are awarded at the end of the game.</div>
+        <div class="btn">Buy Exchange for grain</div>
+      </div>
+      <figcaption>The Exchange asks for its commodity</figcaption>
+    </figure>
+  </div>
+  <ul class="notes">
+    <li>The Railyard doesn't ask for a city: contract generation ignores it, so its location belongs on the table only.</li>
+    <li>The Hub does ask for a city, choosing from your active cities first, because the app already uses the hub city when it generates contracts.</li>
+    <li>The Commodities Exchange asks which commodity it covers, because a monopoly changes which contracts the app offers. The list holds only the ten commodities that can be monopolized, grouped by how many cities supply them and the ties a monopoly awards.</li>
+    <li>A commodity someone else already monopolized is greyed out with their name, since only the first player can hold it. Each commodity is its own row in the app; the sketch groups some to save space.</li>
+    <li>The app can't see track, so buying the Exchange is the player's word that their track reaches every supplying city. The first player to buy an Exchange for a commodity holds that monopoly.</li>
+    <li>Monopoly ties are awarded at the end of the game, not during play, so they never appear in the header's tie count. Only contract ties count toward the 30 that end the game.</li>
+    <li>Gates the app can check, such as the Service Yard's "any Consolidation on the table", show as locked with the reason. Gates it can't check, such as the Regional Office's five cities, are left to the player.</li>
+    <li>When a row is too expensive it shows how short you are. The way out is the Loans button, not a shortcut on this screen.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">5 · Loans</div>
+    <h2>Borrowing and repaying</h2>
+    <p>Reached from the header on every screen. It's the only place that changes debt.</p>
+  </div>
+  <div class="stage">
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$14K</b></div><div><span class="k">Debt</span><b class="neg">$10K</b></div><div><span class="k">Ties</span><b>7</b></div><span class="loan on">Loans</span></div>
+        <div class="seg"><div class="on">Borrow</div><div>Repay</div></div>
+        <div class="step"><span>−</span><span class="v">$10K</span><span>+</span></div>
+        <div class="s" style="text-align:center">In $5K steps, no limit</div>
+        <div class="box stack">
+          <div class="row"><span class="s">Cash</span><span>$14K → <b>$24K</b></span></div>
+          <div class="row"><span class="s">Debt</span><span>$10K → <b class="neg">$20K</b></span></div>
+          <div class="row"><span class="s">Debt service</span><span>$2K → <b>$4K</b></span></div>
+        </div>
+        <div class="box stack">
+          <div class="s">When debt service is due</div>
+          <div class="row"><span>East</span><span class="s">never</span></div>
+          <div class="row"><span style="color:var(--warn)"><b>Central</b></span><span class="s">once, your next delivery there</span></div>
+          <div class="row"><span>West</span><span class="s">every delivery after</span></div>
+        </div>
+        <div class="btn">Borrow $10K</div>
+      </div>
+      <figcaption>Borrow shows what the loan will cost</figcaption>
+    </figure>
+    <figure class="shot">
+      <div class="phone">
+        <div class="hdr"><div><span class="k">Cash</span><b>$18K</b></div><div><span class="k">Debt</span><b class="neg">$25K</b></div><div><span class="k">Ties</span><b>12</b></div><span class="loan on">Loans</span></div>
+        <div class="seg"><div>Borrow</div><div class="on">Repay</div></div>
+        <div class="box pick"><div class="row"><b>Repay $5K</b><span>✓</span></div><div style="font-size:12px">Debt to $20K, service $4K</div></div>
+        <div class="box"><div class="row"><b>Repay $10K</b></div><div class="s">Debt to $15K, service $3K</div></div>
+        <div class="note">You can repay while your debt is $20K or more, but not below $15K.</div>
+        <div class="box row"><span class="s">Cash</span><span>$18K → <b>$13K</b></span></div>
+        <div class="btn">Repay $5K</div>
+        <div class="box" style="border-style:dashed"><div class="s">With $15K of debt this tab reads:</div><div style="font-size:13px">Repaying opens once your debt reaches $20K.</div></div>
+      </div>
+      <figcaption>Repay offers only what the rules allow</figcaption>
+    </figure>
+  </div>
+  <ul class="notes">
+    <li>Borrowing and repaying are each a turn action. The app doesn't count actions, so players manage that themselves, just as they do on the table.</li>
+    <li>The debt-service progress (East, Central, West) lives here rather than on the home screen, because it matters when deciding how much to borrow.</li>
+    <li>A repayment needs the cash to cover it, so cash never goes negative here either.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">6 · End of round</div>
+    <h2>The round report</h2>
+    <p>Shown to every player when a round ends. It replaces the short "Added N routes" message with what to draw and what changed in the market.</p>
+  </div>
+  <div class="stage">
+    <figure class="shot">
+      <div class="phone">
+        <div class="t">End of round 6</div>
+        <div class="s">Independent railroads grew. Draw the new routes on the map.</div>
+        <div class="box stack">
+          <div class="row"><b>Erie Railroad</b><span class="s">3 routes · $9K</span></div>
+          <svg class="map" viewBox="0 0 230 96" role="img" aria-label="Erie Railroad: existing routes Buffalo to Rochester and Rochester to Syracuse, new route Cleveland to Buffalo">
+            <polyline class="old" points="132,34 174,26 212,30"/>
+            <line class="new" x1="22" y1="72" x2="132" y2="34"/>
+            <circle class="city" cx="22" cy="72" r="4.5"/><circle class="city" cx="132" cy="34" r="4.5"/><circle class="city" cx="174" cy="26" r="4.5"/><circle class="city" cx="212" cy="30" r="4.5"/>
+            <text x="8" y="90">Cleveland</text><text x="112" y="54">Buffalo</text><text x="150" y="14">Rochester</text><text x="182" y="48">Syracuse</text>
+          </svg>
+          <div class="s">New: Cleveland – Buffalo</div>
+        </div>
+        <div class="box stack">
+          <div class="row"><b>Gulf Coast Line</b><span class="s">3 routes · $9K</span></div>
+          <svg class="map" viewBox="0 0 230 90" role="img" aria-label="Gulf Coast Line: existing route Houston to Beaumont, new routes Houston to San Antonio and Houston to Galveston">
+            <line class="old" x1="120" y1="34" x2="200" y2="22"/>
+            <line class="new" x1="120" y1="34" x2="26" y2="58"/>
+            <line class="new" x1="120" y1="34" x2="156" y2="72"/>
+            <circle class="city" cx="120" cy="34" r="4.5"/><circle class="city" cx="26" cy="58" r="4.5"/><circle class="city" cx="156" cy="72" r="4.5"/><circle class="city" cx="200" cy="22" r="4.5"/>
+            <text x="98" y="22">Houston</text><text x="8" y="78">San Antonio</text><text x="164" y="80">Galveston</text><text x="172" y="44">Beaumont</text>
+          </svg>
+          <div class="s">New: Houston – San Antonio, Houston – Galveston</div>
+        </div>
+        <div class="legend"><span><i style="height:4px;background:var(--accent)"></i>New</span><span><i style="height:2px;background:var(--muted)"></i>Existing</span></div>
+        <div class="label">Market</div>
+        <div class="box stack">
+          <div class="row"><span>Cattle to Boston</span><span class="chip late">Last round</span></div>
+          <div class="row"><span class="s">New: Wine to Denver</span><span>$14K</span></div>
+        </div>
+        <div class="box row"><span class="s">Round 7 starts with</span><b>Ana</b></div>
+        <div class="row" style="padding:2px 0"><span style="font-size:13px">Open this after every round</span><span class="sw" role="img" aria-label="Switch, on"></span></div>
+        <div class="btn">Done</div>
+      </div>
+      <figcaption>One cropped map for each railroad that grew</figcaption>
+    </figure>
+  </div>
+  <ul class="notes">
+    <li>Each map shows one independent railroad and nothing else: its existing routes thin, this round's routes thick, and only that railroad's cities labeled. No player track or engines, since the player app doesn't have them.</li>
+    <li>The map is cropped to that railroad, with a little margin, so even at phone width it shows only three to six labels. There's no pinch-zoom; the crop already does the zooming. City positions come from the static map geometry, not from board app state.</li>
+    <li>A railroad that grows in two separate places gets one crop that covers both. If that crop gets too wide to read, it splits into two maps under the same name.</li>
+    <li>Nobody is assigned to draw and there are no checkboxes: players handle the map at the table as they do now.</li>
+    <li>The report opens for everyone by default. The switch at its foot turns that off for this player, and the same switch is in the menu so it can be turned back on.</li>
+    <li>With the switch off, the round label at the top gets a dot when a new report is ready. Tapping the round label always opens the latest report, whatever the setting.</li>
+    <li>The setting belongs to the player's device, not to the game, so it never touches shared game state.</li>
+    <li>Later, the same report is a natural home for other end-of-round news, such as monopolies and bonuses.</li>
+  </ul>
+</section>
+
+<footer>Sketches use sample data for one player in round 6. Prices and rules come from the current game rules.</footer>
+</div>
