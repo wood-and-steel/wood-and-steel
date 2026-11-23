@@ -1,7 +1,8 @@
 /**
  * Bot-private state, one `bot_states` row per game (docs/BOT_PLAN.md, Bot state). It holds
- * what a human keeps on paper or in their head: cash, debt, plans, and the narration log.
- * It never holds G/ctx data; physical-table state (track, engines, upgrades) is in board_states.
+ * what a human keeps in their head: plans, delivery counts, and the narration log.
+ * It never holds G/ctx data: cash, debt, engines, cargo and upgrades are in G like every
+ * player's, and physical-table state (track, engine positions, Railyard) is in board_states.
  */
 import { commodities } from '../../data';
 import type { PlayerSeat } from '../../utils/gameManager';
@@ -13,7 +14,6 @@ import type { Effect } from '../engine/actions';
 export const BOT_STATES_VERSION = 1;
 /** Every player starts with $10,000 (rules, Set Up). Money is in dollars, like moneyValue(). */
 export { STARTING_CASH } from '../../rules/rulesData';
-import { STARTING_CASH } from '../../rules/rulesData';
 /** Turns of narration kept per bot; the board shows only the last. */
 export const MAX_LOG_TURNS = 20;
 
@@ -44,16 +44,8 @@ export interface BotRecord {
   weights: Weights;
   /** Seeded generator state; advanced and saved after each use. */
   rngState: number;
-  cash: number;
-  debt: number;
-  /** One-time debt service on the first Central-region delivery has been paid. */
-  centralDebtServicePaid: boolean;
-  /** A Western-region delivery has been made; debt service is due on every delivery from then on. */
-  westernDeliveryMade: boolean;
   /** Deliveries per commodity, for breadth and depth bonuses. */
   deliveries: Record<string, number>;
-  /** The Commodities Exchange commodity; the board records only bought or not. */
-  exchangeCommodity: string | null;
   plan: BotPlan | null;
   turnInProgress: TurnInProgress | null;
   /** Oldest first; at most MAX_LOG_TURNS. */
@@ -72,7 +64,10 @@ export function emptyBotStates(): BotStates {
   return { version: BOT_STATES_VERSION, bots: {} };
 }
 
-/** A new bot's record: weights drawn from its strategy, starting cash, empty log. */
+/**
+ * A new bot's record: weights drawn from its strategy, empty log. Cash, debt and the rest of the
+ * player board live in G like every player's (BotWorld.bot shows them alongside the record).
+ */
 export function createBotRecord(info: { name: string; strategy: StrategyId }, seed: number): BotRecord {
   const rng = createRng(seed);
   const weights = drawWeights(info.strategy, rng);
@@ -81,12 +76,7 @@ export function createBotRecord(info: { name: string; strategy: StrategyId }, se
     strategy: info.strategy,
     weights,
     rngState: rng.state(),
-    cash: STARTING_CASH,
-    debt: 0,
-    centralDebtServicePaid: false,
-    westernDeliveryMade: false,
     deliveries: {},
-    exchangeCommodity: null,
     plan: null,
     turnInProgress: null,
     log: [],
@@ -190,13 +180,7 @@ function normalizeBotRecord(raw: unknown): BotRecord | null {
     strategy,
     weights: normalizeWeights(raw.weights, strategy),
     rngState: isFiniteNumber(raw.rngState) ? raw.rngState >>> 0 : 1,
-    cash: isFiniteNumber(raw.cash) ? raw.cash : STARTING_CASH,
-    debt: isFiniteNumber(raw.debt) && raw.debt >= 0 ? raw.debt : 0,
-    centralDebtServicePaid: raw.centralDebtServicePaid === true,
-    westernDeliveryMade: raw.westernDeliveryMade === true,
     deliveries: normalizeDeliveries(raw.deliveries),
-    exchangeCommodity:
-      typeof raw.exchangeCommodity === 'string' && commodities.has(raw.exchangeCommodity) ? raw.exchangeCommodity : null,
     plan: isRecord(raw.plan) ? structuredClone(raw.plan) : null,
     turnInProgress: normalizeTurnInProgress(raw.turnInProgress),
     log: normalizeLog(raw.log),

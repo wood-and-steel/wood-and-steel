@@ -4,6 +4,7 @@ import { getOtherPlayerIdsInPlayOrder, getPlayerAvatarColor } from "../utils/pla
 import { PlayerAvatar } from "./PlayerAvatar";
 import type { GameState, GameContext } from "../stores/gameStore";
 import { useGameStore } from "../stores/gameStore";
+import { formatMoney } from "../utils/money";
 
 export type GamePhase = "setup" | "play" | "scoring";
 
@@ -13,11 +14,13 @@ export interface PlayerToolbarProps {
   playerID: string | null;
   startingContractExists: boolean;
   currentPhase: GamePhase;
-  onOpenPrivateContractModal?: () => void;
+  onOpenActions?: () => void;
+  onOpenLoans?: () => void;
 }
 
 /**
- * Toolbar shown below NavBar: current player name, score, turn indicator or action buttons (Undo, +P, +M, End Turn).
+ * Toolbar shown below NavBar: the player's name, ties, cash and debt, a Loans button (always),
+ * and on their turn Undo, Actions, +M and End Turn.
  */
 export function PlayerToolbar({
   G,
@@ -25,7 +28,8 @@ export function PlayerToolbar({
   playerID,
   startingContractExists,
   currentPhase,
-  onOpenPrivateContractModal,
+  onOpenActions,
+  onOpenLoans,
 }: PlayerToolbarProps): React.ReactElement | null {
   const effectivePlayerID = playerID ?? ctx.currentPlayer;
   const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
@@ -45,7 +49,7 @@ export function PlayerToolbar({
 
   if (!activePlayer) return null;
 
-  const [key, { name, avatarColor }] = activePlayer;
+  const [key, { name, avatarColor, cash, debt }] = activePlayer;
   const contracts = G.contracts;
   const playerScore = contracts
     .filter((contract) => contract.playerID === key && contract.fulfilled)
@@ -64,18 +68,34 @@ export function PlayerToolbar({
           <span>
             {name} <span className="playerToolbar__score">(Score: {playerScore})</span>
           </span>
+          {currentPhase === "play" && (
+            <span className="playerToolbar__money">
+              <span className="playerToolbar__cash" aria-label="Cash">
+                {formatMoney(cash)}
+              </span>
+              {debt > 0 && (
+                <span className="playerToolbar__debt" aria-label="Debt">
+                  ({formatMoney(debt)} debt)
+                </span>
+              )}
+              <button type="button" className="button playerToolbar__loans" onClick={() => onOpenLoans?.()}>
+                Loans
+              </button>
+            </span>
+          )}
           {otherPlayerIds.length > 0 && (
             <span className="playerToolbar__otherAvatars">
               {otherPlayerIds.map((otherPlayerId) => {
                 const otherPlayer = G.players.find(([id]) => id === otherPlayerId);
                 if (!otherPlayer) return null;
-                const [, { name: otherName, avatarColor: otherAvatarColor }] = otherPlayer;
+                const [, { name: otherName, avatarColor: otherAvatarColor, cash: otherCash, debt: otherDebt }] = otherPlayer;
+                const otherMoney = `${formatMoney(otherCash)}${otherDebt > 0 ? `, ${formatMoney(otherDebt)} debt` : ""}`;
                 return (
                   <PlayerAvatar
                     key={otherPlayerId}
                     name={otherName}
                     avatarColor={getPlayerAvatarColor(otherPlayerId, otherAvatarColor)}
-                    title={otherName}
+                    title={`${otherName}: ${otherMoney}`}
                     isCurrentTurn={otherPlayerId === ctx.currentPlayer}
                   />
                 );
@@ -97,11 +117,11 @@ export function PlayerToolbar({
             </button>
             <button
               type="button"
-              name="privateContract"
-              className={`button ${startingContractExists && isPlayerTurn ? "" : "button--hidden"}`}
-              onClick={() => onOpenPrivateContractModal?.()}
+              name="actions"
+              className={`button ${startingContractExists && currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
+              onClick={() => onOpenActions?.()}
             >
-              +P
+              Actions
             </button>
             <button
               type="submit"

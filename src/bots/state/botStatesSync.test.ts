@@ -32,10 +32,10 @@ describe('ensureBotStates', () => {
 
   test('if another device creates the row first, uses theirs', async () => {
     adapter.beforeSave = () => {
-      adapter.write(CODE, { version: 1, bots: { '0': { name: 'Avery', strategy: 'builder', cash: 1234 } } });
+      adapter.write(CODE, { version: 1, bots: { '0': { name: 'Avery', strategy: 'builder', rngState: 1234 } } });
     };
     const saved = await ensureBotStates(CODE, seats, { adapter });
-    expect(saved.states.bots['0'].cash).toBe(1234);
+    expect(saved.states.bots['0'].rngState).toBe(1234);
   });
 });
 
@@ -44,15 +44,15 @@ describe('updateBotStates', () => {
     await ensureBotStates(CODE, seats, { adapter });
     adapter.beforeSave = () => {
       const row = normalizeBotStates(adapter.rows.get(CODE)!.state);
-      row.bots['0'].debt = 5000;
+      row.bots['0'].deliveries = { coal: 1 };
       adapter.write(CODE, row);
     };
     const saved = await updateBotStates(
       CODE,
-      (states) => ({ ...states, bots: { ...states.bots, '0': { ...states.bots['0'], cash: 4000 } } }),
+      (states) => ({ ...states, bots: { ...states.bots, '0': { ...states.bots['0'], rngState: 4000 } } }),
       { adapter }
     );
-    expect(saved.states.bots['0']).toMatchObject({ cash: 4000, debt: 5000 });
+    expect(saved.states.bots['0']).toMatchObject({ rngState: 4000, deliveries: { coal: 1 } });
   });
 
   test('skips the save when nothing changes', async () => {

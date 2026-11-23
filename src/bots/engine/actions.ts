@@ -92,7 +92,7 @@ export type Action =
 /** App moves, with the arguments the runner passes (GamePort). */
 export type GameMove =
   | { name: 'generateStartingContract'; args: [[string, string], string] }
-  | { name: 'toggleContractFulfilled'; args: [string] }
+  | { name: 'toggleContractFulfilled'; args: [string] | [string, EngineSlot] }
   | { name: 'claimMarketContract'; args: [string] }
   | { name: 'fillMarketTableau'; args: [] }
   | { name: 'addContract'; args: [string, string, 'private'] }
@@ -100,7 +100,13 @@ export type GameMove =
   | { name: 'acquireIndependentRailroad'; args: [string] }
   | { name: 'claimHubCity'; args: [string] }
   | { name: 'claimRegionalOffice'; args: [string] }
-  | { name: 'endTurn'; args: [] };
+  | { name: 'endTurn'; args: [] }
+  | { name: 'borrow'; args: [number] }
+  | { name: 'repay'; args: [number] }
+  | { name: 'payForTrack'; args: [number] }
+  | { name: 'buyEngine'; args: [EngineSlot, EngineTypeId] }
+  | { name: 'buyUpgrade'; args: [UpgradeKey] | [UpgradeKey, string] }
+  | { name: 'setCargo'; args: [EngineSlot, string | null] };
 
 export type Effect =
   | { kind: 'move'; move: GameMove }
@@ -417,7 +423,7 @@ function checkAndApply(world: BotWorld, action: Action): ApplyResult {
       claimed = `, claiming market contract: ${contractLabel(market)}`;
     }
     setCargoIn(next, action.slot, action.commodity);
-    boardOp({ type: 'setCargo', playerID: world.playerID, slot: action.slot, commodity: action.commodity });
+    move({ name: 'setCargo', args: [action.slot, action.commodity] });
     narrate(`picked up ${commodityName(action.commodity)} in ${city} with ${slotLabel(action.slot)} engine${claimed}`);
     return { ok: true, world: next, effects };
   }
@@ -449,6 +455,7 @@ function checkAndApply(world: BotWorld, action: Action): ApplyResult {
       }
       if (total > world.bot.cash) return fail('not enough cash');
       next.bot.cash -= total;
+      move({ name: 'payForTrack', args: [total] });
       narrate(`built ${list(action.routes.map(routeLabel))} for ${money(total)}`);
       return { ok: true, world: next, effects };
     }
@@ -461,7 +468,7 @@ function checkAndApply(world: BotWorld, action: Action): ApplyResult {
       const types: [EngineTypeId | null, EngineTypeId | null] = [...engineTypes(world)];
       types[action.slot] = action.engine;
       next.board.engineTypes[world.playerID] = types;
-      boardOp({ type: 'setEngineType', playerID: world.playerID, slot: action.slot, engineType: action.engine });
+      move({ name: 'buyEngine', args: [action.slot, action.engine] });
       const label = `${engineName(action.engine)}`;
       if (purchase.tradeIn) {
         narrate(`bought ${label} for ${money(purchase.cost)}, trading in ${engineName(purchase.tradeIn)}`);
@@ -471,15 +478,12 @@ function checkAndApply(world: BotWorld, action: Action): ApplyResult {
         boardOp({ type: 'moveEngine', playerID: world.playerID, slot: action.slot, city: action.city });
         narrate(`bought ${label} for ${money(purchase.cost)} & placed in ${action.city}`);
       }
-      // The first Mogul (or better) on the table opens the market: fill the tableau.
-      // The next action's world is rebuilt from G, so the new contracts aren't predicted here.
+      // The first Mogul (or better) on the table opens the market; the buyEngine move fills the
+      // tableau. The next action's world is rebuilt from G, so the new contracts aren't predicted here.
       const opensMarket =
         engineLevel(action.engine) >= engineLevel(MARKET_CONTRACT_MIN_ENGINE) &&
         !world.players.some(([id]) => ownsEngineAtLeast(world, MARKET_CONTRACT_MIN_ENGINE, id));
-      if (opensMarket) {
-        move({ name: 'fillMarketTableau', args: [] });
-        narrate('opened market contracts');
-      }
+      if (opensMarket) narrate('opened market contracts');
       return { ok: true, world: next, effects };
     }
 
@@ -506,6 +510,7 @@ function checkAndApply(world: BotWorld, action: Action): ApplyResult {
       if (!borrowOptions().includes(action.amount)) return fail('borrow in steps of $5,000');
       next.bot.cash += action.amount;
       next.bot.debt += action.amount;
+      move({ name: 'borrow', args: [action.amount] });
       narrate(`borrowed ${money(action.amount)}`);
       return { ok: true, world: next, effects };
     }
@@ -514,6 +519,7 @@ function checkAndApply(world: BotWorld, action: Action): ApplyResult {
       if (!repayOptions(world.bot).includes(action.amount)) return fail('that repayment is not allowed');
       next.bot.cash -= action.amount;
       next.bot.debt -= action.amount;
+      move({ name: 'repay', args: [action.amount] });
       narrate(`repaid ${money(action.amount)} debt`);
       return { ok: true, world: next, effects };
     }
@@ -537,11 +543,12 @@ function checkAndApply(world: BotWorld, action: Action): ApplyResult {
             p.hubCity = action.city!;
           });
           addActiveCity(next, action.city!);
-          move({ name: 'claimHubCity', args: [action.city!] });
+          move({ name: 'buyUpgrade', args: ['hub', action.city!] });
           narrate(`bought ${label} in ${action.city} for ${money(price)}`);
           break;
         case 'railyard':
           next.board.railyards[world.playerID] = action.city!;
+          move({ name: 'buyUpgrade', args: ['railyard'] });
           boardOp({ type: 'moveRailyard', playerID: world.playerID, city: action.city! });
           narrate(`bought ${label} in ${action.city} for ${money(price)}`);
           break;
@@ -549,13 +556,16 @@ function checkAndApply(world: BotWorld, action: Action): ApplyResult {
           setPlayer(next, (p) => {
             p.regionalOffice = action.region!;
           });
-          move({ name: 'claimRegionalOffice', args: [action.region!] });
+          move({ name: 'buyUpgrade', args: ['regional-office', action.region!] });
           narrate(`bought ${label} in ${regionName(action.region!)} for ${money(price)}`);
           break;
         default: {
           const owned = next.board.upgrades[world.playerID] ?? [];
           next.board.upgrades[world.playerID] = [...owned, action.upgrade];
-          boardOp({ type: 'setUpgrade', playerID: world.playerID, upgrade: action.upgrade, owned: true });
+          move({
+            name: 'buyUpgrade',
+            args: action.upgrade === 'commodities-exchange' ? [action.upgrade, action.commodity!] : [action.upgrade],
+          });
           if (action.upgrade === 'commodities-exchange') {
             next.bot.exchangeCommodity = action.commodity!;
             narrate(`bought ${label} (${commodityName(action.commodity!)}) for ${money(price)}`);
@@ -625,11 +635,11 @@ function applyRuns(world: BotWorld, next: BotWorld, action: RunTrains, effects: 
     const carrierError = runOne(world, next, { ...carrier }, effects, true);
     if (carrierError) return carrierError;
     setCargoIn(next, carrier.slot, null);
-    effects.push({ kind: 'boardOp', op: { type: 'setCargo', playerID: world.playerID, slot: carrier.slot, commodity: null } });
+    effects.push({ kind: 'move', move: { name: 'setCargo', args: [carrier.slot, null] } });
     setEngineCity(next, receiver.slot, meet);
     setCargoIn(next, receiver.slot, commodity);
     effects.push({ kind: 'boardOp', op: { type: 'moveEngine', playerID: world.playerID, slot: receiver.slot, city: meet } });
-    effects.push({ kind: 'boardOp', op: { type: 'setCargo', playerID: world.playerID, slot: receiver.slot, commodity } });
+    effects.push({ kind: 'move', move: { name: 'setCargo', args: [receiver.slot, commodity] } });
     narrate(`used Roundhouse to hand ${commodityName(commodity)} to ${slotLabel(receiver.slot)} engine in ${meet}`);
     return runOne(next, next, receiver, effects, false);
   }
@@ -660,6 +670,11 @@ function runOne(from: BotWorld, next: BotWorld, run: EngineRun, effects: Effect[
   const events = [...run.events].sort((a, b) => a.at - b.at);
   const initialLoad = cargo(next)[run.slot];
   let carrying = initialLoad;
+  /**
+   * The engine's cargo in G once this run's moves are made: no cargo move happens mid-run, but
+   * delivering clears G's cargo when it matches the delivered commodity.
+   */
+  let cargoInG = initialLoad;
   const timetable = hasUpgrade(from, 'timetable');
   const lines: string[] = [];
   let end = run.path[run.path.length - 1];
@@ -694,7 +709,8 @@ function runOne(from: BotWorld, next: BotWorld, run: EngineRun, effects: Effect[
       contract.fulfilled = true;
       addActiveCity(next, city);
       carrying = null;
-      effects.push({ kind: 'move', move: { name: 'toggleContractFulfilled', args: [contract.id] } });
+      if (cargoInG === contract.commodity) cargoInG = null;
+      effects.push({ kind: 'move', move: { name: 'toggleContractFulfilled', args: [contract.id, run.slot] } });
       const paid = service.service > 0 ? `${money(payment)} less ${money(service.service)} debt service` : money(payment);
       lines.push(`delivered ${commodityName(contract.commodity)} to ${city} for ${paid}`);
       if (contract.type === 'private') {
@@ -710,7 +726,8 @@ function runOne(from: BotWorld, next: BotWorld, run: EngineRun, effects: Effect[
   setCargoIn(next, run.slot, carrying);
   next.turnState.enginesRun.push(run.slot);
   boardOp({ type: 'moveEngine', playerID: from.playerID, slot: run.slot, city: end });
-  if (initialLoad !== carrying) boardOp({ type: 'setCargo', playerID: from.playerID, slot: run.slot, commodity: carrying });
+  // The final load, set once after the run's moves, so replaying the effects after a reload is safe.
+  if (cargoInG !== carrying) effects.push({ kind: 'move', move: { name: 'setCargo', args: [run.slot, carrying] } });
   const moved = run.path.length > 1 ? `ran ${slotLabel(run.slot)} engine ${run.path[0]} to ${end}` : `used ${slotLabel(run.slot)} engine in ${end}`;
   narrate(list([moved, ...lines]));
   return null;

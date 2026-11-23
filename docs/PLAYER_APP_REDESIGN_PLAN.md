@@ -91,7 +91,7 @@ Each stage ships on its own and leaves the app fully playable.
 2. Add the new `PlayerProps` and `GameState` fields, start values at game creation (`newPlayerProps` in `src/stores/playerDefaults.ts`), `normalizePlayerProps` in deserialization, and serialization of `turnLedger` and `roundReport`.
 3. Unit tests for the rules functions under their new names, and for loading an old saved game.
 
-### Stage 2: money, engines and upgrades
+### Stage 2: money, engines and upgrades — done
 
 The core release. Everything the player board tracked moves into the app, inside today's layout.
 
@@ -154,3 +154,13 @@ The core release. Everything the player board tracked moves into the app, inside
 ## Changes from the sketches
 
 - **Regional Office asks for a region.** The existing `claimRegionalOffice` move records one, so its purchase sheet needs a region picker like the Hub's city picker.
+
+## Decisions made while building Stage 2
+
+- **Claiming a market contract needs a Mogul or better**, now that the app knows engines, and a player holds one claimed contract at a time.
+- **The first Mogul or better bought opens the market**: `buyEngine` fills the tableau, as the bots already did. The +M button stays as a playtest tool.
+- **The board's trays are read-only** for money, engines, cargo, and upgrades, since they live in `G`; the board's engine-type and cargo pickers and its upgrade checkboxes were removed, along with the board clearing cargo on delivery (the fulfil move clears it in `G`).
+- **The offer dialog no longer has "Bought a Hub" or "Bought a Regional Office" cards**, which claimed them for free; both are bought, and paid for, from Actions. +P is replaced by Actions → New private contract.
+- **Delivering a private contract opens the offers** right after the receipt.
+- **Without the delivering engine, the bonus applies only if every engine the player owns earns it.** The receipt asks which engine delivered whenever that would change the payout.
+- **Hub and Regional Office playtest moves (`claimHubCity`, `claimRegionalOffice`) stay** but nothing in the UI uses them for free claims any more.

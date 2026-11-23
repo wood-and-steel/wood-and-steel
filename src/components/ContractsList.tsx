@@ -2,6 +2,8 @@ import React from "react";
 import { ContractDisplay } from "./ContractDisplay";
 import type { GameState, GameContext } from "../stores/gameStore";
 import type { Contract } from "../Contract";
+import { bestEngineLevel, engineLevel } from "../rules/engines";
+import { MARKET_CONTRACT_MIN_ENGINE } from "../rules/rulesData";
 
 const SKIP_OPEN_MS = 50;
 
@@ -68,6 +70,8 @@ export function ContractsList({
   const currentPlayerHasUnfulfilledMarketContract = G.contracts.some(
     (c) => c.type === "market" && !c.fulfilled && c.playerID === ctx.currentPlayer
   );
+  const currentEngines = G.players.find(([id]) => id === ctx.currentPlayer)?.[1].engines ?? [null, null];
+  const canClaimMarket = bestEngineLevel(currentEngines) >= engineLevel(MARKET_CONTRACT_MIN_ENGINE);
 
   return (
     <div className="contractsList">
@@ -82,7 +86,14 @@ export function ContractsList({
           onToggleFulfilled={onToggleFulfilled}
           onDelete={onDelete}
           onClaimContract={onClaimContract}
-          claimMarketDisabled={currentPlayerHasUnfulfilledMarketContract}
+          claimMarketDisabled={currentPlayerHasUnfulfilledMarketContract || !canClaimMarket}
+          claimMarketHint={
+            !canClaimMarket
+              ? "Needs a Mogul or better"
+              : currentPlayerHasUnfulfilledMarketContract
+                ? "You already hold a claimed contract"
+                : undefined
+          }
         />
       ))}
     </div>

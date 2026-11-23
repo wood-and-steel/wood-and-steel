@@ -177,12 +177,7 @@ export async function runBotTurn({
     const states = await ports.bots.update((s) =>
       withRecord(s, playerID, (r) => ({
         ...r,
-        cash: predicted.bot.cash,
-        debt: predicted.bot.debt,
-        centralDebtServicePaid: predicted.bot.centralDebtServicePaid,
-        westernDeliveryMade: predicted.bot.westernDeliveryMade,
         deliveries: predicted.bot.deliveries,
-        exchangeCommodity: predicted.bot.exchangeCommodity,
         rngState: rng.state(),
         plan: decision.plan === undefined ? r.plan : decision.plan,
         turnInProgress: {

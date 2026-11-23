@@ -7,6 +7,7 @@ import { MARKET_TABLEAU_SIZE } from '../../Contract';
 import type { GameContext, GameState } from '../../stores/gameStore';
 import { actionKind, type Action, type GameMove } from '../engine/actions';
 import { emptyTurnState, type ActionKind, type TurnState } from '../engine/world';
+import { LEDGER_LABELS } from '../../rules/finance';
 
 /** "runTrains:0,1", "buildTrack", or "free:pickUp". */
 export function stepKey(action: Action): string {
@@ -64,5 +65,27 @@ export function isMoveDone(
       return me?.regionalOffice != null;
     case 'endTurn':
       return ctx.currentPlayer !== playerID || ctx.turn !== turn.turn || ctx.playOrderPos !== turn.playOrderPos;
+    // Each money move happens at most once a turn, and leaves its line in this turn's money log.
+    case 'borrow':
+      return loggedThisTurn(G, playerID, LEDGER_LABELS.borrowed);
+    case 'repay':
+      return loggedThisTurn(G, playerID, LEDGER_LABELS.repaid);
+    case 'payForTrack':
+      return loggedThisTurn(G, playerID, LEDGER_LABELS.paidForTrack);
+    case 'buyEngine':
+      return me?.engines[move.args[0]] === move.args[1];
+    case 'buyUpgrade': {
+      const [upgrade] = move.args;
+      if (upgrade === 'hub') return me?.hubCity != null;
+      if (upgrade === 'regional-office') return me?.regionalOffice != null;
+      return me?.upgrades.includes(upgrade) ?? false;
+    }
+    case 'setCargo':
+      // Setting cargo is idempotent; the runner emits only each run's final load.
+      return me?.cargo[move.args[0]] === move.args[1];
   }
+}
+
+function loggedThisTurn(G: GameState, playerID: string, label: string): boolean {
+  return G.turnLedger?.playerID === playerID && G.turnLedger.entries.some((e) => e.label === label);
 }

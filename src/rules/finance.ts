@@ -79,3 +79,76 @@ export function borrowOptions(): number[] {
 export function repayOptions(state: { debt: number; cash: number }): number[] {
   return REPAY_AMOUNTS.filter((amount) => state.debt - amount >= DEBT_FLOOR && state.cash >= amount);
 }
+
+/** Why debt service is or isn't due on a delivery, for the receipt's explanation line. */
+export type DebtServiceReason = 'none' | 'firstCentral' | 'western';
+
+/** A delivery's money, line by line, for the delivery receipt and the fulfil move. */
+export interface DeliveryBreakdown {
+  /** The contract's own value. */
+  value: number;
+  /** Extra from a Mountain or Challenger (1 1/3x, rounded down to $1,000); 0 otherwise. */
+  engineBonus: number;
+  /** Upgraded Stations' $3,000; 0 without it. */
+  stationsBonus: number;
+  /** Debt service due on this delivery. */
+  debtService: number;
+  debtServiceReason: DebtServiceReason;
+  /** value + bonuses - debt service; negative when service exceeds the payout. */
+  net: number;
+  /** Whether cash would stay at $0 or more. Deliveries that would bankrupt the player are blocked. */
+  affordable: boolean;
+  /** The player's debt-service progress after the delivery. */
+  centralDebtServicePaid: boolean;
+  westernDeliveryMade: boolean;
+}
+
+/**
+ * Money for delivering `contract` with `engine` (null when the delivering engine doesn't matter
+ * or isn't known: no engine bonus). Every line is separate so the receipt can show only the ones
+ * that apply.
+ */
+export function deliveryBreakdown(
+  player: DebtServiceState & { cash: number; upgrades: readonly string[] },
+  contract: Pick<Contract, 'destinationKey' | 'commodity'>,
+  engine: EngineTypeId | null
+): DeliveryBreakdown {
+  const value = moneyValue(contract);
+  const engineBonus = deliveryPayment(contract, engine, false) - value;
+  const stationsBonus = player.upgrades.includes('upgraded-stations') ? UPGRADED_STATIONS_BONUS : 0;
+  const service = debtServiceForDelivery(player, contract.destinationKey);
+  const debtServiceReason: DebtServiceReason =
+    service.service === 0 ? 'none' : player.westernDeliveryMade || service.westernDeliveryMade ? 'western' : 'firstCentral';
+  const net = value + engineBonus + stationsBonus - service.service;
+  return {
+    value,
+    engineBonus,
+    stationsBonus,
+    debtService: service.service,
+    debtServiceReason,
+    net,
+    affordable: player.cash + net >= 0,
+    centralDebtServicePaid: service.centralDebtServicePaid,
+    westernDeliveryMade: service.westernDeliveryMade,
+  };
+}
+
+/** Whether a player's two engines would pay differently, so the receipt must ask which one delivered. */
+export function deliveringEngineMatters(engines: readonly (EngineTypeId | null)[]): boolean {
+  const owned = engines.filter((e): e is EngineTypeId => e !== null);
+  return new Set(owned.map((e) => BONUS_VALUE_ENGINES.includes(e))).size > 1;
+}
+
+/** The engine whose bonus applies when the player didn't say which delivered: one only if they all pay alike. */
+export function defaultDeliveringEngine(engines: readonly (EngineTypeId | null)[]): EngineTypeId | null {
+  const owned = engines.filter((e): e is EngineTypeId => e !== null);
+  return owned.length > 0 && !deliveringEngineMatters(engines) ? owned[0] : null;
+}
+
+/** Money-log labels for the moves that happen at most once a turn; the bot runner looks for them on resume. */
+export const LEDGER_LABELS = {
+  borrowed: 'Borrowed',
+  repaid: 'Repaid debt',
+  paidForTrack: 'Paid for track',
+  debtService: 'Debt service',
+} as const;

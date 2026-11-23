@@ -140,23 +140,23 @@ export async function playGame({ strategies, seed, maxRounds = 80, markets = 3, 
     const seats: SeatResult[] = ids.map((id, i) => {
       const record = records[id];
       const world: BotWorld = buildWorld({ G, ctx, board, bot: record, playerID: id });
-      const types = (board?.engineTypes[id] ?? ['john-bull', null]).filter((t): t is NonNullable<typeof t> => t !== null);
-      const best = types.sort((a, b) => engineLevel(b) - engineLevel(a))[0] ?? null;
       const props = G.players.find(([pid]) => pid === id)![1];
+      const types = props.engines.filter((t): t is NonNullable<typeof t> => t !== null);
+      const best = types.sort((a, b) => engineLevel(b) - engineLevel(a))[0] ?? null;
       return {
         playerID: id,
         strategy: strategies[i],
         ties: tieBreakdown(world).total,
         fulfillmentTies: fulfillmentTiesOf(G, id),
         deliveries: G.contracts.filter((c) => c.playerID === id && c.fulfilled).length,
-        cash: record.cash,
-        debt: record.debt,
+        cash: props.cash,
+        debt: props.debt,
         bestEngine: best,
-        upgrades: board?.upgrades[id] ?? [],
+        upgrades: props.upgrades.filter((u) => u !== 'railyard'),
         hub: props.hubCity !== null,
         railyard: !!board?.railyards[id],
         regionalOffice: props.regionalOffice !== null,
-        exchange: record.exchangeCommodity !== null,
+        exchange: props.exchangeCommodity !== null,
         routes: Object.values(board?.track ?? {}).filter((o) => o.includes(id)).length,
         acquisitions: tally[id].acquireRailroad ?? 0,
         borrows: tally[id].borrow ?? 0,

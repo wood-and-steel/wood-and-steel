@@ -13,6 +13,8 @@ export interface ContractDisplayProps {
   onDelete: (contractID: string) => void;
   onClaimContract?: (contractID: string) => void;
   claimMarketDisabled?: boolean;
+  /** Why claiming is unavailable, shown beside the disabled menu item. */
+  claimMarketHint?: string;
 }
 
 /**
@@ -31,6 +33,7 @@ export function ContractDisplay({
   onDelete,
   onClaimContract,
   claimMarketDisabled,
+  claimMarketHint,
 }: ContractDisplayProps): React.ReactElement {
   const cardRef = React.useRef<HTMLButtonElement>(null);
   const isClickable = typeof onCardClick === "function" && !contract.fulfilled;
@@ -86,7 +89,7 @@ export function ContractDisplay({
           {isOpenMarket ? (
             onClaimContract != null && (
               <PopupMenuItem onClick={handleClaim} disabled={claimMarketDisabled}>
-                Claim Contract
+                {claimMarketDisabled && claimMarketHint ? `Claim Contract (${claimMarketHint})` : "Claim Contract"}
               </PopupMenuItem>
             )
           ) : (

@@ -12,14 +12,11 @@ import {
   BUILD_LIMIT,
   BUILD_LIMIT_EMPLOYMENT_OFFICE,
   INDIE_MUST_CONNECT,
-  INDIE_PRICE_PER_ROUTE,
-  INDIE_PRICE_PER_ROUTE_AFTER_WEST,
   MIN_TRACK_COST,
   MOUNTAIN_MULTIPLIER,
   PARALLEL_SURCHARGE,
   REGIONAL_OFFICE_MIN_CITIES,
   UPGRADE_PRICES,
-  WESTERN_REGIONS,
   baseTrackCost,
   type UpgradeKey,
 } from './rulesData';
@@ -30,6 +27,7 @@ import {
   serviceYardOpen,
   type EnginePurchase,
 } from '../../rules/engines';
+import { anyWesternDelivery as anyWesternDeliveryIn, indiePricePerRoute as pricePerRoute } from '../../rules/railroads';
 import {
   bestEngineLevel,
   engineCities,
@@ -80,14 +78,11 @@ export function ownsEngineAtLeast(world: BotWorld, engine: EngineTypeId, playerI
 
 /** True once any player has fulfilled a contract in a Western region. */
 export function anyWesternDelivery(world: BotWorld): boolean {
-  return world.contracts.some((c) => {
-    const region = cities.get(c.destinationKey)?.region as RegionCode | undefined;
-    return c.fulfilled && region !== undefined && WESTERN_REGIONS.includes(region);
-  });
+  return anyWesternDeliveryIn(world.contracts);
 }
 
 export function indiePricePerRoute(world: BotWorld): number {
-  return anyWesternDelivery(world) ? INDIE_PRICE_PER_ROUTE_AFTER_WEST : INDIE_PRICE_PER_ROUTE;
+  return pricePerRoute(world.contracts);
 }
 
 export interface IndiePurchase {

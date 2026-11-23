@@ -83,7 +83,7 @@ describe('runBotTurn', () => {
     expect(board.engines['0'][0]).toBe('New York');
 
     const record = botRecord(game);
-    expect(record.cash).toBe(10000 + moneyValue({ commodity: 'machinery', destinationKey: 'New York' }));
+    expect(G.players.find(([id]) => id === '0')![1].cash).toBe(10000 + moneyValue({ commodity: 'machinery', destinationKey: 'New York' }));
     expect(record.deliveries).toEqual({ machinery: 1 });
     expect(record.turnInProgress).toBeNull();
     const lines = last(record.log).lines;

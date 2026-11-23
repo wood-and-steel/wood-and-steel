@@ -66,14 +66,14 @@ describe('heuristic playthrough', () => {
     async (strategy) => {
       const { record, outcomes, world } = await playGame(strategy, 20);
       expect(outcomes.every((o) => o === 'done')).toBe(true);
-      expect(record.cash).toBeGreaterThanOrEqual(0);
+      expect(world.bot.cash).toBeGreaterThanOrEqual(0);
       // Bots may borrow past their limit only to deliver cargo already aboard.
-      expect(record.debt).toBeLessThanOrEqual(params(world).maxDebt + EMERGENCY_DEBT);
+      expect(world.bot.debt).toBeLessThanOrEqual(params(world).maxDebt + EMERGENCY_DEBT);
       expect(fulfillmentTies(world)).toBeGreaterThan(0);
       const lines = record.log.flatMap((l) => l.lines);
       // Set BOT_LOG=1 to see each strategy's results and last moves (BOT_LOG_ALL=1 for every move).
       if (process.env.BOT_LOG || process.env.BOT_LOG_ALL) console.log(
-        `${strategy}: ties ${fulfillmentTies(world)}, cash ${record.cash}, debt ${record.debt}, engines ${JSON.stringify(world.board.engineTypes['0'])}, ` +
+        `${strategy}: ties ${fulfillmentTies(world)}, cash ${world.bot.cash}, debt ${world.bot.debt}, engines ${JSON.stringify(world.board.engineTypes['0'])}, ` +
           `upgrades ${JSON.stringify(world.board.upgrades['0'] ?? [])}, routes ${Object.values(world.board.track).filter((o) => o.includes('0')).length}, ` +
           `hub ${world.players[0][1].hubCity}, railyard ${world.board.railyards['0'] ?? null}, office ${world.players[0][1].regionalOffice}, ` +
           `acquired ${lines.filter((l) => l.includes(' acquired ')).length}, borrowed ${lines.filter((l) => l.includes(' borrowed ')).length}, redrew ${lines.filter((l) => l.includes(' discarded ')).length}\n  ` +

@@ -156,7 +156,6 @@ function BoardView({ rawCode }: { rawCode: string }): React.ReactElement {
             dragging={drag?.token ?? null}
             dropTarget={drag?.target.kind === 'tray'}
             onTokenPointerDown={startTokenDrag}
-            onBoardOp={canEditBoard ? dispatchBoardOp : null}
             bots={bots}
           />
         )}
