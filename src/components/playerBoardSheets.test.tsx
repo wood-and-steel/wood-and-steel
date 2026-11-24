@@ -113,7 +113,7 @@ describe('LoansSheet', () => {
 
     render(<LoansSheet player={player({ debt: 20000 })} isMyTurn onBorrow={() => true} onRepay={() => true} onClose={() => {}} />);
     fireEvent.click(screen.getByRole('tab', { name: 'Repay' }));
-    expect(screen.getAllByRole('radio').map((r) => r.querySelector('strong')?.textContent)).toEqual(['Repay $5K']);
+    expect(screen.getAllByRole('radio').map((r) => r.closest('label')?.querySelector('strong')?.textContent)).toEqual(['Repay $5K']);
   });
 
   test('off turn, it only shows the numbers', () => {

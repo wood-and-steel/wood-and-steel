@@ -273,3 +273,38 @@ button.sheet__option {
 .sheet:focus {
   outline: none;
 }
+
+/* Another player's card */
+.playerSheet__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.playerSheet__stats > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.playerSheet__debt {
+  color: var(--color-danger);
+}
+
+/* A radio choice styled as an option row */
+.sheet__option--radio {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+}
+
+.sheet__radio {
+  margin: 0.25rem 0 0;
+  flex-shrink: 0;
+}
+
+.sheet__optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}

@@ -1,11 +1,3 @@
-.contractsList {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm);
-}
-
 .contract {
   display: flex;
   flex-direction: column;

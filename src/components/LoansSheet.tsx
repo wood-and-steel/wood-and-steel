@@ -3,7 +3,7 @@ import type { PlayerProps } from "../stores/gameStore";
 import { repayOptions, serviceOn } from "../rules/finance";
 import { BORROW_STEP, DEBT_FLOOR } from "../rules/rulesData";
 import { formatMoney } from "../utils/money";
-import { BeforeAfter, Sheet } from "./Sheet";
+import { BeforeAfter, RadioOption, Sheet } from "./Sheet";
 
 export interface LoansSheetProps {
   player: PlayerProps;
@@ -119,19 +119,12 @@ export function LoansSheet({ player, isMyTurn, onBorrow, onRepay, onClose }: Loa
         <>
           <div className="sheet__options" role="radiogroup" aria-label="Amount to repay">
             {repays.map((r) => (
-              <button
-                key={r}
-                type="button"
-                role="radio"
-                aria-checked={repayAmount === r}
-                className={`sheet__option${repayAmount === r ? " sheet__option--selected" : ""}`}
-                onClick={() => setRepayAmount(r)}
-              >
+              <RadioOption key={r} name="repayAmount" checked={repayAmount === r} onSelect={() => setRepayAmount(r)}>
                 <strong>Repay {formatMoney(r)}</strong>
                 <span className="sheet__label">
                   Debt to {formatMoney(player.debt - r)}, service {formatMoney(serviceOn(player.debt - r))}
                 </span>
-              </button>
+              </RadioOption>
             ))}
           </div>
           <p className="sheet__note">
