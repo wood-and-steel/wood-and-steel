@@ -45,7 +45,7 @@ export function WoodAndSteelState({
     React.useState(false);
   const [isPrivateContractModalOpen, setIsPrivateContractModalOpen] =
     React.useState(false);
-  const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | 'discard' | null>(null);
+  const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | 'buyEngine' | 'discard' | null>(null);
   const [receiptContractId, setReceiptContractId] = React.useState<string | null>(null);
   const [claimContractId, setClaimContractId] = React.useState<string | null>(null);
   const [viewPlayerId, setViewPlayerId] = React.useState<string | null>(null);
@@ -129,7 +129,7 @@ export function WoodAndSteelState({
     if (isMyTurn) return;
     setReceiptContractId(null);
     setClaimContractId(null);
-    setOpenSheet((sheet: 'loans' | 'actions' | 'discard' | null) => (sheet === 'loans' ? sheet : null));
+    setOpenSheet((sheet: 'loans' | 'actions' | 'buyEngine' | 'discard' | null) => (sheet === 'loans' ? sheet : null));
   }, [isMyTurn]);
   /** Why the player can't claim a market contract now, or null. */
   const claimRefusal = !myProps
@@ -307,8 +307,9 @@ export function WoodAndSteelState({
               onClose={() => setOpenSheet(null)}
             />
           )}
-          {openSheet === 'actions' && myProps && playerID && isMyTurn && (
+          {(openSheet === 'actions' || openSheet === 'buyEngine') && myProps && playerID && isMyTurn && (
             <ActionsSheet
+              initialView={openSheet === 'buyEngine' ? 'engine' : 'menu'}
               G={G}
               playerID={playerID}
               player={myProps}
@@ -354,6 +355,7 @@ export function WoodAndSteelState({
               onToggleFulfilled={handleToggleFulfilled}
               onClaimContract={handleClaimContract}
               onSetCargo={moves.setCargo}
+              onOpenBuyEngine={() => setOpenSheet('buyEngine')}
             />
           )}
           {activeTab === 'commodities' && <CommoditiesPage />}

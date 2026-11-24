@@ -44,17 +44,17 @@
 
 /* Mobile Layout (default, < 768px) */
 .table {
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
 }
 
 .table__headerCell {
   padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: 0.75rem;
+  font-size: var(--font-size-body);
 }
 
 .table__cell {
   padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: 0.875rem;
+  font-size: var(--font-size-body);
 }
 
 /* Hide less important columns on mobile */
@@ -66,17 +66,17 @@
 /* Tablet Layout (768px - 1023px) */
 @media (min-width: 768px) {
   .table {
-    font-size: 0.875rem;
+    font-size: var(--font-size-body);
   }
 
   .table__headerCell {
     padding: var(--spacing-sm);
-    font-size: 0.875rem;
+    font-size: var(--font-size-body);
   }
 
   .table__cell {
     padding: var(--spacing-sm);
-    font-size: 0.875rem;
+    font-size: var(--font-size-body);
   }
 
   /* Show columns that were hidden on mobile */

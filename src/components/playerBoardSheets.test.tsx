@@ -14,6 +14,7 @@ import type { Moves } from '../stores/moves';
 import { DeliveryReceipt } from './DeliveryReceipt';
 import { LoansSheet } from './LoansSheet';
 import { ActionsSheet } from './ActionsSheet';
+import { EnginesPanel } from './EnginesPanel';
 import { formatMoney } from '../utils/money';
 import { Sheet } from './Sheet';
 import { EditPlaytestDialog } from './EditPlaytestDialog';
@@ -42,6 +43,7 @@ describe('DeliveryReceipt', () => {
     expect(screen.queryByRole('radiogroup')).toBeNull();
     expect(screen.getByText('To your cash').nextSibling).toHaveTextContent(`+${formatMoney(moneyValue(c))}`);
     expect(screen.getByRole('button', { name: 'Deliver and choose a new contract' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Coal is available in:' })).toHaveTextContent('Atlanta, Butte, Calgary');
   });
 
   test('asks which engine delivered only when they pay differently, and shows the bonus lines', () => {
@@ -200,6 +202,54 @@ describe('ActionsSheet', () => {
     const empty = screen.getByText(/on your empty/);
     expect(within(empty).getByRole('img', { name: 'Dark' })).toBeInTheDocument();
     expect(empty).toHaveTextContent(/token/);
+    // The distance is the number and the segments picture.
+    expect(within(tradeIn).getByRole('img', { name: 'segments' })).toBeInTheDocument();
+  });
+
+  test('can open straight on Buy an engine, with Back to the Actions menu', () => {
+    render(
+      <ActionsSheet
+        G={G}
+        playerID="0"
+        player={player()}
+        moves={{} as Moves}
+        onAcquireRailroad={() => {}}
+        onNewPrivateContract={() => {}}
+        initialView="engine"
+        onClose={() => {}}
+      />
+    );
+    expect(screen.getByRole('heading', { name: 'Buy an engine' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Back/ }));
+    expect(screen.getByRole('button', { name: /Discard and draw new contract/ })).toHaveTextContent(
+      'Replace your private contract'
+    );
+  });
+});
+
+describe('EnginesPanel', () => {
+  test("tapping an engine's name opens Buy an engine; cargo shows its icon and name", () => {
+    const onBuyEngine = vi.fn();
+    render(
+      <EnginesPanel
+        player={player({ engines: ['john-bull', 'mogul'], cargo: ['coal', null] })}
+        playerID="0"
+        canEdit
+        onSetCargo={() => true}
+        onBuyEngine={onBuyEngine}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: '2-4-0 John Bull' }));
+    expect(onBuyEngine).toHaveBeenCalled();
+    const cargo = screen.getByRole('combobox', { name: 'Light engine cargo' });
+    expect(cargo).toHaveValue('coal');
+    expect(cargo.closest('label')).toHaveTextContent('Coal');
+    expect(screen.getByRole('combobox', { name: 'Dark engine cargo' }).closest('label')).toHaveTextContent('Set cargo');
+  });
+
+  test('without onBuyEngine, engine names are plain text', () => {
+    render(<EnginesPanel player={player()} playerID="0" canEdit={false} onSetCargo={() => true} />);
+    expect(screen.queryByRole('button')).toBeNull();
   });
 });
 

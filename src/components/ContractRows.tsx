@@ -96,17 +96,15 @@ function ContractRow({ contract, player, onSelect }: ContractRowProps): React.Re
         )}
       </span>
       <span className="contractRow__value">
-        {contract.fulfilled ? (
-          <span className="contractRow__delivered">Delivered</span>
-        ) : (
+        {!contract.fulfilled && (
           <>
             {gross !== null && <s className="contractRow__gross">{gross}</s>}
             <strong title={byEngine ? "Depends on which engine delivers" : undefined}>{net}</strong>
+            <span className="contractRow__dot" aria-hidden="true">
+              ·
+            </span>
           </>
         )}
-        <span className="contractRow__dot" aria-hidden="true">
-          ·
-        </span>
         <span className="contractRow__ties">
           {ties}
           <img

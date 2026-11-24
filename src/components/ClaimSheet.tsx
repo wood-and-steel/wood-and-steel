@@ -3,6 +3,7 @@ import { railroadTieValue, type Contract } from "../Contract";
 import type { PlayerProps } from "../stores/gameStore";
 import { formatCommodity, getEngineType, type EngineSlot } from "../rules/playerBoard";
 import { payoutFor } from "./ContractRows";
+import { CommoditySources } from "./CommoditySources";
 import { EngineSlotIcon } from "./EngineIcon";
 import { RadioOption, Sheet } from "./Sheet";
 
@@ -44,9 +45,12 @@ export function ClaimSheet({ contract, player, playerID, refusal, onClaim, onClo
         {payout.byEngine && <p className="sheet__note">Depends on which engine delivers.</p>}
       </div>
       {refusal ? (
-        <p className="sheet__warning" role="alert">
-          {refusal}
-        </p>
+        <>
+          <CommoditySources commodity={contract.commodity} />
+          <p className="sheet__warning" role="alert">
+            {refusal}
+          </p>
+        </>
       ) : (
         <>
           <span className="sheet__label">Record the {contract.commodity} on an engine? This is optional.</span>
@@ -73,6 +77,7 @@ export function ClaimSheet({ contract, player, playerID, refusal, onClaim, onClo
               <span>Don't record cargo</span>
             </RadioOption>
           </div>
+          <CommoditySources commodity={contract.commodity} />
           <button
             type="button"
             className="button sheet__primary"

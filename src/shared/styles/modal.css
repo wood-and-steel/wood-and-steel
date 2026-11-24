@@ -123,6 +123,6 @@
 .editPlaytestDialog__note {
   grid-column: 1 / -1;
   margin: 0;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-body);
   color: var(--color-text-subtle);
 }

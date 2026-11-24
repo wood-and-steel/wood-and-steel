@@ -8,10 +8,10 @@ import { indiePricePerRoute } from "../rules/railroads";
 import { UPGRADE_KEYS, UPGRADE_NAMES, UPGRADE_PRICES, type UpgradeKey } from "../rules/rulesData";
 import { cities } from "../data";
 import { formatMoney, formatMoneyChange } from "../utils/money";
-import { EngineSlotIcon } from "./EngineIcon";
+import { EngineSegments, EngineSlotIcon } from "./EngineIcon";
 import { BeforeAfter, Sheet } from "./Sheet";
 
-type View = "menu" | "engine" | "upgrade" | "track";
+export type ActionsView = "menu" | "engine" | "upgrade" | "track";
 
 
 const REGION_NAMES: Record<string, string> = {
@@ -45,6 +45,8 @@ export interface ActionsSheetProps {
   onAcquireRailroad: () => void;
   /** Opens the private contract offers (discard and draw). */
   onNewPrivateContract: () => void;
+  /** The view to open on; the Actions menu by default. */
+  initialView?: ActionsView;
   onClose: () => void;
 }
 
@@ -60,9 +62,10 @@ export function ActionsSheet({
   moves,
   onAcquireRailroad,
   onNewPrivateContract,
+  initialView = "menu",
   onClose,
 }: ActionsSheetProps): React.ReactElement {
-  const [view, setView] = React.useState<View>("menu");
+  const [view, setView] = React.useState<ActionsView>(initialView);
   const back = () => setView("menu");
 
   if (view === "engine") {
@@ -125,8 +128,8 @@ export function ActionsSheet({
             onClose();
           }}
         >
-          <span>New private contract</span>
-          <span className="sheet__label">Choose from new offers</span>
+          <span>Discard and draw new contract</span>
+          <span className="sheet__label">Replace your private contract</span>
         </button>
       </div>
       <div className="sheet__box" aria-label="Money this turn">
@@ -179,7 +182,7 @@ function BuyEngineView({ playerID, player, moves, onBack, onClose }: ViewProps &
                   <span>{formatMoney(o.cost)}</span>
                 </div>
                 <span className="sheet__label engineLabel">
-                  {getEngineType(o.engine).distance} segments ·{" "}
+                  <EngineSegments count={getEngineType(o.engine).distance} /> ·{" "}
                   {o.tradeIn ? "trades in your" : "on your empty"}
                   <EngineSlotIcon playerID={playerID} avatarColor={player.avatarColor} slot={o.slot} />
                   {o.tradeIn ? getEngineType(o.tradeIn).name : "token"}
