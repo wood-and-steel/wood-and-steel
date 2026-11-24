@@ -98,23 +98,21 @@ function buildMap(keys: string[], newKeys: ReadonlySet<string>): MiniMap {
   const cityBox = boxOf(names);
   const longest = Math.max(...names.map((n) => n.length));
 
-  // The font depends on the crop's width and the crop on the labels' width, so settle it in two passes.
-  let width = Math.max(MIN_WIDTH, cityBox.maxX - cityBox.minX);
+  // The font depends on the crop's width, and the crop on the labels' width and, for a tall
+  // railroad, on its height with the labels' padding (widened rather than squashed past
+  // MAX_ASPECT). Settle all three before sizing anything, so labels stay readable.
+  const cityWidth = cityBox.maxX - cityBox.minX;
+  const cityHeight = cityBox.maxY - cityBox.minY;
+  let width = Math.max(MIN_WIDTH, cityWidth);
   let fontSize = width * FONT_RATIO;
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 6; pass++) {
     const halfLabel = (longest * CHAR_WIDTH * fontSize) / 2;
-    width = Math.max(MIN_WIDTH, cityBox.maxX - cityBox.minX + 2 * halfLabel + fontSize);
+    width = Math.max(MIN_WIDTH, cityWidth + 2 * halfLabel + fontSize, (cityHeight + 4 * fontSize) / MAX_ASPECT);
     fontSize = width * FONT_RATIO;
   }
   const cityRadius = fontSize * 0.42;
   const padY = fontSize * 2;
-  let height = cityBox.maxY - cityBox.minY + 2 * padY;
-  height = Math.min(Math.max(height, width * MIN_ASPECT), width * MAX_ASPECT);
-  if (cityBox.maxY - cityBox.minY + 2 * padY > height) {
-    // Tall railroad: widen the crop instead of squashing it.
-    height = cityBox.maxY - cityBox.minY + 2 * padY;
-    width = Math.max(width, height / MAX_ASPECT);
-  }
+  const height = Math.min(Math.max(cityHeight + 2 * padY, width * MIN_ASPECT), width * MAX_ASPECT);
   const cx = (cityBox.minX + cityBox.maxX) / 2;
   const cy = (cityBox.minY + cityBox.maxY) / 2;
   const left = cx - width / 2;

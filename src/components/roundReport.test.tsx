@@ -18,6 +18,7 @@ const report = (overrides: Partial<RoundReport> = {}): RoundReport => ({
   routesAdded: { 'Erie Railroad': ['Cleveland-Detroit'] },
   marketExpired: [{ id: 'x', commodity: 'cattle', destinationKey: 'Boston' }],
   marketAdded: [{ id: 'n', commodity: 'wine', destinationKey: 'Denver' }],
+  marketLastRound: [],
   ...overrides,
 });
 
@@ -137,6 +138,21 @@ describe('useRoundReport', () => {
     expect(result.current.isOpen).toBe(true);
     expect(result.current.unseen).toBe(false);
     expect(window.localStorage.getItem('woodAndSteel.roundReport.autoOpen')).toBe('false');
+  });
+
+  test('opens a report whose only news is a market contract entering its last round', () => {
+    const { result } = renderHook(() =>
+      useRoundReport(
+        report({
+          routesAdded: {},
+          marketExpired: [],
+          marketAdded: [],
+          marketLastRound: [{ id: 'l', commodity: 'coal', destinationKey: 'Atlanta' }],
+        }),
+        'ABCDE'
+      )
+    );
+    expect(result.current.isOpen).toBe(true);
   });
 
   test("doesn't open a report with no news, and doesn't flag it", () => {

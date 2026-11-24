@@ -26,6 +26,21 @@ describe('miniMapsFor', () => {
     expect(w).toBeLessThan(2500);
   });
 
+  test('keeps labels readable on a tall railroad: the font fits the final crop, which stays within its aspect', () => {
+    const [map] = miniMapsFor(
+      ['Seattle-Vancouver', 'Portland OR-Seattle', 'Portland OR-San Francisco'],
+      new Set(['Portland OR-San Francisco'])
+    );
+    const { y, w, h } = box(map.viewBox);
+    // About 12px on a 290px-wide map, as on any other map.
+    expect((map.fontSize / w) * 290).toBeCloseTo(12.2, 0);
+    expect(h / w).toBeLessThanOrEqual(0.8 + 1e-3);
+    for (const c of map.cities) {
+      expect(c.y).toBeGreaterThan(y);
+      expect(c.y).toBeLessThan(y + h);
+    }
+  });
+
   test('ignores route keys it has no geometry for', () => {
     expect(miniMapsFor(['Nowhere-Elsewhere'], new Set())).toEqual([]);
   });

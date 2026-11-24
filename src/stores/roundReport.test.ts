@@ -76,6 +76,16 @@ describe('roundReportFrom', () => {
     expect(reportHasNews(report)).toBe(true);
   });
 
+  test('lists open market contracts entering their last round, which counts as news', () => {
+    const before = snapshotForReport(game({ contracts: [market('a', { roundsLeft: 2 }), market('b', { roundsLeft: 1 })] }));
+    const after = game({ contracts: [market('a', { roundsLeft: 1, commodity: 'wine' }), market('b', { roundsLeft: 1 })] });
+    const report = roundReportFrom(before, after, 5);
+    expect(report.marketLastRound).toEqual([{ id: 'a', commodity: 'wine', destinationKey: 'Chicago' }]);
+    expect(report.marketExpired).toEqual([]);
+    expect(report.marketAdded).toEqual([]);
+    expect(reportHasNews(report)).toBe(true);
+  });
+
   test('a round with no changes has no news', () => {
     const G = game({ contracts: [market('a')] });
     expect(reportHasNews(roundReportFrom(snapshotForReport(G), G, 2))).toBe(false);
@@ -99,7 +109,7 @@ describe('end-of-round hook', () => {
     const c = ctx({ round: 0 });
     executeTurnOnEnd('play', G, c);
     expect(c.round).toBe(1);
-    expect(G.roundReport).toEqual({ round: 0, routesAdded: {}, marketExpired: [], marketAdded: [] });
+    expect(G.roundReport).toEqual({ round: 0, routesAdded: {}, marketExpired: [], marketAdded: [], marketLastRound: [] });
   });
 
   test('replaces the report at each round end, and leaves it alone mid-round', () => {

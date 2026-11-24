@@ -65,6 +65,8 @@ export interface RoundReport {
   routesAdded: Record<string, string[]>;
   marketExpired: ReportedContract[];
   marketAdded: ReportedContract[];
+  /** Open market contracts that entered their last round at this round end. */
+  marketLastRound: ReportedContract[];
 }
 
 /** A route owned by an independent railroad, with the round it was added. */

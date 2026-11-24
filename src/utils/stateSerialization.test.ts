@@ -48,6 +48,7 @@ describe('state serialization', () => {
         routesAdded: { 'Erie Railroad': ['Buffalo-Cleveland'] },
         marketExpired: [{ id: 'c1', commodity: 'cattle', destinationKey: 'Boston' }],
         marketAdded: [{ id: 'c2', commodity: 'wine', destinationKey: 'Denver' }],
+        marketLastRound: [{ id: 'c3', commodity: 'coal', destinationKey: 'Atlanta' }],
       },
     };
     const { G: loaded } = deserializeStateFromJSON(serializeStateToJSON(G, ctx));

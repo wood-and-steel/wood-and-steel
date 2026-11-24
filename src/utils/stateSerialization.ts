@@ -155,6 +155,7 @@ function normalizeRoundReport(raw: unknown): RoundReport | undefined {
     routesAdded,
     marketExpired: reportedContracts(raw.marketExpired),
     marketAdded: reportedContracts(raw.marketAdded),
+    marketLastRound: reportedContracts(raw.marketLastRound),
   };
 }
 
