@@ -249,16 +249,31 @@
 
 .contractRow__value {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--spacing-xs);
   flex-shrink: 0;
   white-space: nowrap;
 }
 
-.contractRow__gross,
-.contractRow__ties {
+.contractRow__gross {
   font-size: var(--font-size-sm);
   color: var(--color-text);
+}
+
+/* Railroad ties: the number at the cash number's size, then the ties picture. */
+.contractRow__ties {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.contractRow__dot {
+  color: var(--color-text-subtle);
+}
+
+.contractRow__tieIcon {
+  height: 1rem;
+  width: auto;
 }
 
 .contractRow__delivered {
@@ -295,6 +310,33 @@
 .playerToolbar__otherTies {
   font-size: var(--font-size-sm);
   color: var(--color-text-subtle);
+}
+
+/* The round label: opens the latest round report, with a dot while one is unseen */
+.playerToolbar__round {
+  position: relative;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.playerToolbar__round:disabled {
+  cursor: default;
+}
+
+.playerToolbar__roundDot {
+  position: absolute;
+  top: 0.125rem;
+  right: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--color-notification);
 }
 
 .playerBoard__startingPairs {
@@ -376,9 +418,28 @@
 }
 
 .engines__slot {
-  width: 2.5rem;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-subtle);
+  display: flex;
+  align-items: center;
+}
+
+/* The engine picture (src/components/EngineIcon.tsx); its body takes --engine-icon-color. */
+.engineIcon {
+  display: inline-flex;
+  width: 1.3125rem;
+  height: 1rem;
+}
+
+.engineIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Text with an engine picture in it, e.g. "[icon] 2-6-0 Mogul" in a sheet. */
+.engineLabel {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
 }
 
 .engines__type {

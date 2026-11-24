@@ -1,21 +1,23 @@
 import React from "react";
 import type { PlayerProps } from "../stores/gameStore";
+import { ENGINE_SLOT_NAMES as SLOT_NAMES, EngineSlotIcon } from "./EngineIcon";
 import { COMMODITY_GROUPS, engineDistance, formatCommodity, formatSegments, getEngineType, type EngineSlot } from "../rules/playerBoard";
 
 export interface EnginesPanelProps {
   player: PlayerProps;
+  /** The player's seat, for their token colors. */
+  playerID: string;
   /** Cargo can be recorded only on the player's own turn; otherwise it's shown read-only. */
   canEdit: boolean;
   onSetCargo: (slot: EngineSlot, commodity: string | null) => boolean;
 }
 
-const SLOT_NAMES: Record<EngineSlot, string> = { 0: "Light", 1: "Dark" };
-
 /**
- * The player's two engine tokens: engine type, distance (with the Service Yard), and cargo.
+ * The player's two engine tokens, each shown as the engine picture in its token color (light
+ * or dark version of the player's color): engine type, distance (with the Service Yard), and cargo.
  * Recording cargo is optional; contracts can be fulfilled without it.
  */
-export function EnginesPanel({ player, canEdit, onSetCargo }: EnginesPanelProps): React.ReactElement {
+export function EnginesPanel({ player, playerID, canEdit, onSetCargo }: EnginesPanelProps): React.ReactElement {
   const hasServiceYard = player.upgrades.includes("service-yard");
   return (
     <div className="engines" aria-label="Your engines">
@@ -25,7 +27,9 @@ export function EnginesPanel({ player, canEdit, onSetCargo }: EnginesPanelProps)
         const distance = type ? engineDistance(type, hasServiceYard) : null;
         return (
           <div key={slot} className="engines__row" role="group" aria-label={`${SLOT_NAMES[slot]} engine`}>
-            <span className="engines__slot">{SLOT_NAMES[slot]}</span>
+            <span className="engines__slot">
+              <EngineSlotIcon playerID={playerID} avatarColor={player.avatarColor} slot={slot} label={`${SLOT_NAMES[slot]} engine`} />
+            </span>
             <span className={`engines__type${type ? "" : " engines__type--none"}`}>
               {type ? getEngineType(type).name : "No engine"}
               {distance && (

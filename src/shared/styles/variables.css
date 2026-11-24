@@ -79,6 +79,8 @@
 
   --color-contract-market: #4510d4;
   --color-contract-private: #101020;
+  /* Something new to notice: the round report's new routes, a switch that's on */
+  --color-highlight: #4510d4;
   }
 
 /* Colors - Dark Mode */
@@ -110,4 +112,5 @@
 
   --color-contract-market: #cab9f8;
   --color-contract-private: #f1f1f3;
+  --color-highlight: #b49cf6;
 }

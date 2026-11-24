@@ -34,7 +34,7 @@ const contract = (props: Partial<Contract> = {}): Contract => ({
 describe('ContractRows', () => {
   test('shows the value to the player, struck through to the net when debt service lowers it', () => {
     const central = contract({ destinationKey: 'Chicago', commodity: 'cotton' });
-    render(<ContractRows contracts={[central]} player={player({ debt: 10000 })} actionsFor={() => []} emptyText="" />);
+    render(<ContractRows contracts={[central]} player={player({ debt: 10000 })} emptyText="" />);
     const row = screen.getByRole('button', { name: /Cotton to Chicago/ });
     expect(within(row).getByText(formatMoney(moneyValue(central)), { selector: 's' })).toBeInTheDocument();
     expect(within(row).getByText(formatMoney(moneyValue(central) - 2000), { selector: 'strong' })).toBeInTheDocument();
@@ -49,7 +49,7 @@ describe('ContractRows', () => {
           contract({ id: 'm3', type: 'market', playerID: null, commodity: 'wine', roundsLeft: 1 }),
         ]}
         player={player()}
-        actionsFor={() => []}
+       
         emptyText=""
       />
     );
@@ -58,25 +58,25 @@ describe('ContractRows', () => {
     expect(within(screen.getByRole('button', { name: /Wine to Boston/ })).getByText('Last round')).toBeInTheDocument();
   });
 
-  test('a row opens its actions; rows without actions, and fulfilled ones, are not clickable', () => {
-    const onFulfill = vi.fn();
+  test('tapping a row selects it at once; without onSelect, and fulfilled, rows are not clickable', () => {
+    const onSelect = vi.fn();
     render(
       <ContractRows
         contracts={[contract(), contract({ id: 'k2', commodity: 'wood', fulfilled: true })]}
         player={player()}
-        actionsFor={(c) => (c.fulfilled ? [] : [{ label: 'Fulfill', onSelect: () => onFulfill(c.id) }])}
+        onSelect={onSelect}
         emptyText=""
       />
     );
     expect(screen.getByRole('button', { name: /Wood to Boston/ })).toBeDisabled();
     expect(within(screen.getByRole('button', { name: /Wood to Boston/ })).getByText('Delivered')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Coal to Boston/ }));
-    fireEvent.click(screen.getByText('Fulfill'));
-    expect(onFulfill).toHaveBeenCalledWith('k1');
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'k1' }));
+    expect(screen.queryByRole('menu')).toBeNull();
   });
 
   test('says so when there are none', () => {
-    render(<ContractRows contracts={[]} actionsFor={() => []} emptyText="No contracts right now." />);
+    render(<ContractRows contracts={[]} emptyText="No contracts right now." />);
     expect(screen.getByText('No contracts right now.')).toBeInTheDocument();
   });
 });
@@ -87,7 +87,7 @@ describe('ClaimSheet', () => {
   test('suggests an engine with no cargo recorded, and can claim without recording', () => {
     const onClaim = vi.fn(() => true);
     render(
-      <ClaimSheet
+      <ClaimSheet playerID="0"
         contract={market}
         player={player({ engines: ['american', 'mogul'], cargo: ['coal', null] })}
         refusal={null}
@@ -96,8 +96,8 @@ describe('ClaimSheet', () => {
       />
     );
     const options = screen.getByRole('radiogroup', { name: 'Record cargo' });
-    expect(within(options).getByRole('radio', { name: /Dark: 2-6-0 Mogul/ })).toBeChecked();
-    expect(within(options).getByRole('radio', { name: /Light: 4-4-0 American.*Replaces coal/ })).not.toBeChecked();
+    expect(within(options).getByRole('radio', { name: /Dark\s*2-6-0 Mogul/ })).toBeChecked();
+    expect(within(options).getByRole('radio', { name: /Light\s*4-4-0 American.*Replaces coal/ })).not.toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Claim contract' }));
     expect(onClaim).toHaveBeenLastCalledWith(1);
     fireEvent.click(within(options).getByRole('radio', { name: "Don't record cargo" }));
@@ -105,9 +105,27 @@ describe('ClaimSheet', () => {
     expect(onClaim).toHaveBeenLastCalledWith(undefined);
   });
 
+  test('suggests the engine already carrying the commodity, and says so', () => {
+    const onClaim = vi.fn(() => true);
+    render(
+      <ClaimSheet playerID="0"
+        contract={market}
+        player={player({ engines: ['mogul', 'american'], cargo: ['lead', null] })}
+        refusal={null}
+        onClaim={onClaim}
+        onClose={() => {}}
+      />
+    );
+    const options = screen.getByRole('radiogroup', { name: 'Record cargo' });
+    expect(within(options).getByRole('radio', { name: /Light\s*2-6-0 Mogul.*Carrying lead/ })).toBeChecked();
+    expect(within(options).getByRole('radio', { name: /Dark\s*4-4-0 American/ })).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Claim contract' }));
+    expect(onClaim).toHaveBeenLastCalledWith(0);
+  });
+
   test('explains why it can’t be claimed instead of offering to', () => {
     render(
-      <ClaimSheet
+      <ClaimSheet playerID="0"
         contract={market}
         player={player()}
         refusal="Claiming market contracts needs a Mogul or better."
@@ -197,7 +215,6 @@ describe('PlayerBoard (Home)', () => {
         currentPhase="play"
         onStartingPairSelect={() => {}}
         onToggleFulfilled={() => {}}
-        onDelete={() => {}}
         onClaimContract={() => {}}
       />
     );
@@ -208,49 +225,11 @@ describe('PlayerBoard (Home)', () => {
   });
 });
 
-describe('Contract rows: menus, ranges and empty states (review fixes)', () => {
-  test('the menu takes focus, arrow keys move through it, and Escape gives focus back to the row', () => {
-    render(
-      <ContractRows
-        contracts={[contract()]}
-        player={player()}
-        actionsFor={() => [
-          { label: 'Fulfill', onSelect: () => {} },
-          { label: 'Discard', onSelect: () => {} },
-        ]}
-        emptyText=""
-      />
-    );
-    const row = screen.getByRole('button', { name: /Coal to Boston/ });
-    row.focus();
-    fireEvent.click(row);
-    expect(document.activeElement).toHaveTextContent('Fulfill');
-    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
-    expect(document.activeElement).toHaveTextContent('Discard');
-    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
-    expect(document.activeElement).toHaveTextContent('Fulfill');
-    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
-    expect(screen.queryByText('Discard')).toBeNull();
-    expect(document.activeElement).toBe(row);
-  });
-
-  test('an open menu is forgotten when its row loses its actions, so it does not come back later', () => {
-    const actions = [{ label: 'Fulfill', onSelect: () => {} }];
-    const view = (withActions: boolean) => (
-      <ContractRows contracts={[contract()]} player={player()} actionsFor={() => (withActions ? actions : [])} emptyText="" />
-    );
-    const { rerender } = render(view(true));
-    fireEvent.click(screen.getByRole('button', { name: /Coal to Boston/ }));
-    expect(screen.getByText('Fulfill')).toBeInTheDocument();
-    rerender(view(false));
-    rerender(view(true));
-    expect(screen.queryByText('Fulfill')).toBeNull();
-  });
-
+describe('Contract rows: ranges and empty states (review fixes)', () => {
   test('shows a range when the player’s engines would pay differently', () => {
     const c = contract();
     const value = moneyValue(c);
-    render(<ContractRows contracts={[c]} player={player({ engines: ['mountain', 'prairie'] })} actionsFor={() => []} emptyText="" />);
+    render(<ContractRows contracts={[c]} player={player({ engines: ['mountain', 'prairie'] })} emptyText="" />);
     const bonus = Math.floor((value * 4) / 3 / 1000) * 1000;
     expect(screen.getByTitle('Depends on which engine delivers')).toHaveTextContent(`${formatMoney(value)}–${formatMoney(bonus)}`);
   });
@@ -265,7 +244,6 @@ describe('Contract rows: menus, ranges and empty states (review fixes)', () => {
         currentPhase="play"
         onStartingPairSelect={() => {}}
         onToggleFulfilled={() => {}}
-        onDelete={() => {}}
       />
     );
     const { rerender } = render(board(['american', null]));

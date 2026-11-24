@@ -1,6 +1,7 @@
 import { growIndependentRailroads } from '../independentRailroads';
 import { advanceMarketExpirations } from './marketExpiration';
 import type { PhaseName } from './moveValidation';
+import { roundReportFrom, snapshotForReport } from './roundReport';
 import type { GameState, GameContext } from './gameStore';
 
 /**
@@ -73,16 +74,16 @@ export const phaseConfig: Record<PhaseName, PhaseConfigEntry> = {
         );
         // End-of-round actions when last player's turn ends
         if (ctx.playOrderPos === ctx.playOrder.length - 1) {
+          const before = snapshotForReport(G);
+          const endedRound = ctx.round;
           advanceMarketExpirations(G);
           if (ctx.round >= 1) {
-            const addedRoutes = growIndependentRailroads(G, ctx);
-            if (addedRoutes?.size) {
-              G.lastRoundRoutesAdded = addedRoutes.size;
-            }
+            growIndependentRailroads(G, ctx);
             ctx.round++;
           } else {
             ctx.round = 1;
           }
+          G.roundReport = roundReportFrom(before, G, endedRound);
         }
       },
     },

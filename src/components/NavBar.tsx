@@ -31,19 +31,25 @@ export interface NavBarProps {
   onTabChange: (tabId: NavBarTabId) => void;
   showRailroadHint?: boolean;
   onDismissHint?: () => void;
-  routesAddedCount?: number;
-  onDismissRoutesAddedHint?: () => void;
+  /** Whether the round report opens by itself after each round, on this device; with its menu switch. */
+  roundReportAutoOpen?: boolean;
+  onRoundReportAutoOpenChange?: (on: boolean) => void;
   /** Playtest tool: fill the market tableau (the old +M button). Shown only on the player's turn in play. */
   onFillMarket?: () => void;
+  /** Opens the discard sheet. Shown in play; disabled when it's not the player's turn. */
+  onDiscardContract?: () => void;
+  /** Opens the private contract offers. Shown in play; disabled when it's not the player's turn. */
+  onDrawPrivateContract?: () => void;
+  /** Whether the player may act from the menu now (their turn in play). */
+  canActFromMenu?: boolean;
+  /** The player already holds an unfulfilled private contract, so can't draw another. */
+  hasPrivateContract?: boolean;
 }
 
 /**
  * Navigation bar component with responsive design. Shows tabs for different views on desktop and mobile,
  * and includes a hamburger menu for game management actions.
  */
-const showRoutesAddedHint = (n: number | undefined): boolean =>
-  n != null && n > 0;
-
 export function NavBar({
   gameManager,
   onNavigateToLobby,
@@ -52,21 +58,20 @@ export function NavBar({
   onTabChange,
   showRailroadHint,
   onDismissHint,
-  routesAddedCount,
-  onDismissRoutesAddedHint,
+  roundReportAutoOpen,
+  onRoundReportAutoOpenChange,
   onFillMarket,
+  onDiscardContract,
+  onDrawPrivateContract,
+  canActFromMenu,
+  hasPrivateContract,
 }: NavBarProps): React.ReactElement {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
   const menuButtonDesktopRef = React.useRef<HTMLButtonElement>(null);
   const contractsTabRef = React.useRef<HTMLButtonElement>(null);
   const contractsTabMobileRef = React.useRef<HTMLButtonElement>(null);
-  const railroadsTabRef = React.useRef<HTMLButtonElement>(null);
-  const railroadsTabMobileRef = React.useRef<HTMLButtonElement>(null);
   const [hintPosition, setHintPosition] = React.useState<HintPositionDesktop | HintPositionMobile | null>(null);
-  const [routesAddedHintPosition, setRoutesAddedHintPosition] = React.useState<
-    HintPositionDesktop | HintPositionMobile | null
-  >(null);
   const isDesktop = useIsDesktop();
 
   /** Clamp tab center X so a callout centered there stays on screen (halfMax = half of max callout width). */
@@ -113,38 +118,6 @@ export function NavBar({
   }, [showRailroadHint, isDesktop, clampCalloutCenterX]);
 
   React.useEffect(() => {
-    if (!showRoutesAddedHint(routesAddedCount)) {
-      setRoutesAddedHintPosition(null);
-      return;
-    }
-
-    const updatePosition = () => {
-      const tabRef = isDesktop ? railroadsTabRef.current : railroadsTabMobileRef.current;
-      if (!tabRef) return;
-
-      const rect = tabRef.getBoundingClientRect();
-      const tabCenterX = rect.left + rect.width / 2;
-      if (isDesktop) {
-        const halfMax = 144;
-        setRoutesAddedHintPosition({
-          contentTop: rect.bottom + 12,
-          contentCenterX: clampCalloutCenterX(tabCenterX, halfMax),
-        });
-      } else {
-        const halfMax = 128;
-        setRoutesAddedHintPosition({
-          contentBottom: window.innerHeight - rect.top + 12,
-          contentCenterX: clampCalloutCenterX(tabCenterX, halfMax),
-        });
-      }
-    };
-
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    return () => window.removeEventListener("resize", updatePosition);
-  }, [routesAddedCount, isDesktop, clampCalloutCenterX]);
-
-  React.useEffect(() => {
     if (!showRailroadHint || !onDismissHint) return;
 
     const handleClick = () => onDismissHint();
@@ -163,26 +136,6 @@ export function NavBar({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [showRailroadHint, onDismissHint]);
-
-  React.useEffect(() => {
-    if (!showRoutesAddedHint(routesAddedCount) || !onDismissRoutesAddedHint) return;
-
-    const handleClick = () => onDismissRoutesAddedHint();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onDismissRoutesAddedHint();
-    };
-
-    const timeoutId = setTimeout(() => {
-      document.addEventListener("click", handleClick);
-      document.addEventListener("keydown", handleKeyDown);
-    }, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("click", handleClick);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [routesAddedCount, onDismissRoutesAddedHint]);
 
   const placement = React.useMemo(
     () => (isDesktop ? { side: "bottom" as const, align: "start" as const } : { side: "top" as const, align: "end" as const }),
@@ -242,6 +195,28 @@ export function NavBar({
           </PopupMenuItem>
         )}
         <PopupMenuItem onClick={() => handleMenuClick("edit")}>Add Contract or City...</PopupMenuItem>
+        {onDiscardContract && (
+          <PopupMenuItem
+            disabled={!canActFromMenu}
+            onClick={() => {
+              onDiscardContract();
+              setIsMenuOpen(false);
+            }}
+          >
+            Discard Contract...
+          </PopupMenuItem>
+        )}
+        {onDrawPrivateContract && (
+          <PopupMenuItem
+            disabled={!canActFromMenu || hasPrivateContract}
+            onClick={() => {
+              onDrawPrivateContract();
+              setIsMenuOpen(false);
+            }}
+          >
+            Draw Private Contract
+          </PopupMenuItem>
+        )}
         {onFillMarket && (
           <PopupMenuItem
             onClick={() => {
@@ -250,6 +225,16 @@ export function NavBar({
             }}
           >
             Fill Market Contracts
+          </PopupMenuItem>
+        )}
+        {onRoundReportAutoOpenChange && (
+          <PopupMenuItem
+            onClick={() => {
+              onRoundReportAutoOpenChange(!roundReportAutoOpen);
+              setIsMenuOpen(false);
+            }}
+          >
+            Open Round Report After Each Round: {roundReportAutoOpen ? "On" : "Off"}
           </PopupMenuItem>
         )}
       </PopupMenu>
@@ -271,7 +256,7 @@ export function NavBar({
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              ref={tab.id === "board" ? contractsTabRef : tab.id === "indies" ? railroadsTabRef : null}
+              ref={tab.id === "board" ? contractsTabRef : null}
               type="button"
               className={`navBar__tab ${activeTab === tab.id ? "navBar__tab--active" : ""}`}
               onClick={() => onTabChange(tab.id)}
@@ -286,7 +271,7 @@ export function NavBar({
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              ref={tab.id === "board" ? contractsTabMobileRef : tab.id === "indies" ? railroadsTabMobileRef : null}
+              ref={tab.id === "board" ? contractsTabMobileRef : null}
               type="button"
               className={`navBar__tab--mobile ${activeTab === tab.id ? "navBar__tab--mobile--active" : ""}`}
               onClick={() => onTabChange(tab.id)}
@@ -300,11 +285,6 @@ export function NavBar({
         {showRailroadHint && hintPosition && (
           <NavBarHintCallout isDesktop={isDesktop} hintPosition={hintPosition}>
             Mark the independent railroads on your map, then switch to Home to start taking turns.
-          </NavBarHintCallout>
-        )}
-        {showRoutesAddedHint(routesAddedCount) && routesAddedHintPosition && (
-          <NavBarHintCallout isDesktop={isDesktop} hintPosition={routesAddedHintPosition}>
-            Added {routesAddedCount} {routesAddedCount === 1 ? "route" : "routes"}
           </NavBarHintCallout>
         )}
       </nav>

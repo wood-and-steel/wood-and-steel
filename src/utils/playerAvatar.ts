@@ -7,6 +7,37 @@ export const PLAYER_AVATAR_COLORS = [
   '#8F0AB0', // purple
 ] as const;
 
+/**
+ * Physical tokens come in a light and a dark version of each player color (engines use both).
+ * Dark is the player color itself; these are the light ones, in PLAYER_AVATAR_COLORS order.
+ */
+const PLAYER_LIGHT_COLORS = ['#E7CB2C', '#FB3F84', '#0D9ABA', '#39AB2E', '#CA07F1'] as const;
+
+const LIGHT_BY_PLAYER_COLOR = new Map<string, string>(
+  PLAYER_AVATAR_COLORS.map((color, i) => [color, PLAYER_LIGHT_COLORS[i]]),
+);
+
+const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+/** Mix a hex color toward white (amount > 0) or black (amount < 0). Non-hex colors are returned unchanged. */
+export function shadeColor(color: string, amount: number): string {
+  const match = HEX_RE.exec(color.trim());
+  if (!match) return color;
+  const hex = match[1].length === 3 ? [...match[1]].map((c) => c + c).join('') : match[1];
+  const target = amount > 0 ? 255 : 0;
+  const t = Math.min(1, Math.abs(amount));
+  const channels = [0, 2, 4].map((i) => {
+    const value = Number.parseInt(hex.slice(i, i + 2), 16);
+    return Math.round(value + (target - value) * t);
+  });
+  return `#${channels.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
+/** The light token color for a player color. Colors from before this palette are lightened. */
+export function getPlayerLightColor(color: string): string {
+  return LIGHT_BY_PLAYER_COLOR.get(color) ?? shadeColor(color, 0.45);
+}
+
 /** Assigns a fixed palette color by player index (0-based). */
 export function getPlayerAvatarColorForIndex(playerIndex: number): string {
   return PLAYER_AVATAR_COLORS[playerIndex] ?? PLAYER_AVATAR_COLORS[PLAYER_AVATAR_COLORS.length - 1];

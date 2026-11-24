@@ -3,11 +3,14 @@ import { railroadTieValue, type Contract } from "../Contract";
 import type { PlayerProps } from "../stores/gameStore";
 import { formatCommodity, getEngineType, type EngineSlot } from "../rules/playerBoard";
 import { payoutFor } from "./ContractRows";
+import { EngineSlotIcon } from "./EngineIcon";
 import { RadioOption, Sheet } from "./Sheet";
 
 export interface ClaimSheetProps {
   contract: Contract;
   player: PlayerProps;
+  /** The player's seat, for their engine token colors. */
+  playerID: string;
   /** Why the player can't claim it (no Mogul, already holds a claim), or null if they can. */
   refusal: string | null;
   /** `cargoSlot` records the commodity on that engine; undefined claims without recording cargo. */
@@ -15,16 +18,16 @@ export interface ClaimSheetProps {
   onClose: () => void;
 }
 
-const SLOT_NAMES: Record<EngineSlot, string> = { 0: "Light", 1: "Dark" };
-
 /**
  * Claim an open market contract, optionally recording its commodity on one of the player's
  * engines (cargo is optional; contracts can be fulfilled without it).
  */
-export function ClaimSheet({ contract, player, refusal, onClaim, onClose }: ClaimSheetProps): React.ReactElement {
+export function ClaimSheet({ contract, player, playerID, refusal, onClaim, onClose }: ClaimSheetProps): React.ReactElement {
   const slots = ([0, 1] as EngineSlot[]).filter((slot) => player.engines[slot] !== null);
+  // An engine already carrying this commodity comes first, then an empty one.
+  const carryingSlot = slots.find((slot) => player.cargo[slot] === contract.commodity);
   const emptySlot = slots.find((slot) => player.cargo[slot] === null);
-  const [cargoSlot, setCargoSlot] = React.useState<EngineSlot | null>(emptySlot ?? null);
+  const [cargoSlot, setCargoSlot] = React.useState<EngineSlot | null>(carryingSlot ?? emptySlot ?? null);
   const payout = payoutFor(contract, player);
   const ties = railroadTieValue(contract);
   const commodity = formatCommodity(contract.commodity);
@@ -52,11 +55,16 @@ export function ClaimSheet({ contract, player, refusal, onClaim, onClose }: Clai
               const current = player.cargo[slot];
               return (
                 <RadioOption key={slot} name="claimCargo" checked={cargoSlot === slot} onSelect={() => setCargoSlot(slot)}>
-                  <span>
-                    {SLOT_NAMES[slot]}: {getEngineType(player.engines[slot]!).name}
+                  <span className="engineLabel">
+                    <EngineSlotIcon playerID={playerID} avatarColor={player.avatarColor} slot={slot} />
+                    {getEngineType(player.engines[slot]!).name}
                   </span>
                   <span className="sheet__label">
-                    {current ? `Replaces ${formatCommodity(current).toLowerCase()}` : "No cargo recorded"}
+                    {!current
+                      ? "No cargo recorded"
+                      : current === contract.commodity
+                        ? `Carrying ${formatCommodity(current).toLowerCase()}`
+                        : `Replaces ${formatCommodity(current).toLowerCase()}`}
                   </span>
                 </RadioOption>
               );

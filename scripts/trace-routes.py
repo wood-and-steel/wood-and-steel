@@ -2,7 +2,7 @@
 Dev-only: derive board geometry from docs/map-board-full.jpg (milestone 0 of docs/archived/BOARD_APP_PLAN.md).
 
 Outputs:
-  src/board/geometry/cityPoints.ts   city circle centers/radii + Regional Office disc centers
+  src/data/cityPoints.ts             city circle centers/radii + Regional Office disc centers
   src/board/geometry/routePaths.ts   routeKey -> SVG path d (1-2 cubic Beziers), plus low-confidence flags
 
 Never bundled. Requires: numpy, scipy, opencv-python-headless, scikit-image
@@ -36,6 +36,8 @@ BOARD_SIZE = (6660, 4173)
 ROUTES_TS = ROOT / 'src' / 'data' / 'routes.ts'
 MAP_COORDS_TS = ROOT / 'src' / 'sim' / 'mapCoordinates.ts'
 OUT_DIR = ROOT / 'src' / 'board' / 'geometry'
+# City points are shared with the player app (the round report's mini maps), so they live in src/data.
+CITY_POINTS_TS = ROOT / 'src' / 'data' / 'cityPoints.ts'
 
 SIMPLE_MAP_SCALE = 6
 # Route strokes are ~23px of pure white; borders and text halos are a few px wide.
@@ -407,7 +409,7 @@ def write_city_points(cities, offices):
             x, y, r = offices[code]
             lines.append(f'  {code}: {{ x: {x:.1f}, y: {y:.1f}, r: {r:.1f} }},')
     lines += ['};', '']
-    (OUT_DIR / 'cityPoints.ts').write_text('\n'.join(lines), encoding='utf-8', newline='\n')
+    CITY_POINTS_TS.write_text('\n'.join(lines), encoding='utf-8', newline='\n')
 
 
 def read_edited_paths():
@@ -538,7 +540,7 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     write_city_points(cities, offices)
     write_route_paths(path_ds, flags, edited)
-    print(f'Wrote {len(path_ds)} route paths ({len(flags)} flagged, {len(edited)} kept as hand-edited) and {len(cities)} city points to {OUT_DIR}')
+    print(f'Wrote {len(path_ds)} route paths ({len(flags)} flagged, {len(edited)} kept as hand-edited) and {len(cities)} city points to {OUT_DIR} and {CITY_POINTS_TS}')
     for key in sorted(flags):
         print(f'  flagged {key}: {flags[key]}')
     if args.overlay:

@@ -48,6 +48,7 @@ describe('state serialization', () => {
         routesAdded: { 'Erie Railroad': ['Buffalo-Cleveland'] },
         marketExpired: [{ id: 'c1', commodity: 'cattle', destinationKey: 'Boston' }],
         marketAdded: [{ id: 'c2', commodity: 'wine', destinationKey: 'Denver' }],
+        marketLastRound: [{ id: 'c3', commodity: 'coal', destinationKey: 'Atlanta' }],
       },
     };
     const { G: loaded } = deserializeStateFromJSON(serializeStateToJSON(G, ctx));
@@ -69,5 +70,12 @@ describe('state serialization', () => {
     );
     expect(G.turnLedger).toEqual({ playerID: '0', entries: [{ label: 'Borrowed', amount: 5000 }] });
     expect(G).not.toHaveProperty('roundReport');
+  });
+
+  it('drops the old "Added N routes" count, which the round report replaced', () => {
+    const { G } = deserializeStateFromJSON(
+      JSON.stringify({ G: { contracts: [], players: [], independentRailroads: {}, lastRoundRoutesAdded: 3 }, ctx })
+    );
+    expect(G).not.toHaveProperty('lastRoundRoutesAdded');
   });
 });

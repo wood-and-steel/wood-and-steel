@@ -31,8 +31,9 @@ export interface GameState {
     { name: string; routes: IndependentRailroadRoute[] }
   >;
   byodGameStarted?: boolean;          // true once host starts the game (waiting_for_players → setup)
-  lastRoundRoutesAdded?: number;      // UI hint; set when growIndependentRailroads adds routes
   marketRoundsWithoutExpirationStart?: number; // market round-ends in a row with no expiration countdown started; absent until the market opens
+  turnLedger?: TurnLedger;            // the current player's money changes this turn; cleared at end of turn
+  roundReport?: RoundReport;          // what changed at the last round end; replaced at each round end
 }
 ```
 
@@ -43,6 +44,7 @@ export interface GameState {
 | `players[].activeCities` | Cities the player has expanded into; last entry drives contract generation ("current city") |
 | `players[].hubCity` / `.regionalOffice` | Optional player upgrades; `regionalOffice` gates commodity region in contract generation |
 | `marketRoundsWithoutExpirationStart` | Set to 0 at the first round-end with any open market contract; reset to 0 when a countdown starts, else +1. At 2 or more, the next round-end always starts one. See `src/stores/marketExpiration.ts` |
+| `roundReport` | Written by the end-of-round hook (`src/stores/roundReport.ts`): `round` (the round that ended, counted from 0 like `ctx.round`), `routesAdded` (railroad name → route keys it gained), `marketExpired` / `marketAdded` (copies of `{id, commodity, destinationKey}`, since expired contracts leave `contracts`), and `marketLastRound` (open market contracts that entered their last round, so the report counts that as news). Whether a device has seen it is in that device's `localStorage`, never in `G` |
 | `independentRailroads` | Keyed by generated company name; grown over time by `growIndependentRailroads` (see `src/independentRailroads.ts`) |
 
 ### `Contract` (in `G.contracts`)

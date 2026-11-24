@@ -8,7 +8,7 @@
 import React from 'react';
 import boardImageUrl from '../../../docs/map-board-full.jpg';
 import { routes } from '../../data/routes';
-import { BOARD_HEIGHT, BOARD_WIDTH, CITY_POINTS, REGIONAL_OFFICE_POINTS } from '../geometry/cityPoints';
+import { BOARD_HEIGHT, BOARD_WIDTH, CITY_POINTS, REGIONAL_OFFICE_POINTS } from '../../data/cityPoints';
 import { EDITED_ROUTES, FLAGGED_ROUTES, ROUTE_PATHS } from '../geometry/routePaths';
 import { formatPathD, parsePathD, type BezierPath, type Point } from '../geometry/pathData';
 import {

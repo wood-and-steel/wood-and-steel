@@ -5,6 +5,7 @@ import { PlayerAvatar } from "./PlayerAvatar";
 import type { GameState, GameContext } from "../stores/gameStore";
 import { useGameStore } from "../stores/gameStore";
 import { formatMoney } from "../utils/money";
+import { displayRound } from "../utils/rounds";
 
 export type GamePhase = "setup" | "play" | "scoring";
 
@@ -18,12 +19,17 @@ export interface PlayerToolbarProps {
   onOpenLoans?: () => void;
   /** Opens another player's card. */
   onOpenPlayer?: (playerID: string) => void;
+  /** Opens the latest round report; the round label is disabled without one. */
+  onOpenRoundReport?: () => void;
+  /** A round report this device hasn't seen yet: the round label shows a dot. */
+  roundReportUnseen?: boolean;
 }
 
 /**
  * Toolbar shown below NavBar: the player's name, ties, cash and debt, a Loans button (always),
  * the other players with their ties (press one for their card), and on the player's turn Undo,
- * Actions and End Turn.
+ * Actions and End Turn. In play, the round label opens the latest round report, with a dot when
+ * there's one this device hasn't seen.
  */
 export function PlayerToolbar({
   G,
@@ -34,6 +40,8 @@ export function PlayerToolbar({
   onOpenActions,
   onOpenLoans,
   onOpenPlayer,
+  onOpenRoundReport,
+  roundReportUnseen,
 }: PlayerToolbarProps): React.ReactElement | null {
   const effectivePlayerID = playerID ?? ctx.currentPlayer;
   const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
@@ -116,35 +124,52 @@ export function PlayerToolbar({
             </span>
           )}
         </div>
-        {showTurnToolbar ? (
+        {(showTurnToolbar || currentPhase === "play") && (
           <div className="playerToolbar__buttonGroup">
-            <button
-              type="button"
-              name="undo"
-              aria-label="Undo all actions this turn"
-              className={`button playerToolbar__undo ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
-              disabled={!canUndo}
-              onClick={() => undoCurrentTurn()}
-            >
-              Undo
-            </button>
-            <button
-              type="button"
-              name="actions"
-              className={`button ${startingContractExists && currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
-              onClick={() => onOpenActions?.()}
-            >
-              Actions
-            </button>
-            <button
-              type="submit"
-              name="endTurn"
-              className={`button ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
-            >
-              End Turn
-            </button>
+            {currentPhase === "play" && (
+              <button
+                type="button"
+                className="playerToolbar__round"
+                disabled={!onOpenRoundReport}
+                onClick={() => onOpenRoundReport?.()}
+                aria-label={`Round ${displayRound(ctx.round)}${roundReportUnseen ? ", new round report" : ""}`}
+                title={onOpenRoundReport ? "Show last round's report" : undefined}
+              >
+                Round {displayRound(ctx.round)}
+                {roundReportUnseen && <span className="playerToolbar__roundDot" aria-hidden="true" />}
+              </button>
+            )}
+            {showTurnToolbar && (
+              <>
+                <button
+                  type="button"
+                  name="undo"
+                  aria-label="Undo all actions this turn"
+                  className={`button playerToolbar__undo ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
+                  disabled={!canUndo}
+                  onClick={() => undoCurrentTurn()}
+                >
+                  Undo
+                </button>
+                <button
+                  type="button"
+                  name="actions"
+                  className={`button ${startingContractExists && currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
+                  onClick={() => onOpenActions?.()}
+                >
+                  Actions
+                </button>
+                <button
+                  type="submit"
+                  name="endTurn"
+                  className={`button ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
+                >
+                  End Turn
+                </button>
+              </>
+            )}
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

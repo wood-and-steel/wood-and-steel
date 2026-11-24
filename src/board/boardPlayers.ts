@@ -4,14 +4,9 @@
  * Hub, Railyard and Regional Office upgrade discs use the dark one). Dark is the player color itself.
  */
 import type { GameContext, GameState, RegionCode } from '../stores/gameStore';
-import { getPlayerAvatarColor, PLAYER_AVATAR_COLORS } from '../utils/playerAvatar';
+import { getPlayerAvatarColor, getPlayerLightColor } from '../utils/playerAvatar';
 
-/** Light token color for each player color, in PLAYER_AVATAR_COLORS order. */
-const PLAYER_LIGHT_COLORS = ['#E7CB2C', '#FB3F84', '#0D9ABA', '#39AB2E', '#CA07F1'] as const;
-
-const LIGHT_BY_PLAYER_COLOR = new Map<string, string>(
-  PLAYER_AVATAR_COLORS.map((color, i) => [color, PLAYER_LIGHT_COLORS[i]]),
-);
+export { shadeColor } from '../utils/playerAvatar';
 
 export interface BoardPlayer {
   id: string;
@@ -21,22 +16,6 @@ export interface BoardPlayer {
   dark: string;
   hubCity: string | null;
   regionalOffice: RegionCode | null;
-}
-
-const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
-
-/** Mix a hex color toward white (amount > 0) or black (amount < 0). Non-hex colors are returned unchanged. */
-export function shadeColor(color: string, amount: number): string {
-  const match = HEX_RE.exec(color.trim());
-  if (!match) return color;
-  const hex = match[1].length === 3 ? [...match[1]].map((c) => c + c).join('') : match[1];
-  const target = amount > 0 ? 255 : 0;
-  const t = Math.min(1, Math.abs(amount));
-  const channels = [0, 2, 4].map((i) => {
-    const value = Number.parseInt(hex.slice(i, i + 2), 16);
-    return Math.round(value + (target - value) * t);
-  });
-  return `#${channels.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
 }
 
 /** Players in play order (falling back to G order), with display colors. */
@@ -50,8 +29,7 @@ export function getBoardPlayers(G: GameState, ctx: GameContext): BoardPlayer[] {
       id,
       name: props.name,
       color,
-      // Colors stored by games created before this palette have no assigned light color.
-      light: LIGHT_BY_PLAYER_COLOR.get(color) ?? shadeColor(color, 0.45),
+      light: getPlayerLightColor(color),
       dark: color,
       hubCity: props.hubCity ?? null,
       regionalOffice: props.regionalOffice ?? null,

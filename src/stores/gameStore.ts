@@ -65,6 +65,8 @@ export interface RoundReport {
   routesAdded: Record<string, string[]>;
   marketExpired: ReportedContract[];
   marketAdded: ReportedContract[];
+  /** Open market contracts that entered their last round at this round end. */
+  marketLastRound: ReportedContract[];
 }
 
 /** A route owned by an independent railroad, with the round it was added. */
@@ -81,8 +83,6 @@ export interface GameState {
     { name: string; routes: IndependentRailroadRoute[] }
   >;
   byodGameStarted?: boolean;
-  /** Set at end-of-round when growIndependentRailroads adds routes; cleared when user dismisses NavBar hint. */
-  lastRoundRoutesAdded?: number;
   /**
    * Market round-ends in a row with no expiration countdown started.
    * Absent until the market opens (first round-end with any open market contract).

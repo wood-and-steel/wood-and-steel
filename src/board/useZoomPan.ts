@@ -4,7 +4,7 @@
  * and dragging the map scrolls the viewport.
  */
 import React from 'react';
-import { BOARD_HEIGHT, BOARD_WIDTH } from './geometry/cityPoints';
+import { BOARD_HEIGHT, BOARD_WIDTH } from '../data/cityPoints';
 
 export const MIN_ZOOM = 0.5;
 export const MAX_ZOOM = 4;

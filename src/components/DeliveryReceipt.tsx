@@ -4,25 +4,26 @@ import type { PlayerProps } from "../stores/gameStore";
 import { defaultDeliveringEngine, deliveringEngineMatters, deliveryBreakdown, serviceOn } from "../rules/finance";
 import { getEngineType, type EngineSlot } from "../rules/playerBoard";
 import { formatMoney, formatMoneyChange } from "../utils/money";
+import { EngineSlotIcon } from "./EngineIcon";
 import { BeforeAfter, RadioOption, Sheet } from "./Sheet";
 
 export interface DeliveryReceiptProps {
   contract: Contract;
   player: PlayerProps;
+  /** The player's seat, for their engine token colors. */
+  playerID: string;
   /** Earned so far from contracts, for the before/after line. */
   ties: number;
   onDeliver: (engineSlot: EngineSlot | undefined) => boolean;
   onClose: () => void;
 }
 
-const SLOT_NAMES: Record<EngineSlot, string> = { 0: "Light", 1: "Dark" };
-
 /**
  * What a delivery pays, line by line, before the player confirms. Bonus and debt-service
  * lines appear only when they change the total; the engine is asked for only when the two
  * engines would pay differently.
  */
-export function DeliveryReceipt({ contract, player, ties, onDeliver, onClose }: DeliveryReceiptProps): React.ReactElement {
+export function DeliveryReceipt({ contract, player, playerID, ties, onDeliver, onClose }: DeliveryReceiptProps): React.ReactElement {
   const slots = ([0, 1] as EngineSlot[]).filter((slot) => player.engines[slot] !== null);
   const askEngine = deliveringEngineMatters(player.engines);
   const [slot, setSlot] = React.useState<EngineSlot | undefined>(askEngine ? slots[0] : undefined);
@@ -39,8 +40,9 @@ export function DeliveryReceipt({ contract, player, ties, onDeliver, onClose }: 
           <div className="sheet__options" role="radiogroup" aria-label="Delivering engine">
             {slots.map((s) => (
               <RadioOption key={s} name="deliveringEngine" checked={slot === s} onSelect={() => setSlot(s)}>
-                <span>
-                  {SLOT_NAMES[s]}: {getEngineType(player.engines[s]!).name}
+                <span className="engineLabel">
+                  <EngineSlotIcon playerID={playerID} avatarColor={player.avatarColor} slot={s} />
+                  {getEngineType(player.engines[s]!).name}
                 </span>
               </RadioOption>
             ))}

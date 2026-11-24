@@ -10,7 +10,10 @@ import { LoansSheet } from './components/LoansSheet';
 import { ActionsSheet } from './components/ActionsSheet';
 import { DeliveryReceipt } from './components/DeliveryReceipt';
 import { ClaimSheet } from './components/ClaimSheet';
+import { DiscardSheet } from './components/DiscardSheet';
 import { PlayerSheet } from './components/PlayerSheet';
+import { RoundReportSheet } from './components/RoundReportSheet';
+import { useRoundReport } from './hooks/useRoundReport';
 import type { Contract } from './Contract';
 import { contractTies } from './utils/ties';
 import { bestEngineLevel, engineLevel } from './rules/engines';
@@ -18,7 +21,6 @@ import { MARKET_CONTRACT_MIN_ENGINE } from './rules/rulesData';
 import { independentRailroadPrice } from './stores/gameActions';
 import { formatMoney } from './utils/money';
 import { useGame } from './hooks/useGame';
-import { useGameStore } from './stores/gameStore';
 import { useLobbyStore } from './stores/lobbyStore';
 
 /** Minimal game manager shape passed from App (currentGameCode for NavBar). */
@@ -43,7 +45,7 @@ export function WoodAndSteelState({
     React.useState(false);
   const [isPrivateContractModalOpen, setIsPrivateContractModalOpen] =
     React.useState(false);
-  const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | null>(null);
+  const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | 'discard' | null>(null);
   const [receiptContractId, setReceiptContractId] = React.useState<string | null>(null);
   const [claimContractId, setClaimContractId] = React.useState<string | null>(null);
   const [viewPlayerId, setViewPlayerId] = React.useState<string | null>(null);
@@ -71,10 +73,6 @@ export function WoodAndSteelState({
 
   const handleDismissHint = React.useCallback(() => {
     setShowRailroadHint(false);
-  }, []);
-
-  const handleDismissRoutesAddedHint = React.useCallback(() => {
-    useGameStore.setState((s) => ({ G: { ...s.G, lastRoundRoutesAdded: undefined } }));
   }, []);
 
   const handleNavigateToLobby = React.useCallback(() => {
@@ -112,6 +110,7 @@ export function WoodAndSteelState({
   // Fulfilling opens the delivery receipt; the move runs when the player confirms there.
   const handleToggleFulfilled = React.useCallback((contractId: string) => setReceiptContractId(contractId), []);
   const myProps = G.players.find(([id]) => id === playerID)?.[1];
+  const roundReport = useRoundReport(currentPhase === 'play' ? G.roundReport : undefined, gameManager?.currentGameCode ?? '');
   const isMyTurn = playerID === ctx.currentPlayer;
   // Only contracts the sheets still apply to: the player's own unfulfilled one, an open market one.
   const receiptContract = receiptContractId
@@ -130,7 +129,7 @@ export function WoodAndSteelState({
     if (isMyTurn) return;
     setReceiptContractId(null);
     setClaimContractId(null);
-    setOpenSheet((sheet: 'loans' | 'actions' | null) => (sheet === 'actions' ? null : sheet));
+    setOpenSheet((sheet: 'loans' | 'actions' | 'discard' | null) => (sheet === 'loans' ? sheet : null));
   }, [isMyTurn]);
   /** Why the player can't claim a market contract now, or null. */
   const claimRefusal = !myProps
@@ -141,17 +140,10 @@ export function WoodAndSteelState({
         ? 'You already hold a claimed market contract. Fulfill it before claiming another.'
         : null;
 
-  const handleDelete = React.useCallback(
-    (contractId: string) => {
-      const c = G.contracts.find((x: Contract) => x.id === contractId);
-      if (!c) return;
-      if (!window.confirm(`Delete "${c.commodity} to ${c.destinationKey}"?`))
-        return;
-      setInput(`${c.commodity}, ${c.destinationKey}, ${c.type}`);
-      moves.deleteContract(contractId);
-    },
-    [G.contracts, moves]
-  );
+  // What the menu's Discard Contract offers, and whether Draw Private Contract applies.
+  const myContracts = G.contracts.filter((c: Contract) => c.playerID === playerID && !c.fulfilled);
+  const openMarket = G.contracts.filter((c: Contract) => c.type === 'market' && c.playerID === null && !c.fulfilled);
+  const hasPrivateContract = myContracts.some((c: Contract) => c.type === 'private');
 
   // Claiming opens the claim sheet, where the player can also record the cargo.
   const handleClaimContract = React.useCallback((contractId: string) => setClaimContractId(contractId), []);
@@ -218,8 +210,6 @@ export function WoodAndSteelState({
             onTabChange={handleTabChange}
             showRailroadHint={showRailroadHint}
             onDismissHint={handleDismissHint}
-            routesAddedCount={G.lastRoundRoutesAdded}
-            onDismissRoutesAddedHint={handleDismissRoutesAddedHint}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
@@ -249,9 +239,13 @@ export function WoodAndSteelState({
             onTabChange={handleTabChange}
             showRailroadHint={showRailroadHint}
             onDismissHint={handleDismissHint}
-            routesAddedCount={G.lastRoundRoutesAdded}
-            onDismissRoutesAddedHint={handleDismissRoutesAddedHint}
+            roundReportAutoOpen={roundReport.autoOpen}
+            onRoundReportAutoOpenChange={roundReport.setAutoOpen}
             onFillMarket={currentPhase === 'play' && isMyTurn ? () => moves.fillMarketTableau() : undefined}
+            onDiscardContract={currentPhase === 'play' ? () => setOpenSheet('discard') : undefined}
+            onDrawPrivateContract={currentPhase === 'play' ? () => setIsPrivateContractModalOpen(true) : undefined}
+            canActFromMenu={isMyTurn}
+            hasPrivateContract={hasPrivateContract}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
@@ -279,12 +273,26 @@ export function WoodAndSteelState({
             onOpenActions={() => setOpenSheet('actions')}
             onOpenLoans={() => setOpenSheet('loans')}
             onOpenPlayer={setViewPlayerId}
+            onOpenRoundReport={G.roundReport ? roundReport.open : undefined}
+            roundReportUnseen={roundReport.unseen}
           />
+          {roundReport.isOpen && G.roundReport && (
+            <RoundReportSheet
+              report={G.roundReport}
+              G={G}
+              ctx={ctx}
+              player={myProps}
+              autoOpen={roundReport.autoOpen}
+              onAutoOpenChange={roundReport.setAutoOpen}
+              onClose={roundReport.close}
+            />
+          )}
           {viewPlayerId && <PlayerSheet G={G} playerID={viewPlayerId} onClose={() => setViewPlayerId(null)} />}
           {claimContract && myProps && isMyTurn && (
             <ClaimSheet
               contract={claimContract}
               player={myProps}
+              playerID={playerID ?? ''}
               refusal={claimRefusal}
               onClaim={(cargoSlot) => moves.claimMarketContract(claimContract.id, cargoSlot)}
               onClose={() => setClaimContractId(null)}
@@ -310,10 +318,19 @@ export function WoodAndSteelState({
               onClose={() => setOpenSheet(null)}
             />
           )}
+          {openSheet === 'discard' && isMyTurn && (
+            <DiscardSheet
+              mine={myContracts}
+              market={openMarket}
+              onDiscard={moves.deleteContract}
+              onClose={() => setOpenSheet(null)}
+            />
+          )}
           {receiptContract && myProps && isMyTurn && (
             <DeliveryReceipt
               contract={receiptContract}
               player={myProps}
+              playerID={playerID ?? ''}
               ties={myTies}
               onDeliver={(engineSlot) => {
                 const delivered = moves.toggleContractFulfilled(receiptContract.id, engineSlot);
@@ -335,7 +352,6 @@ export function WoodAndSteelState({
                 setIsPrivateContractModalOpen(true)
               }
               onToggleFulfilled={handleToggleFulfilled}
-              onDelete={handleDelete}
               onClaimContract={handleClaimContract}
               onSetCargo={moves.setCargo}
             />

@@ -3,7 +3,7 @@
  * how tokens sharing a city are laid out, and snapping a drop point to a city.
  */
 import type { BoardOp, BoardState, EngineSlot } from './boardOps';
-import { CITY_POINTS } from './geometry/cityPoints';
+import { CITY_POINTS } from '../data/cityPoints';
 import type { Point } from './geometry/pathData';
 
 export type TokenRef = { kind: 'engine'; playerID: string; slot: EngineSlot } | { kind: 'railyard'; playerID: string };

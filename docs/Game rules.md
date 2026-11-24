@@ -358,6 +358,8 @@ After all players have taken a turn, the round is over.
 
 The app determines how each of the independent railroads are expanding. Players add the corresponding track segments on the central map board.
 
+The app's round report shows what changed: a small map for each independent railroad that grew, with its new routes drawn thick, and the market contracts that expired and the ones that replaced them. It opens for every player at the end of the round unless they've switched that off on their device; the round label in the toolbar always opens the latest report, and shows a dot when there's one they haven't seen.
+
 Independent railroads never start on or expand into mountainous routes of length 4 or more.
 
 ### Monopolies

@@ -35,7 +35,7 @@ const contract = (props: Partial<Contract> = {}): Contract => ({
 describe('DeliveryReceipt', () => {
   test('with no bonuses or debt service, shows the value and the total only', () => {
     const c = contract();
-    render(<DeliveryReceipt contract={c} player={player()} ties={3} onDeliver={() => true} onClose={() => {}} />);
+    render(<DeliveryReceipt playerID="0" contract={c} player={player()} ties={3} onDeliver={() => true} onClose={() => {}} />);
     expect(screen.getByText('Contract value')).toBeInTheDocument();
     expect(screen.queryByText('Debt service')).toBeNull();
     expect(screen.queryByText('Upgraded Stations')).toBeNull();
@@ -48,7 +48,7 @@ describe('DeliveryReceipt', () => {
     const onDeliver = vi.fn(() => true);
     const c = contract({ type: 'market' });
     render(
-      <DeliveryReceipt
+      <DeliveryReceipt playerID="0"
         contract={c}
         player={player({ engines: ['prairie', 'mountain'], upgrades: ['upgraded-stations'] })}
         ties={0}
@@ -67,7 +67,7 @@ describe('DeliveryReceipt', () => {
 
   test('shows first-Central debt service, and blocks a delivery that would bankrupt the player', () => {
     const { unmount } = render(
-      <DeliveryReceipt
+      <DeliveryReceipt playerID="0"
         contract={contract({ destinationKey: 'Chicago', commodity: 'cotton' })}
         player={player({ debt: 10000 })}
         ties={0}
@@ -80,7 +80,7 @@ describe('DeliveryReceipt', () => {
     unmount();
 
     render(
-      <DeliveryReceipt
+      <DeliveryReceipt playerID="0"
         contract={contract()}
         player={player({ cash: 0, debt: 200000, westernDeliveryMade: true })}
         ties={0}
@@ -193,8 +193,13 @@ describe('ActionsSheet', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /Buy an engine/ }));
     expect(screen.getAllByRole('button', { name: 'Buy for $5K' })).toHaveLength(2);
-    expect(screen.getByText(/trades in your light 2-4-0 John Bull/)).toBeInTheDocument();
-    expect(screen.getByText(/on your empty dark token/)).toBeInTheDocument();
+    // The light or dark token is shown as the engine picture, named for screen readers.
+    const tradeIn = screen.getByText(/trades in your/);
+    expect(tradeIn).toHaveTextContent(/trades in your\s*2-4-0 John Bull/);
+    expect(within(tradeIn).getByRole('img', { name: 'Light' })).toBeInTheDocument();
+    const empty = screen.getByText(/on your empty/);
+    expect(within(empty).getByRole('img', { name: 'Dark' })).toBeInTheDocument();
+    expect(empty).toHaveTextContent(/token/);
   });
 });
 

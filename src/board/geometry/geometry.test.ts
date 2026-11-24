@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { routes } from '../../data/routes';
-import { CITY_POINTS, REGIONAL_OFFICE_POINTS } from './cityPoints';
+import { CITY_POINTS, REGIONAL_OFFICE_POINTS } from '../../data/cityPoints';
 import { EDITED_ROUTES, FLAGGED_ROUTES, ROUTE_PATHS } from './routePaths';
 import { formatPathD, parsePathD } from './pathData';
 import { formatRoutePathsFile } from '../edit-paths/routePathsFile';

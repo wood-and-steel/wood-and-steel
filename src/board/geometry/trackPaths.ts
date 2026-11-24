@@ -3,7 +3,7 @@
  * city circles, and offset sideways so parallel owners sit next to each other.
  */
 import { routes } from '../../data/routes';
-import { CITY_POINTS } from './cityPoints';
+import { CITY_POINTS } from '../../data/cityPoints';
 import { parsePathD, type BezierPath, type Point } from './pathData';
 import { ROUTE_PATHS } from './routePaths';
 
