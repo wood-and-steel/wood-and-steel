@@ -2,7 +2,7 @@
 
 Wood and Steel is a board game for 2-5 players. Players each play the role of a rail baron, expanding their railroad empire in the age of the steam engine.
 
-At the start of the game, each player has a two-city railroad in the eastern United States amd the rest of the map is scattered with small independent railroads. Players pick up and deliver commodities to fulfill private and market contracts, making money to build more track and upgrade their company.
+At the start of the game, each player has a two-city railroad in the eastern United States, while the rest of the map is scattered with small independent railroads. Players pick up and deliver commodities to fulfill private and market contracts, making money to build more track and upgrade their company.
 
 This is a board game that is under development. These rules are intended for agents and people who are creating and testing the game.
 
@@ -16,7 +16,7 @@ Wood and Steel is played with physical tabletop components and a web app. On the
 
 - **Railroad**. A player's collection of routes and cities.
 - **City**. A city is a place on the game board where engines move through and stop at.
-- **Active city**. A city that the app knows is controlled by a specific player, a subset of all the citiies in their railroad. The concept of "active city" is internal to the app and not shown to the players.
+- **Active city**. A city that the app knows is controlled by a specific player, a subset of all the cities in their railroad. The concept of "active city" is internal to the app and not shown to the players.
 - **Route**. A route connects two cities. After a player builds track on a route, they may move an engine along that route. More than 1 player can build on a route, but players a route owned by an independent railroad cannot be built on by players or other independent railroads.
 - **Independent railroad**. An app-controlled collection of routes.
 - **Commodity**. An engine can carry 0 or 1 commodity at a time. Each city supplies 0 or more commodities. The categories (e.g. "Finished goods") and colors (e.g. purple) of the commodities are only decorative.
@@ -103,7 +103,7 @@ The app currently shows the total railroad ties earned from contract fulfillment
 
 When a player collects 30 or more railroad ties from contract fulfillment, the game is over. In addition to railroad ties scored during the game, these bonuses are awarded:
 
-- **Regional Office:** If a player has mpurchased a Regional Office, they are awarded bonus railroad ties.
+- **Regional Office:** If a player has purchased a Regional Office, they are awarded bonus railroad ties.
 
 
 ## Set Up
@@ -121,7 +121,7 @@ On the tabletop, each player chooses a color and takes a player board, an engine
 2. Sort the engine deck face up from lowest to highest value amd put it next to their board.
 3. Put the 3 discs on their respective places on the player board.
 4. Put their engine, commodity, and upgrade tokens near their player board.
-5. On a piece of peper, make a note they have $10,000 cash and $0 debt.
+5. On a piece of paper, make a note they have $10,000 cash and $0 debt.
 
 [Rendering of player's board set up with red pieces](./player-board-set-up-rendering.png)
 
@@ -132,7 +132,7 @@ On the tabletop, each player chooses a color and takes a player board, an engine
 
 One player, the host, starts the app on their device by visiting https://woodandsteel.pettiross.com/. From the lobby, click the button with the number of players to start a new game. The other players start the app and join the game using the 5-letter code from the host's game.
 
-The app randomly chooses a player order. In turn, each player chooses a starting route. Players cannot share starting routes or citites, so only one player can have either New York-Philadelphia or Philadelphia-Washington.
+The app randomly chooses a player order. In turn, each player chooses a starting route. Players cannot share starting routes or cities, so only one player can have either New York-Philadelphia or Philadelphia-Washington.
 
 Starting route options:
 
@@ -146,7 +146,7 @@ Starting route options:
 After choosing their starting route, the player uses their marker to draw a line on the route on the map and puts one of their two engine markers on one of the two cities it connects. The app notes the starting cities as the player's first two active cities.
 
 
-#### Indepdendent railroads
+#### Independent railroads
 
 After all players have chosen starting cities, the app creates independent railroads and gives each of them a starting route. Using the black marker, the host marks the routes on the map board.
 
