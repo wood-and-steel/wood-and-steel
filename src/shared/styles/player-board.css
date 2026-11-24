@@ -180,6 +180,7 @@
   margin: 0;
   font-size: var(--font-size-body);
   color: var(--color-text-subtle);
+  padding: var(--spacing-sm) var(--spacing-xs);
 }
 
 .contractRow {
@@ -190,7 +191,7 @@
   width: 100%;
   padding: var(--spacing-sm) var(--spacing-xs);
   border: none;
-  border-bottom: var(--border-width-md) solid var(--color-border-light);
+  border-bottom: var(--border-width-md) solid var(--color-border-subtle);
   background: none;
   color: inherit;
   font-family: inherit;
@@ -406,7 +407,7 @@
   align-items: center;
   gap: var(--spacing-sm);
   flex-wrap: wrap;
-  padding: var(--spacing-sm) 0;
+  padding: var(--spacing-sm) var(--spacing-xs);
 }
 
 .engines__slot {
@@ -493,14 +494,12 @@
 }
 
 /* Cargo, right-aligned like the board app's trays: commodity icon and name, no outline.
-   When editable, a transparent native select covers it so the platform picker opens on tap. */
+   When editable it's a button that opens the cargo sheet. */
 .engines__cargo {
-  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
   margin-left: auto;
-  border-radius: var(--radius-sm);
   white-space: nowrap;
 }
 
@@ -508,11 +507,22 @@
   color: var(--color-text-muted);
 }
 
-label.engines__cargo {
+.engines__cargo--button {
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  color: inherit;
   cursor: pointer;
 }
 
-label.engines__cargo:has(.engines__cargoSelect:focus-visible) {
+.engines__cargo--button.engines__cargo--none {
+  color: var(--color-text-muted);
+}
+
+.engines__cargo--button:focus-visible {
   outline: 2px solid var(--color-highlight);
   outline-offset: 2px;
 }
@@ -525,14 +535,4 @@ label.engines__cargo:has(.engines__cargoSelect:focus-visible) {
 
 .engines__cargoChevron {
   color: var(--color-text-subtle);
-}
-
-.engines__cargoSelect {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  font-size: var(--font-size-body);
-  cursor: pointer;
 }

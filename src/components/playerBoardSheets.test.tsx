@@ -241,10 +241,31 @@ describe('EnginesPanel', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: '2-4-0 John Bull' }));
     expect(onBuyEngine).toHaveBeenCalled();
-    const cargo = screen.getByRole('combobox', { name: 'Light engine cargo' });
-    expect(cargo).toHaveValue('coal');
-    expect(cargo.closest('label')).toHaveTextContent('Coal');
-    expect(screen.getByRole('combobox', { name: 'Dark engine cargo' }).closest('label')).toHaveTextContent('Set cargo');
+    expect(screen.getByRole('button', { name: 'Light engine cargo: Coal' })).toHaveTextContent('Coal');
+    expect(screen.getByRole('button', { name: 'Dark engine cargo: none' })).toHaveTextContent('Set cargo');
+  });
+
+  test('picks cargo from a sheet of commodities by group, with their icons', () => {
+    const onSetCargo = vi.fn(() => true);
+    render(
+      <EnginesPanel
+        player={player({ engines: ['john-bull', 'mogul'], cargo: ['coal', null] })}
+        playerID="0"
+        canEdit
+        onSetCargo={onSetCargo}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Light engine cargo: Coal' }));
+    const sheet = screen.getByRole('dialog', { name: 'Light engine cargo' });
+    const groups = within(sheet).getAllByRole('region').map((g) => g.getAttribute('aria-label'));
+    expect(groups).toEqual(['Metals', 'Mined goods', 'Crops', 'Finished goods', 'Livestock']);
+    expect(within(sheet).getByRole('button', { name: 'Coal' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Wine' }));
+    expect(onSetCargo).toHaveBeenLastCalledWith(0, 'wine');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Light engine cargo: Coal' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear cargo' }));
+    expect(onSetCargo).toHaveBeenLastCalledWith(0, null);
   });
 
   test('without onBuyEngine, engine names are plain text', () => {
