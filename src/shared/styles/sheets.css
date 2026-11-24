@@ -273,3 +273,19 @@ button.sheet__option {
 .sheet:focus {
   outline: none;
 }
+
+/* Another player's card */
+.playerSheet__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.playerSheet__stats > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.playerSheet__debt {
+  color: var(--color-danger);
+}

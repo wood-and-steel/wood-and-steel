@@ -33,6 +33,8 @@ export interface NavBarProps {
   onDismissHint?: () => void;
   routesAddedCount?: number;
   onDismissRoutesAddedHint?: () => void;
+  /** Playtest tool: fill the market tableau (the old +M button). Shown only on the player's turn in play. */
+  onFillMarket?: () => void;
 }
 
 /**
@@ -52,6 +54,7 @@ export function NavBar({
   onDismissHint,
   routesAddedCount,
   onDismissRoutesAddedHint,
+  onFillMarket,
 }: NavBarProps): React.ReactElement {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -207,7 +210,7 @@ export function NavBar({
   );
 
   const tabs: { id: NavBarTabId; label: string }[] = [
-    { id: "board", label: "Contracts" },
+    { id: "board", label: "Home" },
     { id: "commodities", label: "Commodities" },
     { id: "indies", label: "Railroads" },
   ];
@@ -239,6 +242,16 @@ export function NavBar({
           </PopupMenuItem>
         )}
         <PopupMenuItem onClick={() => handleMenuClick("edit")}>Add Contract or City...</PopupMenuItem>
+        {onFillMarket && (
+          <PopupMenuItem
+            onClick={() => {
+              onFillMarket();
+              setIsMenuOpen(false);
+            }}
+          >
+            Fill Market Contracts
+          </PopupMenuItem>
+        )}
       </PopupMenu>
 
       <nav className="navBar">
@@ -286,7 +299,7 @@ export function NavBar({
 
         {showRailroadHint && hintPosition && (
           <NavBarHintCallout isDesktop={isDesktop} hintPosition={hintPosition}>
-            Mark the independent railroads on your map, then switch to Contracts to start taking turns.
+            Mark the independent railroads on your map, then switch to Home to start taking turns.
           </NavBarHintCallout>
         )}
         {showRoutesAddedHint(routesAddedCount) && routesAddedHintPosition && (

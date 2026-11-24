@@ -1,9 +1,11 @@
 import React from "react";
-import { railroadTieValue } from "../Contract";
-import { ContractsList } from "./ContractsList";
+import type { Contract } from "../Contract";
+import { ContractRows, type ContractAction } from "./ContractRows";
 import { EnginesPanel } from "./EnginesPanel";
 import type { EngineSlot } from "../rules/playerBoard";
-import type { GameState, GameContext } from "../stores/gameStore";
+import { formatCommodity } from "../rules/playerBoard";
+import { UPGRADE_NAMES, type UpgradeKey } from "../rules/rulesData";
+import type { GameState, GameContext, PlayerProps } from "../stores/gameStore";
 import { STARTING_CITY_PAIRS } from "../data/startingRoutes";
 
 export type GamePhase = "setup" | "play" | "scoring";
@@ -16,23 +18,47 @@ export interface PlayerBoardProps {
   currentPhase: GamePhase;
   onStartingPairSelect: (pair: [string, string]) => void;
   onOpenPrivateContractModal?: () => void;
+  /** Opens the delivery receipt for one of the player's contracts. */
   onToggleFulfilled: (contractID: string) => void;
   onDelete: (contractID: string) => void;
+  /** Opens the claim sheet for an open market contract. */
   onClaimContract?: (contractID: string) => void;
   onSetCargo?: (slot: EngineSlot, commodity: string | null) => boolean;
 }
 
+const REGION_NAMES: Record<string, string> = {
+  NW: "Northwest",
+  NC: "North Central",
+  NE: "Northeast",
+  SW: "Southwest",
+  SC: "South Central",
+  SE: "Southeast",
+};
+
+/** The player's upgrades as short labels, with the Hub city, Exchange commodity and Office region. */
+function upgradeLabels(player: PlayerProps): string[] {
+  return [
+    ...(player.hubCity ? [`Hub · ${player.hubCity}`] : []),
+    ...player.upgrades.map((u) =>
+      u === "commodities-exchange" && player.exchangeCommodity
+        ? `${UPGRADE_NAMES[u]} · ${formatCommodity(player.exchangeCommodity)}`
+        : UPGRADE_NAMES[u as UpgradeKey]
+    ),
+    ...(player.regionalOffice ? [`Regional Office · ${REGION_NAMES[player.regionalOffice]}`] : []),
+  ];
+}
+
 /**
- * Displays the active player's board with contracts, action buttons, and starting city selection.
+ * Home: during setup, the starting-city choice; in play, the player's engines, their contracts
+ * and the market as rows valued for them (the market high enough to be seen without
+ * scrolling on a small phone), then their upgrades and fulfilled contracts.
  */
 export function PlayerBoard({
   G,
   ctx,
   playerID,
-  startingContractExists,
   currentPhase,
   onStartingPairSelect,
-  onOpenPrivateContractModal,
   onToggleFulfilled,
   onDelete,
   onClaimContract,
@@ -45,10 +71,7 @@ export function PlayerBoard({
   if (!activePlayer) return null;
 
   const [key, playerProps] = activePlayer;
-  const contracts = G.contracts;
-  const playerScore = contracts
-    .filter((contract) => contract.playerID === key && contract.fulfilled)
-    .reduce((sum, contract) => sum + railroadTieValue(contract), 0);
+  const canAct = isPlayerTurn && playerID === key;
 
   const getChosenCities = (): Set<string> => {
     const chosenCities = new Set<string>();
@@ -67,6 +90,26 @@ export function PlayerBoard({
     if (isPairChosen(pair) || !isPlayerTurn) return;
     onStartingPairSelect(pair);
   };
+
+  const mine = G.contracts.filter((c: Contract) => c.playerID === key && !c.fulfilled);
+  const market = G.contracts.filter((c: Contract) => c.type === "market" && c.playerID === null && !c.fulfilled);
+  const fulfilled = G.contracts.filter((c: Contract) => c.playerID === key && c.fulfilled);
+  const upgrades = upgradeLabels(playerProps);
+
+  const mineActions = (c: Contract): ContractAction[] =>
+    canAct
+      ? [
+          { label: "Fulfill", onSelect: () => onToggleFulfilled(c.id) },
+          { label: "Discard", onSelect: () => onDelete(c.id) },
+        ]
+      : [];
+  const marketActions = (c: Contract): ContractAction[] =>
+    canAct
+      ? [
+          ...(onClaimContract ? [{ label: "Claim…", onSelect: () => onClaimContract(c.id) }] : []),
+          { label: "Discard", onSelect: () => onDelete(c.id) },
+        ]
+      : [];
 
   return (
     <div className="playerBoard">
@@ -91,44 +134,50 @@ export function PlayerBoard({
           </div>
         )}
         {currentPhase === "play" && (
-          <EnginesPanel
-            player={playerProps}
-            canEdit={isPlayerTurn && playerID === key}
-            onSetCargo={(slot, commodity) => onSetCargo?.(slot, commodity) ?? false}
-          />
+          <div className="home">
+            <EnginesPanel
+              player={playerProps}
+              canEdit={canAct}
+              onSetCargo={(slot, commodity) => onSetCargo?.(slot, commodity) ?? false}
+            />
+            <section className="home__section" aria-label="Your contracts">
+              <h3 className="home__heading">Yours</h3>
+              <ContractRows
+                contracts={mine}
+                player={playerProps}
+                actionsFor={mineActions}
+                emptyText="No contracts right now."
+              />
+            </section>
+            <section className="home__section" aria-label="Market contracts">
+              <h3 className="home__heading">Market</h3>
+              <ContractRows
+                contracts={market}
+                player={playerProps}
+                actionsFor={marketActions}
+                emptyText="The market opens when someone buys a Mogul."
+              />
+            </section>
+            <section className="home__section" aria-label="Your upgrades">
+              <h3 className="home__heading">Upgrades</h3>
+              {upgrades.length > 0 ? (
+                <div className="upgradeChips">
+                  {upgrades.map((u) => (
+                    <span key={u} className="upgradeChips__chip">
+                      {u}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="contractRows__empty">None yet. Buy them from Actions.</p>
+              )}
+            </section>
+            <section className="home__section" aria-label="Fulfilled contracts">
+              <h3 className="home__heading">Fulfilled</h3>
+              <ContractRows contracts={fulfilled} actionsFor={() => []} emptyText="None yet." />
+            </section>
+          </div>
         )}
-        <div className={`playerBoard__contracts ${currentPhase === "play" ? "" : "hidden"}`}>
-          <h3 className="playerBoard__contractsTitle">Private</h3>
-          <ContractsList
-            G={G}
-            ctx={ctx}
-            type="private"
-            playerID={key}
-            onToggleFulfilled={onToggleFulfilled}
-            onDelete={onDelete}
-            onClaimContract={onClaimContract}
-          />
-          <h3 className="playerBoard__contractsTitle">Market</h3>
-          <ContractsList
-            G={G}
-            ctx={ctx}
-            type="market"
-            playerID={key}
-            onToggleFulfilled={onToggleFulfilled}
-            onDelete={onDelete}
-            onClaimContract={onClaimContract}
-          />
-          <h3 className="playerBoard__contractsTitle">Fulfilled</h3>
-          <ContractsList
-            G={G}
-            ctx={ctx}
-            type="fulfilled"
-            playerID={key}
-            onToggleFulfilled={onToggleFulfilled}
-            onDelete={onDelete}
-            onClaimContract={onClaimContract}
-          />
-        </div>
       </div>
     </div>
   );

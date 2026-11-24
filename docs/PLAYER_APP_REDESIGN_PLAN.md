@@ -116,7 +116,7 @@ The core release. Everything the player board tracked moves into the app, inside
 9. **Playtest edit dialog:** fields for each player's cash, debt, engines, cargo and upgrades (`setPlayerBoard`).
 10. **Docs:** `Game rules.md` (app state lists, money, blocked-delivery note), `AGENTS.md` state map, `BOT_AGENT_GUIDE.md`, `BOARD_AGENT_GUIDE.md`.
 
-### Stage 3: the new Home
+### Stage 3: the new Home — done
 
 1. **Your railroad screen:**
    - The players' money row: tap it for that player's details sheet.
@@ -154,6 +154,13 @@ The core release. Everything the player board tracked moves into the app, inside
 ## Changes from the sketches
 
 - **Regional Office asks for a region.** The existing `claimRegionalOffice` move records one, so its purchase sheet needs a region picker like the Hub's city picker.
+
+## Decisions made while building Stage 3
+
+- **The toolbar lists each other player's railroad ties, not their money.** Money, engines and the rest are on the player's card, opened by pressing them.
+- **Undo, Actions and End Turn stay in the sticky toolbar** rather than a bar at the foot of Home: on phones the tab bar is at the bottom, and the toolbar is reachable from every tab.
+- **+M moved to the menu** as "Fill Market Contracts", shown on the player's turn.
+- **Contract rows replace the contract cards on Home.** The cards remain for the private contract offers.
 
 ## Decisions made while building Stage 2
 

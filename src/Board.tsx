@@ -9,7 +9,12 @@ import { EditPlaytestDialog } from './components/EditPlaytestDialog';
 import { LoansSheet } from './components/LoansSheet';
 import { ActionsSheet } from './components/ActionsSheet';
 import { DeliveryReceipt } from './components/DeliveryReceipt';
-import { railroadTieValue, type Contract } from './Contract';
+import { ClaimSheet } from './components/ClaimSheet';
+import { PlayerSheet } from './components/PlayerSheet';
+import type { Contract } from './Contract';
+import { contractTies } from './utils/ties';
+import { bestEngineLevel, engineLevel } from './rules/engines';
+import { MARKET_CONTRACT_MIN_ENGINE } from './rules/rulesData';
 import { independentRailroadPrice } from './stores/gameActions';
 import { formatMoney } from './utils/money';
 import { useGame } from './hooks/useGame';
@@ -40,6 +45,8 @@ export function WoodAndSteelState({
     React.useState(false);
   const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | null>(null);
   const [receiptContractId, setReceiptContractId] = React.useState<string | null>(null);
+  const [claimContractId, setClaimContractId] = React.useState<string | null>(null);
+  const [viewPlayerId, setViewPlayerId] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState<TabId>('board');
   const [showRailroadHint, setShowRailroadHint] = React.useState(false);
   const prevPhaseRef = React.useRef(ctx.phase);
@@ -107,9 +114,16 @@ export function WoodAndSteelState({
   const myProps = G.players.find(([id]) => id === playerID)?.[1];
   const isMyTurn = playerID === ctx.currentPlayer;
   const receiptContract = receiptContractId ? G.contracts.find((c: Contract) => c.id === receiptContractId) : undefined;
-  const myTies = G.contracts
-    .filter((c: Contract) => c.playerID === playerID && c.fulfilled)
-    .reduce((sum: number, c: Contract) => sum + railroadTieValue(c), 0);
+  const myTies = playerID ? contractTies(G.contracts, playerID) : 0;
+  const claimContract = claimContractId ? G.contracts.find((c: Contract) => c.id === claimContractId) : undefined;
+  /** Why the player can't claim a market contract now, or null. */
+  const claimRefusal = !myProps
+    ? null
+    : bestEngineLevel(myProps.engines) < engineLevel(MARKET_CONTRACT_MIN_ENGINE)
+      ? 'Claiming market contracts needs a Mogul or better.'
+      : G.contracts.some((c: Contract) => c.type === 'market' && !c.fulfilled && c.playerID === playerID)
+        ? 'You already hold a claimed market contract. Fulfill it before claiming another.'
+        : null;
 
   const handleDelete = React.useCallback(
     (contractId: string) => {
@@ -123,10 +137,8 @@ export function WoodAndSteelState({
     [G.contracts, moves]
   );
 
-  const handleClaimContract = React.useCallback(
-    (contractId: string) => moves.claimMarketContract(contractId),
-    [moves]
-  );
+  // Claiming opens the claim sheet, where the player can also record the cargo.
+  const handleClaimContract = React.useCallback((contractId: string) => setClaimContractId(contractId), []);
 
   // Form submit: action determined by the clicked button's name
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -146,9 +158,6 @@ export function WoodAndSteelState({
           playerID ?? ''
         );
         setInput('');
-        break;
-      case 'marketContract':
-        moves.fillMarketTableau();
         break;
       case 'manualContract':
         moves.addContract(
@@ -226,6 +235,7 @@ export function WoodAndSteelState({
             onDismissHint={handleDismissHint}
             routesAddedCount={G.lastRoundRoutesAdded}
             onDismissRoutesAddedHint={handleDismissRoutesAddedHint}
+            onFillMarket={currentPhase === 'play' && isMyTurn ? () => moves.fillMarketTableau() : undefined}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
@@ -252,7 +262,18 @@ export function WoodAndSteelState({
             currentPhase={currentPhase}
             onOpenActions={() => setOpenSheet('actions')}
             onOpenLoans={() => setOpenSheet('loans')}
+            onOpenPlayer={setViewPlayerId}
           />
+          {viewPlayerId && <PlayerSheet G={G} playerID={viewPlayerId} onClose={() => setViewPlayerId(null)} />}
+          {claimContract && myProps && isMyTurn && (
+            <ClaimSheet
+              contract={claimContract}
+              player={myProps}
+              refusal={claimRefusal}
+              onClaim={(cargoSlot) => moves.claimMarketContract(claimContract.id, cargoSlot)}
+              onClose={() => setClaimContractId(null)}
+            />
+          )}
           {openSheet === 'loans' && myProps && (
             <LoansSheet
               player={myProps}

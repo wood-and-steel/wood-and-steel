@@ -1,5 +1,5 @@
 import React from "react";
-import { railroadTieValue } from "../Contract";
+import { contractTies } from "../utils/ties";
 import { getOtherPlayerIdsInPlayOrder, getPlayerAvatarColor } from "../utils/playerAvatar";
 import { PlayerAvatar } from "./PlayerAvatar";
 import type { GameState, GameContext } from "../stores/gameStore";
@@ -16,11 +16,14 @@ export interface PlayerToolbarProps {
   currentPhase: GamePhase;
   onOpenActions?: () => void;
   onOpenLoans?: () => void;
+  /** Opens another player's card. */
+  onOpenPlayer?: (playerID: string) => void;
 }
 
 /**
  * Toolbar shown below NavBar: the player's name, ties, cash and debt, a Loans button (always),
- * and on their turn Undo, Actions, +M and End Turn.
+ * the other players with their ties (press one for their card), and on the player's turn Undo,
+ * Actions and End Turn.
  */
 export function PlayerToolbar({
   G,
@@ -30,6 +33,7 @@ export function PlayerToolbar({
   currentPhase,
   onOpenActions,
   onOpenLoans,
+  onOpenPlayer,
 }: PlayerToolbarProps): React.ReactElement | null {
   const effectivePlayerID = playerID ?? ctx.currentPlayer;
   const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
@@ -50,10 +54,7 @@ export function PlayerToolbar({
   if (!activePlayer) return null;
 
   const [key, { name, avatarColor, cash, debt }] = activePlayer;
-  const contracts = G.contracts;
-  const playerScore = contracts
-    .filter((contract) => contract.playerID === key && contract.fulfilled)
-    .reduce((sum, contract) => sum + railroadTieValue(contract), 0);
+  const playerScore = contractTies(G.contracts, key);
   const otherPlayerIds = getOtherPlayerIdsInPlayOrder(key, ctx.playOrder);
 
   return (
@@ -66,7 +67,10 @@ export function PlayerToolbar({
             isCurrentTurn={key === ctx.currentPlayer}
           />
           <span>
-            {name} <span className="playerToolbar__score">(Score: {playerScore})</span>
+            {name}{" "}
+            <span className="playerToolbar__score">
+              {playerScore} {playerScore === 1 ? "tie" : "ties"}
+            </span>
           </span>
           {currentPhase === "play" && (
             <span className="playerToolbar__money">
@@ -88,16 +92,25 @@ export function PlayerToolbar({
               {otherPlayerIds.map((otherPlayerId) => {
                 const otherPlayer = G.players.find(([id]) => id === otherPlayerId);
                 if (!otherPlayer) return null;
-                const [, { name: otherName, avatarColor: otherAvatarColor, cash: otherCash, debt: otherDebt }] = otherPlayer;
-                const otherMoney = `${formatMoney(otherCash)}${otherDebt > 0 ? `, ${formatMoney(otherDebt)} debt` : ""}`;
+                const [, { name: otherName, avatarColor: otherAvatarColor }] = otherPlayer;
+                const otherTies = contractTies(G.contracts, otherPlayerId);
                 return (
-                  <PlayerAvatar
+                  <button
                     key={otherPlayerId}
-                    name={otherName}
-                    avatarColor={getPlayerAvatarColor(otherPlayerId, otherAvatarColor)}
-                    title={`${otherName}: ${otherMoney}`}
-                    isCurrentTurn={otherPlayerId === ctx.currentPlayer}
-                  />
+                    type="button"
+                    className="playerToolbar__other"
+                    aria-label={`${otherName}, ${otherTies} ${otherTies === 1 ? "tie" : "ties"}. Show their board`}
+                    onClick={() => onOpenPlayer?.(otherPlayerId)}
+                  >
+                    <PlayerAvatar
+                      name={otherName}
+                      avatarColor={getPlayerAvatarColor(otherPlayerId, otherAvatarColor)}
+                      isCurrentTurn={otherPlayerId === ctx.currentPlayer}
+                    />
+                    <span className="playerToolbar__otherTies" aria-hidden="true">
+                      {otherTies}
+                    </span>
+                  </button>
                 );
               })}
             </span>
@@ -122,13 +135,6 @@ export function PlayerToolbar({
               onClick={() => onOpenActions?.()}
             >
               Actions
-            </button>
-            <button
-              type="submit"
-              name="marketContract"
-              className={`button ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
-            >
-              +M
             </button>
             <button
               type="submit"

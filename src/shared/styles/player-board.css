@@ -20,8 +20,10 @@
 .playerToolbar__info {
   padding: var(--spacing-sm);
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: var(--spacing-xs);
 }
 
 .playerToolbar__buttonGroup {
@@ -43,6 +45,7 @@
   margin-top: var(--spacing-xs);
   font-size: var(--font-size-body);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-xs);
 }
@@ -147,18 +150,151 @@
   color: var(--color-text-subtle);
 }
 
-.playerBoard__contracts {
+/* Home (play phase): engines, contracts, market, upgrades, fulfilled */
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  max-width: 36rem;
+}
+
+.home__section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
 }
 
-.playerBoard__contractsTitle {
-  color: var(--color-text-subtle);
+.home__heading {
   margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+.contractRows {
+  display: flex;
+  flex-direction: column;
+}
+
+.contractRows__empty {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+}
+
+.contractRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-xs) var(--spacing-xs);
+  border: none;
+  border-bottom: var(--border-width-md) solid var(--color-border-light);
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.contractRow:last-child {
+  border-bottom: none;
+}
+
+.contractRow:hover:not(:disabled) {
+  background-color: var(--color-bg-hover);
+}
+
+.contractRow:disabled {
+  cursor: default;
+}
+
+.contractRow--fulfilled {
+  color: var(--color-text-subtle);
+}
+
+.contractRow__main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+.contractRow__icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+}
+
+.contractRow__chip {
+  padding: 0 var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-active);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+}
+
+.contractRow__chip--expiring {
+  color: var(--color-text);
+}
+
+.contractRow__chip--last {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.contractRow__value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.contractRow__gross {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.contractRow__ties,
+.contractRow__delivered {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+}
+
+.upgradeChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.upgradeChips__chip {
+  padding: 0.125rem var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-active);
+  font-size: var(--font-size-sm);
+}
+
+/* Other players in the toolbar: avatar plus their ties; press for their card */
+.playerToolbar__other {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
   padding: 0;
-  padding-left: var(--spacing-xs);
-  padding-top: var(--spacing-xs);
+  border: none;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.playerToolbar__otherTies {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
 }
 
 .playerBoard__startingPairs {
