@@ -10,6 +10,7 @@ import { LoansSheet } from './components/LoansSheet';
 import { ActionsSheet } from './components/ActionsSheet';
 import { DeliveryReceipt } from './components/DeliveryReceipt';
 import { ClaimSheet } from './components/ClaimSheet';
+import { DiscardSheet } from './components/DiscardSheet';
 import { PlayerSheet } from './components/PlayerSheet';
 import { RoundReportSheet } from './components/RoundReportSheet';
 import { useRoundReport } from './hooks/useRoundReport';
@@ -44,7 +45,7 @@ export function WoodAndSteelState({
     React.useState(false);
   const [isPrivateContractModalOpen, setIsPrivateContractModalOpen] =
     React.useState(false);
-  const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | null>(null);
+  const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | 'discard' | null>(null);
   const [receiptContractId, setReceiptContractId] = React.useState<string | null>(null);
   const [claimContractId, setClaimContractId] = React.useState<string | null>(null);
   const [viewPlayerId, setViewPlayerId] = React.useState<string | null>(null);
@@ -128,7 +129,7 @@ export function WoodAndSteelState({
     if (isMyTurn) return;
     setReceiptContractId(null);
     setClaimContractId(null);
-    setOpenSheet((sheet: 'loans' | 'actions' | null) => (sheet === 'actions' ? null : sheet));
+    setOpenSheet((sheet: 'loans' | 'actions' | 'discard' | null) => (sheet === 'loans' ? sheet : null));
   }, [isMyTurn]);
   /** Why the player can't claim a market contract now, or null. */
   const claimRefusal = !myProps
@@ -139,17 +140,10 @@ export function WoodAndSteelState({
         ? 'You already hold a claimed market contract. Fulfill it before claiming another.'
         : null;
 
-  const handleDelete = React.useCallback(
-    (contractId: string) => {
-      const c = G.contracts.find((x: Contract) => x.id === contractId);
-      if (!c) return;
-      if (!window.confirm(`Delete "${c.commodity} to ${c.destinationKey}"?`))
-        return;
-      setInput(`${c.commodity}, ${c.destinationKey}, ${c.type}`);
-      moves.deleteContract(contractId);
-    },
-    [G.contracts, moves]
-  );
+  // What the menu's Discard Contract offers, and whether Draw Private Contract applies.
+  const myContracts = G.contracts.filter((c: Contract) => c.playerID === playerID && !c.fulfilled);
+  const openMarket = G.contracts.filter((c: Contract) => c.type === 'market' && c.playerID === null && !c.fulfilled);
+  const hasPrivateContract = myContracts.some((c: Contract) => c.type === 'private');
 
   // Claiming opens the claim sheet, where the player can also record the cargo.
   const handleClaimContract = React.useCallback((contractId: string) => setClaimContractId(contractId), []);
@@ -248,6 +242,10 @@ export function WoodAndSteelState({
             roundReportAutoOpen={roundReport.autoOpen}
             onRoundReportAutoOpenChange={roundReport.setAutoOpen}
             onFillMarket={currentPhase === 'play' && isMyTurn ? () => moves.fillMarketTableau() : undefined}
+            onDiscardContract={currentPhase === 'play' ? () => setOpenSheet('discard') : undefined}
+            onDrawPrivateContract={currentPhase === 'play' ? () => setIsPrivateContractModalOpen(true) : undefined}
+            canActFromMenu={isMyTurn}
+            hasPrivateContract={hasPrivateContract}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
@@ -319,6 +317,14 @@ export function WoodAndSteelState({
               onClose={() => setOpenSheet(null)}
             />
           )}
+          {openSheet === 'discard' && isMyTurn && (
+            <DiscardSheet
+              mine={myContracts}
+              market={openMarket}
+              onDiscard={moves.deleteContract}
+              onClose={() => setOpenSheet(null)}
+            />
+          )}
           {receiptContract && myProps && isMyTurn && (
             <DeliveryReceipt
               contract={receiptContract}
@@ -344,7 +350,6 @@ export function WoodAndSteelState({
                 setIsPrivateContractModalOpen(true)
               }
               onToggleFulfilled={handleToggleFulfilled}
-              onDelete={handleDelete}
               onClaimContract={handleClaimContract}
               onSetCargo={moves.setCargo}
             />

@@ -36,6 +36,14 @@ export interface NavBarProps {
   onRoundReportAutoOpenChange?: (on: boolean) => void;
   /** Playtest tool: fill the market tableau (the old +M button). Shown only on the player's turn in play. */
   onFillMarket?: () => void;
+  /** Opens the discard sheet. Shown in play; disabled when it's not the player's turn. */
+  onDiscardContract?: () => void;
+  /** Opens the private contract offers. Shown in play; disabled when it's not the player's turn. */
+  onDrawPrivateContract?: () => void;
+  /** Whether the player may act from the menu now (their turn in play). */
+  canActFromMenu?: boolean;
+  /** The player already holds an unfulfilled private contract, so can't draw another. */
+  hasPrivateContract?: boolean;
 }
 
 /**
@@ -53,6 +61,10 @@ export function NavBar({
   roundReportAutoOpen,
   onRoundReportAutoOpenChange,
   onFillMarket,
+  onDiscardContract,
+  onDrawPrivateContract,
+  canActFromMenu,
+  hasPrivateContract,
 }: NavBarProps): React.ReactElement {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -183,6 +195,28 @@ export function NavBar({
           </PopupMenuItem>
         )}
         <PopupMenuItem onClick={() => handleMenuClick("edit")}>Add Contract or City...</PopupMenuItem>
+        {onDiscardContract && (
+          <PopupMenuItem
+            disabled={!canActFromMenu}
+            onClick={() => {
+              onDiscardContract();
+              setIsMenuOpen(false);
+            }}
+          >
+            Discard Contract...
+          </PopupMenuItem>
+        )}
+        {onDrawPrivateContract && (
+          <PopupMenuItem
+            disabled={!canActFromMenu || hasPrivateContract}
+            onClick={() => {
+              onDrawPrivateContract();
+              setIsMenuOpen(false);
+            }}
+          >
+            Draw Private Contract
+          </PopupMenuItem>
+        )}
         {onFillMarket && (
           <PopupMenuItem
             onClick={() => {

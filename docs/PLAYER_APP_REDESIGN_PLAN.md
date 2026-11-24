@@ -164,6 +164,8 @@ The core release. Everything the player board tracked moves into the app, inside
 - **The market section also lists open contracts in their last round**, read live from `G`, as the sketch shows.
 - **Mini maps use straight lines between city points**, not the board's traced route curves, which belong to the board app. A railroad wider than about 40% of the board that's in separate pieces gets one map per piece that grew.
 - **The menu's switch reads "Open Round Report After Each Round: On/Off"**, alongside the switch at the foot of the report.
+- **Tapping a contract opens its sheet directly**: the delivery receipt for the player's own contracts, the claim sheet for an open market one. The per-row menu is gone.
+- **Discarding moved to the menu** as "Discard Contract...", a sheet listing the player's unfulfilled contracts and the open market; a discarded market contract isn't replaced. Beside it, "Draw Private Contract" opens the private contract offers, and is disabled while the player holds an unfulfilled private contract. Both are disabled off the player's turn.
 
 ## Decisions made while building Stage 3
 

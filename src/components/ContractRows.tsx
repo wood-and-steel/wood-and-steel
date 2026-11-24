@@ -4,23 +4,12 @@ import type { PlayerProps } from "../stores/gameStore";
 import { deliveryRange } from "../rules/finance";
 import { commodityIcons } from "../shared/assets/icons";
 import { formatMoney } from "../utils/money";
-import { PopupMenu, PopupMenuItem } from "./PopupMenu";
-
-/** Ignore the card press that closed a menu by clicking outside it, so it doesn't reopen. */
-const SKIP_OPEN_MS = 50;
-
-export interface ContractAction {
-  label: string;
-  onSelect: () => void;
-  disabled?: boolean;
-}
-
 export interface ContractRowsProps {
   contracts: Contract[];
   /** The viewing player, for values net of their debt service; omit to show base values. */
   player?: PlayerProps;
-  /** Menu items for a contract; an empty list makes its row not clickable. */
-  actionsFor: (contract: Contract) => ContractAction[];
+  /** What tapping an unfulfilled contract does; omit to make the rows not clickable. */
+  onSelect?: (contract: Contract) => void;
   /** Shown when there are no contracts. */
   emptyText: string;
 }
@@ -52,22 +41,10 @@ export function payoutFor(contract: Contract, player: PlayerProps | undefined): 
 /**
  * Contracts as compact rows: commodity and destination, badges (claimed market contract,
  * rounds left before an open one expires), railroad ties, and the value to the viewing
- * player, struck through to the net when debt service lowers it. Pressing a row opens its
- * actions.
+ * player, struck through to the net when debt service lowers it. Pressing a row calls
+ * `onSelect` (the delivery receipt or the claim sheet).
  */
-export function ContractRows({ contracts, player, actionsFor, emptyText }: ContractRowsProps): React.ReactElement {
-  const [openId, setOpenId] = React.useState<string | null>(null);
-  const [skipOpenUntil, setSkipOpenUntil] = React.useState(0);
-
-  // Forget an open menu whose row is gone, fulfilled, or no longer has actions (e.g. the turn
-  // ended), so it doesn't reappear later.
-  const openStillValid =
-    openId === null ||
-    contracts.some((c) => c.id === openId && !c.fulfilled && actionsFor(c).length > 0);
-  React.useEffect(() => {
-    if (!openStillValid) setOpenId(null);
-  }, [openStillValid]);
-
+export function ContractRows({ contracts, player, onSelect, emptyText }: ContractRowsProps): React.ReactElement {
   if (contracts.length === 0) return <p className="contractRows__empty">{emptyText}</p>;
 
   return (
@@ -79,17 +56,7 @@ export function ContractRows({ contracts, player, actionsFor, emptyText }: Contr
             key={contract.id}
             contract={contract}
             player={player}
-            actions={actionsFor(contract)}
-            isOpen={openId === contract.id}
-            onToggle={() => {
-              if (Date.now() < skipOpenUntil) {
-                setSkipOpenUntil(0);
-                return;
-              }
-              setOpenId((prev: string | null) => (prev === contract.id ? null : contract.id));
-            }}
-            onClose={() => setOpenId(null)}
-            onCloseOutside={() => setSkipOpenUntil(Date.now() + SKIP_OPEN_MS)}
+            onSelect={onSelect && !contract.fulfilled ? () => onSelect(contract) : undefined}
           />
         ))}
     </div>
@@ -99,16 +66,10 @@ export function ContractRows({ contracts, player, actionsFor, emptyText }: Contr
 interface ContractRowProps {
   contract: Contract;
   player?: PlayerProps;
-  actions: ContractAction[];
-  isOpen: boolean;
-  onToggle: () => void;
-  onClose: () => void;
-  onCloseOutside: () => void;
+  onSelect?: () => void;
 }
 
-function ContractRow({ contract, player, actions, isOpen, onToggle, onClose, onCloseOutside }: ContractRowProps): React.ReactElement {
-  const rowRef = React.useRef<HTMLButtonElement>(null);
-  const clickable = actions.length > 0 && !contract.fulfilled;
+function ContractRow({ contract, player, onSelect }: ContractRowProps): React.ReactElement {
   const ties = railroadTieValue(contract);
   const claimed = contract.type === "market" && contract.playerID !== null;
   const { net, gross, byEngine } = payoutFor(contract, contract.fulfilled ? undefined : player);
@@ -121,64 +82,32 @@ function ContractRow({ contract, player, actions, isOpen, onToggle, onClose, onC
     .join(" ");
 
   return (
-    <>
-      <button
-        ref={rowRef}
-        type="button"
-        className={classes}
-        disabled={!clickable}
-        onClick={clickable ? onToggle : undefined}
-        aria-haspopup={clickable ? "menu" : undefined}
-        aria-expanded={clickable ? isOpen : undefined}
-      >
-        <span className="contractRow__main">
-          <img className="contractRow__icon" src={(commodityIcons as Record<string, string>)[contract.commodity]} alt="" />
-          <span className="contractRow__name">
-            {commodityLabel(contract.commodity)} to {contract.destinationKey}
-          </span>
-          {claimed && <span className="contractRow__chip">Market</span>}
-          {contract.roundsLeft !== undefined && contract.playerID === null && (
-            <span className={`contractRow__chip contractRow__chip--expiring${contract.roundsLeft <= 1 ? " contractRow__chip--last" : ""}`}>
-              {contract.roundsLeft <= 1 ? "Last round" : `${contract.roundsLeft} rounds`}
-            </span>
-          )}
+    <button type="button" className={classes} disabled={!onSelect} onClick={onSelect}>
+      <span className="contractRow__main">
+        <img className="contractRow__icon" src={(commodityIcons as Record<string, string>)[contract.commodity]} alt="" />
+        <span className="contractRow__name">
+          {commodityLabel(contract.commodity)} to {contract.destinationKey}
         </span>
-        <span className="contractRow__value">
-          {contract.fulfilled ? (
-            <span className="contractRow__delivered">Delivered</span>
-          ) : (
-            <>
-              {gross !== null && <s className="contractRow__gross">{gross}</s>}
-              <strong title={byEngine ? "Depends on which engine delivers" : undefined}>{net}</strong>
-            </>
-          )}
-          <span className="contractRow__ties">
-            {ties} {ties === 1 ? "tie" : "ties"}
+        {claimed && <span className="contractRow__chip">Market</span>}
+        {contract.roundsLeft !== undefined && contract.playerID === null && (
+          <span className={`contractRow__chip contractRow__chip--expiring${contract.roundsLeft <= 1 ? " contractRow__chip--last" : ""}`}>
+            {contract.roundsLeft <= 1 ? "Last round" : `${contract.roundsLeft} rounds`}
           </span>
+        )}
+      </span>
+      <span className="contractRow__value">
+        {contract.fulfilled ? (
+          <span className="contractRow__delivered">Delivered</span>
+        ) : (
+          <>
+            {gross !== null && <s className="contractRow__gross">{gross}</s>}
+            <strong title={byEngine ? "Depends on which engine delivers" : undefined}>{net}</strong>
+          </>
+        )}
+        <span className="contractRow__ties">
+          {ties} {ties === 1 ? "tie" : "ties"}
         </span>
-      </button>
-      {clickable && (
-        <PopupMenu
-          isOpen={isOpen}
-          onClose={onClose}
-          onCloseOutside={onCloseOutside}
-          anchorRef={rowRef}
-          placement={{ side: "bottom", align: "end" }}
-        >
-          {actions.map((action) => (
-            <PopupMenuItem
-              key={action.label}
-              disabled={action.disabled}
-              onClick={() => {
-                action.onSelect();
-                onClose();
-              }}
-            >
-              {action.label}
-            </PopupMenuItem>
-          ))}
-        </PopupMenu>
-      )}
-    </>
+      </span>
+    </button>
   );
 }

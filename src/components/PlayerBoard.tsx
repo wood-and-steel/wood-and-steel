@@ -1,6 +1,6 @@
 import React from "react";
 import type { Contract } from "../Contract";
-import { ContractRows, type ContractAction } from "./ContractRows";
+import { ContractRows } from "./ContractRows";
 import { EnginesPanel } from "./EnginesPanel";
 import type { EngineSlot } from "../rules/playerBoard";
 import { formatCommodity } from "../rules/playerBoard";
@@ -19,10 +19,9 @@ export interface PlayerBoardProps {
   currentPhase: GamePhase;
   onStartingPairSelect: (pair: [string, string]) => void;
   onOpenPrivateContractModal?: () => void;
-  /** Opens the delivery receipt for one of the player's contracts. */
+  /** Opens the delivery receipt for one of the player's contracts, when they tap it. */
   onToggleFulfilled: (contractID: string) => void;
-  onDelete: (contractID: string) => void;
-  /** Opens the claim sheet for an open market contract. */
+  /** Opens the claim sheet for an open market contract, when they tap it. */
   onClaimContract?: (contractID: string) => void;
   onSetCargo?: (slot: EngineSlot, commodity: string | null) => boolean;
 }
@@ -61,7 +60,6 @@ export function PlayerBoard({
   currentPhase,
   onStartingPairSelect,
   onToggleFulfilled,
-  onDelete,
   onClaimContract,
   onSetCargo,
 }: PlayerBoardProps): React.ReactElement | null {
@@ -101,21 +99,6 @@ export function PlayerBoard({
     ([, p]) => bestEngineLevel(p.engines) >= engineLevel(MARKET_CONTRACT_MIN_ENGINE)
   );
 
-  const mineActions = (c: Contract): ContractAction[] =>
-    canAct
-      ? [
-          { label: "Fulfill", onSelect: () => onToggleFulfilled(c.id) },
-          { label: "Discard", onSelect: () => onDelete(c.id) },
-        ]
-      : [];
-  const marketActions = (c: Contract): ContractAction[] =>
-    canAct
-      ? [
-          ...(onClaimContract ? [{ label: "Claim…", onSelect: () => onClaimContract(c.id) }] : []),
-          { label: "Discard", onSelect: () => onDelete(c.id) },
-        ]
-      : [];
-
   return (
     <div className="playerBoard">
       <div className="playerBoard__player">
@@ -150,7 +133,7 @@ export function PlayerBoard({
               <ContractRows
                 contracts={mine}
                 player={playerProps}
-                actionsFor={mineActions}
+                onSelect={canAct ? (c) => onToggleFulfilled(c.id) : undefined}
                 emptyText="No contracts right now."
               />
             </section>
@@ -159,7 +142,7 @@ export function PlayerBoard({
               <ContractRows
                 contracts={market}
                 player={playerProps}
-                actionsFor={marketActions}
+                onSelect={canAct && onClaimContract ? (c) => onClaimContract(c.id) : undefined}
                 emptyText={marketOpened ? "No open market contracts." : "The market opens when someone buys a Mogul."}
               />
             </section>
@@ -179,7 +162,7 @@ export function PlayerBoard({
             </section>
             <section className="home__section" aria-label="Fulfilled contracts">
               <h3 className="home__heading">Fulfilled</h3>
-              <ContractRows contracts={fulfilled} actionsFor={() => []} emptyText="None yet." />
+              <ContractRows contracts={fulfilled} emptyText="None yet." />
             </section>
           </div>
         )}
