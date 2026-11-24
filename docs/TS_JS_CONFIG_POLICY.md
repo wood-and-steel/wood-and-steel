@@ -12,7 +12,7 @@ This document records the final ts/js config alignment for **strict incremental 
 - **Strict**: `strict: true` — full strict mode (strictNullChecks, noImplicitAny, etc.).
 - **JS checking**: `allowJs: true`, `checkJs: true` — `.js` files are type-checked with the same strictness as `.ts` during migration.
 - **Module / JSX**: `moduleResolution: "Bundler"`, `jsx: "react-jsx"` — matches Vite and modern React.
-- **Paths / types**: Same `baseUrl`, `paths`, `types`, `include`, `exclude` (including `dist`).
+- **Paths / types**: Same `paths`, `types`, `include`, `exclude` (including `dist`). Path mappings are relative to the config file and do not require `baseUrl`.
 
 ## Strict policy (first pass)
 
