@@ -2,7 +2,7 @@ import React from "react";
 import { moneyValue, railroadTieValue, type Contract } from "../Contract";
 import type { PlayerProps } from "../stores/gameStore";
 import { deliveryRange } from "../rules/finance";
-import { commodityIcons } from "../shared/assets/icons";
+import { commodityIcons, contractTieIcons } from "../shared/assets/icons";
 import { formatMoney } from "../utils/money";
 export interface ContractRowsProps {
   contracts: Contract[];
@@ -104,8 +104,16 @@ function ContractRow({ contract, player, onSelect }: ContractRowProps): React.Re
             <strong title={byEngine ? "Depends on which engine delivers" : undefined}>{net}</strong>
           </>
         )}
+        <span className="contractRow__dot" aria-hidden="true">
+          ·
+        </span>
         <span className="contractRow__ties">
-          {ties} {ties === 1 ? "tie" : "ties"}
+          {ties}
+          <img
+            className="contractRow__tieIcon"
+            src={(contractTieIcons as Record<string, string>)[String(ties)]}
+            alt={ties === 1 ? " tie" : " ties"}
+          />
         </span>
       </span>
     </button>

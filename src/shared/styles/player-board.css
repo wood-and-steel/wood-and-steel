@@ -249,16 +249,31 @@
 
 .contractRow__value {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--spacing-xs);
   flex-shrink: 0;
   white-space: nowrap;
 }
 
-.contractRow__gross,
-.contractRow__ties {
+.contractRow__gross {
   font-size: var(--font-size-sm);
   color: var(--color-text);
+}
+
+/* Railroad ties: the number at the cash number's size, then the ties picture. */
+.contractRow__ties {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.contractRow__dot {
+  color: var(--color-text-subtle);
+}
+
+.contractRow__tieIcon {
+  height: 1rem;
+  width: auto;
 }
 
 .contractRow__delivered {
