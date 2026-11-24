@@ -105,6 +105,24 @@ describe('ClaimSheet', () => {
     expect(onClaim).toHaveBeenLastCalledWith(undefined);
   });
 
+  test('suggests the engine already carrying the commodity, and says so', () => {
+    const onClaim = vi.fn(() => true);
+    render(
+      <ClaimSheet
+        contract={market}
+        player={player({ engines: ['mogul', 'american'], cargo: ['lead', null] })}
+        refusal={null}
+        onClaim={onClaim}
+        onClose={() => {}}
+      />
+    );
+    const options = screen.getByRole('radiogroup', { name: 'Record cargo' });
+    expect(within(options).getByRole('radio', { name: /Light: 2-6-0 Mogul.*Carrying lead/ })).toBeChecked();
+    expect(within(options).getByRole('radio', { name: /Dark: 4-4-0 American/ })).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Claim contract' }));
+    expect(onClaim).toHaveBeenLastCalledWith(0);
+  });
+
   test('explains why it can’t be claimed instead of offering to', () => {
     render(
       <ClaimSheet
