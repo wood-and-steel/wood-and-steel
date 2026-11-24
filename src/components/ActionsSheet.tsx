@@ -8,11 +8,11 @@ import { indiePricePerRoute } from "../rules/railroads";
 import { UPGRADE_KEYS, UPGRADE_NAMES, UPGRADE_PRICES, type UpgradeKey } from "../rules/rulesData";
 import { cities } from "../data";
 import { formatMoney, formatMoneyChange } from "../utils/money";
+import { EngineSlotIcon } from "./EngineIcon";
 import { BeforeAfter, Sheet } from "./Sheet";
 
 type View = "menu" | "engine" | "upgrade" | "track";
 
-const SLOT_NAMES: Record<EngineSlot, string> = { 0: "light", 1: "dark" };
 
 const REGION_NAMES: Record<string, string> = {
   NW: "Northwest",
@@ -66,7 +66,7 @@ export function ActionsSheet({
   const back = () => setView("menu");
 
   if (view === "engine") {
-    return <BuyEngineView player={player} moves={moves} onBack={back} onClose={onClose} />;
+    return <BuyEngineView playerID={playerID} player={player} moves={moves} onBack={back} onClose={onClose} />;
   }
   if (view === "upgrade") {
     return <BuyUpgradeView G={G} playerID={playerID} player={player} moves={moves} onBack={back} onClose={onClose} />;
@@ -161,7 +161,7 @@ interface ViewProps {
   onClose: () => void;
 }
 
-function BuyEngineView({ player, moves, onBack, onClose }: ViewProps): React.ReactElement {
+function BuyEngineView({ playerID, player, moves, onBack, onClose }: ViewProps & { playerID: string }): React.ReactElement {
   const options = enginePurchaseOptions(player.engines, player.hubCity !== null);
   return (
     <Sheet title="Buy an engine" onClose={onClose} onBack={onBack}>
@@ -178,11 +178,11 @@ function BuyEngineView({ player, moves, onBack, onClose }: ViewProps): React.Rea
                   <strong>{name}</strong>
                   <span>{formatMoney(o.cost)}</span>
                 </div>
-                <span className="sheet__label">
+                <span className="sheet__label engineLabel">
                   {getEngineType(o.engine).distance} segments ·{" "}
-                  {o.tradeIn
-                    ? `trades in your ${SLOT_NAMES[o.slot]} ${getEngineType(o.tradeIn).name}`
-                    : `on your empty ${SLOT_NAMES[o.slot]} token`}
+                  {o.tradeIn ? "trades in your" : "on your empty"}
+                  <EngineSlotIcon playerID={playerID} avatarColor={player.avatarColor} slot={o.slot} />
+                  {o.tradeIn ? getEngineType(o.tradeIn).name : "token"}
                   {o.skip ? " · Hub order, +$5K" : ""}
                 </span>
                 {short ? (

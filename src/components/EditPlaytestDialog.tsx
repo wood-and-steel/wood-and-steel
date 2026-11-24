@@ -4,6 +4,7 @@ import type { GameState, GameContext } from "../stores/gameStore";
 import type { Moves } from "../stores/moves";
 import { ENGINE_TYPES, UPGRADES, type EngineTypeId, type PlayerUpgradeId } from "../rules/playerBoard";
 import { monopolizableCommodities } from "../rules/engines";
+import { EngineSlotIcon } from "./EngineIcon";
 
 export interface EditPlaytestDialogProps {
   isOpen: boolean;
@@ -274,13 +275,15 @@ export function EditPlaytestDialog({
               </div>
               <div className="editPlaytestDialog__row">
                 <label htmlFor="boardLight" className="editPlaytestDialog__label">
-                  <b>Light engine:</b>
+                  <EngineSlotIcon playerID={boardPlayer} avatarColor={G.players.find(([pid]) => pid === boardPlayer)?.[1].avatarColor} slot={0} />
+                  <b>engine:</b>
                 </label>
                 {engineSelect("boardLight", light, setLight)}
               </div>
               <div className="editPlaytestDialog__row">
                 <label htmlFor="boardDark" className="editPlaytestDialog__label">
-                  <b>Dark engine:</b>
+                  <EngineSlotIcon playerID={boardPlayer} avatarColor={G.players.find(([pid]) => pid === boardPlayer)?.[1].avatarColor} slot={1} />
+                  <b>engine:</b>
                 </label>
                 {engineSelect("boardDark", dark, setDark)}
               </div>

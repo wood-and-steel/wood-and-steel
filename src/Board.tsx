@@ -292,6 +292,7 @@ export function WoodAndSteelState({
             <ClaimSheet
               contract={claimContract}
               player={myProps}
+              playerID={playerID ?? ''}
               refusal={claimRefusal}
               onClaim={(cargoSlot) => moves.claimMarketContract(claimContract.id, cargoSlot)}
               onClose={() => setClaimContractId(null)}
@@ -329,6 +330,7 @@ export function WoodAndSteelState({
             <DeliveryReceipt
               contract={receiptContract}
               player={myProps}
+              playerID={playerID ?? ''}
               ties={myTies}
               onDeliver={(engineSlot) => {
                 const delivered = moves.toggleContractFulfilled(receiptContract.id, engineSlot);

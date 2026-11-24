@@ -434,6 +434,14 @@
   height: 100%;
 }
 
+/* Text with an engine picture in it, e.g. "[icon] 2-6-0 Mogul" in a sheet. */
+.engineLabel {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
 .engines__type {
   flex-grow: 1;
   font-weight: 600;

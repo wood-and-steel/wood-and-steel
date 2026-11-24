@@ -5,6 +5,7 @@ import type { GameState } from "../stores/gameStore";
 import { engineDistance, formatCommodity, formatSegments, getEngineType, type EngineSlot } from "../rules/playerBoard";
 import { UPGRADE_NAMES, type UpgradeKey } from "../rules/rulesData";
 import { formatMoney } from "../utils/money";
+import { EngineSlotIcon } from "./EngineIcon";
 import { Sheet } from "./Sheet";
 
 export interface PlayerSheetProps {
@@ -12,8 +13,6 @@ export interface PlayerSheetProps {
   playerID: string;
   onClose: () => void;
 }
-
-const SLOT_NAMES: Record<EngineSlot, string> = { 0: "Light", 1: "Dark" };
 
 const REGION_NAMES: Record<string, string> = {
   NW: "Northwest",
@@ -68,8 +67,8 @@ export function PlayerSheet({ G, playerID, onClose }: PlayerSheetProps): React.R
           const cargo = props.cargo[slot];
           return (
             <div key={slot} className="sheet__row">
-              <span>
-                <span className="sheet__label">{SLOT_NAMES[slot]}</span>{" "}
+              <span className="engineLabel">
+                <EngineSlotIcon playerID={playerID} avatarColor={props.avatarColor} slot={slot} />
                 {type
                   ? `${getEngineType(type).name} · ${formatSegments(engineDistance(type, hasServiceYard).total)}`
                   : "No engine"}

@@ -87,7 +87,7 @@ describe('ClaimSheet', () => {
   test('suggests an engine with no cargo recorded, and can claim without recording', () => {
     const onClaim = vi.fn(() => true);
     render(
-      <ClaimSheet
+      <ClaimSheet playerID="0"
         contract={market}
         player={player({ engines: ['american', 'mogul'], cargo: ['coal', null] })}
         refusal={null}
@@ -96,8 +96,8 @@ describe('ClaimSheet', () => {
       />
     );
     const options = screen.getByRole('radiogroup', { name: 'Record cargo' });
-    expect(within(options).getByRole('radio', { name: /Dark: 2-6-0 Mogul/ })).toBeChecked();
-    expect(within(options).getByRole('radio', { name: /Light: 4-4-0 American.*Replaces coal/ })).not.toBeChecked();
+    expect(within(options).getByRole('radio', { name: /Dark\s*2-6-0 Mogul/ })).toBeChecked();
+    expect(within(options).getByRole('radio', { name: /Light\s*4-4-0 American.*Replaces coal/ })).not.toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Claim contract' }));
     expect(onClaim).toHaveBeenLastCalledWith(1);
     fireEvent.click(within(options).getByRole('radio', { name: "Don't record cargo" }));
@@ -108,7 +108,7 @@ describe('ClaimSheet', () => {
   test('suggests the engine already carrying the commodity, and says so', () => {
     const onClaim = vi.fn(() => true);
     render(
-      <ClaimSheet
+      <ClaimSheet playerID="0"
         contract={market}
         player={player({ engines: ['mogul', 'american'], cargo: ['lead', null] })}
         refusal={null}
@@ -117,15 +117,15 @@ describe('ClaimSheet', () => {
       />
     );
     const options = screen.getByRole('radiogroup', { name: 'Record cargo' });
-    expect(within(options).getByRole('radio', { name: /Light: 2-6-0 Mogul.*Carrying lead/ })).toBeChecked();
-    expect(within(options).getByRole('radio', { name: /Dark: 4-4-0 American/ })).not.toBeChecked();
+    expect(within(options).getByRole('radio', { name: /Light\s*2-6-0 Mogul.*Carrying lead/ })).toBeChecked();
+    expect(within(options).getByRole('radio', { name: /Dark\s*4-4-0 American/ })).not.toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Claim contract' }));
     expect(onClaim).toHaveBeenLastCalledWith(0);
   });
 
   test('explains why it can’t be claimed instead of offering to', () => {
     render(
-      <ClaimSheet
+      <ClaimSheet playerID="0"
         contract={market}
         player={player()}
         refusal="Claiming market contracts needs a Mogul or better."

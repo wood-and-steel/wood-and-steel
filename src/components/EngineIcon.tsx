@@ -1,5 +1,7 @@
 import React from "react";
 import engineIconSvg from "../shared/assets/images/engine-icon.svg?raw";
+import type { EngineSlot } from "../rules/playerBoard";
+import { getPlayerAvatarColor, getPlayerLightColor } from "../utils/playerAvatar";
 
 export interface EngineIconProps {
   /** The engine token's color: the player's light or dark color. */
@@ -27,4 +29,25 @@ export function EngineIcon({ color, label }: EngineIconProps): React.ReactElemen
       dangerouslySetInnerHTML={{ __html: engineIconSvg }}
     />
   );
+}
+
+export const ENGINE_SLOT_NAMES: Record<EngineSlot, string> = { 0: "Light", 1: "Dark" };
+
+/** The color of a player's light (slot 0) or dark (slot 1) engine token. */
+export function engineSlotColor(playerID: string, avatarColor: string | undefined, slot: EngineSlot): string {
+  const dark = getPlayerAvatarColor(playerID, avatarColor);
+  return slot === 0 ? getPlayerLightColor(dark) : dark;
+}
+
+export interface EngineSlotIconProps {
+  playerID: string;
+  avatarColor?: string;
+  slot: EngineSlot;
+  /** Read out in place of the picture; "Light" or "Dark" by default. */
+  label?: string;
+}
+
+/** The engine picture for one of a player's two engine tokens, in that token's color. */
+export function EngineSlotIcon({ playerID, avatarColor, slot, label }: EngineSlotIconProps): React.ReactElement {
+  return <EngineIcon color={engineSlotColor(playerID, avatarColor, slot)} label={label ?? ENGINE_SLOT_NAMES[slot]} />;
 }
