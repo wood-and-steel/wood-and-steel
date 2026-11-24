@@ -459,9 +459,9 @@ describe('BoardApp (/board)', () => {
         { ada: { engines: ['consolidation', null] }, ben: { engines: ['consolidation', 'mogul'], upgrades: ['service-yard'] } },
         { engines: { '1': ['Atlanta', null] } }
       );
-      expect(row("Ben's Light engine").getByText('Travels 4 segments (3 +1 Service Yard) · on Atlanta')).toBeInTheDocument();
+      expect(row("Ben's Light engine").getByText('Travels 5 segments (4 +1 Service Yard) · on Atlanta')).toBeInTheDocument();
       expect(row("Ben's Dark engine").getByText('Travels 3 segments')).toBeInTheDocument();
-      expect(row("Ada's Light engine").getByText('Travels 3 segments')).toBeInTheDocument();
+      expect(row("Ada's Light engine").getByText('Travels 4 segments')).toBeInTheDocument();
     });
 
     it('keeps a placed token on its row and shows its city', async () => {

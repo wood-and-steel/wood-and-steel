@@ -73,7 +73,7 @@ describe('upgrades', () => {
 
 describe('engineDistance', () => {
   it('is the printed distance without a Service Yard', () => {
-    expect(engineDistance('consolidation', false)).toEqual({ base: 3, bonus: 0, total: 3 });
+    expect(engineDistance('consolidation', false)).toEqual({ base: 4, bonus: 0, total: 4 });
   });
 
   it('adds no bonus below the Consolidation', () => {
@@ -81,7 +81,7 @@ describe('engineDistance', () => {
   });
 
   it('adds 1 at and above the Consolidation', () => {
-    expect(engineDistance('consolidation', true)).toEqual({ base: 3, bonus: 1, total: 4 });
+    expect(engineDistance('consolidation', true)).toEqual({ base: 4, bonus: 1, total: 5 });
     expect(engineDistance('challenger', true)).toEqual({ base: 11, bonus: 1, total: 12 });
   });
 });
