@@ -552,6 +552,44 @@ export function deleteContract(contractID: string): void {
 }
 
 /**
+ * Discard and draw: replace the player's unfulfilled private contract with a new one, in one
+ * state change and one save (two separate moves could save out of order and lose both).
+ * Refused unless it's that player's turn. Returns whether the contract was replaced.
+ */
+export function replacePrivateContract(playerID: string, commodity: string, destinationKey: string): boolean {
+  const { ctx } = useGameStore.getState();
+
+  if (!isMoveAllowed('replacePrivateContract', ctx)) return false;
+  if (playerID !== ctx.currentPlayer) {
+    console.warn(`[replacePrivateContract] Not player ${playerID}'s turn`);
+    return false;
+  }
+
+  const contract = newContract(destinationKey, commodity, { type: 'private', playerID });
+  if (!contract) {
+    console.error('[replacePrivateContract] Contract creation failed');
+    return false;
+  }
+
+  useGameStore.setState((state) => ({
+    G: {
+      ...state.G,
+      contracts: [
+        contract,
+        ...state.G.contracts.filter((c) => !(c.playerID === playerID && c.type === 'private' && !c.fulfilled)),
+      ],
+    },
+  }));
+
+  const updatedState = useGameStore.getState();
+  checkPhaseTransition(updatedState.G, updatedState.ctx);
+
+  markMovedThisTurn();
+  saveCurrentGameState();
+  return true;
+}
+
+/**
  * Acquire an independent railroad: $3,000 per route ($4,000 once anyone has delivered to the
  * West), refused if the player can't pay. Its cities join the player's active cities.
  */

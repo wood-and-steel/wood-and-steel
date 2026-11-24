@@ -25,6 +25,10 @@ export function EnginesPanel({ player, playerID, canEdit, onSetCargo, onBuyEngin
   const hasServiceYard = player.upgrades.includes("service-yard");
   /** The engine whose cargo sheet is open, if any. */
   const [pickingSlot, setPickingSlot] = React.useState<EngineSlot | null>(null);
+  // A picker from a finished turn must not come back on the player's next turn.
+  React.useEffect(() => {
+    if (!canEdit) setPickingSlot(null);
+  }, [canEdit]);
   const cargoSheet = (slot: EngineSlot): React.ReactElement => (
     <CargoSheet
       title={`${SLOT_NAMES[slot]} engine cargo`}

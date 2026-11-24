@@ -132,6 +132,9 @@ export function WoodAndSteelState({
     setReceiptContractId(null);
     setClaimContractId(null);
     setOpenSheet((sheet: 'loans' | 'actions' | 'buyEngine' | 'discard' | null) => (sheet === 'loans' ? sheet : null));
+    // New contracts go to the current player, so offers from a finished turn must not be picked.
+    setIsPrivateContractModalOpen(false);
+    setReplacePrivateContract(false);
   }, [isMyTurn]);
   /** Why the player can't claim a market contract now, or null. */
   const claimRefusal = !myProps
@@ -265,10 +268,10 @@ export function WoodAndSteelState({
             G={G}
             ctx={ctx}
             onSelect={(commodity: string, destinationKey: string) => {
-              if (replacePrivateContract) {
-                myContracts.filter((c: Contract) => c.type === 'private').forEach((c: Contract) => moves.deleteContract(c.id));
+              if (isMyTurn && playerID) {
+                if (replacePrivateContract) moves.replacePrivateContract(playerID, commodity, destinationKey);
+                else moves.addContract(commodity, destinationKey, 'private');
               }
-              moves.addContract(commodity, destinationKey, 'private');
               setIsPrivateContractModalOpen(false);
               setReplacePrivateContract(false);
             }}

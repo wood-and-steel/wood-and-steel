@@ -268,6 +268,17 @@ describe('EnginesPanel', () => {
     expect(onSetCargo).toHaveBeenLastCalledWith(0, null);
   });
 
+  test("a cargo picker left open when the turn ends doesn't come back next turn", () => {
+    const props = { player: player(), playerID: '0', onSetCargo: () => true };
+    const { rerender } = render(<EnginesPanel {...props} canEdit />);
+    fireEvent.click(screen.getByRole('button', { name: /Light engine cargo/ }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    rerender(<EnginesPanel {...props} canEdit={false} />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    rerender(<EnginesPanel {...props} canEdit />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
   test('without onBuyEngine, engine names are plain text', () => {
     render(<EnginesPanel player={player()} playerID="0" canEdit={false} onSetCargo={() => true} />);
     expect(screen.queryByRole('button')).toBeNull();

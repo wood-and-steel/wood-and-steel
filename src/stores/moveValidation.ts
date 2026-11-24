@@ -18,6 +18,7 @@ const MOVES_BY_PHASE: Record<PhaseName, readonly string[]> = {
     'addContract',
     'toggleContractFulfilled',
     'deleteContract',
+    'replacePrivateContract',
     'acquireIndependentRailroad',
     'addCityToPlayer',
     'claimHubCity',
