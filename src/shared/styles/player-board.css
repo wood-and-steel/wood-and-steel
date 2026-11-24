@@ -297,6 +297,33 @@
   color: var(--color-text-subtle);
 }
 
+/* The round label: opens the latest round report, with a dot while one is unseen */
+.playerToolbar__round {
+  position: relative;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.playerToolbar__round:disabled {
+  cursor: default;
+}
+
+.playerToolbar__roundDot {
+  position: absolute;
+  top: 0.125rem;
+  right: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--color-notification);
+}
+
 .playerBoard__startingPairs {
   display: flex;
   flex-direction: column;

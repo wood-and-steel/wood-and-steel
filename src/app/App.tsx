@@ -245,15 +245,9 @@ const AppContent = (): React.ReactElement => {
           }
 
           // Update Zustand store with remote state.
-          // Preserve transient UI fields (e.g. lastRoundRoutesAdded) so subscription doesn't clear the routes-added hint.
           // Preserve hasMovedThisTurn when the update is for the same turn (e.g. our own save echoed back), so Undo stays enabled.
           useGameStore.setState((current) => {
-            const incomingG = state.G as GameState;
-            const preserved =
-              current.G.lastRoundRoutesAdded !== undefined
-                ? { lastRoundRoutesAdded: current.G.lastRoundRoutesAdded }
-                : {};
-            const newG = { ...incomingG, ...preserved };
+            const newG = state.G as GameState;
             const newCtx = state.ctx as GameContext;
             const turnChanged = newCtx.currentPlayer !== current.ctx.currentPlayer;
             return {

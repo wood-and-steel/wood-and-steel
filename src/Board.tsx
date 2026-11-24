@@ -11,6 +11,8 @@ import { ActionsSheet } from './components/ActionsSheet';
 import { DeliveryReceipt } from './components/DeliveryReceipt';
 import { ClaimSheet } from './components/ClaimSheet';
 import { PlayerSheet } from './components/PlayerSheet';
+import { RoundReportSheet } from './components/RoundReportSheet';
+import { useRoundReport } from './hooks/useRoundReport';
 import type { Contract } from './Contract';
 import { contractTies } from './utils/ties';
 import { bestEngineLevel, engineLevel } from './rules/engines';
@@ -18,7 +20,6 @@ import { MARKET_CONTRACT_MIN_ENGINE } from './rules/rulesData';
 import { independentRailroadPrice } from './stores/gameActions';
 import { formatMoney } from './utils/money';
 import { useGame } from './hooks/useGame';
-import { useGameStore } from './stores/gameStore';
 import { useLobbyStore } from './stores/lobbyStore';
 
 /** Minimal game manager shape passed from App (currentGameCode for NavBar). */
@@ -73,10 +74,6 @@ export function WoodAndSteelState({
     setShowRailroadHint(false);
   }, []);
 
-  const handleDismissRoutesAddedHint = React.useCallback(() => {
-    useGameStore.setState((s) => ({ G: { ...s.G, lastRoundRoutesAdded: undefined } }));
-  }, []);
-
   const handleNavigateToLobby = React.useCallback(() => {
     clearSelection();
     setLobbyMode(true);
@@ -112,6 +109,7 @@ export function WoodAndSteelState({
   // Fulfilling opens the delivery receipt; the move runs when the player confirms there.
   const handleToggleFulfilled = React.useCallback((contractId: string) => setReceiptContractId(contractId), []);
   const myProps = G.players.find(([id]) => id === playerID)?.[1];
+  const roundReport = useRoundReport(currentPhase === 'play' ? G.roundReport : undefined, gameManager?.currentGameCode ?? '');
   const isMyTurn = playerID === ctx.currentPlayer;
   // Only contracts the sheets still apply to: the player's own unfulfilled one, an open market one.
   const receiptContract = receiptContractId
@@ -218,8 +216,6 @@ export function WoodAndSteelState({
             onTabChange={handleTabChange}
             showRailroadHint={showRailroadHint}
             onDismissHint={handleDismissHint}
-            routesAddedCount={G.lastRoundRoutesAdded}
-            onDismissRoutesAddedHint={handleDismissRoutesAddedHint}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
@@ -249,8 +245,8 @@ export function WoodAndSteelState({
             onTabChange={handleTabChange}
             showRailroadHint={showRailroadHint}
             onDismissHint={handleDismissHint}
-            routesAddedCount={G.lastRoundRoutesAdded}
-            onDismissRoutesAddedHint={handleDismissRoutesAddedHint}
+            roundReportAutoOpen={roundReport.autoOpen}
+            onRoundReportAutoOpenChange={roundReport.setAutoOpen}
             onFillMarket={currentPhase === 'play' && isMyTurn ? () => moves.fillMarketTableau() : undefined}
           />
           <EditPlaytestDialog
@@ -279,7 +275,20 @@ export function WoodAndSteelState({
             onOpenActions={() => setOpenSheet('actions')}
             onOpenLoans={() => setOpenSheet('loans')}
             onOpenPlayer={setViewPlayerId}
+            onOpenRoundReport={G.roundReport ? roundReport.open : undefined}
+            roundReportUnseen={roundReport.unseen}
           />
+          {roundReport.isOpen && G.roundReport && (
+            <RoundReportSheet
+              report={G.roundReport}
+              G={G}
+              ctx={ctx}
+              player={myProps}
+              autoOpen={roundReport.autoOpen}
+              onAutoOpenChange={roundReport.setAutoOpen}
+              onClose={roundReport.close}
+            />
+          )}
           {viewPlayerId && <PlayerSheet G={G} playerID={viewPlayerId} onClose={() => setViewPlayerId(null)} />}
           {claimContract && myProps && isMyTurn && (
             <ClaimSheet

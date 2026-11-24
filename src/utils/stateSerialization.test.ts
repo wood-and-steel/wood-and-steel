@@ -70,4 +70,11 @@ describe('state serialization', () => {
     expect(G.turnLedger).toEqual({ playerID: '0', entries: [{ label: 'Borrowed', amount: 5000 }] });
     expect(G).not.toHaveProperty('roundReport');
   });
+
+  it('drops the old "Added N routes" count, which the round report replaced', () => {
+    const { G } = deserializeStateFromJSON(
+      JSON.stringify({ G: { contracts: [], players: [], independentRailroads: {}, lastRoundRoutesAdded: 3 }, ctx })
+    );
+    expect(G).not.toHaveProperty('lastRoundRoutesAdded');
+  });
 });

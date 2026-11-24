@@ -1,5 +1,5 @@
 import { applyBoardOp, emptyBoardState } from './boardOps';
-import { CITY_POINTS } from './geometry/cityPoints';
+import { CITY_POINTS } from '../data/cityPoints';
 import { ENGINE_SIZE, RAILYARD_SIZE, layoutTokens, moveTokenOp, nearestCity, tokenCity, type TokenRef } from './tokens';
 
 const light0: TokenRef = { kind: 'engine', playerID: '0', slot: 0 };

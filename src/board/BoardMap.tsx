@@ -7,7 +7,7 @@ import React from 'react';
 import boardImageUrl from './assets/map-board.webp';
 import { routes } from '../data/routes';
 import type { GameState, RegionCode } from '../stores/gameStore';
-import { BOARD_HEIGHT, BOARD_WIDTH, CITY_POINTS, REGIONAL_OFFICE_POINTS } from './geometry/cityPoints';
+import { BOARD_HEIGHT, BOARD_WIDTH, CITY_POINTS, REGIONAL_OFFICE_POINTS } from '../data/cityPoints';
 import { ROUTE_PATHS } from './geometry/routePaths';
 import { ownerSlots, trackPathD } from './geometry/trackPaths';
 import type { BoardPlayer } from './boardPlayers';

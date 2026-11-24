@@ -12,7 +12,6 @@ export interface SerializedState {
     contracts: unknown[];
     players: unknown[];
     independentRailroads: Record<string, unknown>;
-    lastRoundRoutesAdded?: number;
     marketRoundsWithoutExpirationStart?: number;
     turnLedger?: unknown;
     roundReport?: unknown;
@@ -39,9 +38,6 @@ export function serializeState(
     contracts: deepClone(G.contracts || []) as unknown[],
     players: deepClone(G.players || []) as unknown[],
     independentRailroads: deepClone(G.independentRailroads || {}) as Record<string, unknown>,
-    ...(typeof (G as { lastRoundRoutesAdded?: number }).lastRoundRoutesAdded === 'number' && {
-      lastRoundRoutesAdded: (G as { lastRoundRoutesAdded: number }).lastRoundRoutesAdded,
-    }),
     ...(typeof G.marketRoundsWithoutExpirationStart === 'number' && {
       marketRoundsWithoutExpirationStart: G.marketRoundsWithoutExpirationStart,
     }),
@@ -99,8 +95,6 @@ export function deserializeState(data: unknown): SerializedState {
       ),
     };
   }
-  const lastRoundRoutesAdded =
-    typeof gObj.lastRoundRoutesAdded === 'number' ? gObj.lastRoundRoutesAdded : undefined;
   const marketRoundsWithoutExpirationStart =
     typeof gObj.marketRoundsWithoutExpirationStart === 'number'
       ? gObj.marketRoundsWithoutExpirationStart
@@ -115,7 +109,6 @@ export function deserializeState(data: unknown): SerializedState {
       // Fills in money, engines and upgrades for players saved before the app tracked them.
       players: normalizePlayers(deepClone(gObj.players || [])),
       independentRailroads,
-      ...(lastRoundRoutesAdded !== undefined && { lastRoundRoutesAdded }),
       ...(marketRoundsWithoutExpirationStart !== undefined && { marketRoundsWithoutExpirationStart }),
       ...(turnLedger && { turnLedger }),
       ...(roundReport && { roundReport }),

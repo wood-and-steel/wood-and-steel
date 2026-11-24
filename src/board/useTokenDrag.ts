@@ -6,7 +6,7 @@
  * - none: on the map but away from every city (the drop is cancelled).
  */
 import React from 'react';
-import { BOARD_WIDTH } from './geometry/cityPoints';
+import { BOARD_WIDTH } from '../data/cityPoints';
 import { nearestCity, type TokenRef } from './tokens';
 
 /** How close (screen pixels from a city circle's edge) a drop must be to snap to it. */

@@ -12,7 +12,7 @@ import type { SerializedState } from '../utils/stateSerialization';
 import { emptyBoardState } from './boardOps';
 import { setBoardStateAdapter } from './boardStateAdapter';
 import { moneyValue, railroadTieValue } from '../Contract';
-import { CITY_POINTS } from './geometry/cityPoints';
+import { CITY_POINTS } from '../data/cityPoints';
 import { trackPathD } from './geometry/trackPaths';
 import { MemoryBoardStateAdapter } from './memoryBoardStateAdapter.testHelper';
 import { setBotStatesAdapter } from '../bots/state/botStatesAdapter';
@@ -156,7 +156,7 @@ describe('BoardApp (/board)', () => {
 
     expect(screen.getByRole('link', { name: 'BCDFG' })).toBeInTheDocument();
     expect(screen.getByText('Play')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument(); // ctx.round 2, shown counted from 1
 
     expect(container.querySelectorAll('.boardMap__indieRoute')).toHaveLength(2);
     expect(container.querySelectorAll('.boardMap__hub')).toHaveLength(1);

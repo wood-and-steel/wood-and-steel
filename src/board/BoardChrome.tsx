@@ -4,6 +4,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import type { GameContext } from '../stores/gameStore';
+import { displayRound } from '../utils/rounds';
 import { formatPhase, type BoardPlayer } from './boardPlayers';
 import type { BoardStateStatus } from './boardStore';
 import type { BoardSyncStatus } from './useBoardGameSync';
@@ -62,7 +63,7 @@ export function BoardTopBar({
         <span className="boardTopBar__label">Phase</span> {formatPhase(ctx.phase)}
       </span>
       <span className="boardTopBar__item">
-        <span className="boardTopBar__label">Round</span> {ctx.round ?? '—'}
+        <span className="boardTopBar__label">Round</span> {ctx.round !== undefined ? displayRound(ctx.round) : '—'}
       </span>
       <span className="boardTopBar__item">
         <span className="boardTopBar__label">Current</span>{' '}
