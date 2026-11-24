@@ -125,6 +125,7 @@ export function PlayerBoard({
           <div className="home">
             <EnginesPanel
               player={playerProps}
+              playerID={key}
               canEdit={canAct}
               onSetCargo={(slot, commodity) => onSetCargo?.(slot, commodity) ?? false}
             />
