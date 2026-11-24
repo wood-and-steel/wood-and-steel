@@ -45,6 +45,8 @@ export function WoodAndSteelState({
     React.useState(false);
   const [isPrivateContractModalOpen, setIsPrivateContractModalOpen] =
     React.useState(false);
+  // Opened from Actions' "Discard and draw new contract": picking an offer replaces the private contract.
+  const [replacePrivateContract, setReplacePrivateContract] = React.useState(false);
   const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | 'buyEngine' | 'discard' | null>(null);
   const [receiptContractId, setReceiptContractId] = React.useState<string | null>(null);
   const [claimContractId, setClaimContractId] = React.useState<string | null>(null);
@@ -256,12 +258,19 @@ export function WoodAndSteelState({
           />
           <PrivateContractOfferModal
             isOpen={isPrivateContractModalOpen}
-            onClose={() => setIsPrivateContractModalOpen(false)}
+            onClose={() => {
+              setIsPrivateContractModalOpen(false);
+              setReplacePrivateContract(false);
+            }}
             G={G}
             ctx={ctx}
             onSelect={(commodity: string, destinationKey: string) => {
+              if (replacePrivateContract) {
+                myContracts.filter((c: Contract) => c.type === 'private').forEach((c: Contract) => moves.deleteContract(c.id));
+              }
               moves.addContract(commodity, destinationKey, 'private');
               setIsPrivateContractModalOpen(false);
+              setReplacePrivateContract(false);
             }}
           />
           <PlayerToolbar
@@ -315,7 +324,10 @@ export function WoodAndSteelState({
               player={myProps}
               moves={moves}
               onAcquireRailroad={() => handleTabChange('indies')}
-              onNewPrivateContract={() => setIsPrivateContractModalOpen(true)}
+              onNewPrivateContract={() => {
+                setReplacePrivateContract(true);
+                setIsPrivateContractModalOpen(true);
+              }}
               onClose={() => setOpenSheet(null)}
             />
           )}

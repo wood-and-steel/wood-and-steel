@@ -94,10 +94,13 @@ export function PlayerBoard({
   };
 
   const mine = G.contracts.filter((c: Contract) => c.playerID === key && !c.fulfilled);
-  // Expiring contracts first, soonest to leave the tableau at the top; the rest keep their order.
+  // Expiring contracts first, soonest to leave the tableau at the top; then oldest first.
   const market = G.contracts
     .filter((c: Contract) => c.type === "market" && c.playerID === null && !c.fulfilled)
-    .sort((a: Contract, b: Contract) => (a.roundsLeft ?? Infinity) - (b.roundsLeft ?? Infinity));
+    .sort(
+      (a: Contract, b: Contract) =>
+        (a.roundsLeft ?? Infinity) - (b.roundsLeft ?? Infinity) || a.creationTime - b.creationTime
+    );
   const fulfilled = G.contracts.filter((c: Contract) => c.playerID === key && c.fulfilled);
   const upgrades = upgradeLabels(playerProps);
   // The first Mogul anyone buys opens the market; after that an empty tableau just means none are open.
@@ -152,6 +155,7 @@ export function PlayerBoard({
                 player={playerProps}
                 onSelect={canAct && onClaimContract ? (c) => onClaimContract(c.id) : undefined}
                 emptyText={marketOpened ? "No open market contracts." : "The market opens when someone buys a Mogul."}
+                keepOrder
               />
             </section>
             <section className="home__section" aria-label="Your upgrades">

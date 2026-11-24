@@ -43,7 +43,7 @@ export interface ActionsSheetProps {
   moves: Moves;
   /** Opens the Railroads tab, where each railroad shows its price. */
   onAcquireRailroad: () => void;
-  /** Opens the private contract offers (discard and draw). */
+  /** Opens the private contract offers; picking one replaces the player's private contract. */
   onNewPrivateContract: () => void;
   /** The view to open on; the Actions menu by default. */
   initialView?: ActionsView;

@@ -236,11 +236,12 @@ describe('PlayerBoard (Home)', () => {
   });
 
   test('lists expiring market contracts first, soonest to expire at the top', () => {
-    const market = (id: string, commodity: string, roundsLeft?: number) =>
-      contract({ id, type: 'market', playerID: null, commodity, roundsLeft });
+    const market = (id: string, commodity: string, creationTime: number, roundsLeft?: number) =>
+      contract({ id, type: 'market', playerID: null, commodity, creationTime, roundsLeft });
+    // Creation times run opposite to expiry, so the rows can't just be oldest first.
     const G = {
       players: [['0', player()]],
-      contracts: [market('m1', 'wine'), market('m2', 'coal', 3), market('m3', 'fish'), market('m4', 'wood', 1)],
+      contracts: [market('m1', 'fish', 4), market('m2', 'coal', 2, 3), market('m3', 'wine', 1), market('m4', 'wood', 3, 1)],
       independentRailroads: {},
     } as unknown as GameState;
     const ctx = { phase: 'play', currentPlayer: '0', playOrder: ['0'], playOrderPos: 0, numPlayers: 1, turn: 1, round: 1 } as GameContext;
