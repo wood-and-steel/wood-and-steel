@@ -244,7 +244,7 @@
 
 .contractRow__chip--last {
   background-color: var(--color-danger-bg);
-  color: var(--color-danger);
+  color: var(--color-text);
 }
 
 .contractRow__value {
@@ -255,12 +255,12 @@
   white-space: nowrap;
 }
 
-.contractRow__gross {
+.contractRow__gross,
+.contractRow__ties {
   font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text);
 }
 
-.contractRow__ties,
 .contractRow__delivered {
   font-size: var(--font-size-sm);
   color: var(--color-text-subtle);

@@ -4,7 +4,7 @@ import type { PlayerProps } from "../stores/gameStore";
 import { defaultDeliveringEngine, deliveringEngineMatters, deliveryBreakdown, serviceOn } from "../rules/finance";
 import { getEngineType, type EngineSlot } from "../rules/playerBoard";
 import { formatMoney, formatMoneyChange } from "../utils/money";
-import { BeforeAfter, Sheet } from "./Sheet";
+import { BeforeAfter, RadioOption, Sheet } from "./Sheet";
 
 export interface DeliveryReceiptProps {
   contract: Contract;
@@ -36,18 +36,13 @@ export function DeliveryReceipt({ contract, player, ties, onDeliver, onClose }: 
       {askEngine && (
         <div className="sheet__field">
           <span className="sheet__label">Which engine made the delivery?</span>
-          <div className="sheet__tabs" role="radiogroup" aria-label="Delivering engine">
+          <div className="sheet__options" role="radiogroup" aria-label="Delivering engine">
             {slots.map((s) => (
-              <button
-                key={s}
-                type="button"
-                role="radio"
-                aria-checked={slot === s}
-                className={`sheet__tab${slot === s ? " sheet__tab--active" : ""}`}
-                onClick={() => setSlot(s)}
-              >
-                {SLOT_NAMES[s]}: {getEngineType(player.engines[s]!).name}
-              </button>
+              <RadioOption key={s} name="deliveringEngine" checked={slot === s} onSelect={() => setSlot(s)}>
+                <span>
+                  {SLOT_NAMES[s]}: {getEngineType(player.engines[s]!).name}
+                </span>
+              </RadioOption>
             ))}
           </div>
         </div>

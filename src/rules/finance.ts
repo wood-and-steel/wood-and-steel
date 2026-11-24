@@ -152,3 +152,18 @@ export const LEDGER_LABELS = {
   paidForTrack: 'Paid for track',
   debtService: 'Debt service',
 } as const;
+
+/**
+ * What a delivery would pay with the lowest- and highest-paying of the player's engines. They
+ * differ only when one engine is a Mountain or Challenger and the other isn't; with no engines,
+ * both are the no-bonus payout.
+ */
+export function deliveryRange(
+  player: DebtServiceState & { cash: number; upgrades: readonly string[]; engines: readonly (EngineTypeId | null)[] },
+  contract: Pick<Contract, 'destinationKey' | 'commodity'>
+): { low: DeliveryBreakdown; high: DeliveryBreakdown } {
+  const owned = player.engines.filter((e): e is EngineTypeId => e !== null);
+  const all = (owned.length > 0 ? owned : [null]).map((e) => deliveryBreakdown(player, contract, e));
+  const byNet = [...all].sort((a, b) => a.net - b.net);
+  return { low: byNet[0], high: byNet[byNet.length - 1] };
+}

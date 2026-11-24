@@ -96,8 +96,8 @@ describe('ClaimSheet', () => {
       />
     );
     const options = screen.getByRole('radiogroup', { name: 'Record cargo' });
-    expect(within(options).getByRole('radio', { name: /Dark: 2-6-0 Mogul/ })).toHaveAttribute('aria-checked', 'true');
-    expect(within(options).getByRole('radio', { name: /Light/ })).toHaveTextContent('Replaces coal');
+    expect(within(options).getByRole('radio', { name: /Dark: 2-6-0 Mogul/ })).toBeChecked();
+    expect(within(options).getByRole('radio', { name: /Light: 4-4-0 American.*Replaces coal/ })).not.toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Claim contract' }));
     expect(onClaim).toHaveBeenLastCalledWith(1);
     fireEvent.click(within(options).getByRole('radio', { name: "Don't record cargo" }));
@@ -205,5 +205,72 @@ describe('PlayerBoard (Home)', () => {
     expect(sections).toEqual(['Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
     expect(within(screen.getByRole('region', { name: 'Market contracts' })).getByText('Wine to Boston')).toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: 'Your upgrades' })).getByText('Hub · Boston')).toBeInTheDocument();
+  });
+});
+
+describe('Contract rows: menus, ranges and empty states (review fixes)', () => {
+  test('the menu takes focus, arrow keys move through it, and Escape gives focus back to the row', () => {
+    render(
+      <ContractRows
+        contracts={[contract()]}
+        player={player()}
+        actionsFor={() => [
+          { label: 'Fulfill', onSelect: () => {} },
+          { label: 'Discard', onSelect: () => {} },
+        ]}
+        emptyText=""
+      />
+    );
+    const row = screen.getByRole('button', { name: /Coal to Boston/ });
+    row.focus();
+    fireEvent.click(row);
+    expect(document.activeElement).toHaveTextContent('Fulfill');
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+    expect(document.activeElement).toHaveTextContent('Discard');
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+    expect(document.activeElement).toHaveTextContent('Fulfill');
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByText('Discard')).toBeNull();
+    expect(document.activeElement).toBe(row);
+  });
+
+  test('an open menu is forgotten when its row loses its actions, so it does not come back later', () => {
+    const actions = [{ label: 'Fulfill', onSelect: () => {} }];
+    const view = (withActions: boolean) => (
+      <ContractRows contracts={[contract()]} player={player()} actionsFor={() => (withActions ? actions : [])} emptyText="" />
+    );
+    const { rerender } = render(view(true));
+    fireEvent.click(screen.getByRole('button', { name: /Coal to Boston/ }));
+    expect(screen.getByText('Fulfill')).toBeInTheDocument();
+    rerender(view(false));
+    rerender(view(true));
+    expect(screen.queryByText('Fulfill')).toBeNull();
+  });
+
+  test('shows a range when the player’s engines would pay differently', () => {
+    const c = contract();
+    const value = moneyValue(c);
+    render(<ContractRows contracts={[c]} player={player({ engines: ['mountain', 'prairie'] })} actionsFor={() => []} emptyText="" />);
+    const bonus = Math.floor((value * 4) / 3 / 1000) * 1000;
+    expect(screen.getByTitle('Depends on which engine delivers')).toHaveTextContent(`${formatMoney(value)}–${formatMoney(bonus)}`);
+  });
+
+  test('an empty market says the market is closed only before anyone owns a Mogul', () => {
+    const board = (engines: PlayerProps['engines']) => (
+      <PlayerBoard
+        G={{ players: [['0', player({ engines })]], contracts: [], independentRailroads: {} } as unknown as GameState}
+        ctx={{ phase: 'play', currentPlayer: '0', playOrder: ['0'], playOrderPos: 0, numPlayers: 1, turn: 1, round: 1 } as GameContext}
+        playerID="0"
+        startingContractExists
+        currentPhase="play"
+        onStartingPairSelect={() => {}}
+        onToggleFulfilled={() => {}}
+        onDelete={() => {}}
+      />
+    );
+    const { rerender } = render(board(['american', null]));
+    expect(screen.getByText('The market opens when someone buys a Mogul.')).toBeInTheDocument();
+    rerender(board(['mogul', null]));
+    expect(screen.getByText('No open market contracts.')).toBeInTheDocument();
   });
 });

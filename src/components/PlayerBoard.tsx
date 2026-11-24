@@ -4,7 +4,8 @@ import { ContractRows, type ContractAction } from "./ContractRows";
 import { EnginesPanel } from "./EnginesPanel";
 import type { EngineSlot } from "../rules/playerBoard";
 import { formatCommodity } from "../rules/playerBoard";
-import { UPGRADE_NAMES, type UpgradeKey } from "../rules/rulesData";
+import { MARKET_CONTRACT_MIN_ENGINE, UPGRADE_NAMES, type UpgradeKey } from "../rules/rulesData";
+import { bestEngineLevel, engineLevel } from "../rules/engines";
 import type { GameState, GameContext, PlayerProps } from "../stores/gameStore";
 import { STARTING_CITY_PAIRS } from "../data/startingRoutes";
 
@@ -95,6 +96,10 @@ export function PlayerBoard({
   const market = G.contracts.filter((c: Contract) => c.type === "market" && c.playerID === null && !c.fulfilled);
   const fulfilled = G.contracts.filter((c: Contract) => c.playerID === key && c.fulfilled);
   const upgrades = upgradeLabels(playerProps);
+  // The first Mogul anyone buys opens the market; after that an empty tableau just means none are open.
+  const marketOpened = G.players.some(
+    ([, p]) => bestEngineLevel(p.engines) >= engineLevel(MARKET_CONTRACT_MIN_ENGINE)
+  );
 
   const mineActions = (c: Contract): ContractAction[] =>
     canAct
@@ -155,7 +160,7 @@ export function PlayerBoard({
                 contracts={market}
                 player={playerProps}
                 actionsFor={marketActions}
-                emptyText="The market opens when someone buys a Mogul."
+                emptyText={marketOpened ? "No open market contracts." : "The market opens when someone buys a Mogul."}
               />
             </section>
             <section className="home__section" aria-label="Your upgrades">

@@ -86,9 +86,16 @@ export interface PopupMenuProps {
   children: React.ReactNode;
 }
 
+/** The menu's items that can take focus, in order. */
+function menuItems(menu: HTMLElement | null): HTMLElement[] {
+  return menu ? Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])')) : [];
+}
+
 /**
  * Popup menu component that positions itself relative to an anchor element.
- * Supports keyboard navigation (Escape to close) and click-outside-to-close behavior.
+ * Keyboard: focus moves to the first item when it opens; Arrow Up/Down, Home and End move
+ * between items; Escape or Tab closes it; focus returns to what opened it when it closes.
+ * Closes on a click outside.
  */
 export function PopupMenu({
   isOpen,
@@ -100,6 +107,47 @@ export function PopupMenu({
 }: PopupMenuProps): React.ReactElement | null {
   const menuRef = React.useRef<HTMLDivElement>(null);
   const position = useMenuPosition(anchorRef, placement, menuRef, isOpen);
+  const openerRef = React.useRef<HTMLElement | null>(null);
+  const placed = position !== null;
+
+  // Remember what had focus when the menu opened, and give it back when the menu closes
+  // (unless something else, such as a sheet the item opened, has taken focus since).
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const active = document.activeElement;
+    openerRef.current = active instanceof HTMLElement ? active : null;
+    return () => {
+      const opener = openerRef.current;
+      const focus = document.activeElement;
+      if (opener?.isConnected && (!focus || focus === document.body)) opener.focus();
+    };
+  }, [isOpen]);
+
+  // Focus the first item on opening, and again once the menu is placed: a browser won't
+  // focus it while it's still hidden for measuring.
+  React.useEffect(() => {
+    if (!isOpen || menuRef.current?.contains(document.activeElement)) return;
+    menuItems(menuRef.current)[0]?.focus();
+  }, [isOpen, placed]);
+
+  const handleMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const items = menuItems(menuRef.current);
+    if (items.length === 0) return;
+    const index = items.indexOf(document.activeElement as HTMLElement);
+    let next: number | null = null;
+    if (e.key === "ArrowDown") next = index < 0 ? 0 : (index + 1) % items.length;
+    else if (e.key === "ArrowUp") next = index <= 0 ? items.length - 1 : index - 1;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = items.length - 1;
+    else if (e.key === "Tab") {
+      onClose();
+      return;
+    }
+    if (next !== null) {
+      e.preventDefault();
+      items[next].focus();
+    }
+  };
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -133,6 +181,7 @@ export function PopupMenu({
       ref={menuRef}
       className="popupMenu"
       role="menu"
+      onKeyDown={handleMenuKeyDown}
       style={
         position
           ? { position: "fixed", top: position.top, left: position.left, visibility: "visible" }

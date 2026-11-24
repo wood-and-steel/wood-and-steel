@@ -1,10 +1,9 @@
 import React from "react";
 import { railroadTieValue, type Contract } from "../Contract";
 import type { PlayerProps } from "../stores/gameStore";
-import { defaultDeliveringEngine, deliveryBreakdown } from "../rules/finance";
 import { formatCommodity, getEngineType, type EngineSlot } from "../rules/playerBoard";
-import { formatMoney } from "../utils/money";
-import { Sheet } from "./Sheet";
+import { payoutFor } from "./ContractRows";
+import { RadioOption, Sheet } from "./Sheet";
 
 export interface ClaimSheetProps {
   contract: Contract;
@@ -26,7 +25,7 @@ export function ClaimSheet({ contract, player, refusal, onClaim, onClose }: Clai
   const slots = ([0, 1] as EngineSlot[]).filter((slot) => player.engines[slot] !== null);
   const emptySlot = slots.find((slot) => player.cargo[slot] === null);
   const [cargoSlot, setCargoSlot] = React.useState<EngineSlot | null>(emptySlot ?? null);
-  const receipt = deliveryBreakdown(player, contract, defaultDeliveringEngine(player.engines));
+  const payout = payoutFor(contract, player);
   const ties = railroadTieValue(contract);
   const commodity = formatCommodity(contract.commodity);
 
@@ -36,9 +35,10 @@ export function ClaimSheet({ contract, player, refusal, onClaim, onClose }: Clai
         <div className="sheet__row">
           <span className="sheet__label">Worth to you</span>
           <span>
-            <strong>{formatMoney(receipt.net)}</strong> · {ties} {ties === 1 ? "tie" : "ties"}
+            <strong>{payout.net}</strong> · {ties} {ties === 1 ? "tie" : "ties"}
           </span>
         </div>
+        {payout.byEngine && <p className="sheet__note">Depends on which engine delivers.</p>}
       </div>
       {refusal ? (
         <p className="sheet__warning" role="alert">
@@ -51,32 +51,19 @@ export function ClaimSheet({ contract, player, refusal, onClaim, onClose }: Clai
             {slots.map((slot) => {
               const current = player.cargo[slot];
               return (
-                <button
-                  key={slot}
-                  type="button"
-                  role="radio"
-                  aria-checked={cargoSlot === slot}
-                  className={`sheet__option${cargoSlot === slot ? " sheet__option--selected" : ""}`}
-                  onClick={() => setCargoSlot(slot)}
-                >
+                <RadioOption key={slot} name="claimCargo" checked={cargoSlot === slot} onSelect={() => setCargoSlot(slot)}>
                   <span>
                     {SLOT_NAMES[slot]}: {getEngineType(player.engines[slot]!).name}
                   </span>
                   <span className="sheet__label">
                     {current ? `Replaces ${formatCommodity(current).toLowerCase()}` : "No cargo recorded"}
                   </span>
-                </button>
+                </RadioOption>
               );
             })}
-            <button
-              type="button"
-              role="radio"
-              aria-checked={cargoSlot === null}
-              className={`sheet__option${cargoSlot === null ? " sheet__option--selected" : ""}`}
-              onClick={() => setCargoSlot(null)}
-            >
+            <RadioOption name="claimCargo" checked={cargoSlot === null} onSelect={() => setCargoSlot(null)}>
               <span>Don't record cargo</span>
-            </button>
+            </RadioOption>
           </div>
           <button
             type="button"

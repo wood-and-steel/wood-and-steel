@@ -1,7 +1,7 @@
 import React from "react";
 import { moneyValue, railroadTieValue, type Contract } from "../Contract";
 import type { PlayerProps } from "../stores/gameStore";
-import { defaultDeliveringEngine, deliveryBreakdown } from "../rules/finance";
+import { deliveryRange } from "../rules/finance";
 import { commodityIcons } from "../shared/assets/icons";
 import { formatMoney } from "../utils/money";
 import { PopupMenu, PopupMenuItem } from "./PopupMenu";
@@ -29,12 +29,24 @@ function commodityLabel(commodity: string): string {
   return commodity.charAt(0).toUpperCase() + commodity.slice(1);
 }
 
-/** What a contract pays the player now, and its value before debt service when that lowers it. */
-function valueFor(contract: Contract, player: PlayerProps | undefined): { net: number; gross: number | null } {
-  if (!player) return { net: moneyValue(contract), gross: null };
-  const r = deliveryBreakdown(player, contract, defaultDeliveringEngine(player.engines));
-  const gross = r.value + r.engineBonus + r.stationsBonus;
-  return { net: r.net, gross: r.debtService > 0 ? gross : null };
+function moneyText(low: number, high: number): string {
+  return low === high ? formatMoney(low) : `${formatMoney(low)}–${formatMoney(high)}`;
+}
+
+/**
+ * What a contract pays the player: the net, and the amount before debt service when that
+ * lowers it. A range when their engines would pay differently (a Mountain or Challenger with
+ * another engine); `byEngine` says so.
+ */
+export function payoutFor(contract: Contract, player: PlayerProps | undefined): { net: string; gross: string | null; byEngine: boolean } {
+  if (!player) return { net: formatMoney(moneyValue(contract)), gross: null, byEngine: false };
+  const { low, high } = deliveryRange(player, contract);
+  const gross = (r: typeof low) => r.value + r.engineBonus + r.stationsBonus;
+  return {
+    net: moneyText(low.net, high.net),
+    gross: low.debtService > 0 ? moneyText(gross(low), gross(high)) : null,
+    byEngine: low.net !== high.net,
+  };
 }
 
 /**
@@ -46,6 +58,15 @@ function valueFor(contract: Contract, player: PlayerProps | undefined): { net: n
 export function ContractRows({ contracts, player, actionsFor, emptyText }: ContractRowsProps): React.ReactElement {
   const [openId, setOpenId] = React.useState<string | null>(null);
   const [skipOpenUntil, setSkipOpenUntil] = React.useState(0);
+
+  // Forget an open menu whose row is gone, fulfilled, or no longer has actions (e.g. the turn
+  // ended), so it doesn't reappear later.
+  const openStillValid =
+    openId === null ||
+    contracts.some((c) => c.id === openId && !c.fulfilled && actionsFor(c).length > 0);
+  React.useEffect(() => {
+    if (!openStillValid) setOpenId(null);
+  }, [openStillValid]);
 
   if (contracts.length === 0) return <p className="contractRows__empty">{emptyText}</p>;
 
@@ -90,7 +111,7 @@ function ContractRow({ contract, player, actions, isOpen, onToggle, onClose, onC
   const clickable = actions.length > 0 && !contract.fulfilled;
   const ties = railroadTieValue(contract);
   const claimed = contract.type === "market" && contract.playerID !== null;
-  const { net, gross } = valueFor(contract, contract.fulfilled ? undefined : player);
+  const { net, gross, byEngine } = payoutFor(contract, contract.fulfilled ? undefined : player);
   const classes = [
     "contractRow",
     contract.type === "market" ? "contractRow--market" : "contractRow--private",
@@ -127,8 +148,8 @@ function ContractRow({ contract, player, actions, isOpen, onToggle, onClose, onC
             <span className="contractRow__delivered">Delivered</span>
           ) : (
             <>
-              {gross !== null && <s className="contractRow__gross">{formatMoney(gross)}</s>}
-              <strong>{formatMoney(net)}</strong>
+              {gross !== null && <s className="contractRow__gross">{gross}</s>}
+              <strong title={byEngine ? "Depends on which engine delivers" : undefined}>{net}</strong>
             </>
           )}
           <span className="contractRow__ties">

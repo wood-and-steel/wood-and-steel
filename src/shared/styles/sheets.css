@@ -289,3 +289,22 @@ button.sheet__option {
 .playerSheet__debt {
   color: var(--color-danger);
 }
+
+/* A radio choice styled as an option row */
+.sheet__option--radio {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+}
+
+.sheet__radio {
+  margin: 0.25rem 0 0;
+  flex-shrink: 0;
+}
+
+.sheet__optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}

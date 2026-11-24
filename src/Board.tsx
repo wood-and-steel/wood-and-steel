@@ -113,9 +113,25 @@ export function WoodAndSteelState({
   const handleToggleFulfilled = React.useCallback((contractId: string) => setReceiptContractId(contractId), []);
   const myProps = G.players.find(([id]) => id === playerID)?.[1];
   const isMyTurn = playerID === ctx.currentPlayer;
-  const receiptContract = receiptContractId ? G.contracts.find((c: Contract) => c.id === receiptContractId) : undefined;
+  // Only contracts the sheets still apply to: the player's own unfulfilled one, an open market one.
+  const receiptContract = receiptContractId
+    ? G.contracts.find((c: Contract) => c.id === receiptContractId && c.playerID === playerID && !c.fulfilled)
+    : undefined;
   const myTies = playerID ? contractTies(G.contracts, playerID) : 0;
-  const claimContract = claimContractId ? G.contracts.find((c: Contract) => c.id === claimContractId) : undefined;
+  const claimContract = claimContractId
+    ? G.contracts.find(
+        (c: Contract) => c.id === claimContractId && c.type === 'market' && c.playerID === null && !c.fulfilled
+      )
+    : undefined;
+
+  // Turn sheets belong to this turn: when it ends (here or on another device), forget them so
+  // they don't reappear on the player's next turn.
+  React.useEffect(() => {
+    if (isMyTurn) return;
+    setReceiptContractId(null);
+    setClaimContractId(null);
+    setOpenSheet((sheet: 'loans' | 'actions' | null) => (sheet === 'actions' ? null : sheet));
+  }, [isMyTurn]);
   /** Why the player can't claim a market contract now, or null. */
   const claimRefusal = !myProps
     ? null

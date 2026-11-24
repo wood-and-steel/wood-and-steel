@@ -103,6 +103,24 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
   );
 }
 
+export interface RadioOptionProps {
+  /** Shared by every option in the group, so arrow keys move between them. */
+  name: string;
+  checked: boolean;
+  onSelect: () => void;
+  children: React.ReactNode;
+}
+
+/** One choice in a sheet's radio group: a native radio (arrow keys, screen readers) styled as a row. */
+export function RadioOption({ name, checked, onSelect, children }: RadioOptionProps): React.ReactElement {
+  return (
+    <label className={`sheet__option sheet__option--radio${checked ? " sheet__option--selected" : ""}`}>
+      <input type="radio" className="sheet__radio" name={name} checked={checked} onChange={onSelect} />
+      <span className="sheet__optionText">{children}</span>
+    </label>
+  );
+}
+
 /** "Cash $14K → $4K": a value before and after the sheet's action. */
 export function BeforeAfter({ label, before, after }: { label: string; before: string; after: string }): React.ReactElement {
   return (
