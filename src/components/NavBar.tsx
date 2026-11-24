@@ -17,7 +17,7 @@ function useIsDesktop(): boolean {
   return isDesktop;
 }
 
-export type NavBarTabId = "board" | "commodities" | "indies";
+export type NavBarTabId = "board" | "indies";
 
 export interface NavBarGameManager {
   currentGameCode?: string | null;
@@ -164,7 +164,6 @@ export function NavBar({
 
   const tabs: { id: NavBarTabId; label: string }[] = [
     { id: "board", label: "Home" },
-    { id: "commodities", label: "Commodities" },
     { id: "indies", label: "Railroads" },
   ];
 

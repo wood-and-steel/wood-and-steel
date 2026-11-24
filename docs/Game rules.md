@@ -42,10 +42,9 @@ Wood and Steel is played with physical tabletop components and a web app. On the
 
 The app is responsible for all the random behavior in the game, similar to virtual decks of cards. It also tracks some elements of player progress. The goal is that players keep track of the things that are interesting and fun (track, engines, upgrades, money), while the grunt work is delegated to the app (e.g. generating a random contract based on board state).
 
-Once the game is started, each player sees three tabs in the app:
+Once the game is started, each player sees two tabs in the app:
 
 - Home, where they see their engines and cargo, their contracts and the market (each valued for them, net of any debt service), their upgrades, and their fulfilled contracts
-- Commodities, a reference to which commodities are available in which cities
 - Railroads, a list of the independent railroads, their routes, and their price
 
 Above the tabs, each player sees their railroad ties, cash and debt, with a Loans button for borrowing and repaying, and the other players with their railroad ties. Pressing another player shows their board: money, engines, recorded cargo, claimed market contract, upgrades, and debt-service progress. Claiming a market contract offers to record its commodity on one of the player's engines. On their turn, an Actions button lists the turn actions that involve the app: buying an engine or an upgrade, acquiring a railroad, paying for track (the player enters what it cost), and drawing a new private contract. Fulfilling a contract shows a receipt of what it pays before the player confirms.

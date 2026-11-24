@@ -8,7 +8,7 @@ function capitalizeFirst(str: string): string {
 export interface CommodityRichNameProps {
   /** Commodity name (lowercase, e.g. "wood", "steel"). */
   commodity: string;
-  /** Optional CSS class name for the icon. Defaults to "commodityRow__icon". */
+  /** Optional CSS class name for the icon. Defaults to "commodityRichName__icon". */
   iconClassName?: string;
 }
 
@@ -24,7 +24,7 @@ export function CommodityRichName({
       <img
         src={(commodityIcons as Record<string, string>)[commodity]}
         alt={commodity}
-        className={iconClassName ?? "commodityRow__icon"}
+        className={iconClassName ?? "commodityRichName__icon"}
       />
       <span>{capitalizeFirst(commodity)}</span>
     </div>
