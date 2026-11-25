@@ -156,7 +156,7 @@ button.sheet__option {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
-  padding: var(--spacing-sm) 0;
+  padding: var(--spacing-sm);
   border-bottom: var(--border-width-md) solid var(--color-border-light);
 }
 
@@ -166,7 +166,6 @@ button.sheet__option {
 
 .sheet__listItem--button {
   width: 100%;
-  padding: var(--spacing-sm);
   border-top: none;
   border-right: none;
   border-left: none;
