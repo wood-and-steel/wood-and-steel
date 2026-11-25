@@ -156,7 +156,7 @@ describe('BoardApp (/board)', () => {
 
     expect(screen.getByRole('link', { name: 'BCDFG' })).toBeInTheDocument();
     expect(screen.getByText('Play')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument(); // ctx.round 2, shown counted from 1
+    expect(screen.getByText('2')).toBeInTheDocument(); // ctx.round 2
 
     expect(container.querySelectorAll('.mapRoute--indie')).toHaveLength(2);
     expect(container.querySelectorAll('.boardMap__hub')).toHaveLength(1);
