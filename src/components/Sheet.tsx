@@ -12,9 +12,18 @@ export interface SheetProps {
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+/** An open sheet: its content, and the element last focused inside it. */
+interface OpenSheet {
+  content: HTMLDivElement | null;
+  lastFocus: HTMLElement | null;
+}
+
+/** Open sheets, bottom to top. Loans can open over another sheet; only the top one is live. */
+const openSheets: OpenSheet[] = [];
+
 /**
- * The element that opened the current sheet (or chain of sheets, as Actions steps into its
- * sub-sheets), so focus can go back to it when the last sheet closes.
+ * The element outside any sheet that opened the bottom sheet (or chain of sheets, as Actions
+ * steps into its sub-sheets), so focus can go back to it when the last sheet closes.
  */
 let opener: HTMLElement | null = null;
 
@@ -25,27 +34,48 @@ let opener: HTMLElement | null = null;
  * button (+M or End Turn). Focus moves into the sheet when it opens, Tab stays inside it, and
  * focus returns to whatever opened it when it closes, so the game behind can't be changed
  * from the keyboard while it's open.
+ *
+ * Sheets stack: one opened over another (Loans, from the money strip or a "borrow first"
+ * message) covers it, Escape closes only the top one, and closing it puts focus back where it
+ * was in the sheet underneath.
  */
 export function Sheet({ title, onClose, onBack, children }: SheetProps): React.ReactElement {
   const titleId = React.useId();
   const contentRef = React.useRef<HTMLDivElement>(null);
+  const self = React.useRef<OpenSheet>({ content: null, lastFocus: null });
+  const onCloseRef = React.useRef(onClose);
+  onCloseRef.current = onClose;
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && openSheets[openSheets.length - 1] === self.current) onCloseRef.current();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  }, []);
 
   React.useEffect(() => {
+    const sheet = self.current;
+    sheet.content = contentRef.current;
     const active = document.activeElement;
-    if (active instanceof HTMLElement && !active.closest(".sheet")) opener = active;
+    // A sheet that replaces another (the next step of a task) mounts with focus on the body and
+    // keeps the chain's opener; one opened over another sheet leaves it alone too.
+    if (openSheets.length === 0 && active instanceof HTMLElement && active !== document.body && !active.closest(".sheet")) {
+      opener = active;
+    }
+    openSheets.push(sheet);
     contentRef.current?.focus();
     return () => {
+      openSheets.splice(openSheets.indexOf(sheet), 1);
       // Let a following sheet (the next step of the same task) mount before deciding.
       setTimeout(() => {
-        if (document.querySelector(".sheet")) return;
+        const top = openSheets[openSheets.length - 1];
+        if (top) {
+          if (!top.content?.contains(document.activeElement)) {
+            (top.lastFocus?.isConnected ? top.lastFocus : top.content)?.focus();
+          }
+          return;
+        }
         if (opener?.isConnected) opener.focus();
         opener = null;
       }, 0);
@@ -82,7 +112,15 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="modal__content sheet" ref={contentRef} tabIndex={-1} onKeyDown={trapTab}>
+      <div
+        className="modal__content sheet"
+        ref={contentRef}
+        tabIndex={-1}
+        onKeyDown={trapTab}
+        onFocus={(event) => {
+          if (event.target instanceof HTMLElement) self.current.lastFocus = event.target;
+        }}
+      >
         <div className="sheet__header">
           {onBack && (
             <button type="button" className="sheet__back" onClick={onBack}>
@@ -136,5 +174,34 @@ export function BeforeAfter({ label, before, after }: { label: string; before: s
         )}
       </span>
     </div>
+  );
+}
+
+export interface ShortOfCashProps {
+  /** What's short, e.g. "$4K short". */
+  children: React.ReactNode;
+  /** Opens Loans over this sheet; the button is left out without it. */
+  onOpenLoans?: () => void;
+  /** Announce the message when it appears (a refused action), rather than as part of a list. */
+  alert?: boolean;
+}
+
+/**
+ * A "not enough cash" message with a Loans button beside it. Loans opens over this sheet, and
+ * closing it comes back here with the new cash. The money strip has a Loans button too, but
+ * keyboard and screen reader users can't reach it while a sheet is open.
+ */
+export function ShortOfCash({ children, onOpenLoans, alert }: ShortOfCashProps): React.ReactElement {
+  return (
+    <span className="sheet__shortOfCash">
+      <span className="sheet__warning" role={alert ? "alert" : undefined}>
+        {children}
+      </span>
+      {onOpenLoans && (
+        <button type="button" className="button" onClick={onOpenLoans}>
+          Loans
+        </button>
+      )}
+    </span>
   );
 }

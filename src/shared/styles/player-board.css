@@ -56,13 +56,6 @@
   font-weight: bold;
 }
 
-/* Until sheets can stack, Loans waits for the open sheet or dialog to close. */
-:root:has(.modal) .moneyStrip__loans {
-  pointer-events: none;
-  color: var(--color-text-muted);
-  border-color: var(--color-border-light);
-}
-
 /* Desktop: the right end of the fixed nav row */
 @media (min-width: 1024px) {
   .moneyStrip {

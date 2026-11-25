@@ -47,7 +47,11 @@ export function WoodAndSteelState({
     React.useState(false);
   // Opened from Actions' "Discard and draw new contract": picking an offer replaces the private contract.
   const [replacePrivateContract, setReplacePrivateContract] = React.useState(false);
-  const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | 'buyEngine' | 'discard' | null>(null);
+  const [openSheet, setOpenSheet] = React.useState<'actions' | 'buyEngine' | 'discard' | null>(null);
+  // Loans opens over whatever sheet is open (from the money strip or a "borrow first" message),
+  // so it has its own state and the sheet underneath keeps its place.
+  const [isLoansOpen, setIsLoansOpen] = React.useState(false);
+  const openLoans = React.useCallback(() => setIsLoansOpen(true), []);
   const [receiptContractId, setReceiptContractId] = React.useState<string | null>(null);
   const [claimContractId, setClaimContractId] = React.useState<string | null>(null);
   const [viewPlayerId, setViewPlayerId] = React.useState<string | null>(null);
@@ -131,7 +135,7 @@ export function WoodAndSteelState({
     if (isMyTurn) return;
     setReceiptContractId(null);
     setClaimContractId(null);
-    setOpenSheet((sheet: 'loans' | 'actions' | 'buyEngine' | 'discard' | null) => (sheet === 'loans' ? sheet : null));
+    setOpenSheet(null);
     // New contracts go to the current player, so offers from a finished turn must not be picked.
     setIsPrivateContractModalOpen(false);
     setReplacePrivateContract(false);
@@ -282,7 +286,7 @@ export function WoodAndSteelState({
               playerID={playerID}
               isCurrentTurn={isMyTurn}
               showMoney={currentPhase === 'play'}
-              onOpenLoans={() => setOpenSheet('loans')}
+              onOpenLoans={openLoans}
             />
           )}
           <PlayerToolbar
@@ -318,15 +322,6 @@ export function WoodAndSteelState({
               onClose={() => setClaimContractId(null)}
             />
           )}
-          {openSheet === 'loans' && myProps && (
-            <LoansSheet
-              player={myProps}
-              isMyTurn={isMyTurn}
-              onBorrow={moves.borrow}
-              onRepay={moves.repay}
-              onClose={() => setOpenSheet(null)}
-            />
-          )}
           {(openSheet === 'actions' || openSheet === 'buyEngine') && myProps && playerID && isMyTurn && (
             <ActionsSheet
               initialView={openSheet === 'buyEngine' ? 'engine' : 'menu'}
@@ -339,6 +334,7 @@ export function WoodAndSteelState({
                 setReplacePrivateContract(true);
                 setIsPrivateContractModalOpen(true);
               }}
+              onOpenLoans={openLoans}
               onClose={() => setOpenSheet(null)}
             />
           )}
@@ -362,6 +358,16 @@ export function WoodAndSteelState({
                 return delivered;
               }}
               onClose={() => setReceiptContractId(null)}
+              onOpenLoans={openLoans}
+            />
+          )}
+          {isLoansOpen && myProps && (
+            <LoansSheet
+              player={myProps}
+              isMyTurn={isMyTurn}
+              onBorrow={moves.borrow}
+              onRepay={moves.repay}
+              onClose={() => setIsLoansOpen(false)}
             />
           )}
           {activeTab === 'board' && (
