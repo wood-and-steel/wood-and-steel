@@ -179,6 +179,8 @@ export function WoodAndSteelState({
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
             roundReportAutoOpen={roundReport.autoOpen}
             onRoundReportAutoOpenChange={roundReport.setAutoOpen}
+            onShowRoundReport={currentPhase === 'play' ? roundReport.open : undefined}
+            hasRoundReport={G.roundReport !== undefined}
             onFillMarket={currentPhase === 'play' && isMyTurn ? () => moves.fillMarketTableau() : undefined}
             onDiscardContract={currentPhase === 'play' ? () => setOpenSheet('discard') : undefined}
             onDrawPrivateContract={currentPhase === 'play' ? () => setIsPrivateContractModalOpen(true) : undefined}
