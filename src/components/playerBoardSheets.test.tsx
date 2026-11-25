@@ -18,6 +18,7 @@ import { EnginesPanel } from './EnginesPanel';
 import { formatMoney } from '../utils/money';
 import { Sheet } from './Sheet';
 import { EditPlaytestDialog } from './EditPlaytestDialog';
+import { ENGINE_TYPES } from '../rules/playerBoard';
 
 const player = (props: Partial<PlayerProps> = {}): PlayerProps => ({ ...newPlayerProps('Ada'), ...props });
 
@@ -409,6 +410,21 @@ describe('Sheet', () => {
     );
   }
 
+  test('Escape on a sheet over another dialog closes only the sheet', () => {
+    const onDialogEscape = vi.fn();
+    document.addEventListener('keydown', onDialogEscape);
+    const onClose = vi.fn();
+    render(
+      <Sheet title="Loans" onClose={onClose}>
+        <button type="button">Borrow</button>
+      </Sheet>
+    );
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Borrow' }), { key: 'Escape' });
+    document.removeEventListener('keydown', onDialogEscape);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onDialogEscape).not.toHaveBeenCalled();
+  });
+
   test('Loans opens over another sheet; Escape closes only Loans, and focus goes back into the sheet below', async () => {
     render(<StackHarness />);
     const opener = screen.getByRole('button', { name: 'Actions' });
@@ -432,6 +448,20 @@ describe('Sheet', () => {
 });
 
 describe('EditPlaytestDialog player board', () => {
+  test('saves only the fields edited, so money changed meanwhile (by Loans over it) is kept', () => {
+    const G = (cash: number, debt: number) =>
+      ({ contracts: [], players: [['0', { ...player(), cash, debt }]], independentRailroads: {} }) as never;
+    const ctx = { phase: 'play', currentPlayer: '0' } as never;
+    const setPlayerBoard = vi.fn(() => true);
+    const moves = { setPlayerBoard } as unknown as Moves;
+    const { rerender, container } = render(<EditPlaytestDialog isOpen onClose={() => {}} G={G(10000, 0)} ctx={ctx} moves={moves} />);
+    fireEvent.change(screen.getByLabelText('Player board:'), { target: { value: '0' } });
+    rerender(<EditPlaytestDialog isOpen onClose={() => {}} G={G(15000, 5000)} ctx={ctx} moves={moves} />);
+    fireEvent.change(container.querySelector('#boardLight')!, { target: { value: ENGINE_TYPES[1].id } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Player Board' }));
+    expect(setPlayerBoard).toHaveBeenCalledWith('0', { engines: [ENGINE_TYPES[1].id, null] });
+  });
+
   test('forgets the chosen player when closed, so reopening shows current values, not stale ones', () => {
     const G = (cash: number) =>
       ({ contracts: [], players: [['0', { ...player(), cash }]], independentRailroads: {} }) as never;

@@ -47,11 +47,15 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
   onCloseRef.current = onClose;
 
   React.useEffect(() => {
+    // Capture phase, and stop there: a dialog under the top sheet (the private contract offers)
+    // listens for Escape too, and must not close with it.
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && openSheets[openSheets.length - 1] === self.current) onCloseRef.current();
+      if (event.key !== "Escape" || openSheets[openSheets.length - 1] !== self.current) return;
+      event.stopPropagation();
+      onCloseRef.current();
     };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
   }, []);
 
   React.useEffect(() => {

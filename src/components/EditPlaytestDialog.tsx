@@ -43,6 +43,8 @@ export function EditPlaytestDialog({
   const [dark, setDark] = React.useState("");
   const [owned, setOwned] = React.useState<string[]>([]);
   const [exchange, setExchange] = React.useState("");
+  /** The board as loaded when the player was chosen, so Save sends only the fields changed since. */
+  const loadedBoard = React.useRef<{ cashK: string; debtK: string; light: string; dark: string; owned: string[]; exchange: string } | null>(null);
 
   const commodityNames = Array.from(commodities.keys()).sort();
   const cityNames = Array.from(cities.keys()).sort();
@@ -69,25 +71,43 @@ export function EditPlaytestDialog({
     setBoardPlayer(id);
     const props = G.players.find(([pid]) => pid === id)?.[1];
     if (!props) return;
-    setCashK(String(props.cash / 1000));
-    setDebtK(String(props.debt / 1000));
-    setLight(props.engines[0] ?? "");
-    setDark(props.engines[1] ?? "");
-    setOwned([...props.upgrades]);
-    setExchange(props.exchangeCommodity ?? "");
+    const board = {
+      cashK: String(props.cash / 1000),
+      debtK: String(props.debt / 1000),
+      light: props.engines[0] ?? "",
+      dark: props.engines[1] ?? "",
+      owned: [...props.upgrades],
+      exchange: props.exchangeCommodity ?? "",
+    };
+    loadedBoard.current = board;
+    setCashK(board.cashK);
+    setDebtK(board.debtK);
+    setLight(board.light);
+    setDark(board.dark);
+    setOwned(board.owned);
+    setExchange(board.exchange);
   };
 
   if (!isOpen) return null;
 
+  // Sends only what was edited, so money that changed while the dialog was open (Loans can open
+  // over it) isn't put back to the values loaded when the player was chosen.
   const handleSaveBoard = () => {
-    if (!boardPlayer) return;
-    moves.setPlayerBoard(boardPlayer, {
-      cash: Number(cashK) * 1000,
-      debt: Number(debtK) * 1000,
-      engines: [(light || null) as EngineTypeId | null, (dark || null) as EngineTypeId | null],
-      upgrades: owned as PlayerUpgradeId[],
-      exchangeCommodity: owned.includes("commodities-exchange") ? exchange || null : null,
-    });
+    const loaded = loadedBoard.current;
+    if (!boardPlayer || !loaded) return;
+    const board: Parameters<typeof moves.setPlayerBoard>[1] = {};
+    if (cashK !== loaded.cashK) board.cash = Number(cashK) * 1000;
+    if (debtK !== loaded.debtK) board.debt = Number(debtK) * 1000;
+    if (light !== loaded.light || dark !== loaded.dark) {
+      board.engines = [(light || null) as EngineTypeId | null, (dark || null) as EngineTypeId | null];
+    }
+    const exchangeNow = owned.includes("commodities-exchange") ? exchange : "";
+    const exchangeLoaded = loaded.owned.includes("commodities-exchange") ? loaded.exchange : "";
+    if ([...owned].sort().join() !== [...loaded.owned].sort().join() || exchangeNow !== exchangeLoaded) {
+      board.upgrades = owned as PlayerUpgradeId[];
+      board.exchangeCommodity = exchangeNow || null;
+    }
+    if (Object.keys(board).length > 0) moves.setPlayerBoard(boardPlayer, board);
     onClose();
   };
 
