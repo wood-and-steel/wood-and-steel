@@ -38,7 +38,6 @@ The CSS is organized into multiple files, all imported through `/src/shared/styl
 - `tables.css` - Table component styles
 - `contracts.css` - Contract component styles
 - `player-board.css` - Player board component styles
-- `reference-tables.css` - Reference table styles
 - `utilities.css` - Utility classes
 
 This modular approach keeps styles organized while maintaining a single entry point.

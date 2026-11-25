@@ -182,12 +182,12 @@ footer { color: var(--faint); font-size: 0.85rem; border-top: 1px solid var(--li
   <div class="sec-head">
     <div class="eyebrow">Screen map</div>
     <h2>What connects to what</h2>
-    <p>Every screen and sheet in these sketches, and the tap that opens each one. Three tabs (Home, Commodities, Railroads) and the controls across the top are on every screen. Everything else opens from Home.</p>
+    <p>Every screen and sheet in these sketches, and the tap that opens each one. Two tabs (Home, Railroads) and the controls across the top are on every screen. Everything else opens from Home.</p>
   </div>
   <div class="mapwrap">
     <svg class="flow" viewBox="0 0 1080 720" role="img" aria-labelledby="flowTitle flowDesc">
       <title id="flowTitle">Player app screen map</title>
-      <desc id="flowDesc">Controls on every screen lead to Loans, the round report, the menu, and the three tabs. Home leads to another player's details, the cargo picker, claiming a contract, the delivery receipt, the actions sheet and upgrades. The actions sheet leads to buying an engine, paying for track, acquiring a railroad, a new private contract and upgrades. Upgrades lead to choosing a hub city, choosing an exchange commodity, or a plain confirmation.</desc>
+      <desc id="flowDesc">Controls on every screen lead to Loans, the round report, the menu, and the two tabs. Home leads to another player's details, the cargo picker, claiming a contract, the delivery receipt, the actions sheet and upgrades. The actions sheet leads to buying an engine, paying for track, acquiring a railroad, a new private contract and upgrades. Upgrades lead to choosing a hub city, choosing an exchange commodity, or a plain confirmation.</desc>
       <defs>
         <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fa"/></marker>
       </defs>
@@ -197,20 +197,18 @@ footer { color: var(--faint); font-size: 0.85rem; border-top: 1px solid var(--li
       <g class="pil"><rect x="40" y="54" width="150" height="36" rx="18"/><text class="ft" x="115" y="77" text-anchor="middle">Loans button</text></g>
       <g class="pil"><rect x="210" y="54" width="150" height="36" rx="18"/><text class="ft" x="285" y="77" text-anchor="middle">Round label</text></g>
       <g class="pil"><rect x="380" y="54" width="150" height="36" rx="18"/><text class="ft" x="455" y="77" text-anchor="middle">Menu</text></g>
-      <g class="pil"><rect x="552" y="54" width="316" height="36" rx="18"/><text class="ft" x="710" y="77" text-anchor="middle">Tabs: Home · Commodities · Railroads</text></g>
+      <g class="pil"><rect x="552" y="54" width="316" height="36" rx="18"/><text class="ft" x="710" y="77" text-anchor="middle">Tabs: Home · Railroads</text></g>
       <g class="pil"><rect x="880" y="54" width="160" height="36" rx="18"/><text class="ft" x="960" y="77" text-anchor="middle">Cash · debt · ties</text></g>
 
       <path class="fe" d="M115 90 V148" marker-end="url(#ah)"/>
       <path class="fe" d="M285 90 V148" marker-end="url(#ah)"/>
       <path class="fe" d="M455 90 V148" marker-end="url(#ah)"/>
       <path class="fe" d="M620 90 V268" marker-end="url(#ah)"/>
-      <path class="fe" d="M760 90 L785 148" marker-end="url(#ah)"/>
       <path class="fe" d="M830 90 L935 148" marker-end="url(#ah)"/>
 
       <g class="scr"><rect x="40" y="150" width="150" height="52" rx="9"/><text class="ft" x="115" y="172" text-anchor="middle">Loans</text><text class="fs" x="115" y="190" text-anchor="middle">borrow or repay</text></g>
       <g class="scr"><rect x="210" y="150" width="150" height="52" rx="9"/><text class="ft" x="285" y="172" text-anchor="middle">Round report</text><text class="fs" x="285" y="190" text-anchor="middle">opens at round end</text></g>
       <g class="sht"><rect x="380" y="150" width="150" height="52" rx="9"/><text class="ft" x="455" y="172" text-anchor="middle">Menu</text><text class="fs" x="455" y="190" text-anchor="middle">lobby, code, settings</text></g>
-      <g class="scr"><rect x="720" y="150" width="150" height="52" rx="9"/><text class="ft" x="795" y="172" text-anchor="middle">Commodities</text><text class="fs" x="795" y="190" text-anchor="middle">where goods come from</text></g>
       <g class="scr"><rect x="890" y="150" width="150" height="52" rx="9"/><text class="ft" x="965" y="172" text-anchor="middle">Railroads</text><text class="fs" x="965" y="190" text-anchor="middle">independents</text></g>
 
       <path class="fe" d="M440 292 L289 204" marker-end="url(#ah)"/>
@@ -261,7 +259,7 @@ footer { color: var(--faint); font-size: 0.85rem; border-top: 1px solid var(--li
     </svg>
   </div>
   <ul class="notes">
-    <li>Commodities and Railroads stay as tabs: they're the reference players check while planning, and Railroads is also where acquisitions happen.</li>
+    <li>Railroads stays as a tab: it's the reference players check while planning, and it's where acquisitions happen.</li>
     <li>The menu holds what's rare: going to the lobby, copying the game code, the round report setting, and the existing playtest tools.</li>
     <li>Upgrades opens from both the Upgrades row on Home and the Actions sheet. Choose a contract opens after a private delivery and from the Actions sheet's discard.</li>
     <li>Claiming a market contract can also open the cargo picker, to record what was just picked up.</li>

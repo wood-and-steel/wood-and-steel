@@ -126,7 +126,7 @@ The core release. Everything the player board tracked moves into the app, inside
    - Actions and End turn side by side.
 2. **Claim sheet** with the optional cargo choice.
 3. **Money log** for the current turn in the Actions sheet, from `turnLedger`.
-4. **Tabs:** Home, Commodities, Railroads. Rare items (lobby, game code, playtest tools, the round report setting) move to the menu.
+4. **Tabs:** Home, Railroads. Rare items (lobby, game code, playtest tools, the round report setting) move to the menu.
 
 ### Stage 4: round report — done
 
