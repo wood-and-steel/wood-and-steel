@@ -51,9 +51,10 @@ function upgradeLabels(player: PlayerProps): string[] {
 }
 
 /**
- * Home: during setup, the starting-city choice; in play, the player's engines, their contracts
- * and the market as rows valued for them (the market high enough to be seen without
- * scrolling on a small phone), then their upgrades and fulfilled contracts.
+ * Home: during setup, the starting-city choice; in play, a card with the player's engines and
+ * contracts, then the market as rows valued for them (high enough to be seen without scrolling
+ * on a small phone), then their upgrades and fulfilled contracts. Until they have either, those
+ * two fold into one "Your railroad" line, so an early game isn't a column of empty sections.
  */
 export function PlayerBoard({
   G,
@@ -132,22 +133,28 @@ export function PlayerBoard({
         )}
         {currentPhase === "play" && (
           <div className="home">
-            <EnginesPanel
-              player={playerProps}
-              playerID={key}
-              canEdit={canAct}
-              onSetCargo={(slot, commodity) => onSetCargo?.(slot, commodity) ?? false}
-              onBuyEngine={canAct ? onOpenBuyEngine : undefined}
-            />
-            <section className="home__section" aria-label="Your contracts">
-              <h3 className="home__heading">Yours</h3>
-              <ContractRows
-                contracts={mine}
-                player={playerProps}
-                onSelect={canAct ? (c) => onToggleFulfilled(c.id) : undefined}
-                emptyText="No contracts right now."
-              />
-            </section>
+            {/* What the player acts on each turn, set apart from the market and their history. */}
+            <div className="home__card">
+              <section className="home__section" aria-label="Your train">
+                <h3 className="home__heading">Your train</h3>
+                <EnginesPanel
+                  player={playerProps}
+                  playerID={key}
+                  canEdit={canAct}
+                  onSetCargo={(slot, commodity) => onSetCargo?.(slot, commodity) ?? false}
+                  onBuyEngine={canAct ? onOpenBuyEngine : undefined}
+                />
+              </section>
+              <section className="home__section" aria-label="Your contracts">
+                <h3 className="home__heading">Your contracts</h3>
+                <ContractRows
+                  contracts={mine}
+                  player={playerProps}
+                  onSelect={canAct ? (c) => onToggleFulfilled(c.id) : undefined}
+                  emptyText="No contracts right now."
+                />
+              </section>
+            </div>
             <section className="home__section" aria-label="Market contracts">
               <h3 className="home__heading">Market</h3>
               <ContractRows
@@ -158,24 +165,34 @@ export function PlayerBoard({
                 keepOrder
               />
             </section>
-            <section className="home__section" aria-label="Your upgrades">
-              <h3 className="home__heading">Upgrades</h3>
-              {upgrades.length > 0 ? (
-                <div className="upgradeChips">
-                  {upgrades.map((u) => (
-                    <span key={u} className="upgradeChips__chip">
-                      {u}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="contractRows__empty">None yet. Buy them from Actions.</p>
-              )}
-            </section>
-            <section className="home__section" aria-label="Fulfilled contracts">
-              <h3 className="home__heading">Fulfilled</h3>
-              <ContractRows contracts={fulfilled} emptyText="None yet." />
-            </section>
+            {upgrades.length === 0 && fulfilled.length === 0 ? (
+              // Early on, one line instead of two empty sections; they split once either has something.
+              <section className="home__section" aria-label="Your railroad">
+                <h3 className="home__heading">Your railroad</h3>
+                <p className="home__summary">No upgrades yet · No deliveries yet</p>
+              </section>
+            ) : (
+              <>
+                <section className="home__section" aria-label="Your upgrades">
+                  <h3 className="home__heading">Upgrades</h3>
+                  {upgrades.length > 0 ? (
+                    <div className="upgradeChips">
+                      {upgrades.map((u) => (
+                        <span key={u} className="upgradeChips__chip">
+                          {u}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="contractRows__empty">None yet. Buy them from Actions.</p>
+                  )}
+                </section>
+                <section className="home__section" aria-label="Fulfilled contracts">
+                  <h3 className="home__heading">Fulfilled</h3>
+                  <ContractRows contracts={fulfilled} emptyText="None yet." />
+                </section>
+              </>
+            )}
           </div>
         )}
       </div>
