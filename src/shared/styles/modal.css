@@ -25,6 +25,48 @@
   overflow: auto;
 }
 
+/* Mobile browsers count the space under their toolbars in vh; dvh is what's actually visible */
+@supports (height: 100dvh) {
+  .modal__content {
+    max-height: min(80dvh, calc(100dvh - var(--money-strip-height) - 2 * var(--spacing-xl) - var(--spacing-md)));
+  }
+}
+
+/* Phones: a sheet slides up from the bottom edge instead of floating in the middle. Short
+   sheets dock to the bottom; tall ones reach up to the money strip and scroll. */
+@media (max-width: 767px) {
+  .modal--sheet {
+    align-items: flex-end;
+  }
+
+  .modal--sheet > .modal__content {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    max-height: calc(100vh - var(--money-strip-height));
+    max-height: calc(100dvh - var(--money-strip-height));
+    padding: var(--spacing-lg) var(--spacing-lg) calc(var(--spacing-2xl) + var(--safe-area-inset-bottom));
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    overscroll-behavior: contain;
+    animation: modal-slide-up 0.2s ease-out;
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .modal--sheet > .modal__content {
+    animation: none;
+  }
+}
+
+@keyframes modal-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 .modal__title {
   margin-top: 0;
 }
