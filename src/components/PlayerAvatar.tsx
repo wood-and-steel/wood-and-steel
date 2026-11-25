@@ -9,7 +9,7 @@ export interface PlayerAvatarProps {
 }
 
 /**
- * Circular avatar showing one or two initials on a per-player background color. The colors are
+ * Rounded-tile avatar showing one or two initials on a per-player background color. The colors are
  * `--avatar-bg` and `--avatar-text`, set from a ref (no inline styles; see docs/CSS_ARCHITECTURE.md).
  */
 export function PlayerAvatar({

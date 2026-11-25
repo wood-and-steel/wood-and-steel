@@ -66,9 +66,9 @@
 }
 
 .playerAvatar {
-  width: var(--avatar-size);
+  min-width: var(--avatar-width);
   height: var(--avatar-size);
-  border-radius: 50%;
+  border-radius: var(--avatar-radius);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -280,6 +280,9 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
+  /* Keep the players on one line and wrap the round label first; wrap players only past a full line */
+  flex-shrink: 0;
+  max-width: 100%;
 }
 
 /* One player at the table: avatar plus their ties; other players are buttons for their card */

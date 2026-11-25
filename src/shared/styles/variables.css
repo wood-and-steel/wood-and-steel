@@ -59,7 +59,10 @@
   /* Sizes */
   --button-height: 1.75rem;
   --button-height-full: 2.5rem;
-  --avatar-size: 2.2rem;
+  --avatar-size: 2.2rem; /* height */
+  /* Avatars are wide, generously rounded tiles: not a disc, not quite a full pill */
+  --avatar-width: 2.75rem;
+  --avatar-radius: 0.75rem;
   /* A sheet's Back and Close icons: 90% of the sheet title's size */
   --sheet-icon-size: calc(0.9 * var(--font-size-h3));
 
