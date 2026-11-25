@@ -7,6 +7,12 @@
   gap: var(--spacing-md);
 }
 
+/* A sheet taller than the screen scrolls; without this, flexbox squeezes its children
+   (the Cargo sheet's Clear cargo button) to fit the max height instead */
+.sheet > * {
+  flex-shrink: 0;
+}
+
 .sheet__header {
   display: flex;
   align-items: center;
@@ -425,7 +431,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-xs);
-  padding: var(--spacing-xs);
+  padding: var(--spacing-2xs) var(--spacing-xs);
   margin: 0 calc(-1 * var(--spacing-xs));
   border-radius: var(--radius-sm);
   text-align: left;
