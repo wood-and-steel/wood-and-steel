@@ -99,6 +99,8 @@
   --shadow-popup: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
   --shadow-float: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.2);
   --shadow-float-hover: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.3);
+  /* The sticky player toolbar over content scrolling beneath it; downward only, so no side bleed */
+  --shadow-toolbar: 0 0.125rem 0.25rem -0.0625rem rgba(0, 0, 0, 0.12);
   
   --color-danger: #dc3545;
   --color-danger-bg: rgba(220, 53, 69, 0.1);
@@ -149,6 +151,8 @@
     --color-bg-overlay: rgba(0, 0, 0, 0.7);
     /* Dark scrims swallow a soft shadow; this one is darker and tighter */
     --shadow-modal: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.6);
+    /* A shadow alone vanishes on the near-black page, so a faint light edge marks the toolbar's foot */
+    --shadow-toolbar: 0 0.0625rem 0 rgba(255, 255, 255, 0.08), 0 0.25rem 0.5rem rgba(0, 0, 0, 0.7);
 
     --color-danger: #e74c3c;
     --color-danger-bg: rgba(231, 76, 60, 0.15);

@@ -8,6 +8,28 @@
   top: var(--money-strip-height);
   z-index: var(--z-toolbar);
   background-color: var(--color-bg-light);
+  /* Sets it apart from the content scrolling under it */
+  box-shadow: var(--shadow-toolbar);
+}
+
+/* Where the browser can tie it to scrolling, the shadow shows only once the page has scrolled
+   (fading in over the first 1rem); elsewhere it's always on. */
+@supports (animation-timeline: scroll()) {
+  .playerToolbar {
+    animation: playerToolbarShadow linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 1rem;
+  }
+}
+
+@keyframes playerToolbarShadow {
+  from {
+    box-shadow: none;
+  }
+
+  to {
+    box-shadow: var(--shadow-toolbar);
+  }
 }
 
 /* Desktop: the money strip is in the nav row; stick the toolbar just below the nav */
