@@ -466,7 +466,7 @@
 
 .engines__name--none {
   font-weight: 400;
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
 }
 
 /* The engine name as a button: opens the Buy an engine sheet. */
@@ -514,7 +514,7 @@
 }
 
 .engines__cargo--none {
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
 }
 
 .engines__cargo--button {
@@ -522,7 +522,7 @@
 }
 
 .engines__cargo--button.engines__cargo--none {
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
 }
 
 .engines__cargoChevron {
