@@ -31,7 +31,12 @@ export function EnginesPanel({ player, playerID, canEdit, onSetCargo, onBuyEngin
   }, [canEdit]);
   const cargoSheet = (slot: EngineSlot): React.ReactElement => (
     <CargoSheet
-      title={`${SLOT_NAMES[slot]} engine cargo`}
+      title={
+        <span className="engineLabel">
+          <EngineSlotIcon playerID={playerID} avatarColor={player.avatarColor} slot={slot} />
+          {getEngineType(player.engines[slot]!).name} cargo
+        </span>
+      }
       cargo={player.cargo[slot]}
       onSelect={(commodity) => onSetCargo(slot, commodity)}
       onClose={() => setPickingSlot(null)}

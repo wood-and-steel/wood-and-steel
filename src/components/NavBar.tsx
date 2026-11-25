@@ -23,9 +23,6 @@ export interface NavBarProps {
   gameManager: NavBarGameManager;
   onNavigateToLobby: () => void;
   onOpenEditPlaytest: () => void;
-  /** Whether the round report opens by itself after each round, on this device; with its menu switch. */
-  roundReportAutoOpen?: boolean;
-  onRoundReportAutoOpenChange?: (on: boolean) => void;
   /** Opens the latest round report. Shown in play; disabled until the first round has ended. */
   onShowRoundReport?: () => void;
   hasRoundReport?: boolean;
@@ -49,8 +46,6 @@ export function NavBar({
   gameManager,
   onNavigateToLobby,
   onOpenEditPlaytest,
-  roundReportAutoOpen,
-  onRoundReportAutoOpenChange,
   onShowRoundReport,
   hasRoundReport,
   onFillMarket,
@@ -146,16 +141,6 @@ export function NavBar({
             }}
           >
             Fill Market Contracts
-          </PopupMenuItem>
-        )}
-        {onRoundReportAutoOpenChange && (
-          <PopupMenuItem
-            onClick={() => {
-              onRoundReportAutoOpenChange(!roundReportAutoOpen);
-              setIsMenuOpen(false);
-            }}
-          >
-            Open Round Report After Each Round: {roundReportAutoOpen ? "On" : "Off"}
           </PopupMenuItem>
         )}
         {onShowRoundReport && (

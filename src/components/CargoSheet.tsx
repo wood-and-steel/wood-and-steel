@@ -8,7 +8,7 @@ const GROUP_ORDER = ["Metals", "Mined goods", "Crops", "Finished goods", "Livest
 const GROUPS = GROUP_ORDER.map((name) => COMMODITY_GROUPS.find((group) => group.name === name)!);
 
 export interface CargoSheetProps {
-  title: string;
+  title: React.ReactNode;
   /** The commodity recorded now, or null. */
   cargo: string | null;
   /** Called with the chosen commodity, or null for no cargo; the sheet closes after. */

@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { formatMoney } from "../utils/money";
 
 export interface SheetProps {
-  title: string;
+  title: React.ReactNode;
   onClose: () => void;
   /** Shown left of the title, e.g. a Back button inside a multi-step sheet. */
   onBack?: () => void;

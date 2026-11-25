@@ -177,8 +177,6 @@ export function WoodAndSteelState({
             gameManager={gameManager ?? {}}
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
-            roundReportAutoOpen={roundReport.autoOpen}
-            onRoundReportAutoOpenChange={roundReport.setAutoOpen}
             onShowRoundReport={currentPhase === 'play' ? roundReport.open : undefined}
             hasRoundReport={G.roundReport !== undefined}
             onFillMarket={currentPhase === 'play' && isMyTurn ? () => moves.fillMarketTableau() : undefined}

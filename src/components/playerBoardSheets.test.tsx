@@ -335,7 +335,9 @@ describe('EnginesPanel', () => {
       />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Light engine cargo: Coal' }));
-    const sheet = screen.getByRole('dialog', { name: 'Light engine cargo' });
+    const sheet = screen.getByRole('dialog', { name: 'Light 2-4-0 John Bull cargo' });
+    expect(within(sheet).getByRole('heading')).toHaveTextContent('2-4-0 John Bull cargo');
+    expect(within(within(sheet).getByRole('heading')).getByRole('img', { name: 'Light' })).toBeInTheDocument();
     const groups = within(sheet).getAllByRole('region').map((g) => g.getAttribute('aria-label'));
     expect(groups).toEqual(['Metals', 'Mined goods', 'Crops', 'Finished goods', 'Livestock']);
     expect(within(sheet).getByRole('button', { name: 'Coal' })).toHaveAttribute('aria-pressed', 'true');

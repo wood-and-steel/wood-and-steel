@@ -208,7 +208,7 @@ describe('Show Round Report in the menu', () => {
 
   test('comes last and opens the latest report', () => {
     const onShowRoundReport = vi.fn();
-    const items = openMenu({ onShowRoundReport, hasRoundReport: true, onRoundReportAutoOpenChange: () => {} });
+    const items = openMenu({ onShowRoundReport, hasRoundReport: true });
     const show = items[items.length - 1];
     expect(show).toHaveTextContent('Show Round Report');
     fireEvent.click(show);
