@@ -9,7 +9,7 @@ import { UPGRADE_KEYS, UPGRADE_NAMES, UPGRADE_PRICES, type UpgradeKey } from "..
 import { cities } from "../data";
 import { formatMoney, formatMoneyChange } from "../utils/money";
 import { EngineSegments, EngineSlotIcon } from "./EngineIcon";
-import { BeforeAfter, Sheet, ShortOfCash } from "./Sheet";
+import { BeforeAfter, ListRow, Price, Sheet, ShortOfCash } from "./Sheet";
 import { AcquireRailroadSheet } from "./AcquireRailroadSheet";
 
 export type ActionsView = "menu" | "engine" | "upgrade" | "railroad" | "track";
@@ -67,10 +67,12 @@ export function ActionsSheet({
   const back = () => setView("menu");
 
   if (view === "engine") {
-    return <BuyEngineView playerID={playerID} player={player} moves={moves} onBack={back} onClose={onClose} />;
+    // Opened straight from an engine's name, it's its own sheet, with no Actions menu to go back to.
+    const onBack = initialView === "engine" ? undefined : back;
+    return <BuyEngineView playerID={playerID} player={player} moves={moves} onBack={onBack} onClose={onClose} />;
   }
   if (view === "upgrade") {
-    return <BuyUpgradeView G={G} playerID={playerID} player={player} moves={moves} onClose={onClose} />;
+    return <BuyUpgradeView G={G} playerID={playerID} player={player} moves={moves} onBack={back} onClose={onClose} />;
   }
   if (view === "railroad") {
     return (
@@ -93,40 +95,34 @@ export function ActionsSheet({
 
   return (
     <Sheet title="Actions" onClose={onClose}>
-      <div className="actions__list">
-        <button type="button" className="actions__item" onClick={() => setView("engine")}>
-          <span>Buy an engine</span>
+      <div className="sheet__list">
+        <ListRow title="Buy an engine" onSelect={() => setView("engine")}>
           <span className="sheet__label">
             {cheapestEngine
               ? `${getEngineType(cheapestEngine.engine).name} from ${formatMoney(cheapestEngine.cost)}`
               : "You have the best engine"}
           </span>
-        </button>
-        <button type="button" className="actions__item" onClick={() => setView("upgrade")}>
-          <span>Buy an upgrade</span>
+        </ListRow>
+        <ListRow title="Buy an upgrade" onSelect={() => setView("upgrade")}>
           <span className="sheet__label">
             {affordableUpgrades === 1 ? "1 you can afford" : `${affordableUpgrades} you can afford`}
           </span>
-        </button>
-        <button type="button" className="actions__item" onClick={() => setView("railroad")}>
-          <span>Acquire a railroad</span>
+        </ListRow>
+        <ListRow title="Acquire a railroad" onSelect={() => setView("railroad")}>
           <span className="sheet__label">{formatMoney(indiePricePerRoute(G.contracts))} per route</span>
-        </button>
-        <button type="button" className="actions__item" onClick={() => setView("track")}>
-          <span>Pay for track</span>
+        </ListRow>
+        <ListRow title="Pay for track" onSelect={() => setView("track")}>
           <span className="sheet__label">Enter what you spent</span>
-        </button>
-        <button
-          type="button"
-          className="actions__item"
-          onClick={() => {
+        </ListRow>
+        <ListRow
+          title="Discard and draw new contract"
+          onSelect={() => {
             onNewPrivateContract();
             onClose();
           }}
         >
-          <span>Discard and draw new contract</span>
           <span className="sheet__label">Replace your private contract</span>
-        </button>
+        </ListRow>
       </div>
       <div className="sheet__box" aria-label="Money this turn">
         <div className="sheet__subhead">Money this turn</div>
@@ -159,7 +155,8 @@ function isOwnedOrLocked(G: GameState, playerID: string, player: PlayerProps, ke
 interface ViewProps {
   player: PlayerProps;
   moves: Moves;
-  onBack: () => void;
+  /** Back to the Actions menu; omit when the sheet was opened on its own. */
+  onBack?: () => void;
   onClose: () => void;
 }
 
@@ -171,35 +168,28 @@ function BuyEngineView({ playerID, player, moves, onBack, onClose }: ViewProps &
         <p className="sheet__note">You already have the best engine.</p>
       ) : (
         <div className="sheet__list">
-          {options.map((o) => {
-            const short = shortfall(o.cost, player.cash);
-            const name = getEngineType(o.engine).name;
-            return (
-              <div key={`${o.engine}-${o.slot}`} className="sheet__listItem">
-                <strong>{name}</strong>
-                <span className="sheet__label engineLabel">
-                  <EngineSegments count={getEngineType(o.engine).distance} /> ·{" "}
-                  {o.tradeIn ? "trades in your" : "on your empty"}
-                  <EngineSlotIcon playerID={playerID} avatarColor={player.avatarColor} slot={o.slot} />
-                  {o.tradeIn ? getEngineType(o.tradeIn).name : "token"}
-                  {o.skip ? " · Hub order, +$5K" : ""}
-                </span>
-                {short ? (
-                  <ShortOfCash>{short}</ShortOfCash>
-                ) : (
-                  <button
-                    type="button"
-                    className="button"
-                    onClick={() => {
+          {options.map((o) => (
+            <ListRow
+              key={`${o.engine}-${o.slot}`}
+              title={<strong>{getEngineType(o.engine).name}</strong>}
+              aside={<Price price={o.cost} cash={player.cash} />}
+              onSelect={
+                o.cost > player.cash
+                  ? undefined
+                  : () => {
                       if (moves.buyEngine(o.slot, o.engine)) onClose();
-                    }}
-                  >
-                    Buy for {formatMoney(o.cost)}
-                  </button>
-                )}
-              </div>
-            );
-          })}
+                    }
+              }
+            >
+              <span className="sheet__label engineLabel">
+                <EngineSegments count={getEngineType(o.engine).distance} /> ·{" "}
+                {o.tradeIn ? "trades in your" : "on your empty"}
+                <EngineSlotIcon playerID={playerID} avatarColor={player.avatarColor} slot={o.slot} />
+                {o.tradeIn ? getEngineType(o.tradeIn).name : "token"}
+                {o.skip ? " · Hub order, +$5K" : ""}
+              </span>
+            </ListRow>
+          ))}
         </div>
       )}
       <p className="sheet__note">
@@ -214,8 +204,9 @@ function BuyUpgradeView({
   playerID,
   player,
   moves,
+  onBack,
   onClose,
-}: Omit<ViewProps, "onBack"> & { G: GameState; playerID: string }): React.ReactElement {
+}: ViewProps & { G: GameState; playerID: string }): React.ReactElement {
   const [chosen, setChosen] = React.useState<UpgradeKey | null>(null);
   const [choice, setChoice] = React.useState("");
 
@@ -283,8 +274,8 @@ function BuyUpgradeView({
   }
 
   return (
-    <Sheet title="Upgrades" onClose={onClose}>
-      <div className="upgrades__list">
+    <Sheet title="Upgrades" onClose={onClose} onBack={onBack}>
+      <div className="sheet__list">
         {UPGRADES_BY_PRICE.map((key) => {
           const price = UPGRADE_PRICES[key];
           const owned =
@@ -299,25 +290,22 @@ function BuyUpgradeView({
                   : null;
           const locked = !owned && key === "service-yard" ? upgradeRefusal(G, playerID, player, key) : null;
           return (
-            <div key={key} className="upgrades__item">
-              <div className="sheet__row">
-                <span>{UPGRADE_NAMES[key]}</span>
-                {owned ? (
+            <ListRow
+              key={key}
+              title={UPGRADE_NAMES[key]}
+              aside={
+                owned ? (
                   <span className="upgrades__owned">{owned}</span>
                 ) : locked ? (
                   <span className="sheet__label">Locked</span>
-                ) : price > player.cash ? (
-                  <ShortOfCash>
-                    {formatMoney(price)} · {formatMoney(price - player.cash)} short
-                  </ShortOfCash>
                 ) : (
-                  <button type="button" className="button upgrades__buy" onClick={() => setChosen(key)}>
-                    {formatMoney(price)}
-                  </button>
-                )}
-              </div>
+                  <Price price={price} cash={player.cash} />
+                )
+              }
+              onSelect={owned || locked || price > player.cash ? undefined : () => setChosen(key)}
+            >
               <span className="sheet__label">{locked ?? UPGRADE_EFFECTS[key]}</span>
-            </div>
+            </ListRow>
           );
         })}
       </div>

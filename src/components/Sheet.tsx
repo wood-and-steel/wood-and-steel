@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { formatMoney } from "../utils/money";
 
 export interface SheetProps {
   title: string;
@@ -248,6 +249,47 @@ export function BeforeAfter({ label, before, after, warning }: BeforeAfterProps)
         )}
       </span>
     </div>
+  );
+}
+
+export interface ListRowProps {
+  title: React.ReactNode;
+  /** Right of the title: the price, or why it can't be had. */
+  aside?: React.ReactNode;
+  /** What pressing the row does; omit to make it plain text. */
+  onSelect?: () => void;
+  /** Lines under the title. */
+  children?: React.ReactNode;
+}
+
+/** One row in a sheet's list (Actions, engines, upgrades, railroads): the whole row is what you press. */
+export function ListRow({ title, aside, onSelect, children }: ListRowProps): React.ReactElement {
+  const content = (
+    <>
+      <span className="sheet__row">
+        <span>{title}</span>
+        {aside}
+      </span>
+      {children}
+    </>
+  );
+  return onSelect ? (
+    <button type="button" className="sheet__listItem sheet__listItem--button" onClick={onSelect}>
+      {content}
+    </button>
+  ) : (
+    <div className="sheet__listItem">{content}</div>
+  );
+}
+
+/** A row's price, or the price and how far short the player is. */
+export function Price({ price, cash }: { price: number; cash: number }): React.ReactElement {
+  return price > cash ? (
+    <ShortOfCash>
+      {formatMoney(price)} · {formatMoney(price - cash)} short
+    </ShortOfCash>
+  ) : (
+    <span>{formatMoney(price)}</span>
   );
 }
 

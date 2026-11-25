@@ -3,8 +3,7 @@ import type { GameState, PlayerProps } from "../stores/gameStore";
 import type { Moves } from "../stores/moves";
 import { independentRailroadPrice } from "../stores/gameActions";
 import { routes } from "../data";
-import { formatMoney } from "../utils/money";
-import { Sheet, ShortOfCash } from "./Sheet";
+import { ListRow, Price, Sheet } from "./Sheet";
 
 export interface AcquireRailroadSheetProps {
   G: GameState;
@@ -36,25 +35,22 @@ export function AcquireRailroadSheet({ G, player, moves, onBack, onClose }: Acqu
           {railroads.map((railroad) => {
             const price = independentRailroadPrice(G, railroad.name);
             return (
-              <div key={railroad.name} className="sheet__listItem">
-                <strong>{railroad.name}</strong>
+              <ListRow
+                key={railroad.name}
+                title={<strong>{railroad.name}</strong>}
+                aside={<Price price={price} cash={player.cash} />}
+                onSelect={
+                  price > player.cash
+                    ? undefined
+                    : () => {
+                        if (moves.acquireIndependentRailroad(railroad.name)) onClose();
+                      }
+                }
+              >
                 <span className="sheet__label">
                   {connectedCities(railroad.routes.map((route) => route.key)).join(", ")}
                 </span>
-                {price > player.cash ? (
-                  <ShortOfCash>{formatMoney(price - player.cash)} short</ShortOfCash>
-                ) : (
-                  <button
-                    type="button"
-                    className="button"
-                    onClick={() => {
-                      if (moves.acquireIndependentRailroad(railroad.name)) onClose();
-                    }}
-                  >
-                    Buy for {formatMoney(price)}
-                  </button>
-                )}
-              </div>
+              </ListRow>
             );
           })}
         </div>

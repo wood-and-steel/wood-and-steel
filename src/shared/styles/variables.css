@@ -57,7 +57,7 @@
   --sheet-icon-size: calc(0.9 * var(--font-size-h3));
 
   /* Dialogs: the blur behind the scrim */
-  --blur-overlay: 0.25rem;
+  --blur-overlay: 0.125rem;
   
   /* Opacity */
   --opacity-disabled: 0.6;

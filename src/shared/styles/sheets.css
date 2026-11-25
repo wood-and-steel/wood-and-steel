@@ -145,7 +145,8 @@ button.sheet__option {
   background-color: var(--color-bg-active);
 }
 
-/* Choices as rows with a rule between them (engines, railroads) */
+/* Rows with a rule between them (Actions, engines, upgrades, railroads): title and price on
+   top, details under it; a row you can press is a button the full width of the list */
 .sheet__list {
   display: flex;
   flex-direction: column;
@@ -154,14 +155,31 @@ button.sheet__option {
 .sheet__listItem {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--spacing-xs);
+  gap: 0.125rem;
   padding: var(--spacing-sm) 0;
   border-bottom: var(--border-width-md) solid var(--color-border-light);
 }
 
 .sheet__listItem:last-child {
   border-bottom: none;
+}
+
+.sheet__listItem--button {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border-top: none;
+  border-right: none;
+  border-left: none;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet__listItem--button:hover {
+  background-color: var(--color-bg-hover);
 }
 
 .sheet__field {
@@ -218,61 +236,9 @@ button.sheet__option {
   font-weight: 600;
 }
 
-/* Actions */
-.actions__list {
-  display: flex;
-  flex-direction: column;
-}
-
-.actions__item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  padding: var(--spacing-sm) 0;
-  border: none;
-  border-bottom: var(--border-width-md) solid var(--color-border-light);
-  background: none;
-  color: inherit;
-  font-family: inherit;
-  font-size: var(--font-size-body);
-  text-align: left;
-  cursor: pointer;
-}
-
-.actions__item:last-child {
-  border-bottom: none;
-}
-
-.actions__item:hover {
-  background-color: var(--color-bg-hover);
-}
-
-.upgrades__list {
-  display: flex;
-  flex-direction: column;
-}
-
-.upgrades__item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  padding: var(--spacing-xs) 0;
-  border-bottom: var(--border-width-md) solid var(--color-border-light);
-}
-
-.upgrades__item:last-child {
-  border-bottom: none;
-}
-
 .upgrades__owned {
   font-size: var(--font-size-body);
   font-weight: 600;
-}
-
-.upgrades__buy {
-  height: auto;
-  padding: 0.125rem var(--spacing-sm);
-  font-size: var(--font-size-body);
 }
 
 /* "$ [amount] ,000", centered as one fixed-width group so nothing moves while typing */

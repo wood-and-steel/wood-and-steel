@@ -190,7 +190,7 @@ describe('ActionsSheet', () => {
     expect(screen.queryByText('Not enough cash')).toBeNull();
   });
 
-  test('an engine the player is short for shows the shortfall in place of Buy', () => {
+  test("an engine the player is short for shows the shortfall, and its row can't be pressed", () => {
     render(
       <ActionsSheet
         G={G}
@@ -202,7 +202,8 @@ describe('ActionsSheet', () => {
         onClose={() => {}}
       />
     );
-    expect(screen.queryByRole('button', { name: /^Buy for/ })).toBeNull();
+    // Opened straight on Buy an engine, so Close is the only button: no Back, and no rows to press.
+    expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Close']);
     expect(screen.getAllByText(/short$/).length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
   });
@@ -234,7 +235,35 @@ describe('ActionsSheet', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  test('lists engine purchases with their price and what they trade in', () => {
+  test('lists engine purchases with their price and what they trade in, and buys one on a tap', () => {
+    const buyEngine = vi.fn(() => true);
+    render(
+      <ActionsSheet
+        G={G}
+        playerID="0"
+        player={player()}
+        moves={{ buyEngine } as unknown as Moves}
+        onNewPrivateContract={() => {}}
+        onClose={() => {}}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Buy an engine/ }));
+    const rows = screen.getAllByRole('button', { name: /\$5K/ });
+    expect(rows).toHaveLength(2);
+    // The light or dark token is shown as the engine picture, named for screen readers.
+    const tradeIn = screen.getByText(/trades in your/);
+    expect(tradeIn).toHaveTextContent(/trades in your\s*2-4-0 John Bull/);
+    expect(within(tradeIn).getByRole('img', { name: 'Light' })).toBeInTheDocument();
+    const empty = screen.getByText(/on your empty/);
+    expect(within(empty).getByRole('img', { name: 'Dark' })).toBeInTheDocument();
+    expect(empty).toHaveTextContent(/token/);
+    // The distance is the number and the segments picture.
+    expect(within(tradeIn).getByRole('img', { name: 'segments' })).toBeInTheDocument();
+    fireEvent.click(rows[0]);
+    expect(buyEngine).toHaveBeenCalled();
+  });
+
+  test('Buy an engine from the menu has Back to the Actions menu', () => {
     render(
       <ActionsSheet
         G={G}
@@ -246,30 +275,6 @@ describe('ActionsSheet', () => {
       />
     );
     fireEvent.click(screen.getByRole('button', { name: /Buy an engine/ }));
-    expect(screen.getAllByRole('button', { name: 'Buy for $5K' })).toHaveLength(2);
-    // The light or dark token is shown as the engine picture, named for screen readers.
-    const tradeIn = screen.getByText(/trades in your/);
-    expect(tradeIn).toHaveTextContent(/trades in your\s*2-4-0 John Bull/);
-    expect(within(tradeIn).getByRole('img', { name: 'Light' })).toBeInTheDocument();
-    const empty = screen.getByText(/on your empty/);
-    expect(within(empty).getByRole('img', { name: 'Dark' })).toBeInTheDocument();
-    expect(empty).toHaveTextContent(/token/);
-    // The distance is the number and the segments picture.
-    expect(within(tradeIn).getByRole('img', { name: 'segments' })).toBeInTheDocument();
-  });
-
-  test('can open straight on Buy an engine, with Back to the Actions menu', () => {
-    render(
-      <ActionsSheet
-        G={G}
-        playerID="0"
-        player={player()}
-        moves={{} as Moves}
-        onNewPrivateContract={() => {}}
-        initialView="engine"
-        onClose={() => {}}
-      />
-    );
     expect(screen.getByRole('heading', { name: 'Buy an engine' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Back/ }));
     expect(screen.getByRole('button', { name: /Discard and draw new contract/ })).toHaveTextContent(
@@ -277,7 +282,7 @@ describe('ActionsSheet', () => {
     );
   });
 
-  test('Upgrades lists the cheapest first and has no Back button', () => {
+  test('Upgrades lists the cheapest first, with Back to the Actions menu', () => {
     render(
       <ActionsSheet
         G={G}
@@ -290,13 +295,14 @@ describe('ActionsSheet', () => {
       />
     );
     const sheet = screen.getByRole('dialog', { name: 'Upgrades' });
-    expect(within(sheet).queryByRole('button', { name: /Back/ })).toBeNull();
-    const names = Array.from(sheet.querySelectorAll('.upgrades__item .sheet__row > span:first-child')).map(
+    const names = Array.from(sheet.querySelectorAll('.sheet__listItem .sheet__row > span:first-child')).map(
       (el) => el.textContent
     );
     const prices = names.map((name) => UPGRADE_PRICES[UPGRADE_KEYS.find((key) => UPGRADE_NAMES[key] === name)!]);
     expect(prices).toHaveLength(UPGRADE_KEYS.length);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('dialog', { name: 'Actions' })).toBeInTheDocument();
   });
 });
 
@@ -579,7 +585,7 @@ describe('Acquire a railroad', () => {
     },
   } as never;
 
-  test('lists each railroad with the cities it connects, buys one, and shows the shortfall when short', () => {
+  test('lists each railroad with the cities it connects, buys one on a tap, and shows the shortfall when short', () => {
     const acquireIndependentRailroad = vi.fn(() => true);
     const onClose = vi.fn();
     render(
@@ -598,10 +604,11 @@ describe('Acquire a railroad', () => {
     expect(screen.getByText('A, B, C, D, E')).toBeInTheDocument();
 
     // Reading is 4 routes at $3K: $12K against $10K cash.
-    expect(screen.getByText('$2K short')).toBeInTheDocument();
+    expect(screen.getByText(/\$2K short$/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Reading/ })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Buy for $6K' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Erie/ }));
     expect(acquireIndependentRailroad).toHaveBeenCalledWith('Erie');
     expect(onClose).toHaveBeenCalled();
   });
