@@ -124,6 +124,15 @@ export function WoodAndSteelState({
         (c: Contract) => c.id === claimContractId && c.type === 'market' && c.playerID === null && !c.fulfilled
       )
     : undefined;
+  // Any sheet or dialog on screen. Until sheets can stack, the money strip's Loans waits for it to close.
+  const isDialogOpen =
+    openSheet !== null ||
+    receiptContract !== undefined ||
+    claimContract !== undefined ||
+    viewPlayerId !== null ||
+    (roundReport.isOpen && G.roundReport != null) ||
+    isPrivateContractModalOpen ||
+    isEditPlaytestDialogOpen;
 
   // Turn sheets belong to this turn: when it ends (here or on another device), forget them so
   // they don't reappear on the player's next turn.
@@ -282,6 +291,7 @@ export function WoodAndSteelState({
               playerID={playerID}
               isCurrentTurn={isMyTurn}
               showMoney={currentPhase === 'play'}
+              loansDisabled={isDialogOpen}
               onOpenLoans={() => setOpenSheet('loans')}
             />
           )}

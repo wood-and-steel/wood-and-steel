@@ -261,6 +261,12 @@ describe('MoneyStrip', () => {
     expect(onOpenLoans).toHaveBeenCalled();
   });
 
+  test('Loans is disabled, not just muted, while another sheet or dialog is open', () => {
+    const onOpenLoans = vi.fn();
+    render(<MoneyStrip player={player()} playerID="0" isCurrentTurn showMoney loansDisabled onOpenLoans={onOpenLoans} />);
+    expect(screen.getByRole('button', { name: 'Loans' })).toBeDisabled();
+  });
+
   test("in setup, shows the player's name instead of money", () => {
     render(<MoneyStrip player={player()} playerID="0" isCurrentTurn showMoney={false} onOpenLoans={() => {}} />);
     expect(within(screen.getByRole('group', { name: 'Your money' })).getByText('Ada')).toBeInTheDocument();
