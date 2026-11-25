@@ -408,13 +408,7 @@
   margin: 0;
 }
 
-.commoditySources__icon {
-  width: 1.125rem;
-  height: 1.125rem;
-  flex-shrink: 0;
-}
-
-/* Cargo picker: commodities by group, two columns, name then icon */
+/* Cargo picker: commodities by group, two columns, icon then name */
 .cargoSheet {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -429,7 +423,6 @@
 .cargoSheet__item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--spacing-xs);
   padding: var(--spacing-2xs) var(--spacing-xs);
   margin: 0 calc(-1 * var(--spacing-xs));
@@ -444,10 +437,4 @@
 .cargoSheet__item--selected {
   background-color: var(--color-bg-active);
   font-weight: 600;
-}
-
-.cargoSheet__icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  flex-shrink: 0;
 }

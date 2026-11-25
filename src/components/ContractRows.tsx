@@ -2,7 +2,8 @@ import React from "react";
 import { moneyValue, railroadTieValue, type Contract } from "../Contract";
 import type { PlayerProps } from "../stores/gameStore";
 import { deliveryRange } from "../rules/finance";
-import { commodityIcons, contractTieIcons } from "../shared/assets/icons";
+import { contractTieIcons } from "../shared/assets/icons";
+import { CommodityIcon } from "./CommodityIcon";
 import { formatMoney } from "../utils/money";
 export interface ContractRowsProps {
   contracts: Contract[];
@@ -86,7 +87,7 @@ function ContractRow({ contract, player, onSelect }: ContractRowProps): React.Re
   return (
     <button type="button" className={classes} disabled={!onSelect} onClick={onSelect}>
       <span className="contractRow__main">
-        <img className="contractRow__icon" src={(commodityIcons as Record<string, string>)[contract.commodity]} alt="" />
+        <CommodityIcon commodity={contract.commodity} />
         <span className="contractRow__name">
           {commodityLabel(contract.commodity)} to {contract.destinationKey}
         </span>

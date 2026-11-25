@@ -180,7 +180,8 @@
   min-width: 0;
 }
 
-.contractRow__icon {
+/* A commodity's icon, before its name: contract rows, engine cargo, the cargo and claim sheets */
+.commodityIcon {
   width: 1.125rem;
   height: 1.125rem;
   flex-shrink: 0;
@@ -468,12 +469,6 @@
 
 .engines__cargo--button.engines__cargo--none {
   color: var(--color-text-muted);
-}
-
-.engines__cargoIcon {
-  width: 1.125rem;
-  height: 1.125rem;
-  flex-shrink: 0;
 }
 
 .engines__cargoChevron {

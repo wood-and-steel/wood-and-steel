@@ -2,8 +2,8 @@ import React from "react";
 import type { PlayerProps } from "../stores/gameStore";
 import { ENGINE_SLOT_NAMES as SLOT_NAMES, EngineSegments, EngineSlotIcon } from "./EngineIcon";
 import { engineDistance, formatCommodity, getEngineType, type EngineSlot } from "../rules/playerBoard";
-import { commodityIcons } from "../shared/assets/icons";
 import { CargoSheet } from "./CargoSheet";
+import { CommodityIcon } from "./CommodityIcon";
 
 export interface EnginesPanelProps {
   player: PlayerProps;
@@ -79,9 +79,7 @@ export function EnginesPanel({ player, playerID, canEdit, onSetCargo, onBuyEngin
                   aria-label={`${SLOT_NAMES[slot]} engine cargo: ${cargo ? formatCommodity(cargo) : "none"}`}
                   onClick={() => setPickingSlot(slot)}
                 >
-                  {cargo && (
-                    <img className="engines__cargoIcon" src={(commodityIcons as Record<string, string>)[cargo]} alt="" />
-                  )}
+                  {cargo && <CommodityIcon commodity={cargo} />}
                   <span>{cargo ? formatCommodity(cargo) : "Set cargo"}</span>
                   <span className="engines__cargoChevron" aria-hidden="true">
                     ▾
@@ -89,9 +87,7 @@ export function EnginesPanel({ player, playerID, canEdit, onSetCargo, onBuyEngin
                 </button>
               ) : (
                 <span className={`engines__cargo${cargo ? "" : " engines__cargo--none"}`}>
-                  {cargo && (
-                    <img className="engines__cargoIcon" src={(commodityIcons as Record<string, string>)[cargo]} alt="" />
-                  )}
+                  {cargo && <CommodityIcon commodity={cargo} />}
                   <span>{cargo ? formatCommodity(cargo) : "No cargo recorded"}</span>
                 </span>
               ))}
