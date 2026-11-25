@@ -1,7 +1,5 @@
 import React from "react";
-import placeholderIcon from "../shared/assets/images/placeholder-icon.svg";
 import hamburgerIcon from "../shared/assets/images/hamburger-icon.svg";
-import { NavBarHintCallout, type HintPositionDesktop, type HintPositionMobile } from "./NavBarHintCallout";
 import { PopupMenu, PopupMenuItem } from "./PopupMenu";
 
 function useIsDesktop(): boolean {
@@ -17,8 +15,6 @@ function useIsDesktop(): boolean {
   return isDesktop;
 }
 
-export type NavBarTabId = "board" | "indies";
-
 export interface NavBarGameManager {
   currentGameCode?: string | null;
 }
@@ -27,10 +23,6 @@ export interface NavBarProps {
   gameManager: NavBarGameManager;
   onNavigateToLobby: () => void;
   onOpenEditPlaytest: () => void;
-  activeTab: NavBarTabId;
-  onTabChange: (tabId: NavBarTabId) => void;
-  showRailroadHint?: boolean;
-  onDismissHint?: () => void;
   /** Whether the round report opens by itself after each round, on this device; with its menu switch. */
   roundReportAutoOpen?: boolean;
   onRoundReportAutoOpenChange?: (on: boolean) => void;
@@ -47,17 +39,13 @@ export interface NavBarProps {
 }
 
 /**
- * Navigation bar component with responsive design. Shows tabs for different views on desktop and mobile,
- * and includes a hamburger menu for game management actions.
+ * The game menu: a floating button on phones and tablets, and the left end of the nav row on
+ * desktop (the money strip takes its right end).
  */
 export function NavBar({
   gameManager,
   onNavigateToLobby,
   onOpenEditPlaytest,
-  activeTab,
-  onTabChange,
-  showRailroadHint,
-  onDismissHint,
   roundReportAutoOpen,
   onRoundReportAutoOpenChange,
   onFillMarket,
@@ -69,73 +57,7 @@ export function NavBar({
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
   const menuButtonDesktopRef = React.useRef<HTMLButtonElement>(null);
-  const contractsTabRef = React.useRef<HTMLButtonElement>(null);
-  const contractsTabMobileRef = React.useRef<HTMLButtonElement>(null);
-  const [hintPosition, setHintPosition] = React.useState<HintPositionDesktop | HintPositionMobile | null>(null);
   const isDesktop = useIsDesktop();
-
-  /** Clamp tab center X so a callout centered there stays on screen (halfMax = half of max callout width). */
-  const clampCalloutCenterX = React.useCallback(
-    (tabCenterX: number, halfMax: number): number => {
-      return Math.max(
-        halfMax,
-        Math.min(tabCenterX, window.innerWidth - halfMax)
-      );
-    },
-    []
-  );
-
-  React.useEffect(() => {
-    if (!showRailroadHint) {
-      setHintPosition(null);
-      return;
-    }
-
-    const updatePosition = () => {
-      const tabRef = isDesktop ? contractsTabRef.current : contractsTabMobileRef.current;
-      if (!tabRef) return;
-
-      const rect = tabRef.getBoundingClientRect();
-      const tabCenterX = rect.left + rect.width / 2;
-      if (isDesktop) {
-        const halfMax = 144; // 9rem – half of max-width 18rem for edge clamp
-        setHintPosition({
-          contentTop: rect.bottom + 12,
-          contentCenterX: clampCalloutCenterX(tabCenterX, halfMax),
-        });
-      } else {
-        const halfMax = 128; // 8rem – half of max-width 16rem for edge clamp
-        setHintPosition({
-          contentBottom: window.innerHeight - rect.top + 12,
-          contentCenterX: clampCalloutCenterX(tabCenterX, halfMax),
-        });
-      }
-    };
-
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    return () => window.removeEventListener("resize", updatePosition);
-  }, [showRailroadHint, isDesktop, clampCalloutCenterX]);
-
-  React.useEffect(() => {
-    if (!showRailroadHint || !onDismissHint) return;
-
-    const handleClick = () => onDismissHint();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onDismissHint();
-    };
-
-    const timeoutId = setTimeout(() => {
-      document.addEventListener("click", handleClick);
-      document.addEventListener("keydown", handleKeyDown);
-    }, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("click", handleClick);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [showRailroadHint, onDismissHint]);
 
   const placement = React.useMemo(
     () => (isDesktop ? { side: "bottom" as const, align: "start" as const } : { side: "top" as const, align: "end" as const }),
@@ -161,11 +83,6 @@ export function NavBar({
     },
     [onNavigateToLobby, onOpenEditPlaytest]
   );
-
-  const tabs: { id: NavBarTabId; label: string }[] = [
-    { id: "board", label: "Home" },
-    { id: "indies", label: "Railroads" },
-  ];
 
   return (
     <>
@@ -250,42 +167,6 @@ export function NavBar({
         >
           <img src={hamburgerIcon} alt="" className="navBar__menuIcon" />
         </button>
-
-        <div className="navBar__tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              ref={tab.id === "board" ? contractsTabRef : null}
-              type="button"
-              className={`navBar__tab ${activeTab === tab.id ? "navBar__tab--active" : ""}`}
-              onClick={() => onTabChange(tab.id)}
-            >
-              <img src={placeholderIcon} alt="" className="navBar__tabIcon" />
-              <span className="navBar__tabLabel">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="navBar__tabs--mobile">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              ref={tab.id === "board" ? contractsTabMobileRef : null}
-              type="button"
-              className={`navBar__tab--mobile ${activeTab === tab.id ? "navBar__tab--mobile--active" : ""}`}
-              onClick={() => onTabChange(tab.id)}
-            >
-              <img src={placeholderIcon} alt="" className="navBar__tabIcon--mobile" />
-              <span className="navBar__tabLabel--mobile">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {showRailroadHint && hintPosition && (
-          <NavBarHintCallout isDesktop={isDesktop} hintPosition={hintPosition}>
-            Mark the independent railroads on your map, then switch to Home to start taking turns.
-          </NavBarHintCallout>
-        )}
       </nav>
     </>
   );

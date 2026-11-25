@@ -17,7 +17,7 @@
 | Initial phase | `src/utils/gameManager.ts` (`createNewGame` always starts in `waiting_for_players`); `src/stores/gameStore.ts` (store default ctx) | Default `ctx.phase` |
 | Phase-dependent app routing (lobby/waiting/game board) | `src/app/App.js` | `waiting_for_players` branch and BYOD transitions |
 | Provider path from UI to moves/state | `src/providers/GameProvider.js`, `src/hooks/useGame.js` | Verify phase/move changes are reachable by components |
-| Phase in UI (tabs, scoring stub, setup→play hint) | `src/Board.tsx` | `currentPhase`, scoring branch, `prevPhaseRef` effect |
+| Phase in UI (scoring stub, setup vs play controls) | `src/Board.tsx` | `currentPhase`, scoring branch |
 | Setup: starting city pairs + “Choose Starting Cities” | `src/components/PlayerBoard.js` | `STARTING_CITY_PAIRS`, setup-only UI |
 | BYOD waiting screen and start-game transition | `src/app/App.js`, `src/components/WaitingForPlayersScreen.js` | `waiting_for_players` handling |
 | Phase in serialization/persistence | `src/utils/stateSerialization.js`, storage adapters | Ensure `ctx.phase` is read/written |
@@ -62,7 +62,7 @@ Phase transitions are triggered by **`checkPhaseTransition(G, ctx)`** in `src/st
   6. Charleston & Savannah  
 
   Defined in `src/components/PlayerBoard.js` as `STARTING_CITY_PAIRS`. Current behavior keeps all six buttons visible and disables already-chosen pairs.
-- **UI:** “Phase: Setup”; starting-city selector and “Choose Starting Cities” (no manual “End Turn” and no market contract button). Independent railroads tab/page can still be viewed, but railroad actions are blocked by move validation outside `play`.
+- **UI:** “Phase: Setup”; starting-city selector and “Choose Starting Cities” (no manual “End Turn” and no market contract button). Railroads are acquired from the Actions sheet, which only opens in `play`; move validation blocks `acquireIndependentRailroad` outside `play` as well.
 - **Moves allowed:** Only `generateStartingContract` (see `MOVES_BY_PHASE` in `moveValidation.js`).
 
 ### 3. Play phase (`play`)
@@ -148,5 +148,5 @@ play: {
 - **Single source of phase structure:** `src/stores/phaseConfig.ts`.
 - **Transitions:** `phaseManager.checkPhaseTransition`; called from `gameActions.js` after relevant moves.
 - **Moves per phase:** `moveValidation.js` → `MOVES_BY_PHASE`; enforce in `gameActions.js`.
-- **UI:** `Board.tsx` (phase branching/scoring), `NavBar.js` (tabs/menu/hints), `PlayerBoard.js` (setup city pairs and setup-only controls).
+- **UI:** `Board.tsx` (phase branching/scoring), `NavBar.tsx` (game menu), `PlayerBoard.js` (setup city pairs and setup-only controls).
 - When in doubt, search for `ctx.phase`, `currentPhase`, and phase names (`'setup'`, `'play'`, `'scoring'`, `'waiting_for_players'`) to find all call sites.

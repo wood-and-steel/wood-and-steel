@@ -2,93 +2,14 @@
    NAV BAR
    ======================================== */
 
-/* Mobile Layout (default, < 768px) */
+/* Phones and tablets: no nav row, only the floating menu button (bottom right) */
 .navBar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--color-bg-light);
-  padding: var(--spacing-sm) var(--spacing-xs);
-  padding-bottom: calc(var(--spacing-sm) + var(--safe-area-inset-bottom));
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  min-height: 2.5rem;
-  box-sizing: border-box;
-}
-
-/* Mobile: Bottom nav tabs with icon and label */
-.navBar__tabs--mobile {
-  display: flex;
-  gap: var(--spacing-xs);
-  width: 100%;
-  justify-content: space-around;
-  align-items: center;
-}
-
-.navBar__tab--mobile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs);
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text);
-  transition: opacity 0.2s ease;
-  flex: 1;
-  max-width: 5rem;
-}
-
-.navBar__tab--mobile:hover {
-  opacity: 0.8;
-}
-
-.navBar__tab--mobile--active {
-  opacity: 1;
-}
-
-.navBar__tabIcon--mobile {
-  width: 1.5rem;
-  height: 1.5rem;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.navBar__tab--mobile--active .navBar__tabIcon--mobile {
-  opacity: 1;
-}
-
-.navBar__tabLabel--mobile {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 500;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.navBar__tab--mobile--active .navBar__tabLabel--mobile {
-  opacity: 1;
-  font-weight: 600;
-}
-
-/* Desktop tabs - hidden on mobile */
-.navBar__tabs {
   display: none;
 }
 
-.navBar__menuButton--desktop {
-  display: none;
-}
-
-/* Mobile: Floating menu button (bottom right) */
 .navBar__menuButton {
   position: fixed;
-  bottom: calc(3.5rem + var(--safe-area-inset-bottom)); /* nav bar height (2.5rem) + spacing (1rem) */
+  bottom: calc(var(--spacing-md) + var(--safe-area-inset-bottom));
   right: var(--spacing-md);
   width: 3.5rem;
   height: 3.5rem;
@@ -118,65 +39,9 @@
   height: 1.5rem;
 }
 
-/* Menu dropdown */
-.navBar__menu {
-  font-family: var(--font-body);
-  position: fixed;
-  bottom: calc(7.5rem + var(--safe-area-inset-bottom)); /* menu button bottom (3.5rem) + menu button height (3.5rem) + spacing (0.5rem) */
-  right: var(--spacing-md);
-  background-color: var(--color-bg-primary);
-  border: var(--border-width-md) solid var(--color-border-light);
-  border-radius: var(--radius-sm);
-  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
-  padding: var(--spacing-sm) 0;
-  z-index: 102;
-  min-width: 13rem;
-  overflow: hidden;
-  animation: fadeIn 0.2s ease;
-}
-
-.navBar__menuItem {
-  display: block;
-  width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md);
-  background-color: transparent;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  transition: background-color 0.2s ease;
-}
-
-.navBar__menuItem:hover {
-  background-color: var(--color-bg-hover);
-}
-
-.navBar__menuItem:active {
-  background-color: var(--color-bg-active);
-}
-
 /* Tablet Layout (768px - 1023px) */
 @media (min-width: 768px) {
-
-  .navBar {
-    min-height: 3rem;
-    padding: var(--spacing-md) var(--spacing-sm);
-    padding-bottom: calc(var(--spacing-md) + var(--safe-area-inset-bottom));
-  }
-
-  .navBar__tabIcon--mobile {
-    width: 1.75rem;
-    height: 1.75rem;
-  }
-
-  .navBar__tabLabel--mobile {
-    font-size: 0.75rem;
-  }
-
   .navBar__menuButton {
-    bottom: calc(4rem + var(--safe-area-inset-bottom)); /* nav bar height (3rem) + spacing (1rem) */
     width: 4rem;
     height: 4rem;
   }
@@ -185,34 +50,23 @@
     width: 1.75rem;
     height: 1.75rem;
   }
-
-  .navBar__menu {
-    bottom: calc(8.5rem + var(--safe-area-inset-bottom)); /* menu button bottom (4rem) + menu button height (4rem) + spacing (0.5rem) */
-    min-width: 14rem;
-  }
 }
 
-/* Desktop Layout (>= 1024px) */
+/* Desktop Layout (>= 1024px): a fixed nav row, the menu button at its left end and the money
+   strip (MoneyStrip) at its right end */
 @media (min-width: 1024px) {
   .navBar {
-    font-family: var(--font-body);
-    font-size: var(--font-size-body);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     position: fixed;
     top: 0;
-    bottom: auto;
     left: 0;
     right: 0;
-    height: auto;
-    padding: 0;
-    padding-top: var(--spacing-sm);
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-  }
-
-  /* Hide mobile tabs on desktop */
-  .navBar__tabs--mobile {
-    display: none;
+    z-index: 100;
+    box-sizing: border-box;
+    height: var(--nav-height-desktop);
+    background-color: var(--color-bg-light);
   }
 
   /* Hide floating menu button on desktop */
@@ -220,14 +74,11 @@
     display: none;
   }
 
-  /* Show desktop menu button in nav bar */
   .navBar__menuButton--desktop {
     display: flex;
     align-items: center;
     justify-content: center;
-    position: absolute;
-    left: var(--spacing-sm);
-    top: 0.125rem;
+    margin-left: var(--spacing-sm);
     width: 2.5rem;
     height: 2.5rem;
     background-color: transparent;
@@ -245,97 +96,4 @@
     width: 1.5rem;
     height: 1.5rem;
   }
-
-  /* Show desktop tabs */
-  .navBar__tabs {
-    display: flex;
-    gap: var(--spacing-xs);
-    align-items: center;
-    justify-content: center;
-  }
-
-  .navBar__tab {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm);
-    background-color: var(--color-bg-light);
-    color: var(--color-text);
-    border: 0;
-    cursor: pointer;
-    font-family: var(--font-body);
-    font-size: var(--font-size-body);
-    font-weight: 500;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    white-space: nowrap;
-  }
-
-  .navBar__tab:hover {
-    background-color: var(--color-bg-hover);
-  }
-
-  .navBar__tab--active {
-    background-color: var(--color-bg-active);
-    color: var(--color-text);
-    border-color: var(--color-text);
-    font-weight: 600;
-  }
-
-  .navBar__tab--active:hover {
-    background-color: var(--color-bg-primary);
-  }
-
-  .navBar__tabIcon {
-    width: 1.25rem;
-    height: 1.25rem;
-    flex-shrink: 0;
-  }
-
-  .navBar__tabLabel {
-    font-family: var(--font-body);
-    font-size: var(--font-size-body);
-  }
-
-  /* Desktop menu positioning */
-  .navBar__menu {
-    position: fixed;
-    top: calc(var(--spacing-sm) + 2.5rem); /* Top padding + button height + bottom padding */
-    left: var(--spacing-sm);
-    bottom: auto;
-    right: auto;
-    min-width: 14rem;
-  }
-}
-
-/* ========================================
-   RAILROAD HINT CALLOUT
-   ======================================== */
-
-/* Callout content bubble */
-.navBar__hintCallout {
-  position: fixed;
-  left: var(--spacing-sm);
-  z-index: 99;
-  animation: fadeIn 0.3s ease;
-}
-
-.navBar__hintCallout__content {
-  background-color: var(--color-bg-primary);
-  border: var(--border-width-md) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: var(--font-size-body);
-  line-height: 1.4;
-  color: var(--color-text);
-  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.15);
-  max-width: 16rem;
-}
-
-/* Desktop: callout position set by JS */
-.navBar__hintCallout--desktop {
-  /* left/top set dynamically via inline style */
-}
-
-.navBar__hintCallout--desktop .navBar__hintCallout__content {
-  max-width: 18rem;
 }

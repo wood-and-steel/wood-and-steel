@@ -114,8 +114,6 @@ describe('menu', () => {
       gameManager={{}}
       onNavigateToLobby={() => {}}
       onOpenEditPlaytest={() => {}}
-      activeTab="board"
-      onTabChange={() => {}}
       {...props}
     />
   );

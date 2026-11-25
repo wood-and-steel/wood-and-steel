@@ -1,79 +1,27 @@
 /* ========================================
-   INDEPENDENT RAILROADS
+   INDEPENDENT RAILROADS (AcquireRailroadSheet)
    ======================================== */
-.independentRailroads {
+.independentRailroads__routes {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  align-items: center;
-  padding: var(--spacing-sm);
-}
-
-.independentRailroads__item {
-  padding: var(--spacing-xs);
-  background-color: var(--color-bg-primary);
-  border-radius: var(--radius-sm);
-  border: var(--border-width-md) solid var(--color-border-light);
-  width: 100%;
-}
-
-.independentRailroads__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--color-bg-light);
-  padding: var(--spacing-xs);
-  padding-left: var(--spacing-sm);
-  margin: calc(-1 * var(--spacing-xs)) calc(-1 * var(--spacing-xs)) var(--spacing-xs) calc(-1 * var(--spacing-xs));
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-}
-
-.independentRailroads__name {
-  font-weight: bold;
-}
-
-.independentRailroads__button {
-  margin-right: 0;
-  flex-shrink: 0;
-  white-space: nowrap;
-  background-color: var(--color-bg-primary);
-}
-
-.independentRailroads__body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs);
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-subtle);
 }
 
 .independentRailroads__route {
-  text-align: center;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: var(--spacing-xs);
 }
 
 .independentRailroads__route-dot {
   display: inline-block;
-  width: 6px;
-  height: 6px;
+  width: 0.375rem;
+  height: 0.375rem;
   border-radius: 50%;
   background-color: var(--color-notification);
   flex-shrink: 0;
-}
-
-/* Tablet Layout (768px - 1023px) */
-@media (min-width: 768px) {
-  .independentRailroads__item {
-    width: 20rem;
-  }
-}
-
-/* Desktop Layout (>= 1024px) */
-@media (min-width: 1024px) {  
-  .independentRailroads__item {
-    width: 20rem;
-  }
 }
