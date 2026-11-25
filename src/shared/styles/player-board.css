@@ -8,6 +8,28 @@
   top: var(--money-strip-height);
   z-index: var(--z-toolbar);
   background-color: var(--color-bg-light);
+  /* Sets it apart from the content scrolling under it */
+  box-shadow: var(--shadow-toolbar);
+}
+
+/* Where the browser can tie it to scrolling, the shadow shows only once the page has scrolled
+   (fading in over the first 1rem); elsewhere it's always on. */
+@supports (animation-timeline: scroll()) {
+  .playerToolbar {
+    animation: playerToolbarShadow linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 1rem;
+  }
+}
+
+@keyframes playerToolbarShadow {
+  from {
+    box-shadow: none;
+  }
+
+  to {
+    box-shadow: var(--shadow-toolbar);
+  }
 }
 
 /* Desktop: the money strip is in the nav row; stick the toolbar just below the nav */
@@ -113,12 +135,26 @@
   flex-grow: 1;
 }
 
-/* Home (play phase): engines, contracts, market, upgrades, fulfilled */
+/* Home (play phase): a card with the engines and the player's contracts, then the market,
+   upgrades and fulfilled. Section labels carry a rule of their own, so the page keeps its
+   structure while the lists are still empty. */
 .home {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
   max-width: 36rem;
+}
+
+/* What the player acts on each turn */
+.home__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-light);
+  /* On the card's fill the lighter rule disappears, so its section labels take a darker one */
+  --home-rule-color: var(--color-border-medium);
 }
 
 .home__section {
@@ -129,8 +165,21 @@
 
 .home__heading {
   margin: 0;
-  font-size: var(--font-size-body);
-  font-weight: 600;
+  padding-bottom: var(--spacing-xs);
+  border-bottom: var(--border-width-md) solid var(--home-rule-color, var(--color-border-light));
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+/* "Your railroad" while the player has no upgrades or deliveries */
+.home__summary {
+  margin: 0;
+  padding: var(--spacing-xs);
+  font-size: var(--font-size-sm);
   color: var(--color-text-subtle);
 }
 
@@ -139,11 +188,13 @@
   flex-direction: column;
 }
 
+/* Quieter than the section labels, so an empty list reads as a note, not another heading */
 .contractRows__empty {
   margin: 0;
-  font-size: var(--font-size-body);
+  font-size: var(--font-size-sm);
+  font-style: italic;
   color: var(--color-text-subtle);
-  padding: var(--spacing-sm) var(--spacing-xs);
+  padding: var(--spacing-xs);
 }
 
 .contractRow {
@@ -361,11 +412,10 @@
   }
 }
 
-/* Engines on the Contracts tab: one row per token */
+/* Engines on Home: one row per token */
 .engines {
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--spacing-md);
 }
 
 .engines__row {
@@ -416,7 +466,7 @@
 
 .engines__name--none {
   font-weight: 400;
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
 }
 
 /* The engine name as a button: opens the Buy an engine sheet. */
@@ -464,7 +514,7 @@
 }
 
 .engines__cargo--none {
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
 }
 
 .engines__cargo--button {
@@ -472,7 +522,7 @@
 }
 
 .engines__cargo--button.engines__cargo--none {
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
 }
 
 .engines__cargoChevron {

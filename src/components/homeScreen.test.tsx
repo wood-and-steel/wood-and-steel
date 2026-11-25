@@ -269,7 +269,7 @@ describe('MoneyStrip', () => {
 });
 
 describe('PlayerBoard (Home)', () => {
-  test('lists the player’s contracts, then the market, upgrades and fulfilled contracts', () => {
+  test('lists the player’s train and contracts, then the market, upgrades and fulfilled contracts', () => {
     const G = {
       players: [['0', player({ hubCity: 'Boston' })]],
       contracts: [
@@ -293,9 +293,32 @@ describe('PlayerBoard (Home)', () => {
       />
     );
     const sections = screen.getAllByRole('region').map((r) => r.getAttribute('aria-label'));
-    expect(sections).toEqual(['Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
+    expect(sections).toEqual(['Your train', 'Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
     expect(within(screen.getByRole('region', { name: 'Market contracts' })).getByText('Wine to Boston')).toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: 'Your upgrades' })).getByText('Hub · Boston')).toBeInTheDocument();
+  });
+
+  test('folds upgrades and fulfilled contracts into one line until the player has either', () => {
+    const ctx = { phase: 'play', currentPlayer: '0', playOrder: ['0'], playOrderPos: 0, numPlayers: 1, turn: 1, round: 1 } as GameContext;
+    const board = (props: Partial<PlayerProps>, contracts: Contract[]) => (
+      <PlayerBoard
+        G={{ players: [['0', player(props)]], contracts, independentRailroads: {} } as unknown as GameState}
+        ctx={ctx}
+        playerID="0"
+        startingContractExists
+        currentPhase="play"
+        onStartingPairSelect={() => {}}
+        onToggleFulfilled={() => {}}
+      />
+    );
+    const regions = () => screen.getAllByRole('region').map((r) => r.getAttribute('aria-label'));
+    const { rerender } = render(board({}, [contract()]));
+    expect(regions()).toEqual(['Your train', 'Your contracts', 'Market contracts', 'Your railroad']);
+    expect(screen.getByText('No upgrades yet · No deliveries yet')).toBeInTheDocument();
+    rerender(board({}, [contract({ fulfilled: true })]));
+    expect(regions()).toEqual(['Your train', 'Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
+    rerender(board({ upgrades: ['timetable'] }, []));
+    expect(regions()).toEqual(['Your train', 'Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
   });
 
   test('lists expiring market contracts first, soonest to expire at the top', () => {

@@ -56,9 +56,9 @@
 }
 
 .boardTopBar__label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-caps);
   color: var(--color-text-muted);
 }
 
@@ -256,9 +256,9 @@
 
 .routePopover__label {
   width: 4.5rem;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--letter-spacing-caps);
   color: var(--color-text-muted);
 }
 
