@@ -5,7 +5,3 @@
 .padding-xl {
   padding: var(--spacing-3xl) var(--spacing-xl);
 }
-
-.hidden {
-  display: none;
-}

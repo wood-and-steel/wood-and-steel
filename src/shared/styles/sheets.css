@@ -278,6 +278,11 @@ button.sheet__option {
   outline: none;
 }
 
+/* The input draws no ring inside its box, so the box shows focus (unless it's showing an error) */
+.track__field:focus-within:not(.track__field--error) {
+  border-color: var(--color-highlight);
+}
+
 /* Delivery receipt */
 .receipt__charge {
   color: var(--color-danger);
@@ -428,11 +433,6 @@ button.sheet__option {
 
 .roundReport__switchInput:checked::after {
   transform: translateX(1.125rem);
-}
-
-.roundReport__switchInput:focus-visible {
-  outline: 2px solid var(--color-highlight);
-  outline-offset: 2px;
 }
 
 /* Where a contract's commodity comes from (claim and delivery sheets) */

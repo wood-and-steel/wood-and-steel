@@ -1,4 +1,7 @@
-  :root {
+:root {
+  /* Native controls and scrollbars match the theme (see the dark block below) */
+  color-scheme: light;
+
   /* Typography */
   --font-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-body: Judson, Georgia, 'Times New Roman', serif;
@@ -37,7 +40,6 @@
   /* Border Width */
   --border-width-md: 0.0625rem;
   --border-width-lg: 0.125rem;
-  --border-width-xl: 0.25rem;
   
   /* Border Radius */
   --radius-xs: 0.125rem;
@@ -51,7 +53,6 @@
   /* Sizes */
   --button-height: 1.75rem;
   --button-height-full: 2.5rem;
-  --icon-size: 1.5rem;
   --avatar-size: 2.2rem;
   /* A sheet's Back and Close icons: 90% of the sheet title's size */
   --sheet-icon-size: calc(0.9 * var(--font-size-h3));
@@ -64,14 +65,11 @@
   
   /* Colors - Light Mode */
   --color-primary: #2d3436;
-  --color-primary-light: #b2bec3;
   --color-accent: #e5d6fa;
   
   --color-text: #2d3436;
   --color-text-subtle: #4f5a5e;
   --color-text-muted: #778388;
-  /* Muted text for disabled or completed UI (e.g. fulfilled contract body) */
-  --color-disabled: var(--color-text-muted);
   --color-text-light: #dadada;
   
   --color-border: #a3abaf;
@@ -95,38 +93,42 @@
   --color-contract-private: #101020;
   /* Something new to notice: the round report's new routes, a switch that's on */
   --color-highlight: #4510d4;
+}
+
+/* Colors - Dark Mode: follows the system setting. Only the player app (.playerApp in App.tsx) has a
+   dark theme; the playtest board and dev tools stay light. */
+@media (prefers-color-scheme: dark) {
+  :root:has(.playerApp) {
+    color-scheme: dark;
+
+    --color-primary: #edf6fa;
+    --color-accent: #2d3436;
+
+    --color-text: var(--color-primary);
+    --color-text-subtle: #909ea3;
+    --color-text-muted: #7a858a;
+    --color-text-light: #ffffff;
+
+    --color-border: #4f585c;
+    --color-border-light: #2f363a;
+    --color-border-subtle: #1f2528;
+    --color-border-medium: #3b4347;
+
+    --color-bg-primary: #0c0e10;
+    --color-bg-light: #1b2126;
+    --color-bg-active: #2b2a3c;
+    --color-bg-hover: #2a3034;
+    --color-bg-disabled: #2d3436;
+    --color-bg-overlay: rgba(0, 0, 0, 0.7);
+    /* Dark scrims swallow a soft shadow; this one is darker and tighter */
+    --shadow-modal: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.6);
+
+    --color-danger: #e74c3c;
+    --color-danger-bg: rgba(231, 76, 60, 0.15);
+    --color-notification: #e74c3c;
+
+    --color-contract-market: #cab9f8;
+    --color-contract-private: #f1f1f3;
+    --color-highlight: #b49cf6;
   }
-
-/* Colors - Dark Mode */
-  [data-theme="dark"] {
-  --color-primary: #edf6fa;
-  --color-primary-light: #636e72;
-  --color-accent: #2d3436;
-  
-  --color-text: var(--color-primary);
-  --color-text-subtle: #909ea3;
-  --color-text-muted: #7a858a;
-  --color-text-light: #ffffff;
-  
-  --color-border: #4f585c;
-  --color-border-light: #2f363a;
-  --color-border-subtle: #1f2528;
-  --color-border-medium: #3b4347;
-  
-  --color-bg-primary: #0c0e10;
-  --color-bg-light: #1b2126;
-  --color-bg-active: #2b2a3c;
-  --color-bg-hover: #2a3034;
-  --color-bg-disabled: #2d3436;
-  --color-bg-overlay: rgba(0, 0, 0, 0.7);
-  /* Dark scrims swallow a soft shadow; this one is darker and tighter */
-  --shadow-modal: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.6);
-  
-  --color-danger: #e74c3c;
-  --color-danger-bg: rgba(231, 76, 60, 0.15);
-  --color-notification: #e74c3c;
-
-  --color-contract-market: #cab9f8;
-  --color-contract-private: #f1f1f3;
-  --color-highlight: #b49cf6;
 }

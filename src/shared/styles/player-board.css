@@ -114,42 +114,6 @@
   flex-grow: 1;
 }
 
-.playerBoard__info {
-  padding: var(--spacing-sm);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.playerBoard__buttonGroup {
-  display: flex;
-  gap: var(--spacing-xs);
-  align-items: center;
-}
-
-.playerBoard__info--active {
-  background-color: var(--color-bg-active);
-}
-
-.playerBoard__turnIndicator {
-  font-size: var(--font-size-body);
-  color: var(--color-text-subtle);
-}
-
-.playerBoard__name {
-  margin-bottom: var(--spacing-xs);
-  font-size: var(--font-size-body);
-}
-
-.playerBoard__name--active {
-  font-weight: bold;
-}
-
-.playerBoard__score {
-  font-weight: normal;
-  color: var(--color-text-subtle);
-}
-
 /* Home (play phase): engines, contracts, market, upgrades, fulfilled */
 .home {
   display: flex;
@@ -543,11 +507,6 @@
 
 .engines__cargo--button.engines__cargo--none {
   color: var(--color-text-muted);
-}
-
-.engines__cargo--button:focus-visible {
-  outline: 2px solid var(--color-highlight);
-  outline-offset: 2px;
 }
 
 .engines__cargoIcon {
