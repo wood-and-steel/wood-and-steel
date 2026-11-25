@@ -4,6 +4,7 @@ import type { PlayerProps } from "../stores/gameStore";
 import { defaultDeliveringEngine, deliveringEngineMatters, deliveryBreakdown, serviceOn } from "../rules/finance";
 import { getEngineType, type EngineSlot } from "../rules/playerBoard";
 import { formatMoney, formatMoneyChange } from "../utils/money";
+import { CommoditySources } from "./CommoditySources";
 import { EngineSlotIcon } from "./EngineIcon";
 import { BeforeAfter, RadioOption, Sheet } from "./Sheet";
 
@@ -87,6 +88,7 @@ export function DeliveryReceipt({ contract, player, playerID, ties, onDeliver, o
         <BeforeAfter label="Cash" before={formatMoney(player.cash)} after={formatMoney(player.cash + receipt.net)} />
         <BeforeAfter label="Railroad ties" before={String(ties)} after={String(ties + contractTies)} />
       </div>
+      <CommoditySources commodity={contract.commodity} />
       {receipt.affordable ? (
         <button
           type="button"

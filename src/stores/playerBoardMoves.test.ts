@@ -14,6 +14,7 @@ import {
   independentRailroadPrice,
   payForTrack,
   repay,
+  replacePrivateContract,
   setCargo,
   setPlayerBoard,
   toggleContractFulfilled,
@@ -355,3 +356,28 @@ describe('playtest fix-up', () => {
   });
 });
 
+
+describe('replacePrivateContract', () => {
+  const contracts = () => useGameStore.getState().G.contracts;
+
+  test("swaps the player's private contract for the new one in a single change", () => {
+    setUp();
+    holdContract({ id: 'old' });
+    holdContract({ id: 'market', type: 'market' });
+    holdContract({ id: 'done', fulfilled: true });
+    const before = contracts().length;
+    expect(replacePrivateContract('0', 'wine', 'Boston')).toBe(true);
+    const ids = contracts().map((c) => c.id);
+    expect(ids).not.toContain('old');
+    expect(ids).toEqual(expect.arrayContaining(['market', 'done']));
+    expect(contracts()).toHaveLength(before);
+    expect(contracts()[0]).toMatchObject({ commodity: 'wine', destinationKey: 'Boston', type: 'private', playerID: '0' });
+  });
+
+  test("is refused when it is not that player's turn", () => {
+    setUp();
+    holdContract({ id: 'old' });
+    expect(replacePrivateContract('1', 'wine', 'Boston')).toBe(false);
+    expect(contracts().map((c) => c.id)).toContain('old');
+  });
+});

@@ -24,6 +24,8 @@ export interface PlayerBoardProps {
   /** Opens the claim sheet for an open market contract, when they tap it. */
   onClaimContract?: (contractID: string) => void;
   onSetCargo?: (slot: EngineSlot, commodity: string | null) => boolean;
+  /** Opens the Buy an engine sheet, when the player taps one of their engines' names. */
+  onOpenBuyEngine?: () => void;
 }
 
 const REGION_NAMES: Record<string, string> = {
@@ -62,6 +64,7 @@ export function PlayerBoard({
   onToggleFulfilled,
   onClaimContract,
   onSetCargo,
+  onOpenBuyEngine,
 }: PlayerBoardProps): React.ReactElement | null {
   const effectivePlayerID = playerID ?? ctx.currentPlayer;
   const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
@@ -91,7 +94,13 @@ export function PlayerBoard({
   };
 
   const mine = G.contracts.filter((c: Contract) => c.playerID === key && !c.fulfilled);
-  const market = G.contracts.filter((c: Contract) => c.type === "market" && c.playerID === null && !c.fulfilled);
+  // Expiring contracts first, soonest to leave the tableau at the top; then oldest first.
+  const market = G.contracts
+    .filter((c: Contract) => c.type === "market" && c.playerID === null && !c.fulfilled)
+    .sort(
+      (a: Contract, b: Contract) =>
+        (a.roundsLeft ?? Infinity) - (b.roundsLeft ?? Infinity) || a.creationTime - b.creationTime
+    );
   const fulfilled = G.contracts.filter((c: Contract) => c.playerID === key && c.fulfilled);
   const upgrades = upgradeLabels(playerProps);
   // The first Mogul anyone buys opens the market; after that an empty tableau just means none are open.
@@ -128,6 +137,7 @@ export function PlayerBoard({
               playerID={key}
               canEdit={canAct}
               onSetCargo={(slot, commodity) => onSetCargo?.(slot, commodity) ?? false}
+              onBuyEngine={canAct ? onOpenBuyEngine : undefined}
             />
             <section className="home__section" aria-label="Your contracts">
               <h3 className="home__heading">Yours</h3>
@@ -145,6 +155,7 @@ export function PlayerBoard({
                 player={playerProps}
                 onSelect={canAct && onClaimContract ? (c) => onClaimContract(c.id) : undefined}
                 emptyText={marketOpened ? "No open market contracts." : "The market opens when someone buys a Mogul."}
+                keepOrder
               />
             </section>
             <section className="home__section" aria-label="Your upgrades">

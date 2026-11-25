@@ -31,6 +31,10 @@ export const MOVE_COVERAGE: Record<string, Coverage> = {
   addContract: { status: 'used', where: 'engine/actions.ts choosePrivateContract' },
   toggleContractFulfilled: { status: 'used', where: 'engine/actions.ts runOne (deliver)' },
   deleteContract: { status: 'used', where: 'engine/actions.ts redrawPrivateContract' },
+  replacePrivateContract: {
+    status: 'ignored',
+    reason: "The player app's Discard and draw; bots redraw with deleteContract then addContract in the same tick.",
+  },
   acquireIndependentRailroad: { status: 'used', where: 'engine/actions.ts acquireRailroad' },
   addCityToPlayer: {
     status: 'ignored',

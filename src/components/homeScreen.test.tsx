@@ -69,7 +69,7 @@ describe('ContractRows', () => {
       />
     );
     expect(screen.getByRole('button', { name: /Wood to Boston/ })).toBeDisabled();
-    expect(within(screen.getByRole('button', { name: /Wood to Boston/ })).getByText('Delivered')).toBeInTheDocument();
+    expect(within(screen.getByRole('button', { name: /Wood to Boston/ })).queryByText(/Delivered/)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Coal to Boston/ }));
     expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'k1' }));
     expect(screen.queryByRole('menu')).toBeNull();
@@ -103,6 +103,17 @@ describe('ClaimSheet', () => {
     fireEvent.click(within(options).getByRole('radio', { name: "Don't record cargo" }));
     fireEvent.click(screen.getByRole('button', { name: 'Claim contract' }));
     expect(onClaim).toHaveBeenLastCalledWith(undefined);
+  });
+
+  test('shows where the commodity is available, also when the claim is refused', () => {
+    const { rerender } = render(
+      <ClaimSheet playerID="0" contract={market} player={player()} refusal={null} onClaim={() => true} onClose={() => {}} />
+    );
+    expect(screen.getByRole('region', { name: 'Lead is available in:' })).toHaveTextContent('Butte, Calgary');
+    rerender(
+      <ClaimSheet playerID="0" contract={market} player={player()} refusal="No" onClaim={() => true} onClose={() => {}} />
+    );
+    expect(screen.getByRole('region', { name: 'Lead is available in:' })).toBeInTheDocument();
   });
 
   test('suggests the engine already carrying the commodity, and says so', () => {
@@ -222,6 +233,32 @@ describe('PlayerBoard (Home)', () => {
     expect(sections).toEqual(['Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
     expect(within(screen.getByRole('region', { name: 'Market contracts' })).getByText('Wine to Boston')).toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: 'Your upgrades' })).getByText('Hub · Boston')).toBeInTheDocument();
+  });
+
+  test('lists expiring market contracts first, soonest to expire at the top', () => {
+    const market = (id: string, commodity: string, creationTime: number, roundsLeft?: number) =>
+      contract({ id, type: 'market', playerID: null, commodity, creationTime, roundsLeft });
+    // Creation times run opposite to expiry, so the rows can't just be oldest first.
+    const G = {
+      players: [['0', player()]],
+      contracts: [market('m1', 'fish', 4), market('m2', 'coal', 2, 3), market('m3', 'wine', 1), market('m4', 'wood', 3, 1)],
+      independentRailroads: {},
+    } as unknown as GameState;
+    const ctx = { phase: 'play', currentPlayer: '0', playOrder: ['0'], playOrderPos: 0, numPlayers: 1, turn: 1, round: 1 } as GameContext;
+    render(
+      <PlayerBoard
+        G={G}
+        ctx={ctx}
+        playerID="0"
+        startingContractExists
+        currentPhase="play"
+        onStartingPairSelect={() => {}}
+        onToggleFulfilled={() => {}}
+        onClaimContract={() => {}}
+      />
+    );
+    const rows = within(screen.getByRole('region', { name: 'Market contracts' })).getAllByRole('button');
+    expect(rows.map((r) => r.textContent?.match(/^(\w+) to/)?.[1])).toEqual(['Wood', 'Coal', 'Wine', 'Fish']);
   });
 });
 

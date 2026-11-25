@@ -9,6 +9,7 @@ import {
   addContract,
   toggleContractFulfilled,
   deleteContract,
+  replacePrivateContract,
   acquireIndependentRailroad,
   addCityToPlayer,
   claimHubCity,
@@ -39,6 +40,7 @@ export interface Moves {
   addContract: (commodity: string, destinationKey: string, type: 'private' | 'market') => void;
   toggleContractFulfilled: (contractID: string, engineSlot?: EngineSlot) => boolean;
   deleteContract: (contractID: string) => void;
+  replacePrivateContract: (playerID: string, commodity: string, destinationKey: string) => boolean;
   acquireIndependentRailroad: (railroadName: string) => boolean;
   addCityToPlayer: (cityKey: string) => void;
   claimHubCity: (cityKey: string) => boolean;
@@ -83,6 +85,9 @@ export function createMoves(
     toggleContractFulfilled: (contractID, engineSlot) => toggleContractFulfilled(contractID, engineSlot),
 
     deleteContract: (contractID: string) => deleteContract(contractID),
+
+    replacePrivateContract: (playerID, commodity, destinationKey) =>
+      replacePrivateContract(playerID, commodity, destinationKey),
 
     acquireIndependentRailroad: (railroadName: string) =>
       acquireIndependentRailroad(railroadName),

@@ -1,5 +1,6 @@
 import React from "react";
 import engineIconSvg from "../shared/assets/images/engine-icon.svg?raw";
+import engineSegmentsSvg from "../shared/assets/images/engine-segments.svg?raw";
 import type { EngineSlot } from "../rules/playerBoard";
 import { getPlayerAvatarColor, getPlayerLightColor } from "../utils/playerAvatar";
 
@@ -50,4 +51,23 @@ export interface EngineSlotIconProps {
 /** The engine picture for one of a player's two engine tokens, in that token's color. */
 export function EngineSlotIcon({ playerID, avatarColor, slot, label }: EngineSlotIconProps): React.ReactElement {
   return <EngineIcon color={engineSlotColor(playerID, avatarColor, slot)} label={label ?? ENGINE_SLOT_NAMES[slot]} />;
+}
+
+/** The segments picture with its dots in the text color, so it shows in dark mode too. */
+const ENGINE_SEGMENTS_SVG = engineSegmentsSvg.replace(/#2C2C2C/gi, "currentColor");
+
+/** An engine's distance: the number, then the segments picture (read out as "3 segments"). */
+export function EngineSegments({ count }: { count: number }): React.ReactElement {
+  return (
+    <span className="engineSegments">
+      {count}
+      <span
+        className="engineSegments__icon"
+        role="img"
+        aria-label={count === 1 ? " segment" : " segments"}
+        // A static asset from the repo, not user input.
+        dangerouslySetInnerHTML={{ __html: ENGINE_SEGMENTS_SVG }}
+      />
+    </span>
+  );
 }

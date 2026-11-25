@@ -12,6 +12,8 @@ export interface ContractRowsProps {
   onSelect?: (contract: Contract) => void;
   /** Shown when there are no contracts. */
   emptyText: string;
+  /** Keep the given order instead of sorting oldest first (e.g. the market, soonest to expire first). */
+  keepOrder?: boolean;
 }
 
 function commodityLabel(commodity: string): string {
@@ -44,13 +46,12 @@ export function payoutFor(contract: Contract, player: PlayerProps | undefined): 
  * player, struck through to the net when debt service lowers it. Pressing a row calls
  * `onSelect` (the delivery receipt or the claim sheet).
  */
-export function ContractRows({ contracts, player, onSelect, emptyText }: ContractRowsProps): React.ReactElement {
+export function ContractRows({ contracts, player, onSelect, emptyText, keepOrder }: ContractRowsProps): React.ReactElement {
   if (contracts.length === 0) return <p className="contractRows__empty">{emptyText}</p>;
 
   return (
     <div className="contractRows">
-      {[...contracts]
-        .sort((a, b) => a.creationTime - b.creationTime)
+      {(keepOrder ? contracts : [...contracts].sort((a, b) => a.creationTime - b.creationTime))
         .map((contract) => (
           <ContractRow
             key={contract.id}
@@ -96,17 +97,15 @@ function ContractRow({ contract, player, onSelect }: ContractRowProps): React.Re
         )}
       </span>
       <span className="contractRow__value">
-        {contract.fulfilled ? (
-          <span className="contractRow__delivered">Delivered</span>
-        ) : (
+        {!contract.fulfilled && (
           <>
             {gross !== null && <s className="contractRow__gross">{gross}</s>}
             <strong title={byEngine ? "Depends on which engine delivers" : undefined}>{net}</strong>
+            <span className="contractRow__dot" aria-hidden="true">
+              ·
+            </span>
           </>
         )}
-        <span className="contractRow__dot" aria-hidden="true">
-          ·
-        </span>
         <span className="contractRow__ties">
           {ties}
           <img

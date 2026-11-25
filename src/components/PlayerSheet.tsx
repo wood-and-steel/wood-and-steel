@@ -2,10 +2,10 @@ import React from "react";
 import { moneyValue } from "../Contract";
 import { contractTies } from "../utils/ties";
 import type { GameState } from "../stores/gameStore";
-import { engineDistance, formatCommodity, formatSegments, getEngineType, type EngineSlot } from "../rules/playerBoard";
+import { engineDistance, formatCommodity, getEngineType, type EngineSlot } from "../rules/playerBoard";
 import { UPGRADE_NAMES, type UpgradeKey } from "../rules/rulesData";
 import { formatMoney } from "../utils/money";
-import { EngineSlotIcon } from "./EngineIcon";
+import { EngineSegments, EngineSlotIcon } from "./EngineIcon";
 import { Sheet } from "./Sheet";
 
 export interface PlayerSheetProps {
@@ -69,9 +69,13 @@ export function PlayerSheet({ G, playerID, onClose }: PlayerSheetProps): React.R
             <div key={slot} className="sheet__row">
               <span className="engineLabel">
                 <EngineSlotIcon playerID={playerID} avatarColor={props.avatarColor} slot={slot} />
-                {type
-                  ? `${getEngineType(type).name} · ${formatSegments(engineDistance(type, hasServiceYard).total)}`
-                  : "No engine"}
+                {type ? (
+                  <>
+                    {getEngineType(type).name} · <EngineSegments count={engineDistance(type, hasServiceYard).total} />
+                  </>
+                ) : (
+                  "No engine"
+                )}
               </span>
               {type && <span className="sheet__label">{cargo ? formatCommodity(cargo) : "not recorded"}</span>}
             </div>

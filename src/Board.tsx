@@ -44,7 +44,9 @@ export function WoodAndSteelState({
     React.useState(false);
   const [isPrivateContractModalOpen, setIsPrivateContractModalOpen] =
     React.useState(false);
-  const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | 'discard' | null>(null);
+  // Opened from Actions' "Discard and draw new contract": picking an offer replaces the private contract.
+  const [replacePrivateContract, setReplacePrivateContract] = React.useState(false);
+  const [openSheet, setOpenSheet] = React.useState<'loans' | 'actions' | 'buyEngine' | 'discard' | null>(null);
   const [receiptContractId, setReceiptContractId] = React.useState<string | null>(null);
   const [claimContractId, setClaimContractId] = React.useState<string | null>(null);
   const [viewPlayerId, setViewPlayerId] = React.useState<string | null>(null);
@@ -128,7 +130,10 @@ export function WoodAndSteelState({
     if (isMyTurn) return;
     setReceiptContractId(null);
     setClaimContractId(null);
-    setOpenSheet((sheet: 'loans' | 'actions' | 'discard' | null) => (sheet === 'loans' ? sheet : null));
+    setOpenSheet((sheet: 'loans' | 'actions' | 'buyEngine' | 'discard' | null) => (sheet === 'loans' ? sheet : null));
+    // New contracts go to the current player, so offers from a finished turn must not be picked.
+    setIsPrivateContractModalOpen(false);
+    setReplacePrivateContract(false);
   }, [isMyTurn]);
   /** Why the player can't claim a market contract now, or null. */
   const claimRefusal = !myProps
@@ -255,12 +260,19 @@ export function WoodAndSteelState({
           />
           <PrivateContractOfferModal
             isOpen={isPrivateContractModalOpen}
-            onClose={() => setIsPrivateContractModalOpen(false)}
+            onClose={() => {
+              setIsPrivateContractModalOpen(false);
+              setReplacePrivateContract(false);
+            }}
             G={G}
             ctx={ctx}
             onSelect={(commodity: string, destinationKey: string) => {
-              moves.addContract(commodity, destinationKey, 'private');
+              if (isMyTurn && playerID) {
+                if (replacePrivateContract) moves.replacePrivateContract(playerID, commodity, destinationKey);
+                else moves.addContract(commodity, destinationKey, 'private');
+              }
               setIsPrivateContractModalOpen(false);
+              setReplacePrivateContract(false);
             }}
           />
           <PlayerToolbar
@@ -306,14 +318,18 @@ export function WoodAndSteelState({
               onClose={() => setOpenSheet(null)}
             />
           )}
-          {openSheet === 'actions' && myProps && playerID && isMyTurn && (
+          {(openSheet === 'actions' || openSheet === 'buyEngine') && myProps && playerID && isMyTurn && (
             <ActionsSheet
+              initialView={openSheet === 'buyEngine' ? 'engine' : 'menu'}
               G={G}
               playerID={playerID}
               player={myProps}
               moves={moves}
               onAcquireRailroad={() => handleTabChange('indies')}
-              onNewPrivateContract={() => setIsPrivateContractModalOpen(true)}
+              onNewPrivateContract={() => {
+                setReplacePrivateContract(true);
+                setIsPrivateContractModalOpen(true);
+              }}
               onClose={() => setOpenSheet(null)}
             />
           )}
@@ -353,6 +369,7 @@ export function WoodAndSteelState({
               onToggleFulfilled={handleToggleFulfilled}
               onClaimContract={handleClaimContract}
               onSetCargo={moves.setCargo}
+              onOpenBuyEngine={() => setOpenSheet('buyEngine')}
             />
           )}
           {activeTab === 'indies' && <IndependentRailroadsPage />}
