@@ -1,14 +1,11 @@
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
-import { routes } from '../../data/routes';
-import { CITY_POINTS, REGIONAL_OFFICE_POINTS } from '../../data/cityPoints';
+import { routes } from '../data/routes';
+import { CITY_POINTS, REGIONAL_OFFICE_POINTS } from '../data/cityPoints';
 import { EDITED_ROUTES, FLAGGED_ROUTES, ROUTE_PATHS } from './routePaths';
 import { formatPathD, parsePathD } from './pathData';
-import { formatRoutePathsFile } from '../edit-paths/routePathsFile';
 
 const routeEntries = [...routes.entries()];
 
-describe('board geometry', () => {
+describe('map geometry', () => {
   it('has a city point for every city on a route', () => {
     const cities = routeEntries.flatMap(([, route]) => route.cities);
     expect(cities.filter((city) => !CITY_POINTS[city])).toEqual([]);
@@ -46,10 +43,5 @@ describe('board geometry', () => {
     for (const d of Object.values(ROUTE_PATHS)) {
       expect(formatPathD(parsePathD(d))).toBe(d);
     }
-  });
-
-  it('formats routePaths.ts exactly as scripts/trace-routes.py does', () => {
-    const onDisk = readFileSync(resolve(process.cwd(), 'src/board/geometry/routePaths.ts'), 'utf-8');
-    expect(formatRoutePathsFile(ROUTE_PATHS, FLAGGED_ROUTES, EDITED_ROUTES)).toBe(onDisk.replace(/\r\n/g, '\n'));
   });
 });

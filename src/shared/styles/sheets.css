@@ -309,38 +309,10 @@
   gap: var(--spacing-sm);
 }
 
-.miniMap {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.miniMap__route {
-  stroke: var(--color-text-subtle);
-  stroke-linecap: round;
-}
-
-.miniMap__route--new {
-  stroke: var(--color-highlight);
-}
-
-.miniMap__city {
-  fill: var(--color-bg-primary);
-  stroke: var(--color-text);
-}
-
-.miniMap__label {
-  fill: var(--color-text);
-  font-family: inherit;
-  paint-order: stroke;
-  stroke: var(--color-bg-primary);
-  stroke-width: 0.25em;
-  stroke-linejoin: round;
-}
-
 .roundReport__legend {
   display: flex;
-  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  gap: var(--spacing-xs) var(--spacing-md);
   font-size: var(--font-size-body);
   color: var(--color-text-subtle);
 }
@@ -353,14 +325,22 @@
 
 .roundReport__swatch {
   display: inline-block;
-  width: 1.25rem;
-  height: 0.125rem;
-  background-color: var(--color-text-subtle);
+  width: 1.5rem;
+  height: 0.75rem;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(var(--map-route-indie), var(--map-route-indie)) center / 100% 0.125rem no-repeat,
+    var(--map-paper);
 }
 
 .roundReport__swatch--new {
-  height: 0.25rem;
-  background-color: var(--color-highlight);
+  background: linear-gradient(var(--map-route-new), var(--map-route-new)) center / 100% 0.25rem no-repeat,
+    var(--map-paper);
+}
+
+.roundReport__swatch--faint {
+  background: linear-gradient(var(--map-route-indie), var(--map-route-indie)) center / 100% 0.125rem no-repeat,
+    var(--map-paper);
+  opacity: 0.6;
 }
 
 .roundReport__switch {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { routes } from '../../data/routes';
-import { FLAGGED_ROUTES } from '../geometry/routePaths';
+import { FLAGGED_ROUTES } from '../../map/routePaths';
 import { EditPathsPage } from './EditPathsPage';
 
 describe('EditPathsPage', () => {

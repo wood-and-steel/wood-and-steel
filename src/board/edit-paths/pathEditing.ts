@@ -1,4 +1,4 @@
-import type { BezierPath, BezierSegment, Point } from '../geometry/pathData';
+import type { BezierPath, BezierSegment, Point } from '../../map/pathData';
 
 /**
  * A draggable point on a path. Anchor 0 is the start; anchor i is segments[i - 1].end.

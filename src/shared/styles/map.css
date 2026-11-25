@@ -1,0 +1,49 @@
+/*
+ * Map drawing shared by the board app (/board) and the round report's mini maps (src/map/).
+ * Shapes are in board pixels (viewBox within 0 0 6660 4173); stroke widths are SVG attributes
+ * set by MapRoutes, so they can scale with the crop. Colors are --map-* tokens, which stay
+ * light in the dark theme because the map art does.
+ */
+
+.mapRoute {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.mapRoute--indie,
+.mapRoute--faint {
+  stroke: var(--map-route-indie);
+}
+
+.mapRoute--faint {
+  opacity: 0.4;
+}
+
+.mapRoute--casing {
+  stroke: var(--map-route-casing);
+}
+
+.mapRoute--new {
+  stroke: var(--map-route-new);
+}
+
+/* Round report mini map: the art cropped to one railroad, with its cities named */
+.miniMap {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  background-color: var(--map-paper);
+}
+
+.miniMap__label {
+  fill: var(--map-label);
+  font-family: inherit;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--map-label-halo);
+  stroke-width: 0.3em;
+  stroke-linejoin: round;
+}

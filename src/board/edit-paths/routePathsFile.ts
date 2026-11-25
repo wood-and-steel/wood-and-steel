@@ -1,5 +1,5 @@
 /**
- * Serializes src/board/geometry/routePaths.ts. Keep in sync with write_route_paths in
+ * Serializes src/map/routePaths.ts. Keep in sync with write_route_paths in
  * scripts/trace-routes.py so the script and the editor produce identical files.
  */
 

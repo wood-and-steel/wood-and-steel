@@ -7,7 +7,6 @@
  */
 
 .boardApp {
-  --board-indie-route: #222222;
   --board-token-outline: #ffffff;
   --board-track-casing: rgba(255, 255, 255, 0.75);
   --board-engine-stroke: #000;
@@ -143,14 +142,6 @@
 
 .boardMap--panning {
   cursor: grabbing;
-}
-
-.boardMap__indieRoute {
-  fill: none;
-  stroke: var(--board-indie-route);
-  stroke-width: 15;
-  stroke-linecap: round;
-  pointer-events: none;
 }
 
 .boardMap__hub {
