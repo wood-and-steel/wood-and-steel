@@ -101,7 +101,7 @@ The core release. Everything the player board tracked moves into the app, inside
 4. **Actions sheet:**
    - Buy an engine
    - Buy an upgrade: the upgrades list, Hub city picker, Regional Office region picker, Exchange commodity picker
-   - Acquire a railroad: uses the Railroads list, with its price shown
+   - Acquire a railroad: the independent railroads with their routes and prices (`AcquireRailroadSheet`)
    - Pay for track
    - New private contract: the existing flow
 5. **Delivery receipt** replaces the bare fulfill action. It shows only the lines that apply, asks which engine delivered only when the engines would pay differently, and explains a blocked delivery.
@@ -162,6 +162,8 @@ The player bar is a money strip and a two-strip toolbar, each one line at phone 
 - **Money** (`MoneyStrip`): the player's avatar, cash, debt (shown even at $0K) and Loans. The player's name shows here only in setup, before there's money. It's always in view: fixed to the top on phones and tablets, at the right end of the nav row on desktop. It sits above sheet scrims, and sheets and the page start below it (`--money-strip-height`), so cash and debt stay visible while a sheet changes them.
 - **Players:** everyone in play order, the viewer included, with their ties; the current player's avatar pulses. Pressing another player opens their card. The round label sits at the end.
 - **Turn:** Undo, Actions and End Turn on the player's turn in play; otherwise whose turn it is, at the same height.
+
+**No tab bar.** Home is the only page. The Railroads tab became the "Acquire a railroad" step of the Actions sheet (`AcquireRailroadSheet`), so the list is reached only on the player's turn, and the setup → play hint that pointed at the tab is gone. Phones and tablets keep only the floating menu button; desktop keeps the nav row for the menu and the money strip.
 
 **Loans opens over any sheet.** Loans has its own open state in `Board`, so opening it from the money strip leaves the sheet underneath where it was; closing Loans returns there with the new cash. Sheets stack (`Sheet.tsx`): Escape closes only the top one, and focus goes back to where it was in the sheet below. The money strip can't be reached by keyboard while a sheet holds focus, so every "short of cash" message (buying an engine or upgrade, paying for track, a blocked delivery) has its own Loans button (`ShortOfCash`).
 

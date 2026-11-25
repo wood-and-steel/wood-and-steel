@@ -18,7 +18,7 @@
 .boardPage {
   padding: var(--spacing-xs);
   padding-top: var(--money-strip-height); /* Room for the fixed money strip; toolbar flush below it */
-  padding-bottom: calc(3.125rem + var(--safe-area-inset-bottom)); /* Account for fixed navBar height on mobile */
+  padding-bottom: calc(4.5rem + var(--safe-area-inset-bottom)); /* Room to scroll past the floating menu button (3.5rem + spacing) */
 }
 
 .form {
@@ -36,7 +36,7 @@
   .boardPage {
     padding: var(--spacing-md);
     padding-top: var(--money-strip-height); /* Room for the fixed money strip; toolbar flush below it */
-    padding-bottom: calc(5rem + var(--safe-area-inset-bottom)); /* Account for fixed navBar height on tablet */
+    padding-bottom: calc(5rem + var(--safe-area-inset-bottom)); /* Room to scroll past the floating menu button (4rem + spacing) */
   }
 }
 

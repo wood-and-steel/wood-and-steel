@@ -4,7 +4,6 @@ import { PlayerBoard } from './components/PlayerBoard';
 import { PlayerToolbar } from './components/PlayerToolbar';
 import { MoneyStrip } from './components/MoneyStrip';
 import { PrivateContractOfferModal } from './components/PrivateContractOfferModal';
-import { IndependentRailroadsPage } from './components/IndependentRailroadsPage';
 import { EditPlaytestDialog } from './components/EditPlaytestDialog';
 import { LoansSheet } from './components/LoansSheet';
 import { ActionsSheet } from './components/ActionsSheet';
@@ -18,8 +17,6 @@ import type { Contract } from './Contract';
 import { contractTies } from './utils/ties';
 import { bestEngineLevel, engineLevel } from './rules/engines';
 import { MARKET_CONTRACT_MIN_ENGINE } from './rules/rulesData';
-import { independentRailroadPrice } from './stores/gameActions';
-import { formatMoney } from './utils/money';
 import { useGame } from './hooks/useGame';
 import { useLobbyStore } from './stores/lobbyStore';
 
@@ -32,9 +29,7 @@ export interface WoodAndSteelStateProps {
   gameManager?: GameManagerProps;
 }
 
-type TabId = 'board' | 'indies';
-
-/** Main game board: tabs, NavBar, and form-driven moves. */
+/** Main game board: NavBar, the player's board, its sheets, and form-driven moves. */
 export function WoodAndSteelState({
   gameManager,
 }: WoodAndSteelStateProps) {
@@ -55,32 +50,6 @@ export function WoodAndSteelState({
   const [receiptContractId, setReceiptContractId] = React.useState<string | null>(null);
   const [claimContractId, setClaimContractId] = React.useState<string | null>(null);
   const [viewPlayerId, setViewPlayerId] = React.useState<string | null>(null);
-  const [activeTab, setActiveTab] = React.useState<TabId>('board');
-  const [showRailroadHint, setShowRailroadHint] = React.useState(false);
-  const prevPhaseRef = React.useRef(ctx.phase);
-
-  // On transition setup → play, switch to Independent Railroads tab and show hint
-  React.useEffect(() => {
-    const prevPhase = prevPhaseRef.current;
-    const currentPhase = ctx.phase;
-
-    if (prevPhase === 'setup' && currentPhase === 'play') {
-      setActiveTab('indies');
-      setShowRailroadHint(true);
-    }
-
-    prevPhaseRef.current = currentPhase;
-  }, [ctx.phase]);
-
-  const handleTabChange = React.useCallback((tabId: TabId) => {
-    setActiveTab(tabId);
-    setShowRailroadHint(false);
-  }, []);
-
-  const handleDismissHint = React.useCallback(() => {
-    setShowRailroadHint(false);
-  }, []);
-
   const handleNavigateToLobby = React.useCallback(() => {
     clearSelection();
     setLobbyMode(true);
@@ -166,7 +135,6 @@ export function WoodAndSteelState({
       | HTMLButtonElement
       | null;
     const name = submitter?.name ?? '';
-    const id = submitter?.id ?? '';
 
     switch (name) {
       case 'startingContract':
@@ -183,22 +151,6 @@ export function WoodAndSteelState({
           inputParameters[2] as 'private' | 'market'
         );
         break;
-      case 'acquireIndependentRailroad': {
-        const railroadName = id;
-        const railroad = G.independentRailroads[railroadName];
-        const price = independentRailroadPrice(G, railroadName);
-        if (!railroad || !myProps) break;
-        if (price > myProps.cash) {
-          window.alert(
-            `${railroad.name} costs ${formatMoney(price)}; you have ${formatMoney(myProps.cash)}. Borrow first using Loans.`
-          );
-          break;
-        }
-        if (window.confirm(`Acquire ${railroad.name} for ${formatMoney(price)}?`)) {
-          moves.acquireIndependentRailroad(railroadName);
-        }
-        break;
-      }
       case 'endTurn':
         moves.endTurn();
         break;
@@ -215,10 +167,6 @@ export function WoodAndSteelState({
             gameManager={gameManager ?? {}}
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            showRailroadHint={showRailroadHint}
-            onDismissHint={handleDismissHint}
           />
           <EditPlaytestDialog
             isOpen={isEditPlaytestDialogOpen}
@@ -244,10 +192,6 @@ export function WoodAndSteelState({
             gameManager={gameManager ?? {}}
             onNavigateToLobby={handleNavigateToLobby}
             onOpenEditPlaytest={() => setIsEditPlaytestDialogOpen(true)}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            showRailroadHint={showRailroadHint}
-            onDismissHint={handleDismissHint}
             roundReportAutoOpen={roundReport.autoOpen}
             onRoundReportAutoOpenChange={roundReport.setAutoOpen}
             onFillMarket={currentPhase === 'play' && isMyTurn ? () => moves.fillMarketTableau() : undefined}
@@ -326,10 +270,10 @@ export function WoodAndSteelState({
             <ActionsSheet
               initialView={openSheet === 'buyEngine' ? 'engine' : 'menu'}
               G={G}
+              round={ctx.round}
               playerID={playerID}
               player={myProps}
               moves={moves}
-              onAcquireRailroad={() => handleTabChange('indies')}
               onNewPrivateContract={() => {
                 setReplacePrivateContract(true);
                 setIsPrivateContractModalOpen(true);
@@ -370,24 +314,21 @@ export function WoodAndSteelState({
               onClose={() => setIsLoansOpen(false)}
             />
           )}
-          {activeTab === 'board' && (
-            <PlayerBoard
-              G={G}
-              ctx={ctx}
-              playerID={playerID ?? ''}
-              startingContractExists={startingContractExists}
-              currentPhase={currentPhase}
-              onStartingPairSelect={handleStartingPairSelect}
-              onOpenPrivateContractModal={() =>
-                setIsPrivateContractModalOpen(true)
-              }
-              onToggleFulfilled={handleToggleFulfilled}
-              onClaimContract={handleClaimContract}
-              onSetCargo={moves.setCargo}
-              onOpenBuyEngine={() => setOpenSheet('buyEngine')}
-            />
-          )}
-          {activeTab === 'indies' && <IndependentRailroadsPage />}
+          <PlayerBoard
+            G={G}
+            ctx={ctx}
+            playerID={playerID ?? ''}
+            startingContractExists={startingContractExists}
+            currentPhase={currentPhase}
+            onStartingPairSelect={handleStartingPairSelect}
+            onOpenPrivateContractModal={() =>
+              setIsPrivateContractModalOpen(true)
+            }
+            onToggleFulfilled={handleToggleFulfilled}
+            onClaimContract={handleClaimContract}
+            onSetCargo={moves.setCargo}
+            onOpenBuyEngine={() => setOpenSheet('buyEngine')}
+          />
         </div>
       </form>
     </div>

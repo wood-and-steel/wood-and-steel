@@ -153,7 +153,7 @@ describe('ActionsSheet', () => {
         playerID="0"
         player={player()}
         moves={{ payForTrack } as unknown as Moves}
-        onAcquireRailroad={() => {}}
+        round={1}
         onNewPrivateContract={() => {}}
         onClose={() => {}}
       />
@@ -178,7 +178,7 @@ describe('ActionsSheet', () => {
         playerID="0"
         player={player({ cash })}
         moves={{ payForTrack: () => true } as unknown as Moves}
-        onAcquireRailroad={() => {}}
+        round={1}
         onNewPrivateContract={() => {}}
         onOpenLoans={onOpenLoans}
         onClose={() => {}}
@@ -204,7 +204,7 @@ describe('ActionsSheet', () => {
         player={player({ cash: 0 })}
         moves={{} as Moves}
         initialView="engine"
-        onAcquireRailroad={() => {}}
+        round={1}
         onNewPrivateContract={() => {}}
         onOpenLoans={onOpenLoans}
         onClose={() => {}}
@@ -229,7 +229,7 @@ describe('ActionsSheet', () => {
           playerID="0"
           player={player()}
           moves={{ payForTrack } as unknown as Moves}
-          onAcquireRailroad={() => {}}
+          round={1}
           onNewPrivateContract={() => {}}
           onClose={() => {}}
         />
@@ -251,7 +251,7 @@ describe('ActionsSheet', () => {
         playerID="0"
         player={player()}
         moves={{} as Moves}
-        onAcquireRailroad={() => {}}
+        round={1}
         onNewPrivateContract={() => {}}
         onClose={() => {}}
       />
@@ -276,7 +276,7 @@ describe('ActionsSheet', () => {
         playerID="0"
         player={player()}
         moves={{} as Moves}
-        onAcquireRailroad={() => {}}
+        round={1}
         onNewPrivateContract={() => {}}
         initialView="engine"
         onClose={() => {}}
@@ -477,5 +477,68 @@ describe('EditPlaytestDialog player board', () => {
     expect(screen.queryByLabelText('Cash ($K):')).toBeNull();
     fireEvent.change(screen.getByLabelText('Player board:'), { target: { value: '0' } });
     expect(screen.getByLabelText('Cash ($K):')).toHaveValue('4');
+  });
+});
+
+describe('Acquire a railroad', () => {
+  const G = {
+    contracts: [],
+    players: [['0', player()]],
+    independentRailroads: {
+      Erie: { name: 'Erie', routes: [{ key: 'Albany-Buffalo', addedInRound: 0 }, { key: 'Buffalo-Erie', addedInRound: 2 }] },
+      Reading: {
+        name: 'Reading',
+        routes: ['A-B', 'B-C', 'C-D', 'D-E'].map((key) => ({ key, addedInRound: 0 })),
+      },
+    },
+  } as never;
+
+  test('lists each railroad with its routes and price, acquires one, and offers Loans when short', () => {
+    const acquireIndependentRailroad = vi.fn(() => true);
+    const onClose = vi.fn();
+    const onOpenLoans = vi.fn();
+    render(
+      <ActionsSheet
+        G={G}
+        round={3}
+        playerID="0"
+        player={player({ cash: 10000 })}
+        moves={{ acquireIndependentRailroad } as unknown as Moves}
+        onNewPrivateContract={() => {}}
+        onOpenLoans={onOpenLoans}
+        onClose={onClose}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Acquire a railroad/ }));
+    expect(screen.getByRole('dialog', { name: 'Acquire a railroad' })).toBeInTheDocument();
+    const erieRoutes = screen.getByRole('list', { name: 'Erie routes' });
+    expect(within(erieRoutes).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(erieRoutes).getByRole('img', { name: 'new last round' })).toBeInTheDocument();
+
+    // Reading is 4 routes at $3K: $12K against $10K cash.
+    expect(screen.getByText('$2K short')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Loans' }));
+    expect(onOpenLoans).toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Acquire for $6K' }));
+    expect(acquireIndependentRailroad).toHaveBeenCalledWith('Erie');
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  test('Back returns to the Actions menu', () => {
+    render(
+      <ActionsSheet
+        G={G}
+        round={0}
+        playerID="0"
+        player={player()}
+        moves={{} as Moves}
+        initialView="railroad"
+        onNewPrivateContract={() => {}}
+        onClose={() => {}}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Back/ }));
+    expect(screen.getByRole('dialog', { name: 'Actions' })).toBeInTheDocument();
   });
 });

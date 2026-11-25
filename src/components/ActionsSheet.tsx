@@ -10,8 +10,9 @@ import { cities } from "../data";
 import { formatMoney, formatMoneyChange } from "../utils/money";
 import { EngineSegments, EngineSlotIcon } from "./EngineIcon";
 import { BeforeAfter, Sheet, ShortOfCash } from "./Sheet";
+import { AcquireRailroadSheet } from "./AcquireRailroadSheet";
 
-export type ActionsView = "menu" | "engine" | "upgrade" | "track";
+export type ActionsView = "menu" | "engine" | "upgrade" | "railroad" | "track";
 
 
 const REGION_NAMES: Record<string, string> = {
@@ -38,11 +39,11 @@ const UPGRADE_EFFECTS: Record<UpgradeKey, string> = {
 
 export interface ActionsSheetProps {
   G: GameState;
+  /** The current round, for the railroads' newly added routes. */
+  round: number;
   playerID: string;
   player: PlayerProps;
   moves: Moves;
-  /** Opens the Railroads tab, where each railroad shows its price. */
-  onAcquireRailroad: () => void;
   /** Opens the private contract offers; picking one replaces the player's private contract. */
   onNewPrivateContract: () => void;
   /** The view to open on; the Actions menu by default. */
@@ -59,10 +60,10 @@ function shortfall(cost: number, cash: number): string | null {
 /** The turn actions that involve the app, each with its price, plus this turn's money log. */
 export function ActionsSheet({
   G,
+  round,
   playerID,
   player,
   moves,
-  onAcquireRailroad,
   onNewPrivateContract,
   initialView = "menu",
   onOpenLoans,
@@ -76,6 +77,19 @@ export function ActionsSheet({
   }
   if (view === "upgrade") {
     return <BuyUpgradeView G={G} playerID={playerID} player={player} moves={moves} onBack={back} onOpenLoans={onOpenLoans} onClose={onClose} />;
+  }
+  if (view === "railroad") {
+    return (
+      <AcquireRailroadSheet
+        G={G}
+        round={round}
+        player={player}
+        moves={moves}
+        onBack={back}
+        onOpenLoans={onOpenLoans}
+        onClose={onClose}
+      />
+    );
   }
   if (view === "track") {
     return <PayForTrackView player={player} moves={moves} onBack={back} onOpenLoans={onOpenLoans} onClose={onClose} />;
@@ -108,14 +122,7 @@ export function ActionsSheet({
             {affordableUpgrades === 1 ? "1 you can afford" : `${affordableUpgrades} you can afford`}
           </span>
         </button>
-        <button
-          type="button"
-          className="actions__item"
-          onClick={() => {
-            onAcquireRailroad();
-            onClose();
-          }}
-        >
+        <button type="button" className="actions__item" onClick={() => setView("railroad")}>
           <span>Acquire a railroad</span>
           <span className="sheet__label">{formatMoney(indiePricePerRoute(G.contracts))} per route</span>
         </button>
