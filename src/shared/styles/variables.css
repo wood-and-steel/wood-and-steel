@@ -17,6 +17,8 @@
   --font-size-h4: 0.875rem;
   --font-size-h5: 0.875rem;
   --font-size-h6: 0.875rem;
+  /* Small uppercase labels: Home's section labels, the board's top bar and route popover */
+  --letter-spacing-caps: 0.06em;
 
   /* Spacing */
   --spacing-2xs: 0.125rem;

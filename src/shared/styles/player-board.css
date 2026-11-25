@@ -131,6 +131,8 @@
   padding: var(--spacing-sm);
   border-radius: var(--radius-md);
   background-color: var(--color-bg-light);
+  /* On the card's fill the lighter rule disappears, so its section labels take a darker one */
+  --home-rule-color: var(--color-border-medium);
 }
 
 .home__section {
@@ -142,18 +144,13 @@
 .home__heading {
   margin: 0;
   padding-bottom: var(--spacing-xs);
-  border-bottom: var(--border-width-md) solid var(--color-border-light);
+  border-bottom: var(--border-width-md) solid var(--home-rule-color, var(--color-border-light));
   font-family: var(--font-body);
   font-size: var(--font-size-xs);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
   color: var(--color-text-muted);
-}
-
-/* On the card's fill the lighter rule disappears */
-.home__card .home__heading {
-  border-bottom-color: var(--color-border-medium);
 }
 
 /* "Your railroad" while the player has no upgrades or deliveries */
