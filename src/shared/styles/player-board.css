@@ -66,9 +66,9 @@
 }
 
 .playerAvatar {
-  min-width: var(--avatar-width);
+  box-sizing: border-box;
+  width: var(--avatar-width);
   height: var(--avatar-size);
-  padding: 0 var(--avatar-padding-x);
   border-radius: var(--avatar-radius);
   display: inline-flex;
   align-items: center;

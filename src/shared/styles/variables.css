@@ -59,12 +59,10 @@
   /* Sizes */
   --button-height: 1.75rem;
   --button-height-full: 2.5rem;
-  --avatar-size: 1.6rem; /* height */
-  /* Avatars are wide, generously rounded tiles: not a disc, not quite a full pill. They grow past
-     the minimum width for wide initials (an emoji plus a letter), keeping the side padding. */
-  --avatar-width: 1.25rem; /* content box, inside the side padding */
-  --avatar-padding-x: 0.375rem;
-  --avatar-radius: 0.55rem;
+  /* Avatars are fixed-size rounded tiles, border included */
+  --avatar-size: 1.725rem; /* height */
+  --avatar-width: 2.5rem;
+  --avatar-radius: 0.375rem;
   /* A sheet's Back and Close icons: 90% of the sheet title's size */
   --sheet-icon-size: calc(0.9 * var(--font-size-h3));
 
