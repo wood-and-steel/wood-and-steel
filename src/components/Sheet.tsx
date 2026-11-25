@@ -134,7 +134,7 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
 
   return ReactDOM.createPortal(
     <div
-      className="modal"
+      className="modal modal--sheet"
       ref={dialogRef}
       role="dialog"
       aria-labelledby={titleId}
