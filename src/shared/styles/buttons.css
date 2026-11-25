@@ -15,11 +15,6 @@
   transition: background-color 0.2s ease;
 }
 
-/* The dark theme's --color-border nearly vanishes against the button fill */
-[data-theme="dark"] .button:not(.button--danger):not(:disabled) {
-  border-color: var(--color-border-medium);
-}
-
 .button:hover {
   background-color: var(--color-bg-hover);
 }
