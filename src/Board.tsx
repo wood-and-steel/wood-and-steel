@@ -43,7 +43,7 @@ export function WoodAndSteelState({
   // Opened from Actions' "Discard and draw new contract": picking an offer replaces the private contract.
   const [replacePrivateContract, setReplacePrivateContract] = React.useState(false);
   const [openSheet, setOpenSheet] = React.useState<'actions' | 'buyEngine' | 'discard' | null>(null);
-  // Loans opens over whatever sheet is open (from the money strip or a "borrow first" message),
+  // Loans opens from the money strip over whatever sheet is open,
   // so it has its own state and the sheet underneath keeps its place.
   const [isLoansOpen, setIsLoansOpen] = React.useState(false);
   const openLoans = React.useCallback(() => setIsLoansOpen(true), []);
@@ -278,7 +278,6 @@ export function WoodAndSteelState({
                 setReplacePrivateContract(true);
                 setIsPrivateContractModalOpen(true);
               }}
-              onOpenLoans={openLoans}
               onClose={() => setOpenSheet(null)}
             />
           )}
@@ -302,7 +301,6 @@ export function WoodAndSteelState({
                 return delivered;
               }}
               onClose={() => setReceiptContractId(null)}
-              onOpenLoans={openLoans}
             />
           )}
           {isLoansOpen && myProps && (

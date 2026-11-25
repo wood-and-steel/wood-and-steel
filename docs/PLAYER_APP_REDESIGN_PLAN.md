@@ -165,7 +165,7 @@ The player bar is a money strip and a two-strip toolbar, each one line at phone 
 
 **No tab bar.** Home is the only page. The Railroads tab became the "Acquire a railroad" step of the Actions sheet (`AcquireRailroadSheet`), so the list is reached only on the player's turn, and the setup → play hint that pointed at the tab is gone. Phones and tablets keep only the floating menu button; desktop keeps the nav row for the menu and the money strip.
 
-**Loans opens over any sheet.** Loans has its own open state in `Board`, so opening it from the money strip leaves the sheet underneath where it was; closing Loans returns there with the new cash. Sheets stack (`Sheet.tsx`): Escape closes only the top one, and focus goes back to where it was in the sheet below. The money strip can't be reached by keyboard while a sheet holds focus, so every "short of cash" message (buying an engine or upgrade, paying for track, a blocked delivery) has its own Loans button (`ShortOfCash`).
+**Loans opens over any sheet.** Loans has its own open state in `Board`, so opening it from the money strip leaves the sheet underneath where it was; closing Loans returns there with the new cash. Sheets stack (`Sheet.tsx`): Escape closes only the top one, and focus goes back to where it was in the sheet below. "Short of cash" messages (buying an engine or upgrade, acquiring a railroad, paying for track, a blocked delivery) have no Loans button of their own; the money strip's is the one way in.
 
 ## Decisions made while building Stage 4
 

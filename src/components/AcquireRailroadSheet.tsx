@@ -12,8 +12,6 @@ export interface AcquireRailroadSheetProps {
   player: PlayerProps;
   moves: Moves;
   onBack?: () => void;
-  /** Opens Loans over this sheet, from a "short" message. */
-  onOpenLoans?: () => void;
   onClose: () => void;
 }
 
@@ -27,7 +25,6 @@ export function AcquireRailroadSheet({
   player,
   moves,
   onBack,
-  onOpenLoans,
   onClose,
 }: AcquireRailroadSheetProps): React.ReactElement {
   const railroads = Object.values(G.independentRailroads);
@@ -57,7 +54,7 @@ export function AcquireRailroadSheet({
                   ))}
                 </ul>
                 {price > player.cash ? (
-                  <ShortOfCash onOpenLoans={onOpenLoans}>{formatMoney(price - player.cash)} short</ShortOfCash>
+                  <ShortOfCash>{formatMoney(price - player.cash)} short</ShortOfCash>
                 ) : (
                   <button
                     type="button"

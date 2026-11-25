@@ -19,6 +19,7 @@ import { formatMoney } from '../utils/money';
 import { Sheet } from './Sheet';
 import { EditPlaytestDialog } from './EditPlaytestDialog';
 import { ENGINE_TYPES } from '../rules/playerBoard';
+import { UPGRADE_KEYS, UPGRADE_NAMES, UPGRADE_PRICES } from '../rules/rulesData';
 
 const player = (props: Partial<PlayerProps> = {}): PlayerProps => ({ ...newPlayerProps('Ada'), ...props });
 
@@ -95,8 +96,7 @@ describe('DeliveryReceipt', () => {
     expect(screen.queryByRole('button', { name: /Deliver/ })).toBeNull();
   });
 
-  test('a blocked delivery offers Loans', () => {
-    const onOpenLoans = vi.fn();
+  test('a blocked delivery has no Loans button of its own (Loans is in the money strip)', () => {
     render(
       <DeliveryReceipt playerID="0"
         contract={contract()}
@@ -104,11 +104,9 @@ describe('DeliveryReceipt', () => {
         ties={0}
         onDeliver={() => true}
         onClose={() => {}}
-        onOpenLoans={onOpenLoans}
       />
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Loans' }));
-    expect(onOpenLoans).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
   });
 });
 
@@ -170,8 +168,7 @@ describe('ActionsSheet', () => {
     expect(payForTrack).toHaveBeenCalledWith(7000);
   });
 
-  test('refusing more than the cash offers Loans, and the refusal goes once Loans has added enough', () => {
-    const onOpenLoans = vi.fn();
+  test('refusing more than the cash, and the refusal goes once Loans has added enough', () => {
     const sheet = (cash: number) => (
       <ActionsSheet
         G={G}
@@ -180,7 +177,6 @@ describe('ActionsSheet', () => {
         moves={{ payForTrack: () => true } as unknown as Moves}
         round={1}
         onNewPrivateContract={() => {}}
-        onOpenLoans={onOpenLoans}
         onClose={() => {}}
       />
     );
@@ -188,15 +184,13 @@ describe('ActionsSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: /Pay for track/ }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Track cost in thousands of dollars' }), { target: { value: '18' } });
     fireEvent.click(screen.getByRole('button', { name: 'Pay $18K' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Loans' }));
-    expect(onOpenLoans).toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
     rerender(sheet(20000));
     expect(screen.queryByRole('alert')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
   });
 
-  test('an engine the player is short for offers Loans in place of Buy', () => {
-    const onOpenLoans = vi.fn();
+  test('an engine the player is short for shows the shortfall in place of Buy', () => {
     render(
       <ActionsSheet
         G={G}
@@ -206,14 +200,12 @@ describe('ActionsSheet', () => {
         initialView="engine"
         round={1}
         onNewPrivateContract={() => {}}
-        onOpenLoans={onOpenLoans}
         onClose={() => {}}
       />
     );
     expect(screen.queryByRole('button', { name: /^Buy for/ })).toBeNull();
     expect(screen.getAllByText(/short$/).length).toBeGreaterThan(0);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Loans' })[0]);
-    expect(onOpenLoans).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
   });
 
   test("Enter in the track field pays, and doesn't submit the game page's form (+M or End Turn)", () => {
@@ -287,6 +279,29 @@ describe('ActionsSheet', () => {
     expect(screen.getByRole('button', { name: /Discard and draw new contract/ })).toHaveTextContent(
       'Replace your private contract'
     );
+  });
+
+  test('Upgrades lists the cheapest first and has no Back button', () => {
+    render(
+      <ActionsSheet
+        G={G}
+        playerID="0"
+        player={player()}
+        moves={{} as Moves}
+        round={1}
+        onNewPrivateContract={() => {}}
+        initialView="upgrade"
+        onClose={() => {}}
+      />
+    );
+    const sheet = screen.getByRole('dialog', { name: 'Upgrades' });
+    expect(within(sheet).queryByRole('button', { name: /Back/ })).toBeNull();
+    const names = Array.from(sheet.querySelectorAll('.upgrades__item .sheet__row > span:first-child')).map(
+      (el) => el.textContent
+    );
+    const prices = names.map((name) => UPGRADE_PRICES[UPGRADE_KEYS.find((key) => UPGRADE_NAMES[key] === name)!]);
+    expect(prices).toHaveLength(UPGRADE_KEYS.length);
+    expect(prices).toEqual([...prices].sort((a, b) => a - b));
   });
 });
 
@@ -493,10 +508,9 @@ describe('Acquire a railroad', () => {
     },
   } as never;
 
-  test('lists each railroad with its routes and price, acquires one, and offers Loans when short', () => {
+  test('lists each railroad with its routes and price, acquires one, and shows the shortfall when short', () => {
     const acquireIndependentRailroad = vi.fn(() => true);
     const onClose = vi.fn();
-    const onOpenLoans = vi.fn();
     render(
       <ActionsSheet
         G={G}
@@ -505,7 +519,6 @@ describe('Acquire a railroad', () => {
         player={player({ cash: 10000 })}
         moves={{ acquireIndependentRailroad } as unknown as Moves}
         onNewPrivateContract={() => {}}
-        onOpenLoans={onOpenLoans}
         onClose={onClose}
       />
     );
@@ -517,8 +530,7 @@ describe('Acquire a railroad', () => {
 
     // Reading is 4 routes at $3K: $12K against $10K cash.
     expect(screen.getByText('$2K short')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Loans' }));
-    expect(onOpenLoans).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Acquire for $6K' }));
     expect(acquireIndependentRailroad).toHaveBeenCalledWith('Erie');

@@ -35,9 +35,8 @@ let opener: HTMLElement | null = null;
  * focus returns to whatever opened it when it closes, so the game behind can't be changed
  * from the keyboard while it's open.
  *
- * Sheets stack: one opened over another (Loans, from the money strip or a "borrow first"
- * message) covers it, Escape closes only the top one, and closing it puts focus back where it
- * was in the sheet underneath.
+ * Sheets stack: one opened over another (Loans, from the money strip) covers it, Escape closes
+ * only the top one, and closing it puts focus back where it was in the sheet underneath.
  */
 export function Sheet({ title, onClose, onBack, children }: SheetProps): React.ReactElement {
   const titleId = React.useId();
@@ -184,28 +183,15 @@ export function BeforeAfter({ label, before, after }: { label: string; before: s
 export interface ShortOfCashProps {
   /** What's short, e.g. "$4K short". */
   children: React.ReactNode;
-  /** Opens Loans over this sheet; the button is left out without it. */
-  onOpenLoans?: () => void;
   /** Announce the message when it appears (a refused action), rather than as part of a list. */
   alert?: boolean;
 }
 
-/**
- * A "not enough cash" message with a Loans button beside it. Loans opens over this sheet, and
- * closing it comes back here with the new cash. The money strip has a Loans button too, but
- * keyboard and screen reader users can't reach it while a sheet is open.
- */
-export function ShortOfCash({ children, onOpenLoans, alert }: ShortOfCashProps): React.ReactElement {
+/** A "not enough cash" message. Loans is in the money strip, which stays in view above sheets. */
+export function ShortOfCash({ children, alert }: ShortOfCashProps): React.ReactElement {
   return (
-    <span className="sheet__shortOfCash">
-      <span className="sheet__warning" role={alert ? "alert" : undefined}>
-        {children}
-      </span>
-      {onOpenLoans && (
-        <button type="button" className="button" onClick={onOpenLoans}>
-          Loans
-        </button>
-      )}
+    <span className="sheet__warning" role={alert ? "alert" : undefined}>
+      {children}
     </span>
   );
 }
