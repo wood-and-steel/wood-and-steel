@@ -44,6 +44,22 @@
   transition: background-color 0.2s ease;
 }
 
+/* A small icon after the label, e.g. the "opens in a new tab" mark */
+.popupMenu__itemIcon {
+  display: inline-block;
+  width: 0.875em;
+  height: 0.875em;
+  margin-left: var(--spacing-xs);
+  vertical-align: -0.0625em;
+  color: var(--color-text-muted);
+}
+
+.popupMenu__separator {
+  height: var(--border-width-md);
+  margin: var(--spacing-xs) 0;
+  background-color: var(--color-border-light);
+}
+
 .popupMenu__item:hover {
   background-color: var(--color-bg-hover);
 }

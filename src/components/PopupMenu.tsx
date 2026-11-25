@@ -227,3 +227,8 @@ export function PopupMenuItem({ onClick, disabled, children, ...rest }: PopupMen
     </button>
   );
 }
+
+/** A divider line between groups of items in a PopupMenu. */
+export function PopupMenuSeparator(): React.ReactElement {
+  return <div className="popupMenu__separator" role="separator" />;
+}

@@ -1,6 +1,6 @@
 import React from "react";
 import hamburgerIcon from "../shared/assets/images/hamburger-icon.svg";
-import { PopupMenu, PopupMenuItem } from "./PopupMenu";
+import { PopupMenu, PopupMenuItem, PopupMenuSeparator } from "./PopupMenu";
 
 function useIsDesktop(): boolean {
   const [isDesktop, setIsDesktop] = React.useState(
@@ -75,6 +75,15 @@ export function NavBar({
     }
   }, [gameManager]);
 
+  const handleOpenBoard = React.useCallback(() => {
+    const code = gameManager?.currentGameCode;
+    if (!code) return;
+    const url = new URL("/board", window.location.origin);
+    url.searchParams.set("game", code);
+    window.open(url.toString(), "_blank", "noopener");
+    setIsMenuOpen(false);
+  }, [gameManager]);
+
   const handleMenuClick = React.useCallback(
     (action: "lobby" | "edit") => {
       if (action === "lobby") onNavigateToLobby();
@@ -105,10 +114,32 @@ export function NavBar({
         placement={placement}
       >
         <PopupMenuItem onClick={() => handleMenuClick("lobby")}>Go to Lobby</PopupMenuItem>
-        {gameManager?.currentGameCode && (
-          <PopupMenuItem onClick={handleCopyGameCode}>
-            Copy Game Code ({gameManager.currentGameCode})
+        {__INCLUDE_BOARD__ && gameManager?.currentGameCode && (
+          <PopupMenuItem onClick={handleOpenBoard} aria-label="Open Board (opens in a new tab)">
+            Open Board
+            <svg
+              className="popupMenu__itemIcon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
           </PopupMenuItem>
+        )}
+        {gameManager?.currentGameCode && (
+          <>
+            <PopupMenuItem onClick={handleCopyGameCode}>
+              Copy Game Code ({gameManager.currentGameCode})
+            </PopupMenuItem>
+            <PopupMenuSeparator />
+          </>
         )}
         <PopupMenuItem onClick={() => handleMenuClick("edit")}>Add Contract or City...</PopupMenuItem>
         {onDiscardContract && (
@@ -140,9 +171,10 @@ export function NavBar({
               setIsMenuOpen(false);
             }}
           >
-            Fill Market Contracts
+            Fill Market Tableau
           </PopupMenuItem>
         )}
+        {onFillMarket && onShowRoundReport && <PopupMenuSeparator />}
         {onShowRoundReport && (
           <PopupMenuItem
             disabled={!hasRoundReport}

@@ -183,7 +183,7 @@ The player bar is a money strip and a two-strip toolbar, each one line at phone 
 
 - **The toolbar lists each other player's railroad ties, not their money.** Money, engines and the rest are on the player's card, opened by pressing them.
 - **Undo, Actions and End Turn stay in the sticky toolbar** rather than a bar at the foot of Home: on phones the tab bar is at the bottom, and the toolbar is reachable from every tab.
-- **+M moved to the menu** as "Fill Market Contracts", shown on the player's turn.
+- **+M moved to the menu** as "Fill Market Tableau", shown on the player's turn.
 - **Contract rows replace the contract cards on Home.** The cards remain for the private contract offers.
 
 ## Decisions made while building Stage 2
