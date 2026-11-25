@@ -86,8 +86,7 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
 
   React.useEffect(() => {
     // On the document, so Tab works from the money strip's Loans button too. Capture phase, and
-    // stop there: a dialog under the top sheet (the private contract offers) listens for Escape
-    // too, and must not close with it.
+    // stop there, so Escape closes only the top sheet and not a dialog underneath.
     const onKeyDown = (event: KeyboardEvent) => {
       if (openSheets[openSheets.length - 1] !== self.current) return;
       if (event.key === "Escape") {
@@ -113,7 +112,8 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
     }
     openSheets.push(sheet);
     updateBackground();
-    contentRef.current?.focus();
+    // A field the sheet is for (Pay for track's amount) takes focus; otherwise the sheet itself.
+    (contentRef.current?.querySelector<HTMLElement>("[data-autofocus]") ?? contentRef.current)?.focus();
     return () => {
       openSheets.splice(openSheets.indexOf(sheet), 1);
       updateBackground();
@@ -152,15 +152,19 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
       >
         <div className="sheet__header">
           {onBack && (
-            <button type="button" className="sheet__back" onClick={onBack}>
-              Back
+            <button type="button" className="sheet__iconButton" aria-label="Back" onClick={onBack}>
+              <svg className="sheet__icon" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M10.5 2.5 5 8l5.5 5.5" />
+              </svg>
             </button>
           )}
           <h2 className="sheet__title" id={titleId}>
             {title}
           </h2>
-          <button type="button" className="sheet__close" aria-label="Close" onClick={onClose}>
-            ×
+          <button type="button" className="sheet__iconButton" aria-label="Close" onClick={onClose}>
+            <svg className="sheet__icon" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3 3l10 10M13 3 3 13" />
+            </svg>
           </button>
         </div>
         {children}
@@ -180,7 +184,9 @@ function cycleFocus(event: KeyboardEvent, content: HTMLDivElement | null): void 
   if (!content) return;
   event.preventDefault();
   const reachable = Array.from(document.querySelectorAll(SHEET_REACHABLE)).filter((el) => !el.closest(".modal"));
-  const candidates = [content, ...reachable].flatMap((root) => Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)));
+  const candidates = [content, ...reachable]
+    .flatMap((root) => Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)))
+    .filter((el) => !el.closest("[inert]"));
   const stops = candidates.filter((el) => {
     if (!(el instanceof HTMLInputElement) || el.type !== "radio" || !el.name) return true;
     const group = candidates.filter(
@@ -219,11 +225,19 @@ export function RadioOption({ name, checked, onSelect, children }: RadioOptionPr
   );
 }
 
+export interface BeforeAfterProps {
+  label: string;
+  before: string;
+  after: string;
+  /** Show the label as a warning, e.g. "Not enough cash". */
+  warning?: boolean;
+}
+
 /** "Cash $14K → $4K": a value before and after the sheet's action. */
-export function BeforeAfter({ label, before, after }: { label: string; before: string; after: string }): React.ReactElement {
+export function BeforeAfter({ label, before, after, warning }: BeforeAfterProps): React.ReactElement {
   return (
     <div className="sheet__row">
-      <span className="sheet__label">{label}</span>
+      <span className={warning ? "sheet__warning" : "sheet__label"}>{label}</span>
       <span>
         {before === after ? (
           before

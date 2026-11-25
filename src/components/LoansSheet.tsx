@@ -44,9 +44,19 @@ function DebtServiceProgress({ player }: { player: PlayerProps }): React.ReactEl
 /** Borrow in $5,000 steps, or repay what the rules allow. Reached from the Loans button on every screen. */
 export function LoansSheet({ player, isMyTurn, onBorrow, onRepay, onClose }: LoansSheetProps): React.ReactElement {
   const [tab, setTab] = React.useState<Tab>("borrow");
+  const panelId = React.useId();
   const [amount, setAmount] = React.useState(BORROW_STEP);
   const repays = repayOptions(player);
   const [repayAmount, setRepayAmount] = React.useState<number | null>(repays[0] ?? null);
+
+  /** A tab's panel. The hidden one keeps its space but can't be reached (inert: React 18 has no prop for it). */
+  const panelProps = (t: Tab) => ({
+    className: `loans__panel${tab === t ? "" : " loans__panel--hidden"}`,
+    role: "tabpanel",
+    id: `${panelId}-${t}`,
+    "aria-labelledby": `${panelId}-${t}-tab`,
+    ...(tab === t ? {} : { "aria-hidden": true, inert: "" }),
+  });
 
   const act = (done: boolean) => {
     if (done) onClose();
@@ -60,6 +70,8 @@ export function LoansSheet({ player, isMyTurn, onBorrow, onRepay, onClose }: Loa
             key={t}
             type="button"
             role="tab"
+            id={`${panelId}-${t}-tab`}
+            aria-controls={`${panelId}-${t}`}
             aria-selected={tab === t}
             className={`sheet__tab${tab === t ? " sheet__tab--active" : ""}`}
             onClick={() => setTab(t)}
@@ -69,8 +81,9 @@ export function LoansSheet({ player, isMyTurn, onBorrow, onRepay, onClose }: Loa
         ))}
       </div>
 
-      {tab === "borrow" ? (
-        <>
+      {/* Both panels share one grid cell, so the sheet keeps the taller one's height and the tabs stay put. */}
+      <div className="loans__panels">
+        <div {...panelProps("borrow")}>
           <div className="loans__stepper">
             <button
               type="button"
@@ -108,45 +121,48 @@ export function LoansSheet({ player, isMyTurn, onBorrow, onRepay, onClose }: Loa
           ) : (
             <p className="sheet__note">You can borrow on your turn.</p>
           )}
-        </>
-      ) : repays.length === 0 ? (
-        <p className="sheet__note">
-          {player.debt < DEBT_FLOOR + BORROW_STEP
-            ? `Repaying opens once your debt reaches ${formatMoney(DEBT_FLOOR + BORROW_STEP)}.`
-            : `You need at least ${formatMoney(BORROW_STEP)} in cash to repay.`}
-        </p>
-      ) : (
-        <>
-          <div className="sheet__options" role="radiogroup" aria-label="Amount to repay">
-            {repays.map((r) => (
-              <RadioOption key={r} name="repayAmount" checked={repayAmount === r} onSelect={() => setRepayAmount(r)}>
-                <strong>Repay {formatMoney(r)}</strong>
-                <span className="sheet__label">
-                  Debt to {formatMoney(player.debt - r)}, service {formatMoney(serviceOn(player.debt - r))}
-                </span>
-              </RadioOption>
-            ))}
-          </div>
-          <p className="sheet__note">
-            You can repay while your debt is {formatMoney(DEBT_FLOOR + BORROW_STEP)} or more, but not below{" "}
-            {formatMoney(DEBT_FLOOR)}.
-          </p>
-          {repayAmount !== null && (
-            <div className="sheet__box">
-              <BeforeAfter label="Cash" before={formatMoney(player.cash)} after={formatMoney(player.cash - repayAmount)} />
-            </div>
-          )}
-          {isMyTurn ? (
-            repayAmount !== null && (
-              <button type="button" className="button sheet__primary" onClick={() => act(onRepay(repayAmount))}>
-                Repay {formatMoney(repayAmount)}
-              </button>
-            )
+        </div>
+        <div {...panelProps("repay")}>
+          {repays.length === 0 ? (
+            <p className="sheet__note">
+              {player.debt < DEBT_FLOOR + BORROW_STEP
+                ? `Repaying opens once your debt reaches ${formatMoney(DEBT_FLOOR + BORROW_STEP)}.`
+                : `You need at least ${formatMoney(BORROW_STEP)} in cash to repay.`}
+            </p>
           ) : (
-            <p className="sheet__note">You can repay on your turn.</p>
+            <>
+              <div className="sheet__options" role="radiogroup" aria-label="Amount to repay">
+                {repays.map((r) => (
+                  <RadioOption key={r} name="repayAmount" checked={repayAmount === r} onSelect={() => setRepayAmount(r)}>
+                    <strong>Repay {formatMoney(r)}</strong>
+                    <span className="sheet__label">
+                      Debt to {formatMoney(player.debt - r)}, service {formatMoney(serviceOn(player.debt - r))}
+                    </span>
+                  </RadioOption>
+                ))}
+              </div>
+              <p className="sheet__note">
+                You can repay while your debt is {formatMoney(DEBT_FLOOR + BORROW_STEP)} or more, but not below{" "}
+                {formatMoney(DEBT_FLOOR)}.
+              </p>
+              {repayAmount !== null && (
+                <div className="sheet__box">
+                  <BeforeAfter label="Cash" before={formatMoney(player.cash)} after={formatMoney(player.cash - repayAmount)} />
+                </div>
+              )}
+              {isMyTurn ? (
+                repayAmount !== null && (
+                  <button type="button" className="button sheet__primary" onClick={() => act(onRepay(repayAmount))}>
+                    Repay {formatMoney(repayAmount)}
+                  </button>
+                )
+              ) : (
+                <p className="sheet__note">You can repay on your turn.</p>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
     </Sheet>
   );
 }

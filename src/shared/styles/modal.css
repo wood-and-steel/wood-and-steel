@@ -5,6 +5,8 @@
   right: 0;
   bottom: 0;
   background-color: var(--color-bg-overlay);
+  -webkit-backdrop-filter: blur(var(--blur-overlay));
+  backdrop-filter: blur(var(--blur-overlay));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,45 +17,62 @@
 }
 
 .modal__content {
+  /* Fit below the money strip with a little room, padding included (the box is content-box) */
+  --modal-max-height: min(80vh, calc(100vh - var(--money-strip-height) - 2 * var(--spacing-xl) - var(--spacing-md)));
   background-color: var(--color-bg-primary);
   padding: var(--spacing-xl);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--shadow-modal);
   max-width: 31rem;
   width: 90%;
-  /* Fit below the money strip with a little room, padding included (the box is content-box) */
-  max-height: min(80vh, calc(100vh - var(--money-strip-height) - 2 * var(--spacing-xl) - var(--spacing-md)));
+  max-height: var(--modal-max-height);
   overflow: auto;
 }
 
 /* Mobile browsers count the space under their toolbars in vh; dvh is what's actually visible */
 @supports (height: 100dvh) {
   .modal__content {
-    max-height: min(80dvh, calc(100dvh - var(--money-strip-height) - 2 * var(--spacing-xl) - var(--spacing-md)));
+    --modal-max-height: min(80dvh, calc(100dvh - var(--money-strip-height) - 2 * var(--spacing-xl) - var(--spacing-md)));
   }
 }
 
-/* Phones: a sheet slides up from the bottom edge instead of floating in the middle. Short
+/* Sheets on phones (mobile, < 768px): slide up from the bottom edge, square-cornered. Short
    sheets dock to the bottom; tall ones reach up to the money strip and scroll. */
-@media (max-width: 767px) {
-  .modal--sheet {
-    align-items: flex-end;
-  }
+.modal--sheet {
+  align-items: flex-end;
+}
 
+.modal--sheet > .modal__content {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  max-height: calc(100vh - var(--money-strip-height));
+  max-height: calc(100dvh - var(--money-strip-height));
+  padding: var(--spacing-lg) var(--spacing-lg) calc(var(--spacing-2xl) + var(--safe-area-inset-bottom));
+  border-radius: 0;
+  overscroll-behavior: contain;
+  animation: modal-slide-up 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
   .modal--sheet > .modal__content {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: none;
-    max-height: calc(100vh - var(--money-strip-height));
-    max-height: calc(100dvh - var(--money-strip-height));
-    padding: var(--spacing-lg) var(--spacing-lg) calc(var(--spacing-2xl) + var(--safe-area-inset-bottom));
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
-    overscroll-behavior: contain;
-    animation: modal-slide-up 0.2s ease-out;
+    animation: none;
   }
 }
 
-@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+/* Tablet and desktop (>= 768px): a sheet floats in the middle, like any dialog */
+@media (min-width: 768px) {
+  .modal--sheet {
+    align-items: center;
+  }
+
   .modal--sheet > .modal__content {
+    box-sizing: content-box;
+    width: 90%;
+    max-width: 26rem;
+    max-height: var(--modal-max-height);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xs);
     animation: none;
   }
 }
@@ -115,49 +134,6 @@
 .editPlaytestDialog__actions {
   grid-column: 1 / -1;
   margin-top: var(--spacing-sm);
-}
-
-/* ========================================
-   PRIVATE CONTRACT OFFER MODAL
-   ======================================== */
-.privateContractOfferModal__content {
-  max-width: 48rem;
-}
-
-.privateContractOfferModal__instruction {
-  margin: 0 0 var(--spacing-md);
-  color: var(--color-text-secondary, inherit);
-}
-
-.privateContractOfferModal__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-md);
-}
-
-@media (max-width: 767px) {
-  .privateContractOfferModal__content {
-    text-align: center;
-  }
-
-  .privateContractOfferModal__instruction {
-    text-align: center;
-  }
-
-  .privateContractOfferModal__grid {
-    justify-items: center;
-  }
-
-  .privateContractOfferModal__card {
-    text-align: center;
-  }
-}
-
-.privateContractOfferModal__card {
-  text-align: left;
-  font-family: inherit;
-  font-size: inherit;
 }
 
 .editPlaytestDialog__checks {

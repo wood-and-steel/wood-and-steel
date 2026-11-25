@@ -39,8 +39,6 @@ const UPGRADE_EFFECTS: Record<UpgradeKey, string> = {
 
 export interface ActionsSheetProps {
   G: GameState;
-  /** The current round, for the railroads' newly added routes. */
-  round: number;
   playerID: string;
   player: PlayerProps;
   moves: Moves;
@@ -58,7 +56,6 @@ function shortfall(cost: number, cash: number): string | null {
 /** The turn actions that involve the app, each with its price, plus this turn's money log. */
 export function ActionsSheet({
   G,
-  round,
   playerID,
   player,
   moves,
@@ -77,14 +74,7 @@ export function ActionsSheet({
   }
   if (view === "railroad") {
     return (
-      <AcquireRailroadSheet
-        G={G}
-        round={round}
-        player={player}
-        moves={moves}
-        onBack={back}
-        onClose={onClose}
-      />
+      <AcquireRailroadSheet G={G} player={player} moves={moves} onBack={back} onClose={onClose} />
     );
   }
   if (view === "track") {
@@ -180,16 +170,13 @@ function BuyEngineView({ playerID, player, moves, onBack, onClose }: ViewProps &
       {options.length === 0 ? (
         <p className="sheet__note">You already have the best engine.</p>
       ) : (
-        <div className="sheet__options">
+        <div className="sheet__list">
           {options.map((o) => {
             const short = shortfall(o.cost, player.cash);
             const name = getEngineType(o.engine).name;
             return (
-              <div key={`${o.engine}-${o.slot}`} className="sheet__option">
-                <div className="sheet__row">
-                  <strong>{name}</strong>
-                  <span>{formatMoney(o.cost)}</span>
-                </div>
+              <div key={`${o.engine}-${o.slot}`} className="sheet__listItem">
+                <strong>{name}</strong>
                 <span className="sheet__label engineLabel">
                   <EngineSegments count={getEngineType(o.engine).distance} /> ·{" "}
                   {o.tradeIn ? "trades in your" : "on your empty"}
@@ -392,29 +379,26 @@ function choiceOptions(G: GameState, playerID: string, player: PlayerProps, upgr
 
 function PayForTrackView({ player, moves, onBack, onClose }: ViewProps): React.ReactElement {
   const [thousands, setThousands] = React.useState("");
-  // Which refusal to show; the over-cash one reads the live cash, which Loans can change.
-  const [error, setError] = React.useState<"amount" | "cash" | null>(null);
+  const [amountError, setAmountError] = React.useState(false);
   const amount = Number(thousands) * 1000;
+  // Reads the live cash, which Loans can change while the sheet is open.
+  const overCash = amount > player.cash;
 
   const pay = () => {
+    if (overCash) return;
     if (!/^[0-9]+$/.test(thousands) || amount <= 0) {
-      setError("amount");
-      return;
-    }
-    if (amount > player.cash) {
-      setError("cash");
+      setAmountError(true);
       return;
     }
     if (moves.payForTrack(amount)) onClose();
   };
-  const shownError = error === "cash" && amount <= player.cash ? null : error;
 
   return (
     <Sheet title="Pay for track" onClose={onClose} onBack={onBack}>
       <label className="sheet__field">
         <span className="sheet__label">What did this turn's track cost?</span>
-        <span className={`track__field${shownError ? " track__field--error" : ""}`}>
-          <span>$</span>
+        <span className={`track__field${amountError || overCash ? " track__field--error" : ""}`}>
+          <span className="track__affix">$</span>
           <input
             className="track__input"
             type="text"
@@ -422,10 +406,11 @@ function PayForTrackView({ player, moves, onBack, onClose }: ViewProps): React.R
             pattern="[0-9]*"
             autoComplete="off"
             aria-label="Track cost in thousands of dollars"
+            data-autofocus
             value={thousands}
             onChange={(e) => {
               setThousands(e.target.value.replace(/[^0-9]/g, ""));
-              setError(null);
+              setAmountError(false);
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -434,27 +419,23 @@ function PayForTrackView({ player, moves, onBack, onClose }: ViewProps): React.R
               }
             }}
           />
-          <span className="sheet__label">,000</span>
+          <span className="track__affix track__affix--thousands">,000</span>
         </span>
       </label>
-      {shownError === "amount" && (
+      {amountError && (
         <p className="sheet__warning" role="alert">
           Enter what the track cost, in thousands.
         </p>
       )}
-      {shownError === "cash" && (
-        <ShortOfCash alert>
-          That's more than your {formatMoney(player.cash)} cash. To spend more, borrow first using Loans.
-        </ShortOfCash>
-      )}
       <div className="sheet__box">
         <BeforeAfter
-          label="Cash"
+          label={overCash ? "Not enough cash" : "Cash"}
+          warning={overCash}
           before={formatMoney(player.cash)}
-          after={formatMoney(amount > 0 && amount <= player.cash ? player.cash - amount : player.cash)}
+          after={formatMoney(amount > 0 && !overCash ? player.cash - amount : player.cash)}
         />
       </div>
-      <button type="button" className="button sheet__primary" onClick={pay}>
+      <button type="button" className="button sheet__primary" disabled={overCash} onClick={pay}>
         Pay {thousands ? formatMoney(amount) : ""}
       </button>
     </Sheet>
