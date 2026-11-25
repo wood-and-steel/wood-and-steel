@@ -5,15 +5,71 @@
   margin-right: calc(-1 * var(--spacing-xs));
   width: calc(100% + 2 * var(--spacing-xs));
   position: sticky;
-  top: 0;
+  top: var(--money-strip-height);
   z-index: 10;
   background-color: var(--color-bg-light);
 }
 
-/* Desktop: nav is fixed at top; stick toolbar just below it so it doesn't sit behind the nav */
+/* Desktop: the money strip is in the nav row; stick the toolbar just below the nav */
 @media (min-width: 1024px) {
   .playerToolbar {
     top: var(--nav-height-desktop);
+  }
+}
+
+/* Money strip: the player's cash, debt and Loans, always in view and above sheet scrims (see
+   --money-strip-height in variables.css). Fixed to the top on phones and tablets. */
+.moneyStrip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-money-strip);
+  box-sizing: border-box;
+  height: var(--money-strip-height);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--safe-area-inset-top) var(--spacing-sm) 0;
+  background-color: var(--color-bg-active);
+  border-bottom: var(--border-width-md) solid var(--color-border-subtle);
+}
+
+.moneyStrip__cash {
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+}
+
+.moneyStrip__debt {
+  color: var(--color-danger);
+}
+
+.moneyStrip__debt--none {
+  color: var(--color-text-subtle);
+}
+
+.moneyStrip__loans {
+  margin-left: auto;
+}
+
+.moneyStrip__name {
+  font-weight: bold;
+}
+
+/* Until sheets can stack, Loans waits for the open sheet or dialog to close. */
+:root:has(.modal) .moneyStrip__loans {
+  pointer-events: none;
+  color: var(--color-text-muted);
+  border-color: var(--color-border-light);
+}
+
+/* Desktop: the right end of the fixed nav row */
+@media (min-width: 1024px) {
+  .moneyStrip {
+    left: auto;
+    padding: var(--spacing-sm) var(--spacing-sm) 0 var(--spacing-md);
+    background-color: var(--color-bg-light);
+    border-bottom: none;
   }
 }
 
@@ -241,7 +297,7 @@
   font-size: var(--font-size-sm);
 }
 
-/* Toolbar strips: money, table (players and round), turn. Each keeps one line at phone width. */
+/* Toolbar strips: table (players and round), turn. Each keeps one line at phone width. */
 .playerToolbar__strip {
   display: flex;
   align-items: center;
@@ -254,34 +310,9 @@
   border-top: var(--border-width-md) solid var(--color-border-subtle);
 }
 
-.playerToolbar__strip--money {
-  background-color: var(--color-bg-active);
-}
-
 .playerToolbar__strip--table,
 .playerToolbar__strip--turn {
   justify-content: space-between;
-}
-
-.playerToolbar__cash {
-  font-size: var(--font-size-h2);
-  font-weight: 600;
-}
-
-.playerToolbar__debt {
-  color: var(--color-danger);
-}
-
-.playerToolbar__debt--none {
-  color: var(--color-text-subtle);
-}
-
-.playerToolbar__loans {
-  margin-left: auto;
-}
-
-.playerToolbar__name {
-  font-weight: bold;
 }
 
 .playerToolbar__players {
