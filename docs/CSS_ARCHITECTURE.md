@@ -15,6 +15,7 @@ The player app's CSS is all imported, in order, through `src/shared/styles/index
 | `player-board.css` | Toolbar, money strip, avatars, the home screen's engines and contract rows |
 | `modal.css` | `.modal` scrim and dialog, the sheet layout on phones, the playtest dialog |
 | `sheets.css` | Sheet contents: Loans, Actions, upgrades, track, receipts, round report, cargo |
+| `map.css` | Map drawing shared with the board app (`src/map/`): indie route strokes and the round report's mini maps. Colors are `--map-*` tokens, which the dark theme leaves alone because the map art is always light |
 | `tables.css` | `.table` (the lobby's game list) |
 | `popup-menu.css` | `.popupMenu` |
 | `nav-bar.css` | Floating menu button (phones, tablets) and the desktop nav row |

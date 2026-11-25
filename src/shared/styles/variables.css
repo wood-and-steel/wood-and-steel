@@ -106,6 +106,14 @@
   --color-contract-private: #101020;
   /* Something new to notice: the round report's new routes, a switch that's on */
   --color-highlight: #4510d4;
+
+  /* Map art (src/map/) is always light, so the dark theme leaves these alone */
+  --map-paper: #efe9da;
+  --map-route-indie: #222222;
+  --map-route-new: #4510d4;
+  --map-route-casing: rgba(255, 255, 255, 0.9);
+  --map-label: #2d3436;
+  --map-label-halo: rgba(255, 255, 255, 0.85);
 }
 
 /* Colors - Dark Mode: follows the system setting. Only the player app (.playerApp in App.tsx) has a

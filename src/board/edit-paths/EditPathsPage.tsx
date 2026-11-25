@@ -3,14 +3,14 @@
  *
  * Visit /board/edit-paths. Overlays every route path from routePaths.ts on the board art,
  * highlights flagged routes, lets you drag anchors and control points, and saves back to
- * src/board/geometry/routePaths.ts via the File System Access API (Chrome/Edge).
+ * src/map/routePaths.ts via the File System Access API (Chrome/Edge).
  */
 import React from 'react';
 import boardImageUrl from '../../../docs/map-board-full.jpg';
 import { routes } from '../../data/routes';
 import { BOARD_HEIGHT, BOARD_WIDTH, CITY_POINTS, REGIONAL_OFFICE_POINTS } from '../../data/cityPoints';
-import { EDITED_ROUTES, FLAGGED_ROUTES, ROUTE_PATHS } from '../geometry/routePaths';
-import { formatPathD, parsePathD, type BezierPath, type Point } from '../geometry/pathData';
+import { EDITED_ROUTES, FLAGGED_ROUTES, ROUTE_PATHS } from '../../map/routePaths';
+import { formatPathD, parsePathD, type BezierPath, type Point } from '../../map/pathData';
 import {
   getHandlePoint,
   joinSegments,
@@ -230,7 +230,7 @@ export function EditPathsPage(): React.ReactElement {
         types: [{ description: 'TypeScript', accept: { 'text/typescript': ['.ts'] } }],
       });
       if (handle.name !== 'routePaths.ts') {
-        setError(`Pick src/board/geometry/routePaths.ts (got ${handle.name}).`);
+        setError(`Pick src/map/routePaths.ts (got ${handle.name}).`);
         return;
       }
       const ds = Object.fromEntries((Object.entries(paths) as [string, BezierPath][]).map(([key, p]) => [key, formatPathD(p)]));

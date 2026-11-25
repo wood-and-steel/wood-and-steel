@@ -1,5 +1,5 @@
-import { routes } from '../../data/routes';
-import { CITY_POINTS } from '../../data/cityPoints';
+import { routes } from '../data/routes';
+import { CITY_POINTS } from '../data/cityPoints';
 import { offsetPolyline, ownerSlots, samplePath, trackPathD, trimToCities, TRACK_SPACING } from './trackPaths';
 
 const NUM = /-?\d+(?:\.\d+)?/g;

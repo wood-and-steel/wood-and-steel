@@ -10,6 +10,7 @@ import type { Contract } from '../Contract';
 import { newPlayerProps } from '../stores/playerDefaults';
 import type { GameContext, GameState, RoundReport } from '../stores/gameStore';
 import { useRoundReport } from '../hooks/useRoundReport';
+import { NavBar } from './NavBar';
 import { PlayerToolbar } from './PlayerToolbar';
 import { RoundReportSheet } from './RoundReportSheet';
 
@@ -195,5 +196,36 @@ describe('round label', () => {
   test('is disabled before the first report', () => {
     render(<PlayerToolbar G={G} ctx={ctx} playerID="0" startingContractExists currentPhase="play" />);
     expect(screen.getByRole('button', { name: 'Round 4' })).toBeDisabled();
+  });
+});
+
+describe('Show Round Report in the menu', () => {
+  const openMenu = (props: Partial<React.ComponentProps<typeof NavBar>>) => {
+    render(<NavBar gameManager={{}} onNavigateToLobby={() => {}} onOpenEditPlaytest={() => {}} {...props} />);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Menu' })[0]);
+    return screen.getAllByRole('menuitem', { hidden: true });
+  };
+
+  test('comes last and opens the latest report', () => {
+    const onShowRoundReport = vi.fn();
+    const items = openMenu({ onShowRoundReport, hasRoundReport: true, onRoundReportAutoOpenChange: () => {} });
+    const show = items[items.length - 1];
+    expect(show).toHaveTextContent('Show Round Report');
+    fireEvent.click(show);
+    expect(onShowRoundReport).toHaveBeenCalled();
+  });
+
+  test('is disabled before the first round has ended', () => {
+    const onShowRoundReport = vi.fn();
+    const items = openMenu({ onShowRoundReport, hasRoundReport: false });
+    const show = items.find((i) => i.textContent === 'Show Round Report')!;
+    expect(show).toBeDisabled();
+    fireEvent.click(show);
+    expect(onShowRoundReport).not.toHaveBeenCalled();
+  });
+
+  test('is not in the menu outside play', () => {
+    const items = openMenu({});
+    expect(items.map((i) => i.textContent)).not.toContain('Show Round Report');
   });
 });

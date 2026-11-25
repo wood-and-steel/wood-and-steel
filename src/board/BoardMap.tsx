@@ -8,8 +8,9 @@ import boardImageUrl from './assets/map-board.webp';
 import { routes } from '../data/routes';
 import type { GameState, RegionCode } from '../stores/gameStore';
 import { BOARD_HEIGHT, BOARD_WIDTH, CITY_POINTS, REGIONAL_OFFICE_POINTS } from '../data/cityPoints';
-import { ROUTE_PATHS } from './geometry/routePaths';
-import { ownerSlots, trackPathD } from './geometry/trackPaths';
+import { ROUTE_PATHS } from '../map/routePaths';
+import { ownerSlots, trackPathD } from '../map/trackPaths';
+import { getIndieRouteOwners, MapRoutes } from '../map/MapRoutes';
 import type { BoardPlayer } from './boardPlayers';
 import type { ZoomPan } from './useZoomPan';
 import { tokenFill } from './TokenIcon';
@@ -57,15 +58,6 @@ interface BoardMapProps {
   snapCity: string | null;
   /** Null when tokens can't be moved yet (board state not ready) */
   onTokenPointerDown: ((token: TokenRef, event: React.PointerEvent<Element>) => void) | null;
-}
-
-/** routeKey -> independent railroad name */
-export function getIndieRouteOwners(G: GameState): Map<string, string> {
-  const owners = new Map<string, string>();
-  for (const railroad of Object.values(G.independentRailroads ?? {})) {
-    for (const route of railroad.routes) owners.set(route.key, railroad.name);
-  }
-  return owners;
 }
 
 function routeTooltip(
@@ -143,13 +135,8 @@ export function BoardMap({
         preserveAspectRatio="none"
       />
 
-      <g className="boardMap__indieRoutes">
-        {/* Same trimmed geometry as player track, so indie strokes stop at the city circles too. */}
-        {[...indieOwners.keys()].map((key) => {
-          const d = trackPathD(key, 0);
-          return d ? <path key={key} className="boardMap__indieRoute" d={d} /> : null;
-        })}
-      </g>
+      {/* Same trimmed geometry as player track, so indie strokes stop at the city circles too. */}
+      <MapRoutes routes={[...indieOwners.keys()].map((key) => ({ key, kind: 'indie' }))} />
 
       <g className="boardMap__track">
         {Object.entries(track).map(([key, owners]) => {

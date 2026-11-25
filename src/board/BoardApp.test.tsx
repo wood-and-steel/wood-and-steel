@@ -13,7 +13,7 @@ import { emptyBoardState } from './boardOps';
 import { setBoardStateAdapter } from './boardStateAdapter';
 import { moneyValue, railroadTieValue } from '../Contract';
 import { CITY_POINTS } from '../data/cityPoints';
-import { trackPathD } from './geometry/trackPaths';
+import { trackPathD } from '../map/trackPaths';
 import { MemoryBoardStateAdapter } from './memoryBoardStateAdapter.testHelper';
 import { setBotStatesAdapter } from '../bots/state/botStatesAdapter';
 import { MemoryBotStatesAdapter } from '../bots/state/memoryBotStatesAdapter.testHelper';
@@ -158,7 +158,7 @@ describe('BoardApp (/board)', () => {
     expect(screen.getByText('Play')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument(); // ctx.round 2, shown counted from 1
 
-    expect(container.querySelectorAll('.boardMap__indieRoute')).toHaveLength(2);
+    expect(container.querySelectorAll('.mapRoute--indie')).toHaveLength(2);
     expect(container.querySelectorAll('.boardMap__hub')).toHaveLength(1);
     expect(container.querySelector('.boardMap__hub title')).toHaveTextContent("Ada's Hub: Atlanta");
     expect(container.querySelector('.boardMap__regionalOffice title')).toHaveTextContent("Ada's Regional Office: SE");
@@ -221,7 +221,7 @@ describe('BoardApp (/board)', () => {
     boardAdapter.load = () => Promise.reject(new Error('The board_states table does not exist.'));
     const { container } = await renderAt('/board?game=BCDFG');
     expect(await screen.findByRole('alert')).toHaveTextContent('The board_states table does not exist.');
-    expect(container.querySelectorAll('.boardMap__indieRoute')).toHaveLength(2);
+    expect(container.querySelectorAll('.mapRoute--indie')).toHaveLength(2);
   });
 
   it('zooms in steps up to 400% and back to fit width', async () => {
@@ -508,7 +508,7 @@ describe('BoardApp (/board)', () => {
         });
       });
 
-      expect(container.querySelectorAll('.boardMap__indieRoute')).toHaveLength(0);
+      expect(container.querySelectorAll('.mapRoute--indie')).toHaveLength(0);
       expect(container.querySelector('[data-track="Chicago-Cleveland"] [data-owner="1"]')).toBeInTheDocument();
       expect(container.querySelector('[data-track="Chicago-Detroit"] [data-owner="1"]')).toBeInTheDocument();
       await waitFor(() =>

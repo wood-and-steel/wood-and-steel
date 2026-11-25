@@ -5,7 +5,10 @@ import type { GameContext, GameState, PlayerProps, ReportedContract, RoundReport
 import { independentRailroadPrice } from "../stores/gameActions";
 import { isOpenMarketContract } from "../stores/marketExpiration";
 import { formatMoney } from "../utils/money";
-import { miniMapsFor, type MiniMap } from "../utils/miniMap";
+import { BOARD_HEIGHT, BOARD_WIDTH } from "../data/cityPoints";
+import mapArtUrl from "../map/assets/map-plain.webp";
+import { MapRoutes } from "../map/MapRoutes";
+import { miniMapsFor, type MiniMap } from "../map/miniMap";
 import { displayRound } from "../utils/rounds";
 import { payoutFor } from "./ContractRows";
 import { Sheet } from "./Sheet";
@@ -32,31 +35,12 @@ function contractName(c: Pick<Contract, "commodity" | "destinationKey">): string
 function MiniMapView({ map, label }: { map: MiniMap; label: string }): React.ReactElement {
   return (
     <svg className="miniMap" viewBox={map.viewBox} role="img" aria-label={label}>
-      {map.routes
-        .filter((r) => !r.isNew)
-        .map((r) => (
-          <line key={r.key} className="miniMap__route" x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2} strokeWidth={map.cityRadius * 0.45} />
-        ))}
-      {map.routes
-        .filter((r) => r.isNew)
-        .map((r) => (
-          <line
-            key={r.key}
-            className="miniMap__route miniMap__route--new"
-            x1={r.x1}
-            y1={r.y1}
-            x2={r.x2}
-            y2={r.y2}
-            strokeWidth={map.cityRadius * 1.1}
-          />
-        ))}
+      <image href={mapArtUrl} width={BOARD_WIDTH} height={BOARD_HEIGHT} preserveAspectRatio="none" />
+      <MapRoutes routes={map.routes} scale={map.routeScale} />
       {map.cities.map((c) => (
-        <g key={c.name}>
-          <circle className="miniMap__city" cx={c.x} cy={c.y} r={map.cityRadius} strokeWidth={map.cityRadius * 0.35} />
-          <text className="miniMap__label" x={c.x} y={c.labelY} fontSize={map.fontSize} textAnchor="middle">
-            {c.name}
-          </text>
-        </g>
+        <text key={c.name} className="miniMap__label" x={c.labelX} y={c.labelY} fontSize={map.fontSize} textAnchor={c.anchor}>
+          {c.name}
+        </text>
       ))}
     </svg>
   );
@@ -67,7 +51,10 @@ function RailroadGrowth({ name, added, G }: { name: string; added: string[]; G: 
   const newKeys = new Set(added);
   // A railroad acquired since the report is gone from G; its new routes are all there is to draw.
   const allKeys = railroad ? [...railroad.routes.map((r) => r.key), ...added] : added;
-  const maps = miniMapsFor(allKeys, newKeys);
+  const otherKeys = Object.values(G.independentRailroads)
+    .filter((other) => other.name !== name)
+    .flatMap((other) => other.routes.map((r) => r.key));
+  const maps = miniMapsFor(allKeys, newKeys, otherKeys);
   const existing = railroad ? railroad.routes.filter((r) => !newKeys.has(r.key)).map((r) => routeName(r.key)) : [];
   const label = `${name}: ${existing.length > 0 ? `existing routes ${existing.join(", ")}; ` : ""}new ${
     added.length === 1 ? "route" : "routes"
@@ -94,9 +81,10 @@ function RailroadGrowth({ name, added, G }: { name: string; added: string[]; G: 
 
 /**
  * What changed at the end of a round: the independent railroads that grew, each on a mini
- * map cropped to it (new routes thick, existing ones thin), the market contracts that expired
- * and replaced them, and who starts the next round. A switch at the foot turns off opening it
- * after every round, on this device.
+ * map of the board art cropped to it (new routes highlighted, its other routes as on the
+ * board, other railroads' faint), the market contracts that expired and replaced them, and who
+ * starts the next round. A switch at the foot turns off opening it after every round, on this
+ * device.
  */
 export function RoundReportSheet({
   report,
@@ -132,6 +120,10 @@ export function RoundReportSheet({
             <span>
               <i className="roundReport__swatch" />
               Existing
+            </span>
+            <span>
+              <i className="roundReport__swatch roundReport__swatch--faint" />
+              Other railroads
             </span>
           </div>
         </>

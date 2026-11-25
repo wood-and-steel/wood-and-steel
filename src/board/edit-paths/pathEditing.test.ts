@@ -1,4 +1,4 @@
-import type { BezierPath, Point } from '../geometry/pathData';
+import type { BezierPath, Point } from '../../map/pathData';
 import { joinSegments, moveHandle, snapEnds, splitSegment } from './pathEditing';
 
 function evalSegment(p0: Point, c1: Point, c2: Point, p3: Point, t: number): Point {

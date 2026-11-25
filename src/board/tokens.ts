@@ -4,7 +4,7 @@
  */
 import type { BoardOp, BoardState, EngineSlot } from './boardOps';
 import { CITY_POINTS } from '../data/cityPoints';
-import type { Point } from './geometry/pathData';
+import type { Point } from '../map/pathData';
 
 export type TokenRef = { kind: 'engine'; playerID: string; slot: EngineSlot } | { kind: 'railyard'; playerID: string };
 

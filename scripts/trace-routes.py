@@ -3,7 +3,7 @@ Dev-only: derive board geometry from docs/map-board-full.jpg (milestone 0 of doc
 
 Outputs:
   src/data/cityPoints.ts             city circle centers/radii + Regional Office disc centers
-  src/board/geometry/routePaths.ts   routeKey -> SVG path d (1-2 cubic Beziers), plus low-confidence flags
+  src/map/routePaths.ts   routeKey -> SVG path d (1-2 cubic Beziers), plus low-confidence flags
 
 Never bundled. Requires: numpy, scipy, opencv-python-headless, scikit-image
   python -m venv .venv-trace && .venv-trace/Scripts/pip install numpy scipy opencv-python-headless scikit-image
@@ -35,7 +35,7 @@ BOARD_ART = ROOT / 'docs' / 'map-board-full.jpg'
 BOARD_SIZE = (6660, 4173)
 ROUTES_TS = ROOT / 'src' / 'data' / 'routes.ts'
 MAP_COORDS_TS = ROOT / 'src' / 'sim' / 'mapCoordinates.ts'
-OUT_DIR = ROOT / 'src' / 'board' / 'geometry'
+OUT_DIR = ROOT / 'src' / 'map'
 # City points are shared with the player app (the round report's mini maps), so they live in src/data.
 CITY_POINTS_TS = ROOT / 'src' / 'data' / 'cityPoints.ts'
 

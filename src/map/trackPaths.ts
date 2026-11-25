@@ -1,9 +1,10 @@
 /**
- * Player track geometry: each route's Bézier is sampled into a polyline, trimmed at the two
- * city circles, and offset sideways so parallel owners sit next to each other.
+ * Route geometry for drawing track on the map, shared by the board app and the player app's
+ * round report: each route's Bézier is sampled into a polyline, trimmed at the two city
+ * circles, and offset sideways so parallel owners sit next to each other.
  */
-import { routes } from '../../data/routes';
-import { CITY_POINTS } from '../../data/cityPoints';
+import { routes } from '../data/routes';
+import { CITY_POINTS } from '../data/cityPoints';
 import { parsePathD, type BezierPath, type Point } from './pathData';
 import { ROUTE_PATHS } from './routePaths';
 
@@ -78,7 +79,8 @@ export function ownerSlots(ownerCount: number, indieOnRoute: boolean): number[] 
 const trimmedCache = new Map<string, Point[] | null>();
 const dCache = new Map<string, string | null>();
 
-function trimmedPoints(routeKey: string): Point[] | null {
+/** A route's centerline in board pixels, trimmed at its city circles. Null if the route has no geometry. */
+export function routePolyline(routeKey: string): Point[] | null {
   if (!trimmedCache.has(routeKey)) {
     const d = ROUTE_PATHS[routeKey];
     const route = routes.get(routeKey);
@@ -92,7 +94,7 @@ function trimmedPoints(routeKey: string): Point[] | null {
 export function trackPathD(routeKey: string, slot: number): string | null {
   const cacheKey = `${routeKey}|${slot}`;
   if (!dCache.has(cacheKey)) {
-    const points = trimmedPoints(routeKey);
+    const points = routePolyline(routeKey);
     dCache.set(cacheKey, points ? polylineD(offsetPolyline(points, slot * TRACK_SPACING)) : null);
   }
   return dCache.get(cacheKey)!;
