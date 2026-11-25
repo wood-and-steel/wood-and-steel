@@ -1,6 +1,6 @@
 import React from "react";
 import { COMMODITY_GROUPS, formatCommodity } from "../rules/playerBoard";
-import { commodityIcons } from "../shared/assets/icons";
+import { CommodityIcon } from "./CommodityIcon";
 import { Sheet } from "./Sheet";
 
 /** Groups in reading order for two columns: Metals | Mined goods, Crops | Finished goods, Livestock. */
@@ -35,8 +35,8 @@ export function CargoSheet({ title, cargo, onSelect, onClose }: CargoSheetProps)
                 aria-pressed={cargo === c}
                 onClick={() => choose(c)}
               >
+                <CommodityIcon commodity={c} />
                 <span>{formatCommodity(c)}</span>
-                <img className="cargoSheet__icon" src={(commodityIcons as Record<string, string>)[c]} alt="" />
               </button>
             ))}
           </section>
