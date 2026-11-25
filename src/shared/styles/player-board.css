@@ -172,7 +172,7 @@
   font-weight: 700;
   letter-spacing: var(--letter-spacing-caps);
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
 }
 
 /* "Your railroad" while the player has no upgrades or deliveries */
@@ -180,7 +180,7 @@
   margin: 0;
   padding: var(--spacing-xs);
   font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
 }
 
 .contractRows {
@@ -193,7 +193,7 @@
   margin: 0;
   font-size: var(--font-size-sm);
   font-style: italic;
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
   padding: var(--spacing-xs);
 }
 
