@@ -400,6 +400,32 @@ describe('Sheet', () => {
     await waitFor(() => expect(document.activeElement).toBe(opener));
   });
 
+  test("Tab reaches the money strip's Loans button from a sheet, and nothing else outside it", () => {
+    render(
+      <>
+        <button type="button">End Turn</button>
+        <button type="button" data-sheet-reachable>
+          Loans
+        </button>
+        <Sheet title="Actions" onClose={() => {}}>
+          <button type="button">Buy an engine</button>
+        </Sheet>
+      </>
+    );
+    const loans = screen.getByRole('button', { name: 'Loans', hidden: true });
+    const close = screen.getByRole('button', { name: 'Close' });
+    const buy = screen.getByRole('button', { name: 'Buy an engine' });
+    buy.focus();
+    fireEvent.keyDown(buy, { key: 'Tab' });
+    expect(document.activeElement).toBe(loans);
+    fireEvent.keyDown(loans, { key: 'Tab' });
+    expect(document.activeElement).toBe(close);
+    fireEvent.keyDown(close, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(loans);
+    fireEvent.keyDown(loans, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(buy);
+  });
+
   function StackHarness() {
     const [actions, setActions] = React.useState(false);
     const [loans, setLoans] = React.useState(false);

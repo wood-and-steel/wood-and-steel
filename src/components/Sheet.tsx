@@ -12,6 +12,12 @@ export interface SheetProps {
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+/**
+ * Controls outside any sheet that Tab still reaches while one is open: the money strip's Loans
+ * button, so keyboard and screen reader users can borrow without closing the sheet.
+ */
+const SHEET_REACHABLE = "[data-sheet-reachable]:not([disabled])";
+
 /** An open sheet: its content, and the element last focused inside it. */
 interface OpenSheet {
   content: HTMLDivElement | null;
@@ -31,9 +37,9 @@ let opener: HTMLElement | null = null;
  * A dialog over the game for one task (loans, actions, a delivery). Closes on the Close
  * button, a backdrop click, or Escape. Rendered into document.body: the game page is one big
  * form, and pressing Enter in a field inside it would submit the form with its first submit
- * button (+M or End Turn). Focus moves into the sheet when it opens, Tab stays inside it, and
- * focus returns to whatever opened it when it closes, so the game behind can't be changed
- * from the keyboard while it's open.
+ * button (+M or End Turn). Focus moves into the sheet when it opens, Tab stays inside it (plus
+ * the money strip's Loans button), and focus returns to whatever opened it when it closes, so
+ * the game behind can't be changed from the keyboard while it's open.
  *
  * Sheets stack: one opened over another (Loans, from the money strip) covers it, Escape closes
  * only the top one, and closing it puts focus back where it was in the sheet underneath.
@@ -46,12 +52,17 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
   onCloseRef.current = onClose;
 
   React.useEffect(() => {
-    // Capture phase, and stop there: a dialog under the top sheet (the private contract offers)
-    // listens for Escape too, and must not close with it.
+    // On the document, so Tab works from the money strip's Loans button too. Capture phase, and
+    // stop there: a dialog under the top sheet (the private contract offers) listens for Escape
+    // too, and must not close with it.
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || openSheets[openSheets.length - 1] !== self.current) return;
-      event.stopPropagation();
-      onCloseRef.current();
+      if (openSheets[openSheets.length - 1] !== self.current) return;
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        onCloseRef.current();
+      } else if (event.key === "Tab") {
+        cycleFocus(event, self.current.content);
+      }
     };
     document.addEventListener("keydown", onKeyDown, true);
     return () => document.removeEventListener("keydown", onKeyDown, true);
@@ -85,26 +96,6 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
     };
   }, []);
 
-  /** Tab and Shift+Tab cycle through the sheet's own controls. */
-  const trapTab = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== "Tab" || !contentRef.current) return;
-    const focusable: HTMLElement[] = Array.from(contentRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
-    if (focusable.length === 0) {
-      event.preventDefault();
-      return;
-    }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    const active = document.activeElement;
-    if (event.shiftKey && (active === first || active === contentRef.current)) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
-
   return ReactDOM.createPortal(
     <div
       className="modal"
@@ -119,7 +110,6 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
         className="modal__content sheet"
         ref={contentRef}
         tabIndex={-1}
-        onKeyDown={trapTab}
         onFocus={(event) => {
           if (event.target instanceof HTMLElement) self.current.lastFocus = event.target;
         }}
@@ -142,6 +132,28 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
     </div>,
     document.body
   );
+}
+
+/**
+ * Tab and Shift+Tab cycle through the sheet's own controls, then the controls outside it that
+ * stay reachable (the money strip's Loans button), then back to the sheet's first control.
+ */
+function cycleFocus(event: KeyboardEvent, content: HTMLDivElement | null): void {
+  if (!content) return;
+  event.preventDefault();
+  const stops = [
+    ...Array.from(content.querySelectorAll<HTMLElement>(FOCUSABLE)),
+    ...Array.from(document.querySelectorAll<HTMLElement>(SHEET_REACHABLE)).filter((el) => !el.closest(".sheet")),
+  ];
+  if (stops.length === 0) return;
+  const index = stops.indexOf(document.activeElement as HTMLElement);
+  const next =
+    index === -1
+      ? event.shiftKey
+        ? stops.length - 1
+        : 0
+      : (index + (event.shiftKey ? -1 : 1) + stops.length) % stops.length;
+  stops[next].focus();
 }
 
 export interface RadioOptionProps {

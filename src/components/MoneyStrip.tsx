@@ -34,7 +34,8 @@ export function MoneyStrip({ player, playerID, isCurrentTurn, showMoney, onOpenL
           >
             {formatMoney(debt)} debt
           </span>
-          <button type="button" className="button moneyStrip__loans" onClick={onOpenLoans}>
+          {/* Reachable by Tab from an open sheet, too (see Sheet). */}
+          <button type="button" className="button moneyStrip__loans" data-sheet-reachable onClick={onOpenLoans}>
             Loans
           </button>
         </>
