@@ -110,6 +110,14 @@ export function PopupMenu({
   const openerRef = React.useRef<HTMLElement | null>(null);
   const placed = position !== null;
 
+  // Place the menu through custom properties set from a ref (no inline styles; see
+  // docs/CSS_ARCHITECTURE.md). It stays hidden until it has been measured and placed.
+  React.useLayoutEffect(() => {
+    if (!position) return;
+    menuRef.current?.style.setProperty("--popup-menu-top", `${position.top}px`);
+    menuRef.current?.style.setProperty("--popup-menu-left", `${position.left}px`);
+  }, [position]);
+
   // Remember what had focus when the menu opened, and give it back when the menu closes
   // (unless something else, such as a sheet the item opened, has taken focus since).
   React.useEffect(() => {
@@ -179,14 +187,9 @@ export function PopupMenu({
   const menu = (
     <div
       ref={menuRef}
-      className="popupMenu"
+      className={`popupMenu${placed ? "" : " popupMenu--unplaced"}`}
       role="menu"
       onKeyDown={handleMenuKeyDown}
-      style={
-        position
-          ? { position: "fixed", top: position.top, left: position.left, visibility: "visible" }
-          : { position: "fixed", top: 0, left: 0, visibility: "hidden" }
-      }
     >
       {children}
     </div>

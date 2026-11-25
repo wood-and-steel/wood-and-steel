@@ -55,21 +55,6 @@ export function WoodAndSteelState({
     setLobbyMode(true);
   }, [clearSelection, setLobbyMode]);
 
-  // Sync document data-theme with system preference
-  React.useEffect(() => {
-    const updateTheme = (e: MediaQueryListEvent) => {
-      const systemTheme = e.matches ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', systemTheme);
-    };
-
-    const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const initialTheme = darkModeQuery.matches ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', initialTheme);
-
-    darkModeQuery.addEventListener('change', updateTheme);
-    return () => darkModeQuery.removeEventListener('change', updateTheme);
-  }, []);
-
   const startingContractExists =
     G.contracts.filter((contract: Contract) => contract.playerID === playerID).length > 0;
   const currentPhase = ctx.phase as 'play' | 'setup' | 'scoring';

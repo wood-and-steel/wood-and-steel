@@ -1,449 +1,143 @@
 # CSS Architecture Guide
 
-## Overview
+Plain CSS, no framework and no preprocessor. Global stylesheets, BEM-style class names, design tokens in custom properties, and no inline styles.
 
-This project uses a modern, maintainable CSS architecture with no inline styles. All styling is centralized in `/src/shared/styles/index.css`, which imports multiple organized CSS files.
+## Files
 
-### Exception: playtest board (`/board`)
+The player app's CSS is all imported, in order, through `src/shared/styles/index.css` (loaded once by `src/index.tsx`):
 
-`src/shared/styles/board.css` is imported only by `src/board/BoardApp.tsx`, not by `index.css`, so it ships in the lazy board chunk and stays out of production builds. The board's pointer-following overlays (route popover, token drag ghost) set CSS custom properties from a ref (`el.style.setProperty('--…', …)`) instead of `style={}`; their CSS reads the variables. SVG geometry and colors are attributes. See [BOARD_AGENT_GUIDE.md](BOARD_AGENT_GUIDE.md).
+| File | Holds |
+|------|-------|
+| `variables.css` | Design tokens (`:root` custom properties) and the dark theme |
+| `base.css` | Element defaults: `body`, headings, `code`, the keyboard focus ring |
+| `layout.css` | The board page frame and the money strip's height |
+| `buttons.css` | `.button` and its modifiers |
+| `player-board.css` | Toolbar, money strip, avatars, the home screen's engines and contract rows |
+| `modal.css` | `.modal` scrim and dialog, the sheet layout on phones, the playtest dialog |
+| `sheets.css` | Sheet contents: Loans, Actions, upgrades, track, receipts, round report, cargo |
+| `tables.css` | `.table` (the lobby's game list) |
+| `popup-menu.css` | `.popupMenu` |
+| `nav-bar.css` | Floating menu button (phones, tablets) and the desktop nav row |
+| `lobby-screen.css`, `waiting-screen.css` | The two pre-game screens |
+| `utilities.css` | The few single-purpose classes (`.text-center`, `.padding-xl`) |
 
-`src/shared/styles/bots.css` follows the same rule for playtest bots: it is imported only by `src/bots/` components, never by `index.css`. See [BOT_PLAN.md](BOT_PLAN.md).
+Later files win ties, so `utilities.css` comes last. Put a new component's rules in the file that holds its neighbors, or a new file imported from `index.css`.
 
-## Key tenets
+### Outside `index.css`
 
-1. **No inline styles** - Components only refer to class names and never have `style={}` attributes
-2. **Centralized styling** - All CSS files imported through `/src/shared/styles/index.css` with clear organization
-3. **CSS Variables** - Consistent colors, spacing, and values throughout
-4. **Semantic class names** - Classes describe purpose, not appearance
-5. **BEM-inspired naming** - Component-scoped classes with clear hierarchy
-6. **Utility classes** - Reusable classes for common patterns
-7. **Responsive zooming** - All measurements (other than breakpoints) are in rems instead of pixels (assuming a default of 16 px == 1 rem)
-8. **Rounded rem values** - All rem values must be rounded according to specific precision rules (see Rem Value Rounding section)
+- `board.css` is imported only by `src/board/BoardApp.tsx`, so it ships in the lazy board chunk and stays out of production builds. See [BOARD_AGENT_GUIDE.md](BOARD_AGENT_GUIDE.md).
+- `bots.css` is imported only by `src/bots/` components, never by `index.css` (a test checks this). See [BOT_PLAN.md](BOT_PLAN.md).
+- Dev tools (`/sim`, `/pick-coords`, `/board/edit-paths`) import their own CSS next to their page.
 
-## CSS Structure
+## Rules
 
-The CSS is organized into multiple files, all imported through `/src/shared/styles/index.css`:
+1. **No inline styles.** No `style={}` and no JavaScript style objects. When a value is only known at run time (a player's color, a measured position), set a custom property from a ref and let the CSS read it:
 
-- `variables.css` - CSS custom properties (design tokens)
-- `base.css` - Global styles and resets
-- `layout.css` - Page-level layout styles
-- `components.css` - Component-specific styles (NavBar, LobbyScreen, etc.)
-- `buttons.css` - Button component styles
-- `modal.css` - Modal/dialog styles
-- `tables.css` - Table component styles
-- `sheets.css` - Sheet (task dialog) styles
-- `player-board.css` - Player board component styles
-- `utilities.css` - Utility classes
+   ```tsx
+   const ref = React.useRef<HTMLSpanElement>(null);
+   React.useLayoutEffect(() => {
+     ref.current?.style.setProperty("--avatar-bg", avatarColor);
+   }, [avatarColor]);
+   return <span ref={ref} className="playerAvatar" />;
+   ```
 
-This modular approach keeps styles organized while maintaining a single entry point.
+   ```css
+   .playerAvatar { background-color: var(--avatar-bg); }
+   ```
 
-### 1. CSS Variables (`:root`)
+   `PlayerAvatar`, `EngineIcon`, `PopupMenu` and the board's popover and drag ghost all work this way. SVG geometry and fill colors may be attributes.
+2. **Tokens, not literals.** Colors, spacing, font sizes, radii, borders, shadows and z-indexes come from `variables.css`. Add a token rather than repeat a literal; a color literal outside `variables.css` won't follow the theme.
+3. **BEM-style names.** `.block`, `.block__element`, `.block--modifier`, with camelCase words (`.playerToolbar__roundDot`, `.contractRow--fulfilled`). Name by purpose, not looks. Keep selectors to one class where you can; style states with pseudo-classes (`:hover`, `:disabled`, `:focus-visible`) on that class.
+4. **rem, not px.** Sizes are in rem so the app follows the browser's text size (16px = 1rem). Breakpoints are in px. Round rem values as below.
+5. **Mobile first.** Write the phone layout first, then override with `min-width` media queries only. Add a breakpoint only where the layout actually changes.
 
-All design tokens are defined as CSS variables for consistency:
+## Theme
 
-```css
-:root {
-  /* Colors */
-  --color-primary: #404040;
-  --color-text-light: #ffffff;
-  
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-md: 1rem;
-  
-  /* Breakpoints */
-  --breakpoint-mobile: 480px;
-  --breakpoint-tablet: 768px;
-  --breakpoint-desktop: 1024px;
-  --breakpoint-desktop-lg: 1280px;
-  
-  /* Z-Index */
-  --z-modal: 1000;
-}
-```
+Light is the default. Dark follows the system setting through `@media (prefers-color-scheme: dark)` in `variables.css`, which overrides the color tokens; nothing in JavaScript sets the theme.
 
-**Benefits:**
-- Easy theme changes (just update variables)
-- Consistent spacing/colors across the app
-- Self-documenting code
-- Centralized breakpoint management
+- Only the player app has a dark theme. `App.tsx` wraps it in `.playerApp`, and the dark block applies to `:root:has(.playerApp)`, so the playtest board and dev tools stay light.
+- `color-scheme` is set with each theme so native controls (selects, checkboxes, scrollbars) match.
+- Write colors as tokens and the dark theme comes for free. If a component truly needs its own dark colors, put them in a `prefers-color-scheme: dark` block next to the light ones.
 
-### 2. Component Classes (BEM-inspired)
+## Focus
 
-Components use a block-element naming pattern:
+`base.css` gives every focusable element one keyboard focus ring (`:focus-visible`, `--color-highlight`). Mouse and touch focus show none. Don't write `outline: none` unless something else shows focus instead, as `.track__field:focus-within` does for its borderless input.
 
-```css
-/* Block */
-.buttonBar { }
+## Responsive layout
 
-/* Elements */
-.buttonBar__gameCode { }
-.buttonBar__label { }
-.buttonBar__input { }
+Three layouts:
 
-/* Modifiers */
-.button--hidden { }
-```
+| Layout | Width | Query |
+|--------|-------|-------|
+| Mobile | < 768px | none (default) |
+| Tablet | 768px to 1023px | `@media (min-width: 768px)` |
+| Desktop | >= 1024px | `@media (min-width: 1024px)` |
 
-**Example Usage:**
-```jsx
-<div className="buttonBar">
-  <span className="buttonBar__gameCode">Game: ABCD</span>
-  <input className="buttonBar__input" />
-</div>
-```
+Custom properties can't be used in media queries, so write the numbers. Mark each block with a comment (`/* Tablet Layout (768px - 1023px) */`).
 
-### 3. Utility Classes
-
-Common patterns available as single-purpose utilities:
-
-```css
-.flex { display: flex; }
-.flex-column { flex-direction: column; }
-.gap-sm { gap: var(--spacing-sm); }
-.hidden { display: none; }
-.text-center { text-align: center; }
-```
-
-**Example Usage:**
-```jsx
-<div className="flex flex-column gap-md">
-  {/* Content */}
-</div>
-```
-
-### 4. Responsive Breakpoint System
-
-The app uses a **3-layout approach** (mobile, tablet, desktop) for pixel-perfect designs at each breakpoint:
-
-**Breakpoints:**
-- **Mobile**: `< 768px` (default, mobile-first)
-- **Tablet**: `768px - 1023px`
-- **Desktop**: `>= 1024px`
-
-**Implementation Pattern:**
 ```css
 /* Mobile Layout (default, < 768px) */
 .myComponent {
   padding: var(--spacing-sm);
-  font-size: 0.875rem;
 }
 
 /* Tablet Layout (768px - 1023px) */
 @media (min-width: 768px) {
   .myComponent {
     padding: var(--spacing-md);
-    font-size: 1rem;
-  }
-}
-
-/* Desktop Layout (>= 1024px) */
-@media (min-width: 1024px) {
-  .myComponent {
-    padding: var(--spacing-lg);
-    font-size: 1rem;
   }
 }
 ```
 
-**Responsive Utilities:**
-- `.show-mobile`, `.show-tablet`, `.show-desktop` - Show only on specific breakpoint
-- `.hide-mobile`, `.hide-tablet`, `.hide-desktop` - Hide on specific breakpoint
-- `.table__cell--hide-mobile` - Hide table columns on mobile
+Phone-specific pieces of the layout:
 
-**Example Usage:**
+- `--safe-area-inset-top` and `--safe-area-inset-bottom` (from `env()`) keep content clear of notches and the home indicator.
+- `--money-strip-height` is the room the fixed money strip takes at the top; it's `0px` unless the strip is on screen (`:root:has(.moneyStrip)` in `layout.css`). Fixed and sticky things that sit below it use it.
+- Use `dvh` for heights that must fit the visible screen, with a `vh` fallback before it.
+- Respect `prefers-reduced-motion` for anything that slides or moves.
+
+## Patterns
+
 ```jsx
-{/* Show different content per breakpoint */}
-<div className="show-mobile">Mobile only</div>
-<div className="show-tablet">Tablet only</div>
-<div className="show-desktop">Desktop only</div>
+// Buttons
+<button className="button">Pay</button>
+<button className="button sheet__primary">Pay $3K</button>
 
-{/* Hide less important columns on mobile */}
+// A dialog or sheet
+<div className="modal modal--sheet">
+  <div className="modal__content">…</div>
+</div>
+
+// Conditional modifiers
+<button className={`contractRow${fulfilled ? " contractRow--fulfilled" : ""}`}>
+
+// Hide a table column on phones
 <th className="table__headerCell table__headerCell--hide-mobile">Last Turn</th>
 ```
 
-## Component Patterns
+Hide things with a modifier on their own block, or don't render them; there is no global `.hidden` class.
 
-### Modal/Dialog Pattern
+## Rem value rounding
 
-```jsx
-<div className="modal">
-  <div className="modal__content">
-    <h2 className="modal__title">Title</h2>
-    <div className="modal__actions">
-      <button className="button">Action</button>
-    </div>
-  </div>
-</div>
-```
+Round rem values so there are fewer distinct sizes:
 
-### Table Pattern
-
-```jsx
-<table className="table">
-  <thead>
-    <tr className="table__header">
-      <th className="table__headerCell">Header</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr className="table__row table__row--current">
-      <td className="table__cell">Data</td>
-    </tr>
-  </tbody>
-</table>
-```
-
-### Conditional Classes
-
-Use template literals for conditional classes:
-
-```jsx
-// ✅ Good
-<div className={`button ${isActive ? 'button--active' : ''}`}>
-
-// ✅ Better (using array)
-<div className={[
-  'button',
-  isActive && 'button--active',
-  isDisabled && 'button--disabled'
-].filter(Boolean).join(' ')}>
-```
-
-## Best Practices
-
-### DO ✅
-
-1. **Use CSS Variables** for any repeated value
-2. **Use semantic names** - `.modal__title` not `.bold-text`
-3. **Scope styles to components** - `.playerBoard__name` not `.name`
-4. **Use utility classes** for simple, one-off layouts
-5. **Add comments** to organize sections in CSS
-6. **Start with mobile layout** - Use mobile-first approach, then add tablet/desktop overrides
-7. **Add breakpoints only where needed** - Only define responsive breakpoints when there are actual differences between layouts
-8. **Use breakpoint variables** - Reference `var(--breakpoint-tablet)` in comments for clarity
-9. **Use rems for all measurements** - Convert all px values to rem (except breakpoint values) for responsive zooming
-10. **Round rem values appropriately** - Follow the rounding rules for rem precision (see Rem Value Rounding section)
-
-### DON'T ❌
-
-1. **No inline styles** - Always use CSS classes
-2. **No JavaScript style objects** - Keep styles in CSS
-3. **No magic numbers** - Use variables (`var(--spacing-md)`)
-4. **No generic class names** - `.info` is too vague
-5. **No duplicate styles** - DRY principle
-6. **No fluid responsive** - Use discrete breakpoints, not continuous scaling
-7. **No pixel values** - Use rems for all measurements (except breakpoint values in media queries)
-8. **No max-width media queries** - Use mobile-first with min-width queries only
-
-## Adding New Styles
-
-### For a New Component
-
-1. **Add a CSS section with responsive breakpoints:**
-```css
-/* ========================================
-   MY NEW COMPONENT
-   ======================================== */
-
-/* Mobile Layout (default, < 768px) */
-.myComponent {
-  padding: var(--spacing-sm);
-  font-size: 0.875rem;
-}
-
-.myComponent__element {
-  margin-bottom: var(--spacing-xs);
-}
-
-/* Tablet Layout (768px - 1023px) */
-@media (min-width: 768px) {
-  .myComponent {
-    padding: var(--spacing-md);
-    font-size: 1rem;
-  }
-  
-  .myComponent__element {
-    margin-bottom: var(--spacing-sm);
-  }
-}
-
-/* Desktop Layout (>= 1024px) */
-@media (min-width: 1024px) {
-  .myComponent {
-    padding: var(--spacing-lg);
-    font-size: 1rem;
-  }
-}
-```
-
-2. **Use in JSX:**
-```jsx
-export function MyComponent() {
-  return (
-    <div className="myComponent">
-      <span className="myComponent__element">Text</span>
-    </div>
-  );
-}
-```
-
-### For a Variant/State
-
-Use modifier classes with `--`:
+1. **Under 1rem:** nearest 0.0625 (`0.7rem` → `0.75rem`, `0.9rem` → `0.875rem`)
+2. **1rem to 4rem:** nearest 0.25 (`1.1rem` → `1rem`, `1.625rem` → `1.75rem`)
+3. **4rem to 10rem:** nearest 0.5 (`7.1875rem` → `7.5rem`)
+4. **Over 10rem:** nearest whole number (`12.5rem` → `13rem`, `31.25rem` → `31rem`)
 
 ```css
-.button { /* Base styles */ }
-.button--primary { background: blue; }
-.button:disabled { opacity: 0.6; }
-```
-
-### For Layout Utilities
-
-Add to the utilities section if it's reusable:
-
-```css
-.margin-auto { margin: auto; }
-.width-full { width: 100%; }
-```
-
-## Performance Benefits
-
-1. **Smaller bundle** - CSS is more compressible than JS objects
-2. **Better caching** - CSS files cache separately
-3. **Faster rendering** - Browser-optimized CSS parsing
-4. **Easier debugging** - Inspect styles in DevTools
-
-## Maintenance Benefits
-
-1. **Find/replace works** - Change colors globally
-2. **No duplication** - Reuse classes and variables
-3. **Type safety** - No runtime style errors
-4. **Better IDE support** - CSS autocomplete and linting
-
-## Rem Value Rounding
-
-All rem values must be rounded to specific precision levels for consistency and maintainability:
-
-### Rounding Rules
-
-1. **Under 1 rem**: Round to the nearest **0.0625** (e.g., 0.0625, 0.125, 0.1875, etc.)
-   - Examples: `0.06rem` → `0.0625rem`, `0.7rem` → `0.75rem`, `0.9rem` → `0.875rem`
-
-2. **1 to 4 rem**: Round to the nearest **0.25** (e.g., 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4)
-   - Examples: `1.1rem` → `1rem`, `1.625rem` → `1.75rem`, `3.4rem` → `3.5rem`
-
-3. **4 to 10 rem**: Round to the nearest **0.5** (e.g., 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10)
-   - Examples: `7.1875rem` → `7.5rem`, `8.375rem` → `8.5rem`
-
-4. **Above 10 rem**: Round to the nearest **whole number** (e.g., 11, 12, 13, 14, ...)
-   - Examples: `12.5rem` → `13rem`, `31.25rem` → `31rem`, `37.5rem` → `38rem`
-
-### Why Round?
-
-- **Consistency**: Easier to scan and understand rounded values
-- **Maintainability**: Fewer unique values to remember
-- **Performance**: Slightly better browser optimization with standard increments
-- **Design system**: Aligns with common design token practices
-
-### Examples
-
-```css
-/* ✅ Correct - rounded values */
+/* Correct */
 .icon {
-  width: 1.5rem;        /* 1-4 rem, rounded to 0.25 */
-  height: 1.5rem;
-  border: 0.125rem;     /* Under 1 rem, rounded to 0.125 */
+  width: 1.5rem;
+  border-width: 0.0625rem; /* a 1px hairline: --border-width-md */
 }
 
-.button {
-  width: 7.5rem;        /* 4-10 rem, rounded to 0.5 */
-  min-width: 13rem;    /* Above 10 rem, rounded to whole number */
-}
-
-/* ❌ Incorrect - unrounded values */
+/* Incorrect */
 .icon {
-  width: 1.47rem;       /* Should be 1.5rem */
-  border: 0.0625rem;    /* Should be 0.125rem */
-}
-
-.button {
-  width: 7.1875rem;     /* Should be 7.5rem */
-  min-width: 12.5rem;   /* Should be 13rem */
+  width: 1.47rem;          /* 1.5rem */
+  min-width: 12.5rem;      /* 13rem */
 }
 ```
 
-## Responsive Design Philosophy
-
-This app uses a **3-layout breakpoint system** rather than fluid responsive design:
-
-1. **Mobile Layout** (`< 768px`) - Optimized for touch, vertical scrolling, compact information
-2. **Tablet Layout** (`768px - 1023px`) - Balanced layout with more horizontal space
-3. **Desktop Layout** (`>= 1024px`) - Full-featured layout with maximum information density
-
-**Why 3 layouts instead of fluid?**
-- Pixel-perfect control at each breakpoint
-- Easier to maintain with small team (1-2 developers)
-- Clear separation of concerns
-- Better performance (no complex calculations)
-- Matches the fixed screen set requirement
-
-**Example: LobbyScreen Component**
-- Mobile: Compact padding, smaller fonts, hidden "Last Turn" column
-- Tablet: Medium padding, readable fonts, all columns visible
-- Desktop: Spacious padding, larger fonts, full table with all details
-
-## Future Improvements
-
-Consider these enhancements as the app grows:
-
-1. **CSS Modules** - Scoped styles per component file
-2. **Sass/SCSS** - Variables, nesting, mixins for cleaner breakpoint management
-3. **Design tokens** - JSON-based design system for programmatic access
-4. **Container queries** - When browser support improves, for component-level responsiveness
-
-For now, the current CSS architecture is:
-- ✅ Simple and maintainable
-- ✅ Well-organized and documented
-- ✅ Scalable for future growth
-- ✅ No inline styles
-- ✅ Responsive with pixel-perfect breakpoints
-
-## Quick Reference
-
-### Common Patterns
-
-```jsx
-// Modals
-<div className="modal">
-  <div className="modal__content">
-
-// Buttons
-<button className="button">
-
-// Layout
-<div className="flex gap-md">
-<div className="flex flex-column gap-sm">
-
-// Hide/Show
-<div className={`element ${condition ? '' : 'hidden'}`}>
-
-// Player boards
-<div className="playerBoard">
-  <div className="playerBoard__player">
-    <div className="playerBoard__info playerBoard__info--active">
-
-// Responsive breakpoints
-@media (min-width: 768px) { /* Tablet */ }
-@media (min-width: 1024px) { /* Desktop */ }
-
-// Hide/show by breakpoint
-<div className="show-mobile">Mobile only</div>
-<th className="table__headerCell table__headerCell--hide-mobile">Hidden on mobile</th>
-```
-
----
-
-**Last Updated:** January 26, 2026  
-**Maintainer:** Development Team
+Some older rules still use px or raw sizes (`--nav-height-desktop`, a few 1px and 2px values, the lobby spinner). Don't copy them; convert them when you're in the area.

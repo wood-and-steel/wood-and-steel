@@ -682,9 +682,12 @@ const App = (): React.ReactElement => {
       </StorageProvider>
     );
   }
+  // .playerApp turns on the player app's dark theme (variables.css); the pages above stay light.
   return (
     <StorageProvider>
-      <AppContent />
+      <div className="playerApp">
+        <AppContent />
+      </div>
     </StorageProvider>
   );
 };

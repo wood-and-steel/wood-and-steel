@@ -25,10 +25,6 @@
   background-color: var(--color-bg-primary);
 }
 
-.button--hidden {
-  display: none;
-}
-
 .button--icon {
   width: var(--button-height);
   height: var(--button-height);
@@ -47,13 +43,4 @@
 .button--danger:hover {
   background-color: #c82333;
   border-color: #bd2130;
-}
-
-.deleteButton {
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-body);
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
 }

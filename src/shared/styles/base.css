@@ -30,6 +30,12 @@ h4 { font-size: var(--font-size-h4); }
 h5 { font-size: var(--font-size-h5); }
 h6 { font-size: var(--font-size-h6); }
 
+/* Keyboard focus: one ring for every control. Mouse and touch focus show nothing (:focus-visible). */
+:focus-visible {
+  outline: var(--border-width-lg) solid var(--color-highlight);
+  outline-offset: var(--border-width-lg);
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;

@@ -85,9 +85,11 @@
   font-size: 0.875rem;
 }
 
-[data-theme="dark"] .waitingScreen__error {
-  background-color: #4a1c1c;
-  color: #ef9a9a;
+@media (prefers-color-scheme: dark) {
+  .waitingScreen__error {
+    background-color: #4a1c1c;
+    color: #ef9a9a;
+  }
 }
 
 /* Name Input Section */

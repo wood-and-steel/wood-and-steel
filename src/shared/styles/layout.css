@@ -27,10 +27,6 @@
   gap: var(--spacing-sm);
 }
 
-.pageContent {
-  padding: 0;
-}
-
 /* Tablet Layout (768px - 1023px) */
 @media (min-width: 768px) {
   .boardPage {
