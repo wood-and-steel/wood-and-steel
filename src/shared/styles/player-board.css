@@ -315,9 +315,18 @@
   justify-content: space-between;
 }
 
+/* A crowded table (five players with double-digit ties on a narrow phone) wraps the round label to
+   a line of its own rather than pushing it off screen. Wrapping, not scrolling: a scroll box would
+   clip the current player's glow. */
+.playerToolbar__strip--table {
+  flex-wrap: wrap;
+  row-gap: var(--spacing-xs);
+}
+
 .playerToolbar__players {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
 }
 
@@ -354,6 +363,7 @@
 /* The round label: opens the latest round report, with a dot while one is unseen */
 .playerToolbar__round {
   position: relative;
+  margin-left: auto;
   padding: var(--spacing-xs) var(--spacing-sm);
   border: none;
   background: none;
