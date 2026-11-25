@@ -1,3 +1,13 @@
+/* A button with no chrome: text or an icon that's tappable. Components add their own padding,
+   borders and colors on top (their files come after this one, so they win ties). */
+.plainButton {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
 .button {
   font-family: var(--font-body);
   font-size: var(--font-size-body);
@@ -35,12 +45,12 @@
 }
 
 .button--danger {
-  background-color: #dc3545;
-  color: var(--color-text-light);
-  border-color: #dc3545;
+  background-color: var(--color-danger);
+  color: var(--color-text-on-fill);
+  border-color: var(--color-danger);
 }
 
 .button--danger:hover {
-  background-color: #c82333;
-  border-color: #bd2130;
+  background-color: color-mix(in srgb, var(--color-danger) 88%, black);
+  border-color: color-mix(in srgb, var(--color-danger) 85%, black);
 }

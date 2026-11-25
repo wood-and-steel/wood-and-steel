@@ -158,7 +158,7 @@ export function NavBar({
       <nav className="navBar">
         <button
           type="button"
-          className="navBar__menuButton--desktop"
+          className="plainButton navBar__menuButton--desktop"
           ref={menuButtonDesktopRef}
           onClick={() => setIsMenuOpen((o: boolean) => !o)}
           aria-label="Menu"

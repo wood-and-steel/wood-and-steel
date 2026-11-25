@@ -73,7 +73,7 @@ export function LoansSheet({ player, isMyTurn, onBorrow, onRepay, onClose }: Loa
             id={`${panelId}-${t}-tab`}
             aria-controls={`${panelId}-${t}`}
             aria-selected={tab === t}
-            className={`sheet__tab${tab === t ? " sheet__tab--active" : ""}`}
+            className={`plainButton sheet__tab${tab === t ? " sheet__tab--active" : ""}`}
             onClick={() => setTab(t)}
           >
             {t === "borrow" ? "Borrow" : "Repay"}

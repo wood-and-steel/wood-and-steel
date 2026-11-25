@@ -22,9 +22,9 @@
   background-color: var(--color-bg-primary);
   border: var(--border-width-md) solid var(--color-border-light);
   border-radius: var(--radius-sm);
-  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-popup);
   padding: var(--spacing-sm) 0;
-  z-index: 102;
+  z-index: var(--z-popup);
   min-width: 10rem;
   width: max-content;
   overflow: hidden;
@@ -39,13 +39,8 @@
   display: block;
   width: 100%;
   padding: var(--spacing-sm) var(--spacing-md);
-  background-color: transparent;
-  border: none;
   text-align: left;
-  cursor: pointer;
   color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
   transition: background-color 0.2s ease;
 }
 

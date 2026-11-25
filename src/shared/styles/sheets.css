@@ -27,10 +27,7 @@
   flex-shrink: 0;
   padding: var(--spacing-xs);
   margin: calc(-1 * var(--spacing-xs));
-  border: none;
-  background: none;
   color: var(--color-text-subtle);
-  cursor: pointer;
 }
 
 .sheet__iconButton:hover {
@@ -102,12 +99,6 @@
 
 .sheet__tab {
   padding: var(--spacing-xs) var(--spacing-sm);
-  border: none;
-  background: none;
-  color: inherit;
-  font-family: inherit;
-  font-size: var(--font-size-body);
-  cursor: pointer;
 }
 
 .sheet__tab--active {
@@ -129,15 +120,7 @@
   padding: var(--spacing-sm) var(--spacing-md);
   border: var(--border-width-md) solid var(--color-border-light);
   border-radius: var(--radius-sm);
-  background: none;
-  color: inherit;
-  font-family: inherit;
-  font-size: var(--font-size-body);
   text-align: left;
-}
-
-button.sheet__option {
-  cursor: pointer;
 }
 
 .sheet__option--selected {
@@ -166,15 +149,7 @@ button.sheet__option {
 
 .sheet__listItem--button {
   width: 100%;
-  border-top: none;
-  border-right: none;
-  border-left: none;
-  background: none;
-  color: inherit;
-  font-family: inherit;
-  font-size: var(--font-size-body);
   text-align: left;
-  cursor: pointer;
 }
 
 .sheet__listItem--button:hover {
@@ -189,8 +164,6 @@ button.sheet__option {
 
 .sheet__select {
   padding: var(--spacing-sm);
-  font-family: inherit;
-  font-size: var(--font-size-body);
   background-color: var(--color-bg-primary);
   color: var(--color-text);
   border: var(--border-width-md) solid var(--color-border-light);
@@ -263,9 +236,7 @@ button.sheet__option {
   border: none;
   background: none;
   color: inherit;
-  font-family: inherit;
   font-size: var(--font-size-h1);
-  font-weight: inherit;
   text-align: right;
 }
 
@@ -383,12 +354,12 @@ button.sheet__option {
 .roundReport__swatch {
   display: inline-block;
   width: 1.25rem;
-  height: 2px;
+  height: 0.125rem;
   background-color: var(--color-text-subtle);
 }
 
 .roundReport__swatch--new {
-  height: 4px;
+  height: 0.25rem;
   background-color: var(--color-highlight);
 }
 
@@ -476,14 +447,8 @@ button.sheet__option {
   gap: var(--spacing-xs);
   padding: var(--spacing-xs);
   margin: 0 calc(-1 * var(--spacing-xs));
-  border: none;
   border-radius: var(--radius-sm);
-  background: none;
-  color: inherit;
-  font-family: inherit;
-  font-size: var(--font-size-body);
   text-align: left;
-  cursor: pointer;
 }
 
 .cargoSheet__item:hover {

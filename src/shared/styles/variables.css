@@ -7,6 +7,7 @@
   --font-body: Judson, Georgia, 'Times New Roman', serif;
 
   /* Body and heading sizes (rem; h4/h5/h6 match body; rounded per CSS_ARCHITECTURE) */
+  --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-body: 1rem;
   --font-weight-body: 400;
@@ -27,7 +28,7 @@
   --spacing-3xl: 5rem;
 
   /* Layout: desktop nav bar height (padding-top + content) for content offset */
-  --nav-height-desktop: 44px;
+  --nav-height-desktop: 2.75rem;
 
   /* iOS home indicator / curved screen edges (0 on most non-phone viewports) */
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
@@ -46,7 +47,11 @@
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   
-  /* Z-Index */
+  /* Z-Index, lowest to highest */
+  --z-toolbar: 10;
+  --z-nav: 100;
+  --z-menu-button: 101;
+  --z-popup: 102;
   --z-modal: 1000;
   --z-money-strip: 1001; /* above sheet scrims */
   
@@ -84,10 +89,18 @@
   --color-bg-disabled: #dfe6e9;
   --color-bg-overlay: rgba(0, 0, 0, 0.5);
   --shadow-modal: 0 0.5rem 2rem rgba(0, 0, 0, 0.25);
+  /* Things that float over the page: the popup menu and the floating menu button */
+  --shadow-popup: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+  --shadow-float: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.2);
+  --shadow-float-hover: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.3);
   
   --color-danger: #dc3545;
   --color-danger-bg: rgba(220, 53, 69, 0.1);
   --color-notification: #c00;
+  /* Go: a joined seat, Start Game */
+  --color-success: #4caf50;
+  /* Text on a solid danger or success fill */
+  --color-text-on-fill: #ffffff;
 
   --color-contract-market: #4510d4;
   --color-contract-private: #101020;
