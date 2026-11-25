@@ -7,3 +7,8 @@
   align-items: center;
   gap: var(--spacing-xs);
 }
+
+.commodityRichName__icon {
+  width: var(--icon-size);
+  height: var(--icon-size);
+}

@@ -3,7 +3,6 @@ import { NavBar } from './components/NavBar';
 import { PlayerBoard } from './components/PlayerBoard';
 import { PlayerToolbar } from './components/PlayerToolbar';
 import { PrivateContractOfferModal } from './components/PrivateContractOfferModal';
-import { CommoditiesPage } from './components/CommoditiesPage';
 import { IndependentRailroadsPage } from './components/IndependentRailroadsPage';
 import { EditPlaytestDialog } from './components/EditPlaytestDialog';
 import { LoansSheet } from './components/LoansSheet';
@@ -32,7 +31,7 @@ export interface WoodAndSteelStateProps {
   gameManager?: GameManagerProps;
 }
 
-type TabId = 'board' | 'commodities' | 'indies';
+type TabId = 'board' | 'indies';
 
 /** Main game board: tabs, NavBar, and form-driven moves. */
 export function WoodAndSteelState({
@@ -373,7 +372,6 @@ export function WoodAndSteelState({
               onOpenBuyEngine={() => setOpenSheet('buyEngine')}
             />
           )}
-          {activeTab === 'commodities' && <CommoditiesPage />}
           {activeTab === 'indies' && <IndependentRailroadsPage />}
         </div>
       </form>
