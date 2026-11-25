@@ -16,7 +16,7 @@ export interface CargoSheetProps {
   onClose: () => void;
 }
 
-/** Picks an engine's cargo: every commodity with its icon, by group, in two columns. */
+/** Picks an engine's cargo: every commodity with its icon, grouped (without visible headers) in two columns. */
 export function CargoSheet({ title, cargo, onSelect, onClose }: CargoSheetProps): React.ReactElement {
   const choose = (commodity: string | null) => {
     onSelect(commodity);
@@ -27,7 +27,6 @@ export function CargoSheet({ title, cargo, onSelect, onClose }: CargoSheetProps)
       <div className="cargoSheet">
         {GROUPS.map((group) => (
           <section key={group.name} className="cargoSheet__group" aria-label={group.name}>
-            <div className="sheet__subhead">{group.name}</div>
             {group.commodities.map((c) => (
               <button
                 key={c}
