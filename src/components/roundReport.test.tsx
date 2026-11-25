@@ -67,7 +67,7 @@ describe('RoundReportSheet', () => {
     render(
       <RoundReportSheet report={report()} G={G} ctx={ctx} autoOpen onAutoOpenChange={() => {}} onClose={() => {}} />
     );
-    expect(screen.getByRole('heading', { name: 'End of round 3' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'End of round 2' })).toBeInTheDocument();
     expect(screen.getByText('Erie Railroad')).toBeInTheDocument();
     expect(screen.getByText(/2 routes · \$/)).toBeInTheDocument();
     expect(
@@ -79,7 +79,7 @@ describe('RoundReportSheet', () => {
     expect(within(screen.getByText('Cattle to Boston').parentElement!).getByText('Expired')).toBeInTheDocument();
     expect(screen.getByText('New: Wine to Denver')).toBeInTheDocument();
     expect(within(screen.getByText('Coal to Atlanta').parentElement!).getByText('Last round')).toBeInTheDocument();
-    expect(screen.getByText('Round 4 starts with')).toBeInTheDocument();
+    expect(screen.getByText('Round 3 starts with')).toBeInTheDocument();
     expect(screen.getByText('Ada')).toBeInTheDocument();
   });
 
@@ -174,7 +174,7 @@ describe('useRoundReport', () => {
 });
 
 describe('round label', () => {
-  test('shows the round counted from 1, opens the report, and has a dot while one is unseen', () => {
+  test('shows the round, opens the report, and has a dot while one is unseen', () => {
     const onOpen = vi.fn();
     const { container } = render(
       <PlayerToolbar
@@ -187,7 +187,7 @@ describe('round label', () => {
         roundReportUnseen
       />
     );
-    const label = screen.getByRole('button', { name: 'Round 4, new round report' });
+    const label = screen.getByRole('button', { name: 'Round 3, new round report' });
     expect(container.querySelector('.playerToolbar__roundDot')).not.toBeNull();
     fireEvent.click(label);
     expect(onOpen).toHaveBeenCalled();
@@ -195,7 +195,7 @@ describe('round label', () => {
 
   test('is disabled before the first report', () => {
     render(<PlayerToolbar G={G} ctx={ctx} playerID="0" startingContractExists currentPhase="play" />);
-    expect(screen.getByRole('button', { name: 'Round 4' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Round 3' })).toBeDisabled();
   });
 });
 
