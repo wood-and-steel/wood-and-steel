@@ -4,7 +4,6 @@ import { getPlayerAvatarColor } from "../utils/playerAvatar";
 import { PlayerAvatar } from "./PlayerAvatar";
 import type { GameState, GameContext } from "../stores/gameStore";
 import { useGameStore } from "../stores/gameStore";
-import { formatMoney } from "../utils/money";
 import { displayRound } from "../utils/rounds";
 
 export type GamePhase = "setup" | "play" | "scoring";
@@ -16,7 +15,6 @@ export interface PlayerToolbarProps {
   startingContractExists: boolean;
   currentPhase: GamePhase;
   onOpenActions?: () => void;
-  onOpenLoans?: () => void;
   /** Opens another player's card. */
   onOpenPlayer?: (playerID: string) => void;
   /** Opens the latest round report; the round label is disabled without one. */
@@ -28,8 +26,8 @@ export interface PlayerToolbarProps {
 const tiesLabel = (ties: number) => `${ties} ${ties === 1 ? "tie" : "ties"}`;
 
 /**
- * Sticky toolbar below NavBar, in three strips that keep their shape whatever the player count:
- * - Money: the player's avatar, cash, debt and a Loans button (in setup, their name instead).
+ * Sticky toolbar below the money strip (MoneyStrip), in two strips that keep their shape whatever
+ * the player count:
  * - Table: every player in play order with their ties, the current one's avatar pulsing; press
  *   another player for their card. In play, the round label at the end opens the latest round
  *   report, with a dot when there's one this device hasn't seen.
@@ -42,7 +40,6 @@ export function PlayerToolbar({
   startingContractExists,
   currentPhase,
   onOpenActions,
-  onOpenLoans,
   onOpenPlayer,
   onOpenRoundReport,
   roundReportUnseen,
@@ -59,38 +56,11 @@ export function PlayerToolbar({
 
   if (!me) return null;
 
-  const [, { name, avatarColor, cash, debt }] = me;
   const currentName = G.players.find(([id]) => id === ctx.currentPlayer)?.[1]?.name ?? `Player ${ctx.currentPlayer}`;
   const seatIds = ctx.playOrder.filter((id) => G.players.some(([pid]) => pid === id));
 
   return (
     <div className="playerToolbar">
-      <div className="playerToolbar__strip playerToolbar__strip--money" role="group" aria-label="Your money">
-        <PlayerAvatar
-          name={name}
-          avatarColor={getPlayerAvatarColor(myID, avatarColor)}
-          isCurrentTurn={myID === ctx.currentPlayer}
-        />
-        {isPlay ? (
-          <>
-            <span className="playerToolbar__cash" aria-label={`Cash ${formatMoney(cash)}`}>
-              {formatMoney(cash)}
-            </span>
-            <span
-              className={`playerToolbar__debt${debt > 0 ? "" : " playerToolbar__debt--none"}`}
-              aria-label={`Debt ${formatMoney(debt)}`}
-            >
-              {formatMoney(debt)} debt
-            </span>
-            <button type="button" className="button playerToolbar__loans" onClick={() => onOpenLoans?.()}>
-              Loans
-            </button>
-          </>
-        ) : (
-          <span className="playerToolbar__name">{name}</span>
-        )}
-      </div>
-
       <div className="playerToolbar__strip playerToolbar__strip--table">
         <span className="playerToolbar__players">
           {seatIds.map((id) => {

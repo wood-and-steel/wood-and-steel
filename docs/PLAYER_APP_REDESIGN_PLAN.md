@@ -157,13 +157,13 @@ The core release. Everything the player board tracked moves into the app, inside
 
 ## Player bar cleanup
 
-The toolbar is three strips, each one line at phone width, so nothing moves when debt appears or the turn passes:
+The player bar is a money strip and a two-strip toolbar, each one line at phone width, so nothing moves when debt appears or the turn passes:
 
-- **Money:** the player's avatar, cash, debt (shown even at $0K) and Loans. The player's name shows here only in setup, before there's money.
-- **Table:** every player in play order, the viewer included, with their ties; the current player's avatar pulses. Pressing another player opens their card. The round label sits at the end.
+- **Money** (`MoneyStrip`): the player's avatar, cash, debt (shown even at $0K) and Loans. The player's name shows here only in setup, before there's money. It's always in view: fixed to the top on phones and tablets, at the right end of the nav row on desktop. It sits above sheet scrims, and sheets and the page start below it (`--money-strip-height`), so cash and debt stay visible while a sheet changes them.
+- **Players:** everyone in play order, the viewer included, with their ties; the current player's avatar pulses. Pressing another player opens their card. The round label sits at the end.
 - **Turn:** Undo, Actions and End Turn on the player's turn in play; otherwise whose turn it is, at the same height.
 
-Still to come: the money strip stays above sheet scrims (sheets start below it), on desktop the money joins the nav row, and Loans in the strip opens on top of whatever sheet is open, returning to it on close.
+Still to come: sheets stack, so Loans in the money strip opens on top of whatever sheet is open and closing it returns there. Until then, Loans in the strip waits while a sheet or dialog is open.
 
 ## Decisions made while building Stage 4
 

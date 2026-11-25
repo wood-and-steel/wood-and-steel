@@ -2,6 +2,7 @@ import React from 'react';
 import { NavBar } from './components/NavBar';
 import { PlayerBoard } from './components/PlayerBoard';
 import { PlayerToolbar } from './components/PlayerToolbar';
+import { MoneyStrip } from './components/MoneyStrip';
 import { PrivateContractOfferModal } from './components/PrivateContractOfferModal';
 import { IndependentRailroadsPage } from './components/IndependentRailroadsPage';
 import { EditPlaytestDialog } from './components/EditPlaytestDialog';
@@ -123,6 +124,15 @@ export function WoodAndSteelState({
         (c: Contract) => c.id === claimContractId && c.type === 'market' && c.playerID === null && !c.fulfilled
       )
     : undefined;
+  // Any sheet or dialog on screen. Until sheets can stack, the money strip's Loans waits for it to close.
+  const isDialogOpen =
+    openSheet !== null ||
+    receiptContract !== undefined ||
+    claimContract !== undefined ||
+    viewPlayerId !== null ||
+    (roundReport.isOpen && G.roundReport != null) ||
+    isPrivateContractModalOpen ||
+    isEditPlaytestDialogOpen;
 
   // Turn sheets belong to this turn: when it ends (here or on another device), forget them so
   // they don't reappear on the player's next turn.
@@ -275,6 +285,16 @@ export function WoodAndSteelState({
               setReplacePrivateContract(false);
             }}
           />
+          {myProps && playerID && (
+            <MoneyStrip
+              player={myProps}
+              playerID={playerID}
+              isCurrentTurn={isMyTurn}
+              showMoney={currentPhase === 'play'}
+              loansDisabled={isDialogOpen}
+              onOpenLoans={() => setOpenSheet('loans')}
+            />
+          )}
           <PlayerToolbar
             G={G}
             ctx={ctx}
@@ -282,7 +302,6 @@ export function WoodAndSteelState({
             startingContractExists={startingContractExists}
             currentPhase={currentPhase}
             onOpenActions={() => setOpenSheet('actions')}
-            onOpenLoans={() => setOpenSheet('loans')}
             onOpenPlayer={setViewPlayerId}
             onOpenRoundReport={G.roundReport ? roundReport.open : undefined}
             roundReportUnseen={roundReport.unseen}

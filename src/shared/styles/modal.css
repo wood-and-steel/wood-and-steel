@@ -9,6 +9,9 @@
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal);
+  /* The money strip stays above the scrim; center the dialog in the space below it */
+  box-sizing: border-box;
+  padding-top: var(--money-strip-height);
 }
 
 .modal__content {
@@ -17,7 +20,8 @@
   border-radius: var(--radius-md);
   max-width: 31rem;
   width: 90%;
-  max-height: 80vh;
+  /* Fit below the money strip with a little room, padding included (the box is content-box) */
+  max-height: min(80vh, calc(100vh - var(--money-strip-height) - 2 * var(--spacing-xl) - var(--spacing-md)));
   overflow: auto;
 }
 

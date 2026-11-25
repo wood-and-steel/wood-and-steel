@@ -28,6 +28,11 @@
 
   /* iOS home indicator / curved screen edges (0 on most non-phone viewports) */
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+
+  /* Height of the player's money strip (MoneyStrip), and so the room left above the page and sheets.
+     0 on pages without one; set below while it's on screen. */
+  --money-strip-height: 0px;
 
   /* Border Width */
   --border-width-md: 0.0625rem;
@@ -40,6 +45,7 @@
   
   /* Z-Index */
   --z-modal: 1000;
+  --z-money-strip: 1001; /* above sheet scrims */
   
   /* Sizes */
   --button-height: 1.75rem;
