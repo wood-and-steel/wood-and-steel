@@ -20,7 +20,8 @@
   border-radius: var(--radius-md);
   max-width: 31rem;
   width: 90%;
-  max-height: 80vh;
+  /* Fit below the money strip with a little room, padding included (the box is content-box) */
+  max-height: min(80vh, calc(100vh - var(--money-strip-height) - 2 * var(--spacing-xl) - var(--spacing-md)));
   overflow: auto;
 }
 
