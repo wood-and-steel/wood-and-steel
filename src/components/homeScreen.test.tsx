@@ -2,7 +2,7 @@
 /**
  * Stage 3 Home (docs/PLAYER_APP_REDESIGN_PLAN.md): contracts and the market as rows valued for
  * the viewing player, the claim sheet with its optional cargo, another player's card, and the
- * toolbar's ties for every player.
+ * toolbar's money, table and turn strips.
  */
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -202,6 +202,61 @@ describe('PlayerToolbar', () => {
     fireEvent.click(ben);
     expect(onOpenPlayer).toHaveBeenCalledWith('1');
     expect(screen.queryByRole('button', { name: '+M' })).toBeNull();
+  });
+
+  const table = (currentPlayer: string, debt = 0) => ({
+    G: {
+      players: [
+        ['0', player({ name: 'Ada', cash: 14000, debt })],
+        ['1', player({ name: 'Ben' })],
+        ['2', player({ name: 'Cy' })],
+      ],
+      contracts: [contract({ id: 'f1', playerID: '0', fulfilled: true })],
+      independentRailroads: {},
+    } as unknown as GameState,
+    ctx: { phase: 'play', currentPlayer, playOrder: ['1', '0', '2'], playOrderPos: 0, numPlayers: 3, turn: 1, round: 1 } as GameContext,
+  });
+
+  test('shows cash and debt, even with no debt, and opens Loans', () => {
+    const onOpenLoans = vi.fn();
+    const { G, ctx } = table('1');
+    render(<PlayerToolbar G={G} ctx={ctx} playerID="0" startingContractExists currentPhase="play" onOpenLoans={onOpenLoans} />);
+    const money = screen.getByRole('group', { name: 'Your money' });
+    expect(within(money).getByLabelText('Cash $14K')).toBeInTheDocument();
+    expect(within(money).getByLabelText('Debt $0K')).toBeInTheDocument();
+    fireEvent.click(within(money).getByRole('button', { name: 'Loans' }));
+    expect(onOpenLoans).toHaveBeenCalled();
+  });
+
+  test('lists every player in play order, the viewer included', () => {
+    const { G, ctx } = table('1');
+    render(<PlayerToolbar G={G} ctx={ctx} playerID="0" startingContractExists currentPhase="play" />);
+    const seats = document.querySelectorAll('.playerToolbar__seat');
+    expect(Array.from(seats).map((seat) => seat.getAttribute('aria-label'))).toEqual([
+      'Ben, 0 ties. Show their board',
+      'You, 1 tie',
+      'Cy, 0 ties. Show their board',
+    ]);
+  });
+
+  test("says whose turn it is off the player's turn, and shows Undo, Actions and End Turn on it", () => {
+    const { G, ctx } = table('1');
+    const { rerender } = render(<PlayerToolbar G={G} ctx={ctx} playerID="0" startingContractExists currentPhase="play" />);
+    expect(screen.getByText("Ben's turn")).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'End Turn' })).toBeNull();
+    rerender(<PlayerToolbar G={G} ctx={{ ...ctx, currentPlayer: '0' }} playerID="0" startingContractExists currentPhase="play" />);
+    expect(screen.queryByText("Ben's turn")).toBeNull();
+    expect(screen.getByRole('button', { name: 'Undo all actions this turn' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Actions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'End Turn' })).toBeInTheDocument();
+  });
+
+  test("in setup, shows the player's name instead of money", () => {
+    const { G, ctx } = table('0');
+    render(<PlayerToolbar G={G} ctx={{ ...ctx, phase: 'setup' }} playerID="0" startingContractExists={false} currentPhase="setup" />);
+    expect(within(screen.getByRole('group', { name: 'Your money' })).getByText('Ada')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
+    expect(screen.getByText('Your turn')).toBeInTheDocument();
   });
 });
 

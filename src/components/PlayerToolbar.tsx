@@ -1,6 +1,6 @@
 import React from "react";
 import { contractTies } from "../utils/ties";
-import { getOtherPlayerIdsInPlayOrder, getPlayerAvatarColor } from "../utils/playerAvatar";
+import { getPlayerAvatarColor } from "../utils/playerAvatar";
 import { PlayerAvatar } from "./PlayerAvatar";
 import type { GameState, GameContext } from "../stores/gameStore";
 import { useGameStore } from "../stores/gameStore";
@@ -25,11 +25,15 @@ export interface PlayerToolbarProps {
   roundReportUnseen?: boolean;
 }
 
+const tiesLabel = (ties: number) => `${ties} ${ties === 1 ? "tie" : "ties"}`;
+
 /**
- * Toolbar shown below NavBar: the player's name, ties, cash and debt, a Loans button (always),
- * the other players with their ties (press one for their card), and on the player's turn Undo,
- * Actions and End Turn. In play, the round label opens the latest round report, with a dot when
- * there's one this device hasn't seen.
+ * Sticky toolbar below NavBar, in three strips that keep their shape whatever the player count:
+ * - Money: the player's avatar, cash, debt and a Loans button (in setup, their name instead).
+ * - Table: every player in play order with their ties, the current one's avatar pulsing; press
+ *   another player for their card. In play, the round label at the end opens the latest round
+ *   report, with a dot when there's one this device hasn't seen.
+ * - Turn: on the player's turn in play, Undo, Actions and End Turn; otherwise whose turn it is.
  */
 export function PlayerToolbar({
   G,
@@ -43,132 +47,127 @@ export function PlayerToolbar({
   onOpenRoundReport,
   roundReportUnseen,
 }: PlayerToolbarProps): React.ReactElement | null {
-  const effectivePlayerID = playerID ?? ctx.currentPlayer;
-  const activePlayer = G.players.find(([key]) => key === effectivePlayerID);
-  const isPlayerTurn = playerID === ctx.currentPlayer;
-  const currentPlayerEntry = G.players.find(([id]) => id === ctx.currentPlayer);
-  const currentPlayerName = currentPlayerEntry?.[1]?.name ?? `Player ${ctx.currentPlayer}`;
-  const showTurnToolbar = isPlayerTurn;
+  const myID = playerID ?? ctx.currentPlayer;
+  const me = G.players.find(([id]) => id === myID);
+  const isMyTurn = playerID === ctx.currentPlayer;
+  const isPlay = currentPhase === "play";
 
   const hasMovedThisTurn = useGameStore((s) => s.hasMovedThisTurn);
   const turnStartSnapshot = useGameStore((s) => s.turnStartSnapshot);
   const undoCurrentTurn = useGameStore((s) => s.undoCurrentTurn);
-  const canUndo =
-    currentPhase === "play" &&
-    isPlayerTurn &&
-    turnStartSnapshot != null &&
-    hasMovedThisTurn;
+  const canUndo = isPlay && isMyTurn && turnStartSnapshot != null && hasMovedThisTurn;
 
-  if (!activePlayer) return null;
+  if (!me) return null;
 
-  const [key, { name, avatarColor, cash, debt }] = activePlayer;
-  const playerScore = contractTies(G.contracts, key);
-  const otherPlayerIds = getOtherPlayerIdsInPlayOrder(key, ctx.playOrder);
+  const [, { name, avatarColor, cash, debt }] = me;
+  const currentName = G.players.find(([id]) => id === ctx.currentPlayer)?.[1]?.name ?? `Player ${ctx.currentPlayer}`;
+  const seatIds = ctx.playOrder.filter((id) => G.players.some(([pid]) => pid === id));
 
   return (
     <div className="playerToolbar">
-      <div className="playerToolbar__info playerToolbar__info--active">
-        <div className="playerToolbar__name playerToolbar__name--active">
-          <PlayerAvatar
-            name={name}
-            avatarColor={getPlayerAvatarColor(key, avatarColor)}
-            isCurrentTurn={key === ctx.currentPlayer}
-          />
-          <span>
-            {name}{" "}
-            <span className="playerToolbar__score">
-              {playerScore} {playerScore === 1 ? "tie" : "ties"}
+      <div className="playerToolbar__strip playerToolbar__strip--money" role="group" aria-label="Your money">
+        <PlayerAvatar
+          name={name}
+          avatarColor={getPlayerAvatarColor(myID, avatarColor)}
+          isCurrentTurn={myID === ctx.currentPlayer}
+        />
+        {isPlay ? (
+          <>
+            <span className="playerToolbar__cash" aria-label={`Cash ${formatMoney(cash)}`}>
+              {formatMoney(cash)}
             </span>
-          </span>
-          {currentPhase === "play" && (
-            <span className="playerToolbar__money">
-              <span className="playerToolbar__cash" aria-label="Cash">
-                {formatMoney(cash)}
+            <span
+              className={`playerToolbar__debt${debt > 0 ? "" : " playerToolbar__debt--none"}`}
+              aria-label={`Debt ${formatMoney(debt)}`}
+            >
+              {formatMoney(debt)} debt
+            </span>
+            <button type="button" className="button playerToolbar__loans" onClick={() => onOpenLoans?.()}>
+              Loans
+            </button>
+          </>
+        ) : (
+          <span className="playerToolbar__name">{name}</span>
+        )}
+      </div>
+
+      <div className="playerToolbar__strip playerToolbar__strip--table">
+        <span className="playerToolbar__players">
+          {seatIds.map((id) => {
+            const [, { name: seatName, avatarColor: seatColor }] = G.players.find(([pid]) => pid === id)!;
+            const ties = contractTies(G.contracts, id);
+            const avatar = (
+              <PlayerAvatar
+                name={seatName}
+                avatarColor={getPlayerAvatarColor(id, seatColor)}
+                isCurrentTurn={id === ctx.currentPlayer}
+              />
+            );
+            const tiesCount = (
+              <span className="playerToolbar__ties" aria-hidden="true">
+                {ties}
               </span>
-              {debt > 0 && (
-                <span className="playerToolbar__debt" aria-label="Debt">
-                  ({formatMoney(debt)} debt)
-                </span>
-              )}
-              <button type="button" className="button playerToolbar__loans" onClick={() => onOpenLoans?.()}>
-                Loans
-              </button>
-            </span>
-          )}
-          {otherPlayerIds.length > 0 && (
-            <span className="playerToolbar__otherAvatars">
-              {otherPlayerIds.map((otherPlayerId) => {
-                const otherPlayer = G.players.find(([id]) => id === otherPlayerId);
-                if (!otherPlayer) return null;
-                const [, { name: otherName, avatarColor: otherAvatarColor }] = otherPlayer;
-                const otherTies = contractTies(G.contracts, otherPlayerId);
-                return (
-                  <button
-                    key={otherPlayerId}
-                    type="button"
-                    className="playerToolbar__other"
-                    aria-label={`${otherName}, ${otherTies} ${otherTies === 1 ? "tie" : "ties"}. Show their board`}
-                    onClick={() => onOpenPlayer?.(otherPlayerId)}
-                  >
-                    <PlayerAvatar
-                      name={otherName}
-                      avatarColor={getPlayerAvatarColor(otherPlayerId, otherAvatarColor)}
-                      isCurrentTurn={otherPlayerId === ctx.currentPlayer}
-                    />
-                    <span className="playerToolbar__otherTies" aria-hidden="true">
-                      {otherTies}
-                    </span>
-                  </button>
-                );
-              })}
-            </span>
-          )}
-        </div>
-        {(showTurnToolbar || currentPhase === "play") && (
-          <div className="playerToolbar__buttonGroup">
-            {currentPhase === "play" && (
+            );
+            return id === myID ? (
+              <span key={id} className="playerToolbar__seat" role="img" aria-label={`You, ${tiesLabel(ties)}`}>
+                {avatar}
+                {tiesCount}
+              </span>
+            ) : (
               <button
+                key={id}
                 type="button"
-                className="playerToolbar__round"
-                disabled={!onOpenRoundReport}
-                onClick={() => onOpenRoundReport?.()}
-                aria-label={`Round ${displayRound(ctx.round)}${roundReportUnseen ? ", new round report" : ""}`}
-                title={onOpenRoundReport ? "Show last round's report" : undefined}
+                className="playerToolbar__seat playerToolbar__seat--other"
+                aria-label={`${seatName}, ${tiesLabel(ties)}. Show their board`}
+                onClick={() => onOpenPlayer?.(id)}
               >
-                Round {displayRound(ctx.round)}
-                {roundReportUnseen && <span className="playerToolbar__roundDot" aria-hidden="true" />}
+                {avatar}
+                {tiesCount}
               </button>
-            )}
-            {showTurnToolbar && (
-              <>
-                <button
-                  type="button"
-                  name="undo"
-                  aria-label="Undo all actions this turn"
-                  className={`button playerToolbar__undo ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
-                  disabled={!canUndo}
-                  onClick={() => undoCurrentTurn()}
-                >
-                  Undo
-                </button>
-                <button
-                  type="button"
-                  name="actions"
-                  className={`button ${startingContractExists && currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
-                  onClick={() => onOpenActions?.()}
-                >
+            );
+          })}
+        </span>
+        {isPlay && (
+          <button
+            type="button"
+            className="playerToolbar__round"
+            disabled={!onOpenRoundReport}
+            onClick={() => onOpenRoundReport?.()}
+            aria-label={`Round ${displayRound(ctx.round)}${roundReportUnseen ? ", new round report" : ""}`}
+            title={onOpenRoundReport ? "Show last round's report" : undefined}
+          >
+            Round {displayRound(ctx.round)}
+            {roundReportUnseen && <span className="playerToolbar__roundDot" aria-hidden="true" />}
+          </button>
+        )}
+      </div>
+
+      <div className="playerToolbar__strip playerToolbar__strip--turn">
+        {isMyTurn && isPlay ? (
+          <>
+            <button
+              type="button"
+              name="undo"
+              aria-label="Undo all actions this turn"
+              className="button"
+              disabled={!canUndo}
+              onClick={() => undoCurrentTurn()}
+            >
+              Undo
+            </button>
+            <span className="playerToolbar__turnButtons">
+              {startingContractExists && (
+                <button type="button" name="actions" className="button" onClick={() => onOpenActions?.()}>
                   Actions
                 </button>
-                <button
-                  type="submit"
-                  name="endTurn"
-                  className={`button ${currentPhase === "play" && isPlayerTurn ? "" : "button--hidden"}`}
-                >
-                  End Turn
-                </button>
-              </>
-            )}
-          </div>
+              )}
+              <button type="submit" name="endTurn" className="button">
+                End Turn
+              </button>
+            </span>
+          </>
+        ) : (
+          <span className="playerToolbar__whoseTurn">{isMyTurn ? "Your turn" : `${currentName}'s turn`}</span>
         )}
       </div>
     </div>
