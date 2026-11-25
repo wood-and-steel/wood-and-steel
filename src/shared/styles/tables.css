@@ -7,8 +7,9 @@
   border-bottom: var(--border-width-md) solid var(--color-border-medium);
 }
 
+/* Mobile Layout (default, < 768px) */
 .table__headerCell {
-  padding: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   text-align: left;
 }
 
@@ -22,39 +23,22 @@
   background-color: var(--color-bg-hover);
 }
 
-.table__row--current {
-  background-color: var(--color-accent);
-}
-
+.table__row--current,
 .table__row--current:hover {
   background-color: var(--color-accent);
 }
 
 .table__cell {
-  padding: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
 }
 
 .table__cell--bold {
   font-weight: bold;
 }
 
-/* ========================================
-   RESPONSIVE TABLE STYLES
-   ======================================== */
-
-/* Mobile Layout (default, < 768px) */
-.table {
-  font-size: var(--font-size-body);
-}
-
-.table__headerCell {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-body);
-}
-
-.table__cell {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-body);
+.table__cell--delete {
+  text-align: center;
+  width: 5rem; /* 4rem for the button, plus the cell's padding */
 }
 
 /* Hide less important columns on mobile */
@@ -63,50 +47,15 @@
   display: none;
 }
 
-/* Tablet Layout (768px - 1023px) */
+/* Tablet and desktop (>= 768px) */
 @media (min-width: 768px) {
-  .table {
-    font-size: var(--font-size-body);
-  }
-
-  .table__headerCell {
-    padding: var(--spacing-sm);
-    font-size: var(--font-size-body);
-  }
-
+  .table__headerCell,
   .table__cell {
     padding: var(--spacing-sm);
-    font-size: var(--font-size-body);
   }
 
-  /* Show columns that were hidden on mobile */
-  .table__cell--hide-mobile {
-    display: table-cell;
-  }
-
+  .table__cell--hide-mobile,
   .table__headerCell--hide-mobile {
     display: table-cell;
   }
-}
-
-/* Desktop Layout (>= 1024px) */
-@media (min-width: 1024px) {
-  .table {
-    font-size: 1rem;
-  }
-
-  .table__headerCell {
-    padding: var(--spacing-sm);
-    font-size: 1rem;
-  }
-
-  .table__cell {
-    padding: var(--spacing-sm);
-    font-size: 1rem;
-  }
-}
-
-.table__cell--delete {
-  text-align: center;
-  width: 4rem;
 }

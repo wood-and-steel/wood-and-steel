@@ -31,7 +31,7 @@ export function CargoSheet({ title, cargo, onSelect, onClose }: CargoSheetProps)
               <button
                 key={c}
                 type="button"
-                className={`cargoSheet__item${cargo === c ? " cargoSheet__item--selected" : ""}`}
+                className={`plainButton cargoSheet__item${cargo === c ? " cargoSheet__item--selected" : ""}`}
                 aria-pressed={cargo === c}
                 onClick={() => choose(c)}
               >

@@ -14,10 +14,11 @@
   background-color: var(--color-bg-light);
 }
 
+/* On phones the page's own padding is the margin; the content adds none at the sides */
 .waitingScreen__content {
   width: 100%;
   max-width: 30rem;
-  padding: var(--spacing-md);
+  padding: var(--spacing-md) 0;
 }
 
 .waitingScreen__title {
@@ -49,7 +50,7 @@
 
 .waitingScreen__codeLabel {
   margin: 0 0 var(--spacing-sm) 0;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
 
@@ -70,7 +71,7 @@
 }
 
 .waitingScreen__copyButton {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
 }
 
@@ -78,18 +79,11 @@
 .waitingScreen__error {
   padding: var(--spacing-sm) var(--spacing-md);
   margin-bottom: var(--spacing-md);
-  background-color: #fce4ec;
-  color: #c62828;
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
   border-radius: var(--radius-sm);
   text-align: center;
-  font-size: 0.875rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .waitingScreen__error {
-    background-color: #4a1c1c;
-    color: #ef9a9a;
-  }
+  font-size: var(--font-size-sm);
 }
 
 /* Name Input Section */
@@ -104,7 +98,7 @@
 .waitingScreen__nameLabel {
   display: block;
   margin-bottom: var(--spacing-xs);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text);
 }
@@ -112,12 +106,11 @@
 .waitingScreen__nameInput {
   width: 100%;
   padding: var(--spacing-sm);
-  font-size: 1rem;
+  font-size: var(--font-size-body);
   border: var(--border-width-md) solid var(--color-border);
   border-radius: var(--radius-sm);
   background-color: var(--color-bg-primary);
   color: var(--color-text);
-  box-sizing: border-box;
 }
 
 .waitingScreen__nameInput:focus {
@@ -133,7 +126,7 @@
 .waitingScreen__savingIndicator {
   display: inline-block;
   margin-top: var(--spacing-xs);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
 
@@ -180,11 +173,11 @@
 .waitingScreen__playerStatus {
   width: 1.25rem;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .waitingScreen__playerStatus--joined {
-  color: #4caf50;
+  color: var(--color-success);
 }
 
 .waitingScreen__playerStatus--open {
@@ -203,7 +196,7 @@
 }
 
 .waitingScreen__playerTag {
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   font-weight: normal;
 }
@@ -217,33 +210,33 @@
 }
 
 .waitingScreen__startButton {
-  background-color: #4caf50;
-  color: white;
-  border-color: #4caf50;
+  background-color: var(--color-success);
+  color: var(--color-text-on-fill);
+  border-color: var(--color-success);
   font-weight: 600;
 }
 
 .waitingScreen__startButton:hover:not(:disabled) {
-  background-color: #43a047;
-  border-color: #43a047;
+  background-color: color-mix(in srgb, var(--color-success) 90%, black);
+  border-color: color-mix(in srgb, var(--color-success) 90%, black);
 }
 
 .waitingScreen__startButton:disabled {
-  background-color: #a5d6a7;
-  border-color: #a5d6a7;
-  color: white;
+  background-color: color-mix(in srgb, var(--color-success) 50%, white);
+  border-color: color-mix(in srgb, var(--color-success) 50%, white);
+  color: var(--color-text-on-fill);
   cursor: not-allowed;
 }
 
 .waitingScreen__cancelButton {
   background-color: transparent;
-  color: #dc3545;
-  border-color: #dc3545;
+  color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .waitingScreen__cancelButton:hover:not(:disabled) {
-  background-color: #dc3545;
-  color: white;
+  background-color: var(--color-danger);
+  color: var(--color-text-on-fill);
 }
 
 /* Status Message */
@@ -254,7 +247,7 @@
 
 .waitingScreen__statusMessage p {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
 
@@ -265,7 +258,7 @@
   }
 
   .waitingScreen__content {
-    max-width: 32rem;
+    max-width: calc(32rem + 2 * var(--spacing-lg));
     padding: var(--spacing-lg);
   }
 
@@ -284,7 +277,6 @@
   .waitingScreen__nameSection {
     padding: var(--spacing-lg);
   }
-
 
   .waitingScreen__playerItem {
     padding: var(--spacing-md) var(--spacing-lg);
@@ -308,10 +300,9 @@
   }
 
   .waitingScreen__content {
-    max-width: 36rem;
+    max-width: calc(36rem + 2 * var(--spacing-xl));
     padding: var(--spacing-xl);
   }
-
 
   .waitingScreen__code {
     font-size: 3rem;

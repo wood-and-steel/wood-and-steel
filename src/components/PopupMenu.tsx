@@ -217,7 +217,7 @@ export function PopupMenuItem({ onClick, disabled, children, ...rest }: PopupMen
   return (
     <button
       type="button"
-      className="popupMenu__item"
+      className="plainButton popupMenu__item"
       role="menuitem"
       disabled={disabled}
       onClick={handleClick}

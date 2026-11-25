@@ -14,9 +14,10 @@
   background-color: var(--color-bg-light);
 }
 
+/* On phones the page's own padding is the margin; the content adds none at the sides */
 .lobbyScreen__content {
   width: 100%;
-  padding: var(--spacing-md);
+  padding: var(--spacing-md) 0;
 }
 
 .lobbyScreen__title {
@@ -33,9 +34,9 @@
 }
 
 .lobbyScreen__spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--color-border);
+  width: 1rem;
+  height: 1rem;
+  border: var(--border-width-lg) solid var(--color-border);
   border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
@@ -52,7 +53,7 @@
   margin-bottom: var(--spacing-md);
   padding: var(--spacing-sm);
   background-color: var(--color-bg-light);
-  border: 1px solid var(--color-border);
+  border: var(--border-width-md) solid var(--color-border);
   border-radius: var(--radius-md);
 }
 
@@ -65,15 +66,17 @@
 }
 
 .lobbyScreen__joinLabel {
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-text);
   font-weight: 500;
 }
 
 .lobbyScreen__joinInput {
+  /* The width is the code's; padding and border go outside it */
+  box-sizing: content-box;
   padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: 0.875rem;
-  border: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  border: var(--border-width-md) solid var(--color-border);
   border-radius: var(--radius-sm);
   width: 7rem;
   text-transform: uppercase;
@@ -84,7 +87,7 @@
 .lobbyScreen__joinInput:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  box-shadow: 0 0 0 var(--border-width-lg) color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .lobbyScreen__joinInput:disabled {
@@ -109,11 +112,11 @@
 .lobbyScreen__cloudError {
   margin-bottom: var(--spacing-md);
   padding: var(--spacing-sm);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   color: var(--color-danger);
   text-align: center;
   background-color: var(--color-danger-bg);
-  border: 1px solid var(--color-danger);
+  border: var(--border-width-md) solid var(--color-danger);
   border-radius: var(--radius-md);
 }
 
@@ -144,7 +147,7 @@
 .lobbyScreen__emptyState p {
   margin: 0 0 var(--spacing-md) 0;
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 .lobbyScreen__actions {
@@ -161,7 +164,7 @@
   margin: var(--spacing-sm) 0;
   flex-wrap: wrap;
   justify-content: center;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
 /* Tablet Layout (768px - 1023px) */
@@ -171,7 +174,7 @@
   }
 
   .lobbyScreen__content {
-    max-width: 38rem;
+    max-width: calc(38rem + 2 * var(--spacing-lg));
     padding: var(--spacing-lg);
     margin-top: 0;
   }
@@ -186,23 +189,23 @@
   }
 
   .lobbyScreen__joinLabel {
-    font-size: 1rem;
+    font-size: var(--font-size-body);
   }
 
   .lobbyScreen__joinInput {
-    font-size: 1rem;
+    font-size: var(--font-size-body);
     padding: var(--spacing-sm) var(--spacing-md);
     width: 8rem;
   }
 
   .lobbyScreen__joinError {
-    font-size: 0.875rem;
+    font-size: var(--font-size-sm);
   }
 
   .lobbyScreen__cloudError {
     margin-bottom: var(--spacing-lg);
     padding: var(--spacing-md);
-    font-size: 1rem;
+    font-size: var(--font-size-body);
   }
 
   .lobbyScreen__emptyState {
@@ -210,7 +213,7 @@
   }
 
   .lobbyScreen__emptyState p {
-    font-size: 1rem;
+    font-size: var(--font-size-body);
     margin-bottom: var(--spacing-lg);
   }
 
@@ -222,7 +225,7 @@
   .lobbyScreen__newGame {
     gap: var(--spacing-md);
     margin: var(--spacing-md);
-    font-size: 1rem;
+    font-size: var(--font-size-body);
   }
 }
 
@@ -233,33 +236,11 @@
   }
 
   .lobbyScreen__content {
-    max-width: 50rem;
+    max-width: calc(50rem + 2 * var(--spacing-xl));
     padding: var(--spacing-xl);
-  }
-
-  .lobbyScreen__title {
-    margin-bottom: var(--spacing-lg);
   }
 
   .lobbyScreen__joinGame {
     padding: var(--spacing-md) var(--spacing-lg);
-  }
-
-  .lobbyScreen__emptyState {
-    padding: var(--spacing-xl);
-  }
-
-  .lobbyScreen__emptyState p {
-    font-size: 1rem;
-  }
-
-  .lobbyScreen__actions {
-    margin-top: var(--spacing-lg);
-    gap: var(--spacing-sm);
-  }
-
-  .lobbyScreen__newGame {
-    gap: var(--spacing-md);
-    margin: var(--spacing-md);
   }
 }

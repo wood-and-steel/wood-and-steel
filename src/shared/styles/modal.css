@@ -12,12 +12,13 @@
   justify-content: center;
   z-index: var(--z-modal);
   /* The money strip stays above the scrim; center the dialog in the space below it */
-  box-sizing: border-box;
   padding-top: var(--money-strip-height);
 }
 
 .modal__content {
-  /* Fit below the money strip with a little room, padding included (the box is content-box) */
+  /* Fit below the money strip with a little room. The box is content-box, so width and max-width
+     are the text column's and the padding goes outside them. */
+  box-sizing: content-box;
   --modal-max-height: min(80vh, calc(100vh - var(--money-strip-height) - 2 * var(--spacing-xl) - var(--spacing-md)));
   background-color: var(--color-bg-primary);
   padding: var(--spacing-xl);
@@ -125,7 +126,6 @@
 .editPlaytestDialog__select {
   width: 100%;
   padding: var(--spacing-sm);
-  font-size: 1rem;
   background-color: var(--color-bg-primary);
   color: var(--color-text);
   border: var(--border-width-md) solid var(--color-border-light);

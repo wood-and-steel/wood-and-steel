@@ -1,4 +1,21 @@
 /* ========================================
+   RESET (player app only)
+   :where() keeps these at zero specificity, so any class overrides them. They apply while the
+   player app is on screen, including what it portals into <body>; the playtest board and dev
+   tools keep the browser's defaults.
+   ======================================== */
+:where(:root:has(.playerApp)) *,
+:where(:root:has(.playerApp)) *::before,
+:where(:root:has(.playerApp)) *::after {
+  box-sizing: border-box;
+}
+
+/* Form controls take the surrounding text's font, not the browser's small sans-serif */
+:where(:root:has(.playerApp)) :where(button, input, select, textarea) {
+  font: inherit;
+}
+
+/* ========================================
    GLOBAL STYLES
    ======================================== */
 body {

@@ -153,7 +153,7 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
       >
         <div className="sheet__header">
           {onBack && (
-            <button type="button" className="sheet__iconButton" aria-label="Back" onClick={onBack}>
+            <button type="button" className="plainButton sheet__iconButton" aria-label="Back" onClick={onBack}>
               <svg className="sheet__icon" viewBox="0 0 16 16" aria-hidden="true">
                 <path d="M10.5 2.5 5 8l5.5 5.5" />
               </svg>
@@ -162,7 +162,7 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
           <h2 className="sheet__title" id={titleId}>
             {title}
           </h2>
-          <button type="button" className="sheet__iconButton" aria-label="Close" onClick={onClose}>
+          <button type="button" className="plainButton sheet__iconButton" aria-label="Close" onClick={onClose}>
             <svg className="sheet__icon" viewBox="0 0 16 16" aria-hidden="true">
               <path d="M3 3l10 10M13 3 3 13" />
             </svg>
@@ -274,7 +274,7 @@ export function ListRow({ title, aside, onSelect, children }: ListRowProps): Rea
     </>
   );
   return onSelect ? (
-    <button type="button" className="sheet__listItem sheet__listItem--button" onClick={onSelect}>
+    <button type="button" className="plainButton sheet__listItem sheet__listItem--button" onClick={onSelect}>
       {content}
     </button>
   ) : (

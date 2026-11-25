@@ -75,6 +75,7 @@ function ContractRow({ contract, player, onSelect }: ContractRowProps): React.Re
   const claimed = contract.type === "market" && contract.playerID !== null;
   const { net, gross, byEngine } = payoutFor(contract, contract.fulfilled ? undefined : player);
   const classes = [
+    "plainButton",
     "contractRow",
     contract.type === "market" ? "contractRow--market" : "contractRow--private",
     contract.fulfilled ? "contractRow--fulfilled" : "",

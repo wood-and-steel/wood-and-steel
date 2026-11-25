@@ -53,7 +53,7 @@ export function EnginesPanel({ player, playerID, canEdit, onSetCargo, onBuyEngin
             </span>
             <span className="engines__type">
               {onBuyEngine ? (
-                <button type="button" className={`${nameClass} engines__name--button`} onClick={onBuyEngine}>
+                <button type="button" className={`plainButton ${nameClass} engines__name--button`} onClick={onBuyEngine}>
                   {name}
                 </button>
               ) : (
@@ -70,7 +70,7 @@ export function EnginesPanel({ player, playerID, canEdit, onSetCargo, onBuyEngin
               (canEdit ? (
                 <button
                   type="button"
-                  className={`engines__cargo engines__cargo--button${cargo ? "" : " engines__cargo--none"}`}
+                  className={`plainButton engines__cargo engines__cargo--button${cargo ? "" : " engines__cargo--none"}`}
                   aria-label={`${SLOT_NAMES[slot]} engine cargo: ${cargo ? formatCommodity(cargo) : "none"}`}
                   onClick={() => setPickingSlot(slot)}
                 >

@@ -87,7 +87,7 @@ export function PlayerToolbar({
               <button
                 key={id}
                 type="button"
-                className="playerToolbar__seat playerToolbar__seat--other"
+                className="plainButton playerToolbar__seat playerToolbar__seat--other"
                 aria-label={`${seatName}, ${tiesLabel(ties)}. Show their board`}
                 onClick={() => onOpenPlayer?.(id)}
               >
@@ -100,7 +100,7 @@ export function PlayerToolbar({
         {isPlay && (
           <button
             type="button"
-            className="playerToolbar__round"
+            className="plainButton playerToolbar__round"
             disabled={!onOpenRoundReport}
             onClick={() => onOpenRoundReport?.()}
             aria-label={`Round ${displayRound(ctx.round)}${roundReportUnseen ? ", new round report" : ""}`}
