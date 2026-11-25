@@ -40,6 +40,7 @@
   --border-width-xl: 0.25rem;
   
   /* Border Radius */
+  --radius-xs: 0.125rem;
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   
@@ -52,6 +53,11 @@
   --button-height-full: 2.5rem;
   --icon-size: 1.5rem;
   --avatar-size: 2.2rem;
+  /* A sheet's Back and Close icons: 90% of the sheet title's size */
+  --sheet-icon-size: calc(0.9 * var(--font-size-h3));
+
+  /* Dialogs: the blur behind the scrim */
+  --blur-overlay: 0.125rem;
   
   /* Opacity */
   --opacity-disabled: 0.6;
@@ -79,6 +85,7 @@
   --color-bg-hover: #f6f1e6;
   --color-bg-disabled: #dfe6e9;
   --color-bg-overlay: rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 0.5rem 2rem rgba(0, 0, 0, 0.25);
   
   --color-danger: #dc3545;
   --color-danger-bg: rgba(220, 53, 69, 0.1);
@@ -112,6 +119,8 @@
   --color-bg-hover: #2a3034;
   --color-bg-disabled: #2d3436;
   --color-bg-overlay: rgba(0, 0, 0, 0.7);
+  /* Dark scrims swallow a soft shadow; this one is darker and tighter */
+  --shadow-modal: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.6);
   
   --color-danger: #e74c3c;
   --color-danger-bg: rgba(231, 76, 60, 0.15);

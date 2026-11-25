@@ -3,7 +3,7 @@ import { NavBar } from './components/NavBar';
 import { PlayerBoard } from './components/PlayerBoard';
 import { PlayerToolbar } from './components/PlayerToolbar';
 import { MoneyStrip } from './components/MoneyStrip';
-import { PrivateContractOfferModal } from './components/PrivateContractOfferModal';
+import { PrivateContractOfferSheet } from './components/PrivateContractOfferSheet';
 import { EditPlaytestDialog } from './components/EditPlaytestDialog';
 import { LoansSheet } from './components/LoansSheet';
 import { ActionsSheet } from './components/ActionsSheet';
@@ -207,23 +207,24 @@ export function WoodAndSteelState({
             ctx={ctx}
             moves={moves}
           />
-          <PrivateContractOfferModal
-            isOpen={isPrivateContractModalOpen}
-            onClose={() => {
-              setIsPrivateContractModalOpen(false);
-              setReplacePrivateContract(false);
-            }}
-            G={G}
-            ctx={ctx}
-            onSelect={(commodity: string, destinationKey: string) => {
-              if (isMyTurn && playerID) {
-                if (replacePrivateContract) moves.replacePrivateContract(playerID, commodity, destinationKey);
-                else moves.addContract(commodity, destinationKey, 'private');
-              }
-              setIsPrivateContractModalOpen(false);
-              setReplacePrivateContract(false);
-            }}
-          />
+          {isPrivateContractModalOpen && (
+            <PrivateContractOfferSheet
+              G={G}
+              ctx={ctx}
+              onSelect={(commodity: string, destinationKey: string) => {
+                if (isMyTurn && playerID) {
+                  if (replacePrivateContract) moves.replacePrivateContract(playerID, commodity, destinationKey);
+                  else moves.addContract(commodity, destinationKey, 'private');
+                }
+                setIsPrivateContractModalOpen(false);
+                setReplacePrivateContract(false);
+              }}
+              onClose={() => {
+                setIsPrivateContractModalOpen(false);
+                setReplacePrivateContract(false);
+              }}
+            />
+          )}
           {myProps && playerID && (
             <MoneyStrip
               player={myProps}
@@ -270,7 +271,6 @@ export function WoodAndSteelState({
             <ActionsSheet
               initialView={openSheet === 'buyEngine' ? 'engine' : 'menu'}
               G={G}
-              round={ctx.round}
               playerID={playerID}
               player={myProps}
               moves={moves}

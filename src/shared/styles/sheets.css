@@ -5,7 +5,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  max-width: 26rem;
 }
 
 .sheet__header {
@@ -20,20 +19,32 @@
   font-size: var(--font-size-h3);
 }
 
-.sheet__back,
-.sheet__close {
-  padding: 0 var(--spacing-xs);
+/* Back and Close: icons at 90% of the title's size, with a little room around them to tap */
+.sheet__iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: var(--spacing-xs);
+  margin: calc(-1 * var(--spacing-xs));
   border: none;
   background: none;
   color: var(--color-text-subtle);
-  font-family: inherit;
-  font-size: var(--font-size-body);
   cursor: pointer;
 }
 
-.sheet__close {
-  font-size: 1.5rem;
-  line-height: 1;
+.sheet__iconButton:hover {
+  color: var(--color-text);
+}
+
+.sheet__icon {
+  width: var(--sheet-icon-size);
+  height: var(--sheet-icon-size);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .sheet__row {
@@ -134,6 +145,42 @@ button.sheet__option {
   background-color: var(--color-bg-active);
 }
 
+/* Rows with a rule between them (Actions, engines, upgrades, railroads): title and price on
+   top, details under it; a row you can press is a button the full width of the list */
+.sheet__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet__listItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: var(--spacing-sm);
+  border-bottom: var(--border-width-md) solid var(--color-border-light);
+}
+
+.sheet__listItem:last-child {
+  border-bottom: none;
+}
+
+.sheet__listItem--button {
+  width: 100%;
+  border-top: none;
+  border-right: none;
+  border-left: none;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet__listItem--button:hover {
+  background-color: var(--color-bg-hover);
+}
+
 .sheet__field {
   display: flex;
   flex-direction: column;
@@ -150,7 +197,22 @@ button.sheet__option {
   border-radius: var(--radius-sm);
 }
 
-/* Loans */
+/* Loans: both tabs' panels share one grid cell, so switching tabs never changes the height */
+.loans__panels {
+  display: grid;
+}
+
+.loans__panel {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.loans__panel--hidden {
+  visibility: hidden;
+}
+
 .loans__stepper {
   display: flex;
   justify-content: space-between;
@@ -173,67 +235,16 @@ button.sheet__option {
   font-weight: 600;
 }
 
-/* Actions */
-.actions__list {
-  display: flex;
-  flex-direction: column;
-}
-
-.actions__item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  padding: var(--spacing-sm) 0;
-  border: none;
-  border-bottom: var(--border-width-md) solid var(--color-border-light);
-  background: none;
-  color: inherit;
-  font-family: inherit;
-  font-size: var(--font-size-body);
-  text-align: left;
-  cursor: pointer;
-}
-
-.actions__item:last-child {
-  border-bottom: none;
-}
-
-.actions__item:hover {
-  background-color: var(--color-bg-hover);
-}
-
-.upgrades__list {
-  display: flex;
-  flex-direction: column;
-}
-
-.upgrades__item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  padding: var(--spacing-xs) 0;
-  border-bottom: var(--border-width-md) solid var(--color-border-light);
-}
-
-.upgrades__item:last-child {
-  border-bottom: none;
-}
-
 .upgrades__owned {
   font-size: var(--font-size-body);
   font-weight: 600;
 }
 
-.upgrades__buy {
-  height: auto;
-  padding: 0.125rem var(--spacing-sm);
-  font-size: var(--font-size-body);
-}
-
+/* "$ [amount] ,000", centered as one fixed-width group so nothing moves while typing */
 .track__field {
   display: flex;
+  justify-content: center;
   align-items: baseline;
-  gap: 0.125rem;
   padding: var(--spacing-sm) var(--spacing-md);
   border: var(--border-width-md) solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -246,14 +257,21 @@ button.sheet__option {
 }
 
 .track__input {
-  width: 4rem;
+  width: 2rem;
+  padding: 0;
+  margin-left: 0.125rem;
   border: none;
   background: none;
   color: inherit;
   font-family: inherit;
-  font-size: inherit;
+  font-size: var(--font-size-h1);
   font-weight: inherit;
   text-align: right;
+}
+
+.track__affix--thousands {
+  font-size: var(--font-size-body);
+  color: var(--color-text-subtle);
 }
 
 .track__input:focus {
