@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
   getAvatarTextColor,
-  getOtherPlayerIdsInPlayOrder,
   getPlayerAvatarColor,
   getPlayerAvatarColorForIndex,
   getPlayerInitials,
@@ -40,14 +39,6 @@ describe('playerAvatar', () => {
     expect(getPlayerAvatarColor('0', stored)).toBe(stored);
     expect(getPlayerAvatarColor('0')).toBe('#856C04');
     expect(getPlayerAvatarColor('1')).toBe('#C43232');
-  });
-
-  test('getOtherPlayerIdsInPlayOrder returns remaining players in play order', () => {
-    const playOrder = ['0', '1', '2'];
-    expect(getOtherPlayerIdsInPlayOrder('0', playOrder)).toEqual(['1', '2']);
-    expect(getOtherPlayerIdsInPlayOrder('1', playOrder)).toEqual(['2', '0']);
-    expect(getOtherPlayerIdsInPlayOrder('2', playOrder)).toEqual(['0', '1']);
-    expect(getOtherPlayerIdsInPlayOrder('missing', playOrder)).toEqual([]);
   });
 
   test('getAvatarTextColor returns black or white for hsl and hex colors', () => {

@@ -17,39 +17,6 @@
   }
 }
 
-.playerToolbar__info {
-  padding: var(--spacing-sm);
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.playerToolbar__buttonGroup {
-  display: flex;
-  gap: var(--spacing-xs);
-  align-items: center;
-}
-
-.playerToolbar__info--active {
-  background-color: var(--color-bg-active);
-}
-
-.playerToolbar__turnIndicator {
-  font-size: var(--font-size-body);
-  color: var(--color-text-subtle);
-}
-
-.playerToolbar__name {
-  margin-top: var(--spacing-xs);
-  font-size: var(--font-size-body);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
 .playerAvatar {
   width: var(--avatar-size);
   height: var(--avatar-size);
@@ -86,22 +53,6 @@
   50% {
     border-color: var(--color-text-light);
   }
-}
-
-.playerToolbar__name--active {
-  font-weight: bold;
-}
-
-.playerToolbar__score {
-  font-weight: normal;
-  color: var(--color-text-subtle);
-}
-
-.playerToolbar__otherAvatars {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin-left: var(--spacing-sm);
 }
 
 .playerBoard {
@@ -290,11 +241,72 @@
   font-size: var(--font-size-sm);
 }
 
-/* Other players in the toolbar: avatar plus their ties; press for their card */
-.playerToolbar__other {
+/* Toolbar strips: money, table (players and round), turn. Each keeps one line at phone width. */
+.playerToolbar__strip {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-height: var(--avatar-size);
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.playerToolbar__strip + .playerToolbar__strip {
+  border-top: var(--border-width-md) solid var(--color-border-subtle);
+}
+
+.playerToolbar__strip--money {
+  background-color: var(--color-bg-active);
+}
+
+.playerToolbar__strip--table,
+.playerToolbar__strip--turn {
+  justify-content: space-between;
+}
+
+/* A crowded table (five players with double-digit ties on a narrow phone) wraps the round label to
+   a line of its own rather than pushing it off screen. Wrapping, not scrolling: a scroll box would
+   clip the current player's glow. */
+.playerToolbar__strip--table {
+  flex-wrap: wrap;
+  row-gap: var(--spacing-xs);
+}
+
+.playerToolbar__cash {
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+}
+
+.playerToolbar__debt {
+  color: var(--color-danger);
+}
+
+.playerToolbar__debt--none {
+  color: var(--color-text-subtle);
+}
+
+.playerToolbar__loans {
+  margin-left: auto;
+}
+
+.playerToolbar__name {
+  font-weight: bold;
+}
+
+.playerToolbar__players {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+/* One player at the table: avatar plus their ties; other players are buttons for their card */
+.playerToolbar__seat {
   display: inline-flex;
   align-items: center;
   gap: 0.125rem;
+}
+
+.playerToolbar__seat--other {
   padding: 0;
   border: none;
   background: none;
@@ -303,14 +315,24 @@
   cursor: pointer;
 }
 
-.playerToolbar__otherTies {
+.playerToolbar__ties {
   font-size: var(--font-size-body);
+  color: var(--color-text-subtle);
+}
+
+.playerToolbar__turnButtons {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.playerToolbar__whoseTurn {
   color: var(--color-text-subtle);
 }
 
 /* The round label: opens the latest round report, with a dot while one is unseen */
 .playerToolbar__round {
   position: relative;
+  margin-left: auto;
   padding: var(--spacing-xs) var(--spacing-sm);
   border: none;
   background: none;
@@ -372,29 +394,6 @@
     width: 15rem;
   }
 }
-/* Money in the toolbar: cash, debt when there is some, and the Loans button */
-.playerToolbar__money {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  margin-left: var(--spacing-sm);
-}
-
-.playerToolbar__cash {
-  font-weight: 600;
-}
-
-.playerToolbar__debt {
-  color: var(--color-danger);
-  font-size: var(--font-size-body);
-}
-
-.playerToolbar__loans {
-  height: auto;
-  padding: 0.125rem var(--spacing-sm);
-  font-size: var(--font-size-body);
-}
-
 /* Engines on the Contracts tab: one row per token */
 .engines {
   display: flex;

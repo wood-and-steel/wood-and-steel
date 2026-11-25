@@ -155,11 +155,21 @@ The core release. Everything the player board tracked moves into the app, inside
 
 - **Regional Office asks for a region.** The existing `claimRegionalOffice` move records one, so its purchase sheet needs a region picker like the Hub's city picker.
 
+## Player bar cleanup
+
+The toolbar is three strips, each one line at phone width, so nothing moves when debt appears or the turn passes:
+
+- **Money:** the player's avatar, cash, debt (shown even at $0K) and Loans. The player's name shows here only in setup, before there's money.
+- **Table:** every player in play order, the viewer included, with their ties; the current player's avatar pulses. Pressing another player opens their card. The round label sits at the end.
+- **Turn:** Undo, Actions and End Turn on the player's turn in play; otherwise whose turn it is, at the same height.
+
+Still to come: the money strip stays above sheet scrims (sheets start below it), on desktop the money joins the nav row, and Loans in the strip opens on top of whatever sheet is open, returning to it on close.
+
 ## Decisions made while building Stage 4
 
 - **The report is worked out by comparing before and after** the end-of-round hook (`src/stores/roundReport.ts`), so the growth and expiration code didn't change.
 - **Rounds are shown counted from 1.** `ctx.round` starts at 0 for the first round of play; the player app's round label, the report and the board app's top bar all add 1.
-- **The round label sits in the toolbar**, left of Undo, Actions and End Turn, and is there on every player's screen during play.
+- **The round label sits in the toolbar**, at the end of the players' strip, and is there on every player's screen during play.
 - **A report with no news doesn't open by itself or get a dot**: the first round's report (railroads don't grow until the end of round 2, and the market may not be open) would otherwise interrupt everyone for nothing. The round label still opens it.
 - **The market section also lists open contracts in their last round**, read live from `G`, as the sketch shows.
 - **Mini maps use straight lines between city points**, not the board's traced route curves, which belong to the board app. A railroad wider than about 40% of the board that's in separate pieces gets one map per piece that grew.

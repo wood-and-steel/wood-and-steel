@@ -64,18 +64,6 @@ export function getPlayerInitials(name: string): string {
   return firstInitial + Array.from(words[1])[0].toUpperCase();
 }
 
-export function getOtherPlayerIdsInPlayOrder(
-  viewingPlayerId: string,
-  playOrder: string[]
-): string[] {
-  const startIndex = playOrder.indexOf(viewingPlayerId);
-  if (startIndex === -1) return [];
-
-  return Array.from({ length: playOrder.length - 1 }, (_, offset) =>
-    playOrder[(startIndex + offset + 1) % playOrder.length]
-  );
-}
-
 export function getAvatarTextColor(backgroundColor: string): "#000000" | "#ffffff" {
   const { r, g, b } = parseColor(backgroundColor);
   const luminance = relativeLuminance(r, g, b);
