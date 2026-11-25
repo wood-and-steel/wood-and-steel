@@ -288,6 +288,8 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-sm);
+  min-width: 0;
+  overflow-x: auto;
 }
 
 /* One player at the table: avatar plus their ties; other players are buttons for their card */
