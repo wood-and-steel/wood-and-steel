@@ -110,11 +110,11 @@ describe('ClaimSheet', () => {
     const { rerender } = render(
       <ClaimSheet playerID="0" contract={market} player={player()} refusal={null} onClaim={() => true} onClose={() => {}} />
     );
-    expect(screen.getByRole('region', { name: 'Lead is available in:' })).toHaveTextContent('Butte, Calgary');
+    expect(screen.getByRole('region', { name: 'Lead · Available in:' })).toHaveTextContent('Butte, Calgary');
     rerender(
       <ClaimSheet playerID="0" contract={market} player={player()} refusal="No" onClaim={() => true} onClose={() => {}} />
     );
-    expect(screen.getByRole('region', { name: 'Lead is available in:' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Lead · Available in:' })).toBeInTheDocument();
   });
 
   test('suggests the engine already carrying the commodity, and says so', () => {

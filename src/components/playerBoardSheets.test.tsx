@@ -45,7 +45,7 @@ describe('DeliveryReceipt', () => {
     expect(screen.queryByRole('radiogroup')).toBeNull();
     expect(screen.getByText('To your cash').nextSibling).toHaveTextContent(`+${formatMoney(moneyValue(c))}`);
     expect(screen.getByRole('button', { name: 'Deliver and choose a new contract' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Coal is available in:' })).toHaveTextContent('Atlanta, Butte, Calgary');
+    expect(screen.getByRole('region', { name: 'Coal · Available in:' })).toHaveTextContent('Atlanta, Butte, Calgary');
   });
 
   test('asks which engine delivered only when they pay differently, and shows the bonus lines', () => {

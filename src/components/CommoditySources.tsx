@@ -6,7 +6,7 @@ import { commodityIcons } from "../shared/assets/icons";
 /** A sheet section listing the cities that supply a contract's commodity. */
 export function CommoditySources({ commodity }: { commodity: string }): React.ReactElement {
   const cities = commodities.get(commodity)?.cities ?? [];
-  const heading = `${formatCommodity(commodity)} is available in:`;
+  const heading = `${formatCommodity(commodity)} · Available in:`;
   return (
     <section className="commoditySources" aria-label={heading}>
       <div className="sheet__subhead commoditySources__heading">
