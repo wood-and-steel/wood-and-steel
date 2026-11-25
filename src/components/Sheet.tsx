@@ -13,19 +13,51 @@ const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
- * Controls outside any sheet that Tab still reaches while one is open: the money strip's Loans
- * button, so keyboard and screen reader users can borrow without closing the sheet.
+ * Regions outside any sheet that stay live while one is open: the money strip, so keyboard and
+ * screen reader users can read their money and reach Loans without closing the sheet.
  */
-const SHEET_REACHABLE = "[data-sheet-reachable]:not([disabled])";
+const SHEET_REACHABLE = "[data-sheet-reachable]";
 
-/** An open sheet: its content, and the element last focused inside it. */
+/** An open sheet: its dialog, its content, and the element last focused inside it. */
 interface OpenSheet {
+  dialog: HTMLDivElement | null;
   content: HTMLDivElement | null;
   lastFocus: HTMLElement | null;
 }
 
 /** Open sheets, bottom to top. Loans can open over another sheet; only the top one is live. */
 const openSheets: OpenSheet[] = [];
+
+/** Elements this module made inert, so it un-inerts only those. */
+const inerted = new Set<Element>();
+
+/**
+ * Makes everything but the top sheet and the reachable regions (the money strip) inert, so
+ * neither keyboard nor screen reader can reach the game behind or a sheet underneath. This
+ * stands in for aria-modal, which would hide the money strip from screen readers too.
+ */
+function updateBackground(): void {
+  inerted.forEach((el) => el.removeAttribute("inert"));
+  inerted.clear();
+  const top = openSheets[openSheets.length - 1];
+  if (!top?.dialog) return;
+  const keep = [
+    top.dialog,
+    ...Array.from(document.querySelectorAll(SHEET_REACHABLE)).filter((el) => !el.closest(".modal")),
+  ];
+  const hideOthers = (parent: Element) => {
+    for (const child of Array.from(parent.children)) {
+      if (keep.includes(child)) continue;
+      if (keep.some((el) => child.contains(el))) {
+        hideOthers(child);
+      } else if (!child.hasAttribute("inert")) {
+        child.setAttribute("inert", "");
+        inerted.add(child);
+      }
+    }
+  };
+  hideOthers(document.body);
+}
 
 /**
  * The element outside any sheet that opened the bottom sheet (or chain of sheets, as Actions
@@ -38,16 +70,17 @@ let opener: HTMLElement | null = null;
  * button, a backdrop click, or Escape. Rendered into document.body: the game page is one big
  * form, and pressing Enter in a field inside it would submit the form with its first submit
  * button (+M or End Turn). Focus moves into the sheet when it opens, Tab stays inside it (plus
- * the money strip's Loans button), and focus returns to whatever opened it when it closes, so
- * the game behind can't be changed from the keyboard while it's open.
+ * the money strip's Loans button), everything else behind it is inert, and focus returns to
+ * whatever opened it when it closes, so the game behind can't be changed while it's open.
  *
  * Sheets stack: one opened over another (Loans, from the money strip) covers it, Escape closes
  * only the top one, and closing it puts focus back where it was in the sheet underneath.
  */
 export function Sheet({ title, onClose, onBack, children }: SheetProps): React.ReactElement {
   const titleId = React.useId();
+  const dialogRef = React.useRef<HTMLDivElement>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
-  const self = React.useRef<OpenSheet>({ content: null, lastFocus: null });
+  const self = React.useRef<OpenSheet>({ dialog: null, content: null, lastFocus: null });
   const onCloseRef = React.useRef(onClose);
   onCloseRef.current = onClose;
 
@@ -70,6 +103,7 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
 
   React.useEffect(() => {
     const sheet = self.current;
+    sheet.dialog = dialogRef.current;
     sheet.content = contentRef.current;
     const active = document.activeElement;
     // A sheet that replaces another (the next step of a task) mounts with focus on the body and
@@ -78,9 +112,11 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
       opener = active;
     }
     openSheets.push(sheet);
+    updateBackground();
     contentRef.current?.focus();
     return () => {
       openSheets.splice(openSheets.indexOf(sheet), 1);
+      updateBackground();
       // Let a following sheet (the next step of the same task) mount before deciding.
       setTimeout(() => {
         const top = openSheets[openSheets.length - 1];
@@ -99,8 +135,8 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
   return ReactDOM.createPortal(
     <div
       className="modal"
+      ref={dialogRef}
       role="dialog"
-      aria-modal="true"
       aria-labelledby={titleId}
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
@@ -135,16 +171,25 @@ export function Sheet({ title, onClose, onBack, children }: SheetProps): React.R
 }
 
 /**
- * Tab and Shift+Tab cycle through the sheet's own controls, then the controls outside it that
- * stay reachable (the money strip's Loans button), then back to the sheet's first control.
+ * Tab and Shift+Tab cycle through the sheet's own controls, then the controls in the regions
+ * outside it that stay reachable (the money strip's Loans button), then back to the sheet's
+ * first control. A radio group is one stop, as natively: its focused, checked or first option;
+ * arrow keys move within it.
  */
 function cycleFocus(event: KeyboardEvent, content: HTMLDivElement | null): void {
   if (!content) return;
   event.preventDefault();
-  const stops = [
-    ...Array.from(content.querySelectorAll<HTMLElement>(FOCUSABLE)),
-    ...Array.from(document.querySelectorAll<HTMLElement>(SHEET_REACHABLE)).filter((el) => !el.closest(".sheet")),
-  ];
+  const reachable = Array.from(document.querySelectorAll(SHEET_REACHABLE)).filter((el) => !el.closest(".modal"));
+  const candidates = [content, ...reachable].flatMap((root) => Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)));
+  const stops = candidates.filter((el) => {
+    if (!(el instanceof HTMLInputElement) || el.type !== "radio" || !el.name) return true;
+    const group = candidates.filter(
+      (other): other is HTMLInputElement =>
+        other instanceof HTMLInputElement && other.type === "radio" && other.name === el.name
+    );
+    const stop = group.find((r) => r === document.activeElement) ?? group.find((r) => r.checked) ?? group[0];
+    return el === stop;
+  });
   if (stops.length === 0) return;
   const index = stops.indexOf(document.activeElement as HTMLElement);
   const next =
