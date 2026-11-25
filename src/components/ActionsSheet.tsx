@@ -48,8 +48,6 @@ export interface ActionsSheetProps {
   onNewPrivateContract: () => void;
   /** The view to open on; the Actions menu by default. */
   initialView?: ActionsView;
-  /** Opens Loans over this sheet, from a "short" message. */
-  onOpenLoans?: () => void;
   onClose: () => void;
 }
 
@@ -66,17 +64,16 @@ export function ActionsSheet({
   moves,
   onNewPrivateContract,
   initialView = "menu",
-  onOpenLoans,
   onClose,
 }: ActionsSheetProps): React.ReactElement {
   const [view, setView] = React.useState<ActionsView>(initialView);
   const back = () => setView("menu");
 
   if (view === "engine") {
-    return <BuyEngineView playerID={playerID} player={player} moves={moves} onBack={back} onOpenLoans={onOpenLoans} onClose={onClose} />;
+    return <BuyEngineView playerID={playerID} player={player} moves={moves} onBack={back} onClose={onClose} />;
   }
   if (view === "upgrade") {
-    return <BuyUpgradeView G={G} playerID={playerID} player={player} moves={moves} onBack={back} onOpenLoans={onOpenLoans} onClose={onClose} />;
+    return <BuyUpgradeView G={G} playerID={playerID} player={player} moves={moves} onClose={onClose} />;
   }
   if (view === "railroad") {
     return (
@@ -86,13 +83,12 @@ export function ActionsSheet({
         player={player}
         moves={moves}
         onBack={back}
-        onOpenLoans={onOpenLoans}
         onClose={onClose}
       />
     );
   }
   if (view === "track") {
-    return <PayForTrackView player={player} moves={moves} onBack={back} onOpenLoans={onOpenLoans} onClose={onClose} />;
+    return <PayForTrackView player={player} moves={moves} onBack={back} onClose={onClose} />;
   }
 
   const engineOptions = enginePurchaseOptions(player.engines, player.hubCity !== null);
@@ -160,6 +156,9 @@ export function ActionsSheet({
   );
 }
 
+/** Upgrades from cheapest to dearest; equal prices keep player-board order. */
+const UPGRADES_BY_PRICE = [...UPGRADE_KEYS].sort((a, b) => UPGRADE_PRICES[a] - UPGRADE_PRICES[b]);
+
 function isOwnedOrLocked(G: GameState, playerID: string, player: PlayerProps, key: UpgradeKey): boolean {
   if (key === "hub") return player.hubCity !== null;
   if (key === "regional-office") return player.regionalOffice !== null;
@@ -171,11 +170,10 @@ interface ViewProps {
   player: PlayerProps;
   moves: Moves;
   onBack: () => void;
-  onOpenLoans?: () => void;
   onClose: () => void;
 }
 
-function BuyEngineView({ playerID, player, moves, onBack, onOpenLoans, onClose }: ViewProps & { playerID: string }): React.ReactElement {
+function BuyEngineView({ playerID, player, moves, onBack, onClose }: ViewProps & { playerID: string }): React.ReactElement {
   const options = enginePurchaseOptions(player.engines, player.hubCity !== null);
   return (
     <Sheet title="Buy an engine" onClose={onClose} onBack={onBack}>
@@ -200,7 +198,7 @@ function BuyEngineView({ playerID, player, moves, onBack, onOpenLoans, onClose }
                   {o.skip ? " · Hub order, +$5K" : ""}
                 </span>
                 {short ? (
-                  <ShortOfCash onOpenLoans={onOpenLoans}>{short}</ShortOfCash>
+                  <ShortOfCash>{short}</ShortOfCash>
                 ) : (
                   <button
                     type="button"
@@ -229,10 +227,8 @@ function BuyUpgradeView({
   playerID,
   player,
   moves,
-  onBack,
-  onOpenLoans,
   onClose,
-}: ViewProps & { G: GameState; playerID: string }): React.ReactElement {
+}: Omit<ViewProps, "onBack"> & { G: GameState; playerID: string }): React.ReactElement {
   const [chosen, setChosen] = React.useState<UpgradeKey | null>(null);
   const [choice, setChoice] = React.useState("");
 
@@ -281,7 +277,7 @@ function BuyUpgradeView({
           <BeforeAfter label="Cash" before={formatMoney(player.cash)} after={formatMoney(player.cash - price)} />
         </div>
         {short ? (
-          <ShortOfCash onOpenLoans={onOpenLoans}>{short}</ShortOfCash>
+          <ShortOfCash>{short}</ShortOfCash>
         ) : (
           <button
             type="button"
@@ -300,9 +296,9 @@ function BuyUpgradeView({
   }
 
   return (
-    <Sheet title="Upgrades" onClose={onClose} onBack={onBack}>
+    <Sheet title="Upgrades" onClose={onClose}>
       <div className="upgrades__list">
-        {UPGRADE_KEYS.map((key) => {
+        {UPGRADES_BY_PRICE.map((key) => {
           const price = UPGRADE_PRICES[key];
           const owned =
             key === "hub"
@@ -324,7 +320,7 @@ function BuyUpgradeView({
                 ) : locked ? (
                   <span className="sheet__label">Locked</span>
                 ) : price > player.cash ? (
-                  <ShortOfCash onOpenLoans={onOpenLoans}>
+                  <ShortOfCash>
                     {formatMoney(price)} · {formatMoney(price - player.cash)} short
                   </ShortOfCash>
                 ) : (
@@ -394,7 +390,7 @@ function choiceOptions(G: GameState, playerID: string, player: PlayerProps, upgr
   return null;
 }
 
-function PayForTrackView({ player, moves, onBack, onOpenLoans, onClose }: ViewProps): React.ReactElement {
+function PayForTrackView({ player, moves, onBack, onClose }: ViewProps): React.ReactElement {
   const [thousands, setThousands] = React.useState("");
   // Which refusal to show; the over-cash one reads the live cash, which Loans can change.
   const [error, setError] = React.useState<"amount" | "cash" | null>(null);
@@ -447,7 +443,7 @@ function PayForTrackView({ player, moves, onBack, onOpenLoans, onClose }: ViewPr
         </p>
       )}
       {shownError === "cash" && (
-        <ShortOfCash alert onOpenLoans={onOpenLoans}>
+        <ShortOfCash alert>
           That's more than your {formatMoney(player.cash)} cash. To spend more, borrow first using Loans.
         </ShortOfCash>
       )}

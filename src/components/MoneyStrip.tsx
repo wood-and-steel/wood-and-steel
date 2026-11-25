@@ -21,7 +21,8 @@ export interface MoneyStripProps {
 export function MoneyStrip({ player, playerID, isCurrentTurn, showMoney, onOpenLoans }: MoneyStripProps): React.ReactElement {
   const { name, avatarColor, cash, debt } = player;
   return (
-    <div className="moneyStrip" role="group" aria-label="Your money">
+    // Stays live, and its Loans button reachable by Tab, while a sheet is open (see Sheet).
+    <div className="moneyStrip" role="group" aria-label="Your money" data-sheet-reachable>
       <PlayerAvatar name={name} avatarColor={getPlayerAvatarColor(playerID, avatarColor)} isCurrentTurn={isCurrentTurn} />
       {showMoney ? (
         <>

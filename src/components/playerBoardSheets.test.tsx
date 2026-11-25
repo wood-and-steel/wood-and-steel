@@ -16,9 +16,10 @@ import { LoansSheet } from './LoansSheet';
 import { ActionsSheet } from './ActionsSheet';
 import { EnginesPanel } from './EnginesPanel';
 import { formatMoney } from '../utils/money';
-import { Sheet } from './Sheet';
+import { RadioOption, Sheet } from './Sheet';
 import { EditPlaytestDialog } from './EditPlaytestDialog';
 import { ENGINE_TYPES } from '../rules/playerBoard';
+import { UPGRADE_KEYS, UPGRADE_NAMES, UPGRADE_PRICES } from '../rules/rulesData';
 
 const player = (props: Partial<PlayerProps> = {}): PlayerProps => ({ ...newPlayerProps('Ada'), ...props });
 
@@ -95,8 +96,7 @@ describe('DeliveryReceipt', () => {
     expect(screen.queryByRole('button', { name: /Deliver/ })).toBeNull();
   });
 
-  test('a blocked delivery offers Loans', () => {
-    const onOpenLoans = vi.fn();
+  test('a blocked delivery has no Loans button of its own (Loans is in the money strip)', () => {
     render(
       <DeliveryReceipt playerID="0"
         contract={contract()}
@@ -104,11 +104,9 @@ describe('DeliveryReceipt', () => {
         ties={0}
         onDeliver={() => true}
         onClose={() => {}}
-        onOpenLoans={onOpenLoans}
       />
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Loans' }));
-    expect(onOpenLoans).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
   });
 });
 
@@ -170,8 +168,7 @@ describe('ActionsSheet', () => {
     expect(payForTrack).toHaveBeenCalledWith(7000);
   });
 
-  test('refusing more than the cash offers Loans, and the refusal goes once Loans has added enough', () => {
-    const onOpenLoans = vi.fn();
+  test('refusing more than the cash, and the refusal goes once Loans has added enough', () => {
     const sheet = (cash: number) => (
       <ActionsSheet
         G={G}
@@ -180,7 +177,6 @@ describe('ActionsSheet', () => {
         moves={{ payForTrack: () => true } as unknown as Moves}
         round={1}
         onNewPrivateContract={() => {}}
-        onOpenLoans={onOpenLoans}
         onClose={() => {}}
       />
     );
@@ -188,15 +184,13 @@ describe('ActionsSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: /Pay for track/ }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Track cost in thousands of dollars' }), { target: { value: '18' } });
     fireEvent.click(screen.getByRole('button', { name: 'Pay $18K' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Loans' }));
-    expect(onOpenLoans).toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
     rerender(sheet(20000));
     expect(screen.queryByRole('alert')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
   });
 
-  test('an engine the player is short for offers Loans in place of Buy', () => {
-    const onOpenLoans = vi.fn();
+  test('an engine the player is short for shows the shortfall in place of Buy', () => {
     render(
       <ActionsSheet
         G={G}
@@ -206,14 +200,12 @@ describe('ActionsSheet', () => {
         initialView="engine"
         round={1}
         onNewPrivateContract={() => {}}
-        onOpenLoans={onOpenLoans}
         onClose={() => {}}
       />
     );
     expect(screen.queryByRole('button', { name: /^Buy for/ })).toBeNull();
     expect(screen.getAllByText(/short$/).length).toBeGreaterThan(0);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Loans' })[0]);
-    expect(onOpenLoans).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
   });
 
   test("Enter in the track field pays, and doesn't submit the game page's form (+M or End Turn)", () => {
@@ -287,6 +279,29 @@ describe('ActionsSheet', () => {
     expect(screen.getByRole('button', { name: /Discard and draw new contract/ })).toHaveTextContent(
       'Replace your private contract'
     );
+  });
+
+  test('Upgrades lists the cheapest first and has no Back button', () => {
+    render(
+      <ActionsSheet
+        G={G}
+        playerID="0"
+        player={player()}
+        moves={{} as Moves}
+        round={1}
+        onNewPrivateContract={() => {}}
+        initialView="upgrade"
+        onClose={() => {}}
+      />
+    );
+    const sheet = screen.getByRole('dialog', { name: 'Upgrades' });
+    expect(within(sheet).queryByRole('button', { name: /Back/ })).toBeNull();
+    const names = Array.from(sheet.querySelectorAll('.upgrades__item .sheet__row > span:first-child')).map(
+      (el) => el.textContent
+    );
+    const prices = names.map((name) => UPGRADE_PRICES[UPGRADE_KEYS.find((key) => UPGRADE_NAMES[key] === name)!]);
+    expect(prices).toHaveLength(UPGRADE_KEYS.length);
+    expect(prices).toEqual([...prices].sort((a, b) => a - b));
   });
 });
 
@@ -383,6 +398,82 @@ describe('Sheet', () => {
 
     fireEvent.click(close);
     await waitFor(() => expect(document.activeElement).toBe(opener));
+  });
+
+  test("Tab reaches the money strip's Loans button from a sheet, and nothing else outside it", () => {
+    render(
+      <>
+        <button type="button">End Turn</button>
+        <div data-sheet-reachable>
+          <button type="button">Loans</button>
+        </div>
+        <Sheet title="Actions" onClose={() => {}}>
+          <button type="button">Buy an engine</button>
+        </Sheet>
+      </>
+    );
+    const loans = screen.getByRole('button', { name: 'Loans', hidden: true });
+    const close = screen.getByRole('button', { name: 'Close' });
+    const buy = screen.getByRole('button', { name: 'Buy an engine' });
+    buy.focus();
+    fireEvent.keyDown(buy, { key: 'Tab' });
+    expect(document.activeElement).toBe(loans);
+    fireEvent.keyDown(loans, { key: 'Tab' });
+    expect(document.activeElement).toBe(close);
+    fireEvent.keyDown(close, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(loans);
+    fireEvent.keyDown(loans, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(buy);
+  });
+
+  test('everything behind the sheet but the money strip is inert, until the sheet closes', async () => {
+    function InertHarness() {
+      const [open, setOpen] = React.useState(true);
+      return (
+        <div data-testid="app">
+          <button type="button">End Turn</button>
+          <div data-sheet-reachable data-testid="strip">
+            <button type="button">Loans</button>
+          </div>
+          {open && (
+            <Sheet title="Actions" onClose={() => setOpen(false)}>
+              <button type="button">Buy an engine</button>
+            </Sheet>
+          )}
+        </div>
+      );
+    }
+    render(<InertHarness />);
+    const endTurn = screen.getByRole('button', { name: 'End Turn', hidden: true });
+    expect(endTurn).toHaveAttribute('inert');
+    expect(screen.getByTestId('strip')).not.toHaveAttribute('inert');
+    expect(screen.getByTestId('app')).not.toHaveAttribute('inert');
+    expect(screen.getByRole('dialog', { name: 'Actions' })).not.toHaveAttribute('inert');
+    expect(screen.getByRole('dialog', { name: 'Actions' })).not.toHaveAttribute('aria-modal');
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(endTurn).not.toHaveAttribute('inert');
+  });
+
+  test('a radio group is one Tab stop, at its checked option', () => {
+    render(
+      <Sheet title="Deliver" onClose={() => {}}>
+        <RadioOption name="engine" checked={false} onSelect={() => {}}>
+          Light engine
+        </RadioOption>
+        <RadioOption name="engine" checked onSelect={() => {}}>
+          Dark engine
+        </RadioOption>
+        <button type="button">Deliver</button>
+      </Sheet>
+    );
+    const close = screen.getByRole('button', { name: 'Close' });
+    close.focus();
+    fireEvent.keyDown(close, { key: 'Tab' });
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'Dark engine' }));
+    fireEvent.keyDown(document.activeElement!, { key: 'Tab' });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Deliver' }));
+    fireEvent.keyDown(document.activeElement!, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'Dark engine' }));
   });
 
   function StackHarness() {
@@ -493,10 +584,9 @@ describe('Acquire a railroad', () => {
     },
   } as never;
 
-  test('lists each railroad with its routes and price, acquires one, and offers Loans when short', () => {
+  test('lists each railroad with its routes and price, acquires one, and shows the shortfall when short', () => {
     const acquireIndependentRailroad = vi.fn(() => true);
     const onClose = vi.fn();
-    const onOpenLoans = vi.fn();
     render(
       <ActionsSheet
         G={G}
@@ -505,7 +595,6 @@ describe('Acquire a railroad', () => {
         player={player({ cash: 10000 })}
         moves={{ acquireIndependentRailroad } as unknown as Moves}
         onNewPrivateContract={() => {}}
-        onOpenLoans={onOpenLoans}
         onClose={onClose}
       />
     );
@@ -517,8 +606,7 @@ describe('Acquire a railroad', () => {
 
     // Reading is 4 routes at $3K: $12K against $10K cash.
     expect(screen.getByText('$2K short')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Loans' }));
-    expect(onOpenLoans).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Acquire for $6K' }));
     expect(acquireIndependentRailroad).toHaveBeenCalledWith('Erie');
