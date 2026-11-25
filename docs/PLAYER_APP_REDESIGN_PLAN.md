@@ -163,7 +163,7 @@ The player bar is a money strip and a two-strip toolbar, each one line at phone 
 - **Players:** everyone in play order, the viewer included, with their ties; the current player's avatar pulses. Pressing another player opens their card. The round label sits at the end.
 - **Turn:** Undo, Actions and End Turn on the player's turn in play; otherwise whose turn it is, at the same height.
 
-Still to come: sheets stack, so Loans in the money strip opens on top of whatever sheet is open and closing it returns there. Until then, Loans in the strip waits while a sheet or dialog is open.
+**Loans opens over any sheet.** Loans has its own open state in `Board`, so opening it from the money strip leaves the sheet underneath where it was; closing Loans returns there with the new cash. Sheets stack (`Sheet.tsx`): Escape closes only the top one, and focus goes back to where it was in the sheet below. The money strip can't be reached by keyboard while a sheet holds focus, so every "short of cash" message (buying an engine or upgrade, paying for track, a blocked delivery) has its own Loans button (`ShortOfCash`).
 
 ## Decisions made while building Stage 4
 

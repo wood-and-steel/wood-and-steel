@@ -18,6 +18,7 @@ import { EnginesPanel } from './EnginesPanel';
 import { formatMoney } from '../utils/money';
 import { Sheet } from './Sheet';
 import { EditPlaytestDialog } from './EditPlaytestDialog';
+import { ENGINE_TYPES } from '../rules/playerBoard';
 
 const player = (props: Partial<PlayerProps> = {}): PlayerProps => ({ ...newPlayerProps('Ada'), ...props });
 
@@ -93,6 +94,22 @@ describe('DeliveryReceipt', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Borrow first using Loans');
     expect(screen.queryByRole('button', { name: /Deliver/ })).toBeNull();
   });
+
+  test('a blocked delivery offers Loans', () => {
+    const onOpenLoans = vi.fn();
+    render(
+      <DeliveryReceipt playerID="0"
+        contract={contract()}
+        player={player({ cash: 0, debt: 200000, westernDeliveryMade: true })}
+        ties={0}
+        onDeliver={() => true}
+        onClose={() => {}}
+        onOpenLoans={onOpenLoans}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Loans' }));
+    expect(onOpenLoans).toHaveBeenCalled();
+  });
 });
 
 describe('LoansSheet', () => {
@@ -151,6 +168,52 @@ describe('ActionsSheet', () => {
     fireEvent.change(input, { target: { value: '7' } });
     fireEvent.click(screen.getByRole('button', { name: 'Pay $7K' }));
     expect(payForTrack).toHaveBeenCalledWith(7000);
+  });
+
+  test('refusing more than the cash offers Loans, and the refusal goes once Loans has added enough', () => {
+    const onOpenLoans = vi.fn();
+    const sheet = (cash: number) => (
+      <ActionsSheet
+        G={G}
+        playerID="0"
+        player={player({ cash })}
+        moves={{ payForTrack: () => true } as unknown as Moves}
+        onAcquireRailroad={() => {}}
+        onNewPrivateContract={() => {}}
+        onOpenLoans={onOpenLoans}
+        onClose={() => {}}
+      />
+    );
+    const { rerender } = render(sheet(10000));
+    fireEvent.click(screen.getByRole('button', { name: /Pay for track/ }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Track cost in thousands of dollars' }), { target: { value: '18' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Pay $18K' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Loans' }));
+    expect(onOpenLoans).toHaveBeenCalled();
+    rerender(sheet(20000));
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Loans' })).toBeNull();
+  });
+
+  test('an engine the player is short for offers Loans in place of Buy', () => {
+    const onOpenLoans = vi.fn();
+    render(
+      <ActionsSheet
+        G={G}
+        playerID="0"
+        player={player({ cash: 0 })}
+        moves={{} as Moves}
+        initialView="engine"
+        onAcquireRailroad={() => {}}
+        onNewPrivateContract={() => {}}
+        onOpenLoans={onOpenLoans}
+        onClose={() => {}}
+      />
+    );
+    expect(screen.queryByRole('button', { name: /^Buy for/ })).toBeNull();
+    expect(screen.getAllByText(/short$/).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Loans' })[0]);
+    expect(onOpenLoans).toHaveBeenCalled();
   });
 
   test("Enter in the track field pays, and doesn't submit the game page's form (+M or End Turn)", () => {
@@ -321,9 +384,84 @@ describe('Sheet', () => {
     fireEvent.click(close);
     await waitFor(() => expect(document.activeElement).toBe(opener));
   });
+
+  function StackHarness() {
+    const [actions, setActions] = React.useState(false);
+    const [loans, setLoans] = React.useState(false);
+    return (
+      <>
+        <button type="button" onClick={() => setActions(true)}>
+          Actions
+        </button>
+        <button type="button" onClick={() => setLoans(true)}>
+          Loans in the money strip
+        </button>
+        {actions && (
+          <Sheet title="Actions" onClose={() => setActions(false)}>
+            <button type="button">Buy an engine</button>
+          </Sheet>
+        )}
+        {loans && (
+          <Sheet title="Loans" onClose={() => setLoans(false)}>
+            <button type="button">Borrow</button>
+          </Sheet>
+        )}
+      </>
+    );
+  }
+
+  test('Escape on a sheet over another dialog closes only the sheet', () => {
+    const onDialogEscape = vi.fn();
+    document.addEventListener('keydown', onDialogEscape);
+    const onClose = vi.fn();
+    render(
+      <Sheet title="Loans" onClose={onClose}>
+        <button type="button">Borrow</button>
+      </Sheet>
+    );
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Borrow' }), { key: 'Escape' });
+    document.removeEventListener('keydown', onDialogEscape);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onDialogEscape).not.toHaveBeenCalled();
+  });
+
+  test('Loans opens over another sheet; Escape closes only Loans, and focus goes back into the sheet below', async () => {
+    render(<StackHarness />);
+    const opener = screen.getByRole('button', { name: 'Actions' });
+    opener.focus();
+    fireEvent.click(opener);
+    const buy = screen.getByRole('button', { name: 'Buy an engine' });
+    buy.focus();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Loans in the money strip', hidden: true }));
+    expect(screen.getByRole('dialog', { name: 'Loans' }).contains(document.activeElement)).toBe(true);
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Loans' })).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'Actions' })).toBeInTheDocument();
+    await waitFor(() => expect(document.activeElement).toBe(buy));
+
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Actions' })).toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(opener));
+  });
 });
 
 describe('EditPlaytestDialog player board', () => {
+  test('saves only the fields edited, so money changed meanwhile (by Loans over it) is kept', () => {
+    const G = (cash: number, debt: number) =>
+      ({ contracts: [], players: [['0', { ...player(), cash, debt }]], independentRailroads: {} }) as never;
+    const ctx = { phase: 'play', currentPlayer: '0' } as never;
+    const setPlayerBoard = vi.fn(() => true);
+    const moves = { setPlayerBoard } as unknown as Moves;
+    const { rerender, container } = render(<EditPlaytestDialog isOpen onClose={() => {}} G={G(10000, 0)} ctx={ctx} moves={moves} />);
+    fireEvent.change(screen.getByLabelText('Player board:'), { target: { value: '0' } });
+    rerender(<EditPlaytestDialog isOpen onClose={() => {}} G={G(15000, 5000)} ctx={ctx} moves={moves} />);
+    fireEvent.change(container.querySelector('#boardLight')!, { target: { value: ENGINE_TYPES[1].id } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Player Board' }));
+    expect(setPlayerBoard).toHaveBeenCalledWith('0', { engines: [ENGINE_TYPES[1].id, null] });
+  });
+
   test('forgets the chosen player when closed, so reopening shows current values, not stale ones', () => {
     const G = (cash: number) =>
       ({ contracts: [], players: [['0', { ...player(), cash }]], independentRailroads: {} }) as never;

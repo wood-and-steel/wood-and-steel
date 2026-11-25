@@ -6,7 +6,7 @@ import { getEngineType, type EngineSlot } from "../rules/playerBoard";
 import { formatMoney, formatMoneyChange } from "../utils/money";
 import { CommoditySources } from "./CommoditySources";
 import { EngineSlotIcon } from "./EngineIcon";
-import { BeforeAfter, RadioOption, Sheet } from "./Sheet";
+import { BeforeAfter, RadioOption, Sheet, ShortOfCash } from "./Sheet";
 
 export interface DeliveryReceiptProps {
   contract: Contract;
@@ -17,6 +17,8 @@ export interface DeliveryReceiptProps {
   ties: number;
   onDeliver: (engineSlot: EngineSlot | undefined) => boolean;
   onClose: () => void;
+  /** Opens Loans over this sheet when the delivery is blocked for lack of cash. */
+  onOpenLoans?: () => void;
 }
 
 /**
@@ -24,7 +26,7 @@ export interface DeliveryReceiptProps {
  * lines appear only when they change the total; the engine is asked for only when the two
  * engines would pay differently.
  */
-export function DeliveryReceipt({ contract, player, playerID, ties, onDeliver, onClose }: DeliveryReceiptProps): React.ReactElement {
+export function DeliveryReceipt({ contract, player, playerID, ties, onDeliver, onClose, onOpenLoans }: DeliveryReceiptProps): React.ReactElement {
   const slots = ([0, 1] as EngineSlot[]).filter((slot) => player.engines[slot] !== null);
   const askEngine = deliveringEngineMatters(player.engines);
   const [slot, setSlot] = React.useState<EngineSlot | undefined>(askEngine ? slots[0] : undefined);
@@ -100,9 +102,9 @@ export function DeliveryReceipt({ contract, player, playerID, ties, onDeliver, o
           {contract.type === "private" ? "Deliver and choose a new contract" : "Deliver"}
         </button>
       ) : (
-        <p className="sheet__warning" role="alert">
+        <ShortOfCash alert onOpenLoans={onOpenLoans}>
           Debt service is more than this delivery pays plus your cash. Borrow first using Loans, then deliver.
-        </p>
+        </ShortOfCash>
       )}
     </Sheet>
   );

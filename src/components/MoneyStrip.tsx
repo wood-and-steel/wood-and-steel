@@ -10,8 +10,6 @@ export interface MoneyStripProps {
   isCurrentTurn: boolean;
   /** Cash, debt and Loans show in play; in setup, before there's money, the player's name instead. */
   showMoney: boolean;
-  /** While another sheet or dialog is open, Loans waits for it to close. */
-  loansDisabled?: boolean;
   onOpenLoans: () => void;
 }
 
@@ -20,7 +18,7 @@ export interface MoneyStripProps {
  * at the right end of the nav row on desktop. It sits above sheet scrims, and sheets open below
  * it, so cash and debt stay visible while a sheet changes them.
  */
-export function MoneyStrip({ player, playerID, isCurrentTurn, showMoney, loansDisabled, onOpenLoans }: MoneyStripProps): React.ReactElement {
+export function MoneyStrip({ player, playerID, isCurrentTurn, showMoney, onOpenLoans }: MoneyStripProps): React.ReactElement {
   const { name, avatarColor, cash, debt } = player;
   return (
     <div className="moneyStrip" role="group" aria-label="Your money">
@@ -36,7 +34,7 @@ export function MoneyStrip({ player, playerID, isCurrentTurn, showMoney, loansDi
           >
             {formatMoney(debt)} debt
           </span>
-          <button type="button" className="button moneyStrip__loans" disabled={loansDisabled} onClick={onOpenLoans}>
+          <button type="button" className="button moneyStrip__loans" onClick={onOpenLoans}>
             Loans
           </button>
         </>
