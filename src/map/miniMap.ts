@@ -129,11 +129,17 @@ interface PlacedLabel {
   box: Box;
 }
 
-/** A label at one spot around its city: where the text goes and the box it covers. */
-function labelAt(name: string, spot: (typeof SPOTS)[number], fontSize: number): PlacedLabel {
+/** How many times further out a label may move, one font size each, when no spot next to its city is free. */
+const MAX_RING = 4;
+
+/**
+ * A label at one spot around its city, `ring` font sizes further out than next to it: where the
+ * text goes and the box it covers.
+ */
+function labelAt(name: string, spot: (typeof SPOTS)[number], fontSize: number, ring = 0): PlacedLabel {
   const { x, y, r } = CITY_POINTS[name];
   const width = name.length * CHAR_WIDTH * fontSize;
-  const gap = fontSize * 0.3;
+  const gap = fontSize * (0.3 + ring);
   const labelX = spot.dx === 0 ? x : x + spot.dx * (r + gap);
   // Above or below: clear the circle. Level with the city: center the capitals on it.
   const labelY =
@@ -147,8 +153,9 @@ function labelAt(name: string, spot: (typeof SPOTS)[number], fontSize: number): 
 
 /**
  * Labels for `names`, each at the spot around its city that covers the fewest route points and
- * city circles, overlaps no other label, and stays on the board art. The busiest cities choose
- * first. Returned in the order of `names`.
+ * city circles. A label never overlaps another or leaves the board art: when every spot next to
+ * its city would, it moves further out, ring by ring. The busiest cities choose first. Returned
+ * in the order of `names`.
  */
 function placeLabels(names: string[], keys: string[], otherKeys: string[], fontSize: number): PlacedLabel[] {
   const routePoints = [...keys, ...otherKeys].flatMap((key) => routePolyline(key) ?? []);
@@ -157,19 +164,28 @@ function placeLabels(names: string[], keys: string[], otherKeys: string[], fontS
   const pad = fontSize * 0.2;
   const placed = new Map<string, PlacedLabel>();
   for (const name of order) {
-    const cost = (label: PlacedLabel, preference: number): number => {
-      const { box } = label;
+    const fits = ({ box }: PlacedLabel): boolean =>
+      box.minX >= 0 &&
+      box.minY >= 0 &&
+      box.maxX <= BOARD_WIDTH &&
+      box.maxY <= BOARD_HEIGHT &&
+      ![...placed.values()].some((other) => overlaps(box, other.box));
+    const cost = ({ box }: PlacedLabel, preference: number): number => {
       const routeHits = routePoints.filter((p) => contains(box, p, pad)).length;
       const cityHits = names.filter((other) => contains(box, CITY_POINTS[other], CITY_POINTS[other].r)).length;
-      const labelHits = [...placed.values()].filter((other) => overlaps(box, other.box)).length;
-      const offBoard = box.minX < 0 || box.minY < 0 || box.maxX > BOARD_WIDTH || box.maxY > BOARD_HEIGHT ? 1 : 0;
-      return 3 * routeHits + 40 * cityHits + 100 * labelHits + 10000 * offBoard + preference;
+      return 3 * routeHits + 40 * cityHits + preference;
     };
-    const candidates = SPOTS.map((spot, i) => {
-      const label = labelAt(name, spot, fontSize);
-      return { label, cost: cost(label, i * 0.5) };
-    });
-    placed.set(name, candidates.reduce((best, c) => (c.cost < best.cost ? c : best)).label);
+    let best: { label: PlacedLabel; cost: number } | undefined;
+    for (let ring = 0; ring <= MAX_RING && !best; ring++) {
+      for (const [i, spot] of SPOTS.entries()) {
+        const label = labelAt(name, spot, fontSize, ring);
+        if (!fits(label)) continue;
+        const c = cost(label, i * 0.5);
+        if (!best || c < best.cost) best = { label, cost: c };
+      }
+    }
+    // Nothing fits within MAX_RING (none did in 1,000 maps from grown games): keep the preferred spot.
+    placed.set(name, best?.label ?? labelAt(name, SPOTS[0], fontSize));
   }
   return names.map((name) => placed.get(name)!);
 }

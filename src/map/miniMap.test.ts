@@ -118,4 +118,25 @@ describe('miniMapsFor', () => {
     const [map] = miniMapsFor(['Bismarck-Fargo'], new Set());
     expect(map.cities.map((c) => c.anchor)).toEqual(['middle', 'middle']);
   });
+
+  test('never overlaps two labels', () => {
+    // A long railroad across the top of the board, where labels crowd each other.
+    const keys = ['Calgary-Regina', 'Regina-Winnipeg', 'Thunder Bay-Winnipeg', 'Sudbury-Thunder Bay', 'Ottawa-Sudbury', 'Sudbury-Toronto'];
+    for (const newKey of keys) {
+      for (const map of miniMapsFor(keys, new Set([newKey]))) {
+        const boxes = map.cities.map((c) => {
+          const width = c.name.length * 0.56 * map.fontSize;
+          const left = c.anchor === 'start' ? c.labelX : c.anchor === 'end' ? c.labelX - width : c.labelX - width / 2;
+          return { name: c.name, minX: left, maxX: left + width, minY: c.labelY - 0.72 * map.fontSize, maxY: c.labelY + 0.1 * map.fontSize };
+        });
+        const overlapping = boxes.flatMap((a, i) =>
+          boxes
+            .slice(i + 1)
+            .filter((b) => a.minX < b.maxX && b.minX < a.maxX && a.minY < b.maxY && b.minY < a.maxY)
+            .map((b) => `${a.name}/${b.name}`)
+        );
+        expect(overlapping).toEqual([]);
+      }
+    }
+  });
 });
