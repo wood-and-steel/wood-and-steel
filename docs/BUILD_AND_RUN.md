@@ -54,6 +54,20 @@ npm run preview
 
 Serves the contents of `dist/` so you can smoke-test before deploying.
 
+## Deploying
+
+The site is hosted on DreamHost at https://woodandsteel.pettiross.com. Deploying needs SSH key access to `pettiross@iad1-shared-e1-16.dreamhost.com`.
+
+```bash
+npm run deploy               # production build (no board, no bots), then upload
+npm run deploy -- --board    # playtest build (board at /board and bots), then upload
+npm run deploy -- --no-build # upload the current dist/ without rebuilding
+```
+
+[`scripts/deploy.mjs`](../scripts/deploy.mjs) streams `dist/` over ssh into a staging folder on the server, then uses the server's rsync to sync it into `/home/pettiross/woodandsteel.pettiross.com`. The live site keeps serving the old files until the upload is complete. New files are switched in together at the end, and files the new build no longer has (such as old hashed bundles) are then deleted. If the build fails or the upload is incomplete, the site is left unchanged. Set `DEPLOY_HOST` or `DEPLOY_DIR` to deploy somewhere else.
+
+Both kinds of build deploy to the same folder, so whichever ran last is what the site serves. With `--board`, anyone who visits can open `/board` and the bot seat controls.
+
 ## Development
 
 ```bash
