@@ -591,7 +591,8 @@ export function replacePrivateContract(playerID: string, commodity: string, dest
 
 /**
  * Acquire an independent railroad: $3,000 per route ($4,000 once anyone has delivered to the
- * West), refused if the player can't pay. Its cities join the player's active cities.
+ * West), refused if the player can't pay. Its cities join the player's active cities, and the
+ * player earns ACQUISITION_TIES right away.
  */
 export function acquireIndependentRailroad(railroadName: string): boolean {
   const { G, ctx } = useGameStore.getState();
@@ -642,6 +643,7 @@ export function acquireIndependentRailroad(railroadName: string): boolean {
           // Add all cities from the railroad to the player's active cities (Set avoids duplicates)
           activeCities: Array.from(new Set([...player.activeCities, ...citiesInRailroad])),
           cash: player.cash - price,
+          railroadsAcquired: player.railroadsAcquired + 1,
         },
         [{ label: `Acquired ${railroad.name}`, amount: -price }]
       ),

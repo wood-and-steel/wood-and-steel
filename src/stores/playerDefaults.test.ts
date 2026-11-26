@@ -12,6 +12,7 @@ describe('startingPlayerBoard', () => {
       exchangeCommodity: null,
       centralDebtServicePaid: false,
       westernDeliveryMade: false,
+      railroadsAcquired: 0,
     });
   });
 
@@ -58,6 +59,7 @@ describe('normalizePlayerProps', () => {
       exchangeCommodity: 'grain',
       centralDebtServicePaid: true,
       westernDeliveryMade: true,
+      railroadsAcquired: 2,
     };
     expect(normalizePlayerProps(saved)).toEqual(saved);
   });
@@ -73,6 +75,7 @@ describe('normalizePlayerProps', () => {
       exchangeCommodity: 'gold',
       regionalOffice: 'XX',
       centralDebtServicePaid: 'yes',
+      railroadsAcquired: 1.5,
     });
     expect(player).toMatchObject({
       cash: 10000,
@@ -84,6 +87,7 @@ describe('normalizePlayerProps', () => {
       regionalOffice: null,
       centralDebtServicePaid: false,
       westernDeliveryMade: false,
+      railroadsAcquired: 0,
       activeCities: [],
       hubCity: null,
     });

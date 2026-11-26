@@ -27,6 +27,8 @@ export interface PlayerBoardFields {
   centralDebtServicePaid: boolean;
   /** A delivery to a Western region has been made; debt service is due on every delivery from then on. */
   westernDeliveryMade: boolean;
+  /** Independent railroads acquired; each is worth ACQUISITION_TIES. */
+  railroadsAcquired: number;
 }
 
 export interface PlayerProps extends PlayerBoardFields {

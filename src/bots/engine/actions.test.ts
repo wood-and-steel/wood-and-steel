@@ -203,6 +203,7 @@ describe('independent railroads', () => {
     expect(ops(effects)).toEqual([{ type: 'reconcileIndependentRailroads', railroads: {}, acquirers: { Erie: '0' } }]);
     expect(next.board.track['Boston-Syracuse']).toEqual(['0']);
     expect(next.bot.cash).toBe(7000);
+    expect(next.players.find(([id]) => id === '0')![1].railroadsAcquired).toBe(1);
     expect(lines(effects)).toEqual(['→ Acquired Erie for $3,000']);
   });
 });

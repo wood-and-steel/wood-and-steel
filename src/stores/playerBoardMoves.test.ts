@@ -281,12 +281,14 @@ describe('independent railroads', () => {
     expect(independentRailroadPrice(useGameStore.getState().G, 'Erie')).toBe(6000);
     expect(acquireIndependentRailroad('Erie')).toBe(true);
     expect(me().cash).toBe(4000);
+    expect(me().railroadsAcquired).toBe(1);
     expect(ledger()?.entries).toEqual([{ label: 'Acquired Erie', amount: -6000 }]);
 
     setUp({ cash: 5000 });
     useGameStore.setState((s) => ({ G: { ...s.G, independentRailroads: erie } }));
     expect(acquireIndependentRailroad('Erie')).toBe(false);
     expect(useGameStore.getState().G.independentRailroads).toHaveProperty('Erie');
+    expect(me().railroadsAcquired).toBe(0);
   });
 
   test('cost $4,000 per route once anyone has delivered to the West', () => {

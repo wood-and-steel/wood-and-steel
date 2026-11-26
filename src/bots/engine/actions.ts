@@ -492,6 +492,9 @@ function checkAndApply(world: BotWorld, action: Action): ApplyResult {
       if (!purchase) return fail(`can't acquire ${action.name}`);
       if (purchase.cost > world.bot.cash) return fail('not enough cash');
       next.bot.cash -= purchase.cost;
+      setPlayer(next, (p) => {
+        p.railroadsAcquired = (p.railroadsAcquired ?? 0) + 1;
+      });
       delete next.independentRailroads[action.name];
       for (const key of purchase.routes) {
         claimRouteIn(next, key);

@@ -14,7 +14,7 @@ import { PlayerSheet } from './components/PlayerSheet';
 import { RoundReportSheet } from './components/RoundReportSheet';
 import { useRoundReport } from './hooks/useRoundReport';
 import type { Contract } from './Contract';
-import { contractTies } from './utils/ties';
+import { playerTies } from './utils/ties';
 import { bestEngineLevel, engineLevel } from './rules/engines';
 import { MARKET_CONTRACT_MIN_ENGINE } from './rules/rulesData';
 import { useGame } from './hooks/useGame';
@@ -76,7 +76,7 @@ export function WoodAndSteelState({
   const receiptContract = receiptContractId
     ? G.contracts.find((c: Contract) => c.id === receiptContractId && c.playerID === playerID && !c.fulfilled)
     : undefined;
-  const myTies = playerID ? contractTies(G.contracts, playerID) : 0;
+  const myTies = playerID ? playerTies(G.contracts, playerID, myProps) : 0;
   const claimContract = claimContractId
     ? G.contracts.find(
         (c: Contract) => c.id === claimContractId && c.type === 'market' && c.playerID === null && !c.fulfilled

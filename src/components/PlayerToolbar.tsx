@@ -1,5 +1,5 @@
 import React from "react";
-import { contractTies } from "../utils/ties";
+import { playerTies } from "../utils/ties";
 import { getPlayerAvatarColor } from "../utils/playerAvatar";
 import { PlayerAvatar } from "./PlayerAvatar";
 import type { GameState, GameContext } from "../stores/gameStore";
@@ -64,8 +64,9 @@ export function PlayerToolbar({
       <div className="playerToolbar__strip playerToolbar__strip--table">
         <span className="playerToolbar__players">
           {seatIds.map((id) => {
-            const [, { name: seatName, avatarColor: seatColor }] = G.players.find(([pid]) => pid === id)!;
-            const ties = contractTies(G.contracts, id);
+            const [, seatProps] = G.players.find(([pid]) => pid === id)!;
+            const { name: seatName, avatarColor: seatColor } = seatProps;
+            const ties = playerTies(G.contracts, id, seatProps);
             const avatar = (
               <PlayerAvatar
                 name={seatName}
