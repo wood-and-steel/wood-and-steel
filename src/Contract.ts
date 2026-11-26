@@ -354,6 +354,64 @@ export function generateMarketContract(G: GameState): Contract | undefined {
 }
 
 /**
+ * Segments from the nearest of `activeCities` to the nearest city producing `commodity`
+ * (0 when an active city produces it), or Infinity if none can be reached.
+ */
+export function commodityDistanceFrom(activeCities: Iterable<string>, commodity: string): number {
+  const produces = (c: string) => cities.get(c)?.commodities.includes(commodity) ?? false;
+  let best = Infinity;
+  for (const cityKey of activeCities) {
+    const distance = shortestDistance(cityKey, produces);
+    if (distance !== undefined && distance < best) best = distance;
+    if (best === 0) break;
+  }
+  return best;
+}
+
+/**
+ * How well the open market serves a player: segments from their active cities to the nearest
+ * source of any open contract's commodity. Infinity when there are no open contracts.
+ */
+export function marketAccessDistance(activeCities: Iterable<string>, openContracts: Contract[]): number {
+  const cityKeys = [...activeCities];
+  const commoditiesOpen = new Set(openContracts.map((c) => c.commodity));
+  let best = Infinity;
+  for (const commodity of commoditiesOpen) {
+    best = Math.min(best, commodityDistanceFrom(cityKeys, commodity));
+    if (best === 0) break;
+  }
+  return best;
+}
+
+/**
+ * The player the open market serves worst (largest marketAccessDistance), ties broken at random.
+ * Every player with active cities counts, whether or not they can claim market contracts yet.
+ *
+ * @param random - Source of randomness in [0, 1); injectable for tests.
+ * @returns A player ID, or undefined if no player has active cities
+ */
+export function leastServedPlayer(
+  G: GameState,
+  openContracts: Contract[],
+  random: () => number = Math.random
+): string | undefined {
+  let worst = -1;
+  let tied: string[] = [];
+  for (const [id, props] of G.players) {
+    if (props.activeCities.length === 0) continue;
+    const distance = marketAccessDistance(props.activeCities, openContracts);
+    if (distance > worst) {
+      worst = distance;
+      tied = [id];
+    } else if (distance === worst) {
+      tied.push(id);
+    }
+  }
+  if (tied.length === 0) return undefined;
+  return tied[Math.min(Math.floor(random() * tied.length), tied.length - 1)];
+}
+
+/**
  * Returns the subset of commodities whose nearest producing city is at least
  * minDistance segments from destinationKey.
  */
