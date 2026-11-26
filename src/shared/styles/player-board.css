@@ -349,9 +349,20 @@
   color: var(--color-text-subtle);
 }
 
+/* Turn buttons keep their labels on one line, so with large text or a narrow phone the row wraps
+   instead of pushing End Turn off screen: first Undo above the pair, then each button on its own. */
+.playerToolbar__strip--turn {
+  flex-wrap: wrap;
+  row-gap: var(--spacing-xs);
+}
+
 .playerToolbar__turnButtons {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--spacing-xs);
+  max-width: 100%;
+  margin-left: auto;
 }
 
 /* Undo, Actions and End Turn, from quietest to loudest: Undo is bare text, Actions a raised
