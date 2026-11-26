@@ -18,15 +18,14 @@ export interface PlayerSheetProps {
 /**
  * Another player's board, as a glance across the table would show it, laid out like Home: a card
  * with where they stand (ties, cash, debt, deliveries, and how far their debt service has
- * advanced), then their engines and any cargo they recorded, their claimed market contract and
- * their upgrades. Until they have a claimed contract or an upgrade, those two fold into one
- * "Railroad" line. Their private contract stays private.
+ * advanced), then their engines and any cargo they recorded, their contracts (private and
+ * claimed market, valued for them) and their upgrades.
  */
 export function PlayerSheet({ G, playerID, onClose }: PlayerSheetProps): React.ReactElement | null {
   const serviceLabelId = React.useId();
   const props = G.players.find(([id]) => id === playerID)?.[1];
   if (!props) return null;
-  const claimed = G.contracts.filter((c) => c.type === "market" && c.playerID === playerID && !c.fulfilled);
+  const contracts = G.contracts.filter((c) => c.playerID === playerID && !c.fulfilled);
   const deliveries = G.contracts.filter((c) => c.playerID === playerID && c.fulfilled).length;
   const upgrades = upgradeLabels(props);
   const stats: { label: string; value: React.ReactNode; className?: string }[] = [
@@ -92,34 +91,25 @@ export function PlayerSheet({ G, playerID, onClose }: PlayerSheetProps): React.R
           />
         </section>
 
-        {claimed.length === 0 && upgrades.length === 0 ? (
-          // Early on, one line instead of two empty sections; they split once either has something.
-          <section className="infoSection" aria-label="Railroad">
-            <h3 className="infoSection__heading">Railroad</h3>
-            <p className="infoSection__summary">No claimed contract · No upgrades yet</p>
-          </section>
-        ) : (
-          <>
-            <section className="infoSection" aria-label="Claimed contract">
-              <h3 className="infoSection__heading">Claimed contract</h3>
-              <ContractRows contracts={claimed} player={props} emptyText="None right now." />
-            </section>
-            <section className="infoSection" aria-label="Upgrades">
-              <h3 className="infoSection__heading">Upgrades</h3>
-              {upgrades.length > 0 ? (
-                <div className="upgradeChips">
-                  {upgrades.map((u) => (
-                    <span key={u} className="upgradeChips__chip">
-                      {u}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="contractRows__empty">None yet.</p>
-              )}
-            </section>
-          </>
-        )}
+        <section className="infoSection" aria-label="Contracts">
+          <h3 className="infoSection__heading">Contracts</h3>
+          <ContractRows contracts={contracts} player={props} emptyText="None right now." />
+        </section>
+
+        <section className="infoSection" aria-label="Upgrades">
+          <h3 className="infoSection__heading">Upgrades</h3>
+          {upgrades.length > 0 ? (
+            <div className="upgradeChips">
+              {upgrades.map((u) => (
+                <span key={u} className="upgradeChips__chip">
+                  {u}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="contractRows__empty">None yet.</p>
+          )}
+        </section>
       </div>
     </Sheet>
   );

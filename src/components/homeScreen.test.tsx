@@ -164,7 +164,7 @@ describe('PlayerSheet', () => {
       ...props,
     });
 
-  test("shows another player's standing, engines, claimed contract and upgrades, not their private contract", () => {
+  test("shows another player's standing, engines, contracts (private and claimed) and upgrades", () => {
     const G = {
       players: [['1', ben()]],
       contracts: [
@@ -177,7 +177,7 @@ describe('PlayerSheet', () => {
     render(<PlayerSheet G={G} playerID="1" onClose={() => {}} />);
     const sheet = screen.getByRole('dialog', { name: 'Ben' });
     const sections = within(sheet).getAllByRole('region').map((r) => r.getAttribute('aria-label'));
-    expect(sections).toEqual(['Standing', 'Train', 'Claimed contract', 'Upgrades']);
+    expect(sections).toEqual(['Standing', 'Train', 'Contracts', 'Upgrades']);
     const standing = within(sheet).getByRole('region', { name: 'Standing' });
     expect(within(standing).getByText('$8K')).toBeInTheDocument();
     expect(within(standing).getByText('$15K')).toBeInTheDocument();
@@ -187,22 +187,12 @@ describe('PlayerSheet', () => {
     const train = within(sheet).getByRole('region', { name: 'Train' });
     expect(within(train).getByText('Grain')).toBeInTheDocument();
     expect(within(train).getByText('No cargo recorded')).toBeInTheDocument();
-    expect(within(sheet).getByRole('button', { name: /Imports to Richmond/ })).toBeDisabled();
-    expect(within(sheet).queryByText(/Cotton/)).toBeNull();
+    const contracts = within(sheet).getByRole('region', { name: 'Contracts' });
+    expect(within(contracts).getByRole('button', { name: /Cotton to Boston/ })).toBeDisabled();
+    expect(within(contracts).getByRole('button', { name: /Imports to Richmond/ })).toBeDisabled();
+    expect(within(contracts).getAllByRole('button')).toHaveLength(2);
     expect(within(sheet).getByText('Hub · Atlanta')).toBeInTheDocument();
     expect(within(sheet).getByText('Railyard')).toBeInTheDocument();
-  });
-
-  test('folds the claimed contract and upgrades into one line until the player has either', () => {
-    const G = {
-      players: [['1', ben({ upgrades: [], hubCity: null })]],
-      contracts: [],
-      independentRailroads: {},
-    } as unknown as GameState;
-    render(<PlayerSheet G={G} playerID="1" onClose={() => {}} />);
-    const sections = screen.getAllByRole('region').map((r) => r.getAttribute('aria-label'));
-    expect(sections).toEqual(['Standing', 'Train', 'Railroad']);
-    expect(screen.getByText('No claimed contract · No upgrades yet')).toBeInTheDocument();
   });
 });
 
