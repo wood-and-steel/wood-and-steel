@@ -276,19 +276,105 @@
 }
 
 /* Another player's card */
-.playerSheet__stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+/* Another player's card: laid out like Home, with the info sections from player-board.css */
+.playerSheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.playerSheet__title {
+  display: inline-flex;
+  align-items: center;
   gap: var(--spacing-sm);
 }
 
-.playerSheet__stats > div {
-  display: flex;
-  flex-direction: column;
+.playerSheet__standing {
+  gap: var(--spacing-sm);
 }
 
-.playerSheet__debt {
+/* Each stat as wide as its label, spread across the card, so Delivered fits on a small phone */
+.playerSheet__stats {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  margin: 0;
+}
+
+.playerSheet__stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2xs);
+}
+
+/* Small uppercase, like the section labels, so the numbers under them lead */
+.playerSheet__label {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-caps);
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.playerSheet__value {
+  margin: 0;
+  font-size: var(--font-size-h3);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.playerSheet__value--debt {
   color: var(--color-danger);
+}
+
+/* Debt service: a pill per region, filled once it's started */
+.playerSheet__service {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  padding-top: var(--spacing-sm);
+  border-top: var(--border-width-md) solid var(--info-rule-color);
+}
+
+.playerSheet__service .playerSheet__label {
+  flex-grow: 1;
+}
+
+.playerSheet__pills {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.playerSheet__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2xs);
+  padding: var(--spacing-2xs) var(--spacing-sm);
+  border: var(--border-width-md) dashed var(--color-border-medium);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+}
+
+.playerSheet__pill--done {
+  border-style: solid;
+  border-color: transparent;
+  background-color: var(--color-bg-active);
+  color: inherit;
+}
+
+.playerSheet__check {
+  width: 0.875rem;
+  height: 0.875rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* A radio choice styled as an option row */

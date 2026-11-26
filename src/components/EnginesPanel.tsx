@@ -14,6 +14,8 @@ export interface EnginesPanelProps {
   onSetCargo: (slot: EngineSlot, commodity: string | null) => boolean;
   /** Opens the Buy an engine sheet when the player taps an engine's name; omit to make the names plain text. */
   onBuyEngine?: () => void;
+  /** The list's accessible name; another player's card names it for them. */
+  label?: string;
 }
 
 /**
@@ -21,7 +23,14 @@ export interface EnginesPanelProps {
  * or dark version of the player's color): engine type, distance (with the Service Yard), and cargo.
  * Recording cargo is optional; contracts can be fulfilled without it.
  */
-export function EnginesPanel({ player, playerID, canEdit, onSetCargo, onBuyEngine }: EnginesPanelProps): React.ReactElement {
+export function EnginesPanel({
+  player,
+  playerID,
+  canEdit,
+  onSetCargo,
+  onBuyEngine,
+  label = "Your engines",
+}: EnginesPanelProps): React.ReactElement {
   const hasServiceYard = player.upgrades.includes("service-yard");
   /** The engine whose cargo sheet is open, if any. */
   const [pickingSlot, setPickingSlot] = React.useState<EngineSlot | null>(null);
@@ -43,7 +52,7 @@ export function EnginesPanel({ player, playerID, canEdit, onSetCargo, onBuyEngin
     />
   );
   return (
-    <div className="engines" aria-label="Your engines">
+    <div className="engines" role="group" aria-label={label}>
       {pickingSlot !== null && canEdit && cargoSheet(pickingSlot)}
       {([0, 1] as EngineSlot[]).map((slot) => {
         const type = player.engines[slot];

@@ -151,8 +151,8 @@ describe('ClaimSheet', () => {
 });
 
 describe('PlayerSheet', () => {
-  test("shows another player's money, ties, engines, claimed contract, upgrades and debt service, not their private contract", () => {
-    const ben = player({
+  const ben = (props: Partial<PlayerProps> = {}) =>
+    player({
       name: 'Ben',
       cash: 8000,
       debt: 15000,
@@ -161,9 +161,12 @@ describe('PlayerSheet', () => {
       upgrades: ['upgraded-stations', 'railyard'],
       hubCity: 'Atlanta',
       centralDebtServicePaid: true,
+      ...props,
     });
+
+  test("shows another player's standing, engines, contracts (private and claimed) and upgrades", () => {
     const G = {
-      players: [['1', ben]],
+      players: [['1', ben()]],
       contracts: [
         contract({ id: 'p1', playerID: '1', commodity: 'cotton', destinationKey: 'Boston' }),
         contract({ id: 'm1', type: 'market', playerID: '1', commodity: 'imports', destinationKey: 'Richmond' }),
@@ -173,15 +176,23 @@ describe('PlayerSheet', () => {
     } as unknown as GameState;
     render(<PlayerSheet G={G} playerID="1" onClose={() => {}} />);
     const sheet = screen.getByRole('dialog', { name: 'Ben' });
-    expect(within(sheet).getByText('$8K')).toBeInTheDocument();
-    expect(within(sheet).getByText('$15K')).toBeInTheDocument();
-    expect(within(sheet).getByText('Grain')).toBeInTheDocument();
-    expect(within(sheet).getByText('not recorded')).toBeInTheDocument();
-    expect(within(sheet).getByText('Imports to Richmond')).toBeInTheDocument();
-    expect(within(sheet).queryByText(/Cotton/)).toBeNull();
+    const sections = within(sheet).getAllByRole('region').map((r) => r.getAttribute('aria-label'));
+    expect(sections).toEqual(['Standing', 'Train', 'Contracts', 'Upgrades']);
+    const standing = within(sheet).getByRole('region', { name: 'Standing' });
+    expect(within(standing).getByText('$8K')).toBeInTheDocument();
+    expect(within(standing).getByText('$15K')).toBeInTheDocument();
+    expect(within(standing).getByText('Delivered').nextElementSibling).toHaveTextContent('1');
+    const service = within(standing).getByRole('list', { name: 'Debt service' });
+    expect(within(service).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Central: paid', 'Western: not yet']);
+    const train = within(sheet).getByRole('region', { name: 'Train' });
+    expect(within(train).getByText('Grain')).toBeInTheDocument();
+    expect(within(train).getByText('No cargo recorded')).toBeInTheDocument();
+    const contracts = within(sheet).getByRole('region', { name: 'Contracts' });
+    expect(within(contracts).getByRole('button', { name: /Cotton to Boston/ })).toBeDisabled();
+    expect(within(contracts).getByRole('button', { name: /Imports to Richmond/ })).toBeDisabled();
+    expect(within(contracts).getAllByRole('button')).toHaveLength(2);
     expect(within(sheet).getByText('Hub · Atlanta')).toBeInTheDocument();
     expect(within(sheet).getByText('Railyard')).toBeInTheDocument();
-    expect(within(sheet).getByText('Central paid')).toBeInTheDocument();
   });
 });
 
