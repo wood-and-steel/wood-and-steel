@@ -93,7 +93,7 @@ The player with the most railroad ties wins. Railroad ties are awarded these way
 - **Commodity bonuses** are granted based on the breadth and depth of a railroad. 
   - The breadth bonus is based on the number of different commodities a railroad has delivered. The first eight are worth 1 railroad tie each, the second four are worth 2 ties, and all additional commodities are worth 3 railroad ties. 
   - The depth bonus is one plus the number of times you have delivered your most delivered commodity.
-- **Monopoly bonuses** are granted when a player connects track to all cities that provide a monopoly-eligible commodity. See Monopolies below for more about eligibility and scoring.
+- **Monopoly bonuses** are granted when a player buys a Commodities Exchange Office, which they can do once their track connects to all cities that provide a monopoly-eligible commodity. See Monopolies below for more about eligibility and scoring.
 
 The app currently shows the total railroad ties earned from contract fulfillment, but not any of the bonuses.
 
@@ -104,7 +104,7 @@ When a player collects 30 or more railroad ties from contract fulfillment, the g
 
 - **Regional Office:** If a player has purchased a Regional Office, they are awarded bonus railroad ties.
 
-Players check connection and monopoly bonuses themselves at the end of the game, counting routes from independent railroads they acquired. The app doesn't have complete information about each player's routes, so it can't award these bonuses.
+Players check connection bonuses themselves at the end of the game, counting routes from independent railroads they acquired. The app doesn't have complete information about each player's routes, so it can't award these bonuses.
 
 
 ## Set Up
@@ -287,7 +287,7 @@ The Mountain and Challenger multipliers are rounded down to the nearest $1,000.
 
 Independent railroads can be acquired once a player's rail network connects with one or more cities in the independent railroad. Independent railroads cost $3,000 per route until the any player fulfills a contract in either Western region. After this happens, independent railroads cost $4,000 per route track.
 
-Acquiring an independent railroad doesn't award railroad ties by itself, but its routes become part of the player's rail network and count toward connection and monopoly bonuses.
+Acquiring an independent railroad doesn't award railroad ties by itself, but its routes become part of the player's rail network. They count toward connection bonuses and toward the connections needed to buy a Commodities Exchange Office.
 
 ### Go first next round
 
@@ -347,7 +347,9 @@ If you have connections to at least 5 of the cities in a region and no one else 
 
 #### Commodities Exchange Office – $20,000
 
-If your railway network is connected to all the cities that provide a commodity that can be monopolized, gain the benefits of a monopoly in that commodity.
+Once your rail network connects to all the cities that provide a commodity that can be monopolized, you may buy this office for that commodity. Buying it gives you a monopoly in that commodity: you gain its railroad ties and its other benefits (see Monopolies below).
+
+The app doesn't have complete information about each player's routes, so it trusts the player has made the connections: it asks which commodity and lists every one that can be monopolized, without checking the player's track.
 
 ### Discard and draw a new Private Contract
 
@@ -369,9 +371,9 @@ Independent railroads never start on or expand into mountainous routes of length
 
 Railroads were often built around transporting certain commodities. If the commodities were delivered in large enough quantities, they became part of the financial backbone of a railroad. (Designer note: To reflect this in gameplay, we've decided to include monopolies as part of how you build your railroad. The intention is that not all players will have monopolies at game end.)
 
-A player gets a monopoly when their track connects to all cities providing a commodity available in 4, 5, or 6 cities and they have a Commodities Exchange Office dedicated to that commodity. Having a monopoly immediately awards that player railroad ties as shown in the table below. It also increases the chance that the monopolized commodity will be in the private contracts offered to a player after they make a delivery to a city within one segment of a city with that commodity. The probability distribution for the other commodities is the same, within the remaining odds.
+Connecting track to all cities providing a commodity available in 4, 5, or 6 cities lets a player buy a Commodities Exchange Office dedicated to that commodity. Buying the office gives the player the monopoly, which immediately awards them railroad ties as shown in the table below. It also increases the chance that the monopolized commodity will be in the private contracts offered to a player after they make a delivery to a city within one segment of a city with that commodity. The probability distribution for the other commodities is the same, within the remaining odds.
 
-Only the first player who fulfills the requirement can have a monopoly in a commodity.
+Only the first player to buy a Commodities Exchange Office for a commodity can have a monopoly in it.
 
 #### Monopoly Size
 

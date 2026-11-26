@@ -248,7 +248,7 @@ function BuyUpgradeView({
         )}
         {key === "commodities-exchange" && (
           <p className="sheet__note">
-            Buy it once your track reaches every city that supplies the commodity. Its ties come at the end of the game.
+            Buy it once your track reaches every city that supplies the commodity. Buying it gives you the monopoly and its ties.
           </p>
         )}
         <div className="sheet__box">

@@ -130,7 +130,7 @@ export const UPGRADES: readonly Upgrade[] = [
     id: 'commodities-exchange',
     name: 'Commodities Exchange',
     price: 20000,
-    effect: 'If your railway network connects to all the cities providing a commodity that can be monopolized, gain the benefits of a monopoly in it.',
+    effect: 'Buy once your railway network connects to all the cities providing a commodity that can be monopolized. Gain the monopoly in it: its railroad ties and its benefits.',
   },
 ];
 
