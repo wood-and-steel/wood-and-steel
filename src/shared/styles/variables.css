@@ -61,8 +61,8 @@
   /* Sizes */
   --button-height: 1.75rem;
   --button-height-full: 2.5rem;
-  /* The Home toolbar's Undo, Actions and End Turn: taller, for thumbs */
-  --button-height-turn: 2.25rem;
+  /* The Home toolbar's Undo, Actions and End Turn: a little taller than other buttons, for thumbs */
+  --button-height-turn: 2rem;
   /* Avatars are fixed-size rounded tiles, border included */
   --avatar-size: 1.725rem; /* height */
   --avatar-width: 2.5rem;
@@ -116,10 +116,10 @@
   --color-contract-private: #101020;
   /* Something new to notice: the round report's new routes, a switch that's on */
   --color-highlight: #4510d4;
-  /* End Turn: filled with the theme's ink, so it reads first and looks final */
-  --color-turn-commit-bg: var(--color-primary);
-  --color-turn-commit-fg: var(--color-bg-primary);
-  --color-turn-commit-hover: #414b4e;
+  /* End Turn: a softened fill of the theme's ink, so it reads first without shouting */
+  --color-turn-commit-bg: #66737a;
+  --color-turn-commit-fg: #ffffff;
+  --color-turn-commit-hover: #5a666c;
 
   /* Map art (src/map/) is always light, so the dark theme leaves these alone */
   --map-paper: #efe9da;
@@ -167,6 +167,8 @@
     --color-contract-market: #cab9f8;
     --color-contract-private: #f1f1f3;
     --color-highlight: #b49cf6;
-    --color-turn-commit-hover: #ffffff;
+    --color-turn-commit-bg: #8d999f;
+    --color-turn-commit-fg: #0c0e10;
+    --color-turn-commit-hover: #9da8ad;
   }
 }

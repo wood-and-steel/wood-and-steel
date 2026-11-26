@@ -360,7 +360,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-xs) var(--spacing-sm);
   max-width: 100%;
   margin-left: auto;
 }
@@ -373,9 +373,10 @@
   gap: 0.375rem;
   height: var(--button-height-turn);
   padding: 0 var(--spacing-md) 0 0.625rem;
-  border-radius: var(--radius-md);
-  border: var(--border-width-md) solid var(--color-border);
-  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-xs); /* Desktop modals' corners */
+  border: var(--border-width-md) solid var(--color-border-medium);
+  /* Only partway from the toolbar's grey to the page color, so Actions sits softly on the strip */
+  background-color: color-mix(in srgb, var(--color-bg-primary) 50%, var(--color-bg-light));
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: var(--font-size-body);
