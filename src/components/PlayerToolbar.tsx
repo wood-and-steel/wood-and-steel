@@ -119,20 +119,38 @@ export function PlayerToolbar({
               type="button"
               name="undo"
               aria-label="Undo all actions this turn"
-              className="button"
+              className="playerToolbar__turnButton playerToolbar__turnButton--undo"
               disabled={!canUndo}
               onClick={() => undoCurrentTurn()}
             >
+              <svg className="playerToolbar__turnIcon" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M5.5 3 2.5 6l3 3M2.5 6H10a3.5 3.5 0 0 1 0 7H6.5" />
+              </svg>
               Undo
             </button>
             <span className="playerToolbar__turnButtons">
               {startingContractExists && (
-                <button type="button" name="actions" className="button" onClick={() => onOpenActions?.()}>
+                <button
+                  type="button"
+                  name="actions"
+                  className="playerToolbar__turnButton"
+                  onClick={() => onOpenActions?.()}
+                >
+                  <svg className="playerToolbar__turnIcon" viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M6 4h7.5M6 8h7.5M6 12h7.5M2.75 4h.01M2.75 8h.01M2.75 12h.01" />
+                  </svg>
                   Actions
                 </button>
               )}
-              <button type="submit" name="endTurn" className="button">
+              <button
+                type="submit"
+                name="endTurn"
+                className="playerToolbar__turnButton playerToolbar__turnButton--commit"
+              >
                 End Turn
+                <svg className="playerToolbar__turnIcon" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M2.5 8h8M7.5 4.5 11 8l-3.5 3.5M13.5 3v10" />
+                </svg>
               </button>
             </span>
           </>
