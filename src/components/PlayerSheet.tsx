@@ -80,8 +80,8 @@ export function PlayerSheet({ G, playerID, onClose }: PlayerSheetProps): React.R
           </div>
         </section>
 
-        <section className="infoSection" aria-label="Train">
-          <h3 className="infoSection__heading">Train</h3>
+        <section className="infoSection" aria-label="Trains">
+          <h3 className="infoSection__heading">Trains</h3>
           <EnginesPanel
             player={props}
             playerID={playerID}

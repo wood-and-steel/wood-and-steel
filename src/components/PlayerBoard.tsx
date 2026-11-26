@@ -135,8 +135,8 @@ export function PlayerBoard({
           <div className="home">
             {/* What the player acts on each turn, set apart from the market and their history. */}
             <div className="infoCard">
-              <section className="infoSection" aria-label="Your train">
-                <h3 className="infoSection__heading">Your train</h3>
+              <section className="infoSection" aria-label="Your trains">
+                <h3 className="infoSection__heading">Your trains</h3>
                 <EnginesPanel
                   player={playerProps}
                   playerID={key}

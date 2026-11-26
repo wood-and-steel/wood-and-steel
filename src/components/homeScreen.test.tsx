@@ -177,14 +177,14 @@ describe('PlayerSheet', () => {
     render(<PlayerSheet G={G} playerID="1" onClose={() => {}} />);
     const sheet = screen.getByRole('dialog', { name: 'Ben' });
     const sections = within(sheet).getAllByRole('region').map((r) => r.getAttribute('aria-label'));
-    expect(sections).toEqual(['Standing', 'Train', 'Contracts', 'Upgrades']);
+    expect(sections).toEqual(['Standing', 'Trains', 'Contracts', 'Upgrades']);
     const standing = within(sheet).getByRole('region', { name: 'Standing' });
     expect(within(standing).getByText('$8K')).toBeInTheDocument();
     expect(within(standing).getByText('$15K')).toBeInTheDocument();
     expect(within(standing).getByText('Delivered').nextElementSibling).toHaveTextContent('1');
     const service = within(standing).getByRole('list', { name: 'Debt service' });
     expect(within(service).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Central: paid', 'Western: not yet']);
-    const train = within(sheet).getByRole('region', { name: 'Train' });
+    const train = within(sheet).getByRole('region', { name: 'Trains' });
     expect(within(train).getByText('Grain')).toBeInTheDocument();
     expect(within(train).getByText('No cargo recorded')).toBeInTheDocument();
     const contracts = within(sheet).getByRole('region', { name: 'Contracts' });
@@ -304,7 +304,7 @@ describe('PlayerBoard (Home)', () => {
       />
     );
     const sections = screen.getAllByRole('region').map((r) => r.getAttribute('aria-label'));
-    expect(sections).toEqual(['Your train', 'Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
+    expect(sections).toEqual(['Your trains', 'Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
     expect(within(screen.getByRole('region', { name: 'Market contracts' })).getByText('Wine to Boston')).toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: 'Your upgrades' })).getByText('Hub · Boston')).toBeInTheDocument();
   });
@@ -324,12 +324,12 @@ describe('PlayerBoard (Home)', () => {
     );
     const regions = () => screen.getAllByRole('region').map((r) => r.getAttribute('aria-label'));
     const { rerender } = render(board({}, [contract()]));
-    expect(regions()).toEqual(['Your train', 'Your contracts', 'Market contracts', 'Your railroad']);
+    expect(regions()).toEqual(['Your trains', 'Your contracts', 'Market contracts', 'Your railroad']);
     expect(screen.getByText('No upgrades yet · No deliveries yet')).toBeInTheDocument();
     rerender(board({}, [contract({ fulfilled: true })]));
-    expect(regions()).toEqual(['Your train', 'Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
+    expect(regions()).toEqual(['Your trains', 'Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
     rerender(board({ upgrades: ['timetable'] }, []));
-    expect(regions()).toEqual(['Your train', 'Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
+    expect(regions()).toEqual(['Your trains', 'Your contracts', 'Market contracts', 'Your upgrades', 'Fulfilled contracts']);
   });
 
   test('lists expiring market contracts first, soonest to expire at the top', () => {
