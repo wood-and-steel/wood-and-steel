@@ -52,7 +52,7 @@ export function EnginesPanel({
     />
   );
   return (
-    <div className="engines" aria-label={label}>
+    <div className="engines" role="group" aria-label={label}>
       {pickingSlot !== null && canEdit && cargoSheet(pickingSlot)}
       {([0, 1] as EngineSlot[]).map((slot) => {
         const type = player.engines[slot];
