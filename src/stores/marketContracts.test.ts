@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { addContract, claimMarketContract, fillMarketTableau, generateMarketContract, toggleContractFulfilled } from './gameActions';
 import { useGameStore } from './gameStore';
 import { endTurn } from './events';
+import { marketAccessDistance } from '../Contract';
 
 const openMarket = () =>
   useGameStore.getState().G.contracts.filter((c) => c.type === 'market' && c.playerID === null);
@@ -95,6 +96,22 @@ describe('market contract tableau', () => {
     setUp(0);
     fillMarketTableau();
     expect(openMarket()).toHaveLength(3);
+  });
+
+  test('fillMarketTableau puts a commodity near every player when players are far apart', () => {
+    useGameStore.getState().resetState(3);
+    const far = [['Boston', 'Portland ME'], ['Portland OR', 'Seattle'], ['Dallas', 'Houston']];
+    useGameStore.setState((s) => ({
+      G: { ...s.G, players: s.G.players.map(([id, p], i) => [id, { ...p, activeCities: far[i] }]) },
+      ctx: { ...s.ctx, phase: 'play' },
+    }));
+    for (let i = 0; i < 10; i++) {
+      useGameStore.setState((s) => ({ G: { ...s.G, contracts: [] } }));
+      fillMarketTableau();
+      const open = openMarket();
+      expect(open).toHaveLength(3);
+      for (const cities of far) expect(marketAccessDistance(cities, open)).toBeLessThanOrEqual(1);
+    }
   });
 
   test('fillMarketTableau keeps existing open contracts and tops up to 3', () => {

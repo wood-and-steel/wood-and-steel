@@ -7,7 +7,7 @@ import { advanceMarketExpirations, openMarketContracts } from './marketExpiratio
 import { useGameStore } from './gameStore';
 import type { GameState } from './gameStore';
 import type { Contract } from '../Contract';
-import { MARKET_EXPIRATION_ROUNDS } from '../Contract';
+import { commodityDistanceFrom, MARKET_EXPIRATION_ROUNDS } from '../Contract';
 
 /** Random source that returns `values` in order, then repeats the last one. */
 function seq(...values: number[]): () => number {
@@ -147,5 +147,21 @@ describe('advanceMarketExpirations', () => {
     expect(byId('f')).toEqual(fulfilled);
     expect(byId('p')).toEqual(priv);
     expect(byId('a')?.roundsLeft).toBe(MARKET_EXPIRATION_ROUNDS);
+  });
+
+  test('the replacement serves the player the expiring contract was serving', () => {
+    // Tobacco (Norfolk, Raleigh) serves player 1 only; aluminum and machinery serve player 0.
+    for (let i = 0; i < 10; i++) {
+      G.contracts = [
+        market('t', { commodity: 'tobacco', roundsLeft: 1 }),
+        market('al', { commodity: 'aluminum' }),
+        market('m', { commodity: 'machinery' }),
+      ];
+      G.marketRoundsWithoutExpirationStart = 0;
+      advanceMarketExpirations(G, NO_START);
+      expect(byId('t')).toBeUndefined();
+      const replacement = openMarketContracts(G.contracts).find((c) => !['al', 'm'].includes(c.id))!;
+      expect(commodityDistanceFrom(['Norfolk', 'Raleigh'], replacement.commodity)).toBeLessThanOrEqual(1);
+    }
   });
 });

@@ -11,6 +11,7 @@
  */
 import {
   generateMarketContract,
+  leastServedPlayer,
   MARKET_EXPIRATION_GUARANTEE_ROUNDS,
   MARKET_EXPIRATION_ROUNDS,
   MARKET_EXPIRATION_START_CHANCE,
@@ -27,14 +28,20 @@ export function isOpenMarketContract(c: Contract): boolean {
   return c.type === 'market' && c.playerID === null && !c.fulfilled;
 }
 
-/** Draw a market contract that doesn't duplicate an active contract in `contracts`, or undefined after 50 tries. */
-export function drawMarketContract(G: GameState, contracts: Contract[]): Contract | undefined {
+/**
+ * Draw a market contract that doesn't duplicate an active contract in `contracts`, or undefined after 50 tries.
+ * It is anchored on the player the open market in `contracts` serves worst (leastServedPlayer), not counting
+ * `leavingIds`: open contracts about to leave the tableau, which still count for the duplicate check.
+ */
+export function drawMarketContract(G: GameState, contracts: Contract[], leavingIds: string[] = []): Contract | undefined {
+  const staying = openMarketContracts(contracts).filter((c) => !leavingIds.includes(c.id));
+  const anchor = leastServedPlayer(G, staying);
   const activeContractKeys = new Set(
     contracts.filter((c) => !c.fulfilled).map((c) => `${c.commodity}|${c.destinationKey}`)
   );
 
   for (let attempts = 0; attempts < 50; attempts++) {
-    const candidate = generateMarketContract(G);
+    const candidate = generateMarketContract(G, anchor);
     if (!candidate) return undefined;
     if (!activeContractKeys.has(`${candidate.commodity}|${candidate.destinationKey}`)) {
       return candidate;
@@ -46,10 +53,15 @@ export function drawMarketContract(G: GameState, contracts: Contract[]): Contrac
 /**
  * A market contract just left (or is about to leave) the open tableau:
  * add one replacement to the front of `contracts`, avoiding duplicates of active contracts.
+ * `leavingIds` names open contracts still in `contracts` that are about to leave (see drawMarketContract).
  * One-for-one: does not change the number of contracts in the tableau; it only replaces the one that left.
  */
-export function withReplacementMarketContract(G: GameState, contracts: Contract[]): Contract[] {
-  const replacement = drawMarketContract(G, contracts);
+export function withReplacementMarketContract(
+  G: GameState,
+  contracts: Contract[],
+  leavingIds: string[] = []
+): Contract[] {
+  const replacement = drawMarketContract(G, contracts, leavingIds);
   if (!replacement) {
     console.error('[withReplacementMarketContract] Failed to generate a replacement market contract');
     return contracts;
@@ -78,8 +90,9 @@ export function advanceMarketExpirations(G: GameState, random: () => number = Ma
   // Expire contracts that reached 0. Draw each replacement before removing the expired one
   // so the duplicate check keeps the replacement from matching it.
   const expired = contracts.filter((c) => isOpenMarketContract(c) && c.roundsLeft !== undefined && c.roundsLeft <= 0);
+  const expiredIds = expired.map((c) => c.id);
   for (const old of expired) {
-    contracts = withReplacementMarketContract(G, contracts).filter((c) => c.id !== old.id);
+    contracts = withReplacementMarketContract(G, contracts, expiredIds).filter((c) => c.id !== old.id);
   }
 
   // Maybe start one countdown.
