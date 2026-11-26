@@ -12,7 +12,7 @@ The player app's CSS is all imported, in order, through `src/shared/styles/index
 | `base.css` | The reset, element defaults (`body`, headings, `code`), the keyboard focus ring |
 | `layout.css` | The board page frame and the money strip's height |
 | `buttons.css` | `.plainButton`, `.button` and its modifiers |
-| `player-board.css` | Toolbar, money strip, avatars, the home screen's engines and contract rows |
+| `player-board.css` | Toolbar, money strip, avatars, the home screen's engines and contract rows, and the info sections (`.infoSection`, `.infoCard`) Home and the player card share |
 | `modal.css` | `.modal` scrim and dialog, the sheet layout on phones, the playtest dialog |
 | `sheets.css` | Sheet contents: Loans, Actions, upgrades, track, receipts, round report, cargo |
 | `map.css` | Map drawing shared with the board app (`src/map/`): indie route strokes and the round report's mini maps. Colors are `--map-*` tokens, which the dark theme leaves alone because the map art is always light |
@@ -20,7 +20,7 @@ The player app's CSS is all imported, in order, through `src/shared/styles/index
 | `popup-menu.css` | `.popupMenu` |
 | `nav-bar.css` | Floating menu button (phones, tablets) and the desktop nav row |
 | `lobby-screen.css`, `waiting-screen.css` | The two pre-game screens |
-| `utilities.css` | The few single-purpose classes (`.text-center`, `.padding-xl`) |
+| `utilities.css` | The few single-purpose classes (`.text-center`, `.padding-xl`, `.visuallyHidden` for words only screen readers need) |
 
 Later files win ties, so `utilities.css` comes last. Put a new component's rules in the file that holds its neighbors, or a new file imported from `index.css`.
 

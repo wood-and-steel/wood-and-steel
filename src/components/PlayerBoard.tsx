@@ -37,8 +37,8 @@ const REGION_NAMES: Record<string, string> = {
   SE: "Southeast",
 };
 
-/** The player's upgrades as short labels, with the Hub city, Exchange commodity and Office region. */
-function upgradeLabels(player: PlayerProps): string[] {
+/** A player's upgrades as short labels, with the Hub city, Exchange commodity and Office region. Home and the player card both list them. */
+export function upgradeLabels(player: PlayerProps): string[] {
   return [
     ...(player.hubCity ? [`Hub · ${player.hubCity}`] : []),
     ...player.upgrades.map((u) =>
@@ -134,9 +134,9 @@ export function PlayerBoard({
         {currentPhase === "play" && (
           <div className="home">
             {/* What the player acts on each turn, set apart from the market and their history. */}
-            <div className="home__card">
-              <section className="home__section" aria-label="Your train">
-                <h3 className="home__heading">Your train</h3>
+            <div className="infoCard">
+              <section className="infoSection" aria-label="Your train">
+                <h3 className="infoSection__heading">Your train</h3>
                 <EnginesPanel
                   player={playerProps}
                   playerID={key}
@@ -145,8 +145,8 @@ export function PlayerBoard({
                   onBuyEngine={canAct ? onOpenBuyEngine : undefined}
                 />
               </section>
-              <section className="home__section" aria-label="Your contracts">
-                <h3 className="home__heading">Your contracts</h3>
+              <section className="infoSection" aria-label="Your contracts">
+                <h3 className="infoSection__heading">Your contracts</h3>
                 <ContractRows
                   contracts={mine}
                   player={playerProps}
@@ -155,8 +155,8 @@ export function PlayerBoard({
                 />
               </section>
             </div>
-            <section className="home__section" aria-label="Market contracts">
-              <h3 className="home__heading">Market</h3>
+            <section className="infoSection" aria-label="Market contracts">
+              <h3 className="infoSection__heading">Market</h3>
               <ContractRows
                 contracts={market}
                 player={playerProps}
@@ -167,14 +167,14 @@ export function PlayerBoard({
             </section>
             {upgrades.length === 0 && fulfilled.length === 0 ? (
               // Early on, one line instead of two empty sections; they split once either has something.
-              <section className="home__section" aria-label="Your railroad">
-                <h3 className="home__heading">Your railroad</h3>
-                <p className="home__summary">No upgrades yet · No deliveries yet</p>
+              <section className="infoSection" aria-label="Your railroad">
+                <h3 className="infoSection__heading">Your railroad</h3>
+                <p className="infoSection__summary">No upgrades yet · No deliveries yet</p>
               </section>
             ) : (
               <>
-                <section className="home__section" aria-label="Your upgrades">
-                  <h3 className="home__heading">Upgrades</h3>
+                <section className="infoSection" aria-label="Your upgrades">
+                  <h3 className="infoSection__heading">Upgrades</h3>
                   {upgrades.length > 0 ? (
                     <div className="upgradeChips">
                       {upgrades.map((u) => (
@@ -187,8 +187,8 @@ export function PlayerBoard({
                     <p className="contractRows__empty">None yet. Buy them from Actions.</p>
                   )}
                 </section>
-                <section className="home__section" aria-label="Fulfilled contracts">
-                  <h3 className="home__heading">Fulfilled</h3>
+                <section className="infoSection" aria-label="Fulfilled contracts">
+                  <h3 className="infoSection__heading">Fulfilled</h3>
                   <ContractRows contracts={fulfilled} emptyText="None yet." />
                 </section>
               </>

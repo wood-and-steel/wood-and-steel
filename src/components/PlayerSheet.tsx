@@ -1,11 +1,12 @@
 import React from "react";
-import { moneyValue } from "../Contract";
+import { getPlayerAvatarColor } from "../utils/playerAvatar";
 import { playerTies } from "../utils/ties";
 import type { GameState } from "../stores/gameStore";
-import { engineDistance, formatCommodity, getEngineType, type EngineSlot } from "../rules/playerBoard";
-import { UPGRADE_NAMES, type UpgradeKey } from "../rules/rulesData";
 import { formatMoney } from "../utils/money";
-import { EngineSegments, EngineSlotIcon } from "./EngineIcon";
+import { ContractRows } from "./ContractRows";
+import { EnginesPanel } from "./EnginesPanel";
+import { PlayerAvatar } from "./PlayerAvatar";
+import { upgradeLabels } from "./PlayerBoard";
 import { Sheet } from "./Sheet";
 
 export interface PlayerSheetProps {
@@ -14,108 +15,111 @@ export interface PlayerSheetProps {
   onClose: () => void;
 }
 
-const REGION_NAMES: Record<string, string> = {
-  NW: "Northwest",
-  NC: "North Central",
-  NE: "Northeast",
-  SW: "Southwest",
-  SC: "South Central",
-  SE: "Southeast",
-};
-
 /**
- * Another player's board, as a glance across the table would show it: money, engines and
- * any cargo they recorded, their claimed market contract, upgrades, and how far their debt
- * service has advanced. Their private contract stays private.
+ * Another player's board, as a glance across the table would show it, laid out like Home: a card
+ * with where they stand (ties, cash, debt, deliveries, and how far their debt service has
+ * advanced), then their engines and any cargo they recorded, their claimed market contract and
+ * their upgrades. Until they have a claimed contract or an upgrade, those two fold into one
+ * "Railroad" line. Their private contract stays private.
  */
 export function PlayerSheet({ G, playerID, onClose }: PlayerSheetProps): React.ReactElement | null {
+  const serviceLabelId = React.useId();
   const props = G.players.find(([id]) => id === playerID)?.[1];
   if (!props) return null;
-  const claimed = G.contracts.find((c) => c.type === "market" && c.playerID === playerID && !c.fulfilled);
-  const hasServiceYard = props.upgrades.includes("service-yard");
-  const upgrades: string[] = [
-    ...(props.hubCity ? [`Hub · ${props.hubCity}`] : []),
-    ...props.upgrades.map((u) =>
-      u === "commodities-exchange" && props.exchangeCommodity
-        ? `${UPGRADE_NAMES[u]} · ${formatCommodity(props.exchangeCommodity)}`
-        : UPGRADE_NAMES[u as UpgradeKey]
-    ),
-    ...(props.regionalOffice ? [`Regional Office · ${REGION_NAMES[props.regionalOffice]}`] : []),
+  const claimed = G.contracts.filter((c) => c.type === "market" && c.playerID === playerID && !c.fulfilled);
+  const deliveries = G.contracts.filter((c) => c.playerID === playerID && c.fulfilled).length;
+  const upgrades = upgradeLabels(props);
+  const stats: { label: string; value: React.ReactNode; className?: string }[] = [
+    { label: "Ties", value: playerTies(G.contracts, playerID, props) },
+    { label: "Cash", value: formatMoney(props.cash) },
+    { label: "Debt", value: formatMoney(props.debt), className: props.debt > 0 ? "playerSheet__value--debt" : undefined },
+    { label: "Delivered", value: deliveries },
+  ];
+  const service = [
+    { region: "Central", done: props.centralDebtServicePaid, doneText: "paid", notYetText: "not yet" },
+    { region: "Western", done: props.westernDeliveryMade, doneText: "every delivery", notYetText: "not yet" },
   ];
 
   return (
-    <Sheet title={props.name} onClose={onClose}>
-      <div className="playerSheet__stats">
-        <div>
-          <span className="sheet__label">Cash</span>
-          <strong>{formatMoney(props.cash)}</strong>
-        </div>
-        <div>
-          <span className="sheet__label">Debt</span>
-          <strong className={props.debt > 0 ? "playerSheet__debt" : ""}>{formatMoney(props.debt)}</strong>
-        </div>
-        <div>
-          <span className="sheet__label">Ties</span>
-          <strong>{playerTies(G.contracts, playerID, props)}</strong>
-        </div>
-      </div>
-
-      <div className="sheet__subhead">Engines</div>
-      <div className="sheet__box">
-        {([0, 1] as EngineSlot[]).map((slot) => {
-          const type = props.engines[slot];
-          const cargo = props.cargo[slot];
-          return (
-            <div key={slot} className="sheet__row">
-              <span className="engineLabel">
-                <EngineSlotIcon playerID={playerID} avatarColor={props.avatarColor} slot={slot} />
-                {type ? (
-                  <>
-                    {getEngineType(type).name} · <EngineSegments count={engineDistance(type, hasServiceYard).total} />
-                  </>
-                ) : (
-                  "No engine"
-                )}
-              </span>
-              {type && <span className="sheet__label">{cargo ? formatCommodity(cargo) : "not recorded"}</span>}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="sheet__subhead">Claimed contract</div>
-      {claimed ? (
-        <div className="sheet__box">
-          <div className="sheet__row">
-            <span>
-              {formatCommodity(claimed.commodity)} to {claimed.destinationKey}
+    <Sheet
+      title={
+        <span className="playerSheet__title">
+          <PlayerAvatar name={props.name} avatarColor={getPlayerAvatarColor(playerID, props.avatarColor)} />
+          {props.name}
+        </span>
+      }
+      onClose={onClose}
+    >
+      <div className="playerSheet">
+        {/* Where they stand */}
+        <section className="infoCard playerSheet__standing" aria-label="Standing">
+          <dl className="playerSheet__stats">
+            {stats.map((s) => (
+              <div key={s.label} className="playerSheet__stat">
+                <dt className="playerSheet__label">{s.label}</dt>
+                <dd className={`playerSheet__value${s.className ? ` ${s.className}` : ""}`}>{s.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="playerSheet__service">
+            <span className="playerSheet__label" id={serviceLabelId}>
+              Debt service
             </span>
-            <strong>{formatMoney(moneyValue(claimed))}</strong>
+            <ul className="playerSheet__pills" aria-labelledby={serviceLabelId}>
+              {service.map((s) => (
+                <li key={s.region} className={`playerSheet__pill${s.done ? " playerSheet__pill--done" : ""}`}>
+                  {s.done && (
+                    <svg className="playerSheet__check" viewBox="0 0 16 16" aria-hidden="true">
+                      <path d="M3 8.5 6.5 12 13 4.5" />
+                    </svg>
+                  )}
+                  {s.region}
+                  <span className="visuallyHidden">: {s.done ? s.doneText : s.notYetText}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      ) : (
-        <p className="sheet__note">None</p>
-      )}
+        </section>
 
-      <div className="sheet__subhead">Upgrades</div>
-      {upgrades.length > 0 ? (
-        <div className="upgradeChips">
-          {upgrades.map((u) => (
-            <span key={u} className="upgradeChips__chip">
-              {u}
-            </span>
-          ))}
-        </div>
-      ) : (
-        <p className="sheet__note">None yet</p>
-      )}
+        <section className="infoSection" aria-label="Train">
+          <h3 className="infoSection__heading">Train</h3>
+          <EnginesPanel
+            player={props}
+            playerID={playerID}
+            canEdit={false}
+            onSetCargo={() => false}
+            label={`${props.name}'s engines`}
+          />
+        </section>
 
-      <div className="sheet__subhead">Debt service</div>
-      <div className="sheet__box">
-        <div className="sheet__row">
-          <span>{props.centralDebtServicePaid ? "Central paid" : "Central not yet"}</span>
-          <span className="sheet__label">{props.westernDeliveryMade ? "West: every delivery" : "West not yet"}</span>
-        </div>
+        {claimed.length === 0 && upgrades.length === 0 ? (
+          // Early on, one line instead of two empty sections; they split once either has something.
+          <section className="infoSection" aria-label="Railroad">
+            <h3 className="infoSection__heading">Railroad</h3>
+            <p className="infoSection__summary">No claimed contract · No upgrades yet</p>
+          </section>
+        ) : (
+          <>
+            <section className="infoSection" aria-label="Claimed contract">
+              <h3 className="infoSection__heading">Claimed contract</h3>
+              <ContractRows contracts={claimed} player={props} emptyText="None right now." />
+            </section>
+            <section className="infoSection" aria-label="Upgrades">
+              <h3 className="infoSection__heading">Upgrades</h3>
+              {upgrades.length > 0 ? (
+                <div className="upgradeChips">
+                  {upgrades.map((u) => (
+                    <span key={u} className="upgradeChips__chip">
+                      {u}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="contractRows__empty">None yet.</p>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </Sheet>
   );
