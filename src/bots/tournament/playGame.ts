@@ -148,7 +148,8 @@ export async function playGame({ strategies, seed, maxRounds = 80, markets = 3, 
       if (ids.some((id) => fulfillmentTiesOf(G, id) >= GAME_END_TIES)) break;
       if (ctx.phase === 'play' && ctx.round !== sampledRound) {
         sampledRound = ctx.round ?? -1;
-        sampleMarketAccess(G);
+        // Read the store again: opening the market above changed it after G was read.
+        sampleMarketAccess(useGameStore.getState().G);
       }
       const player = ctx.currentPlayer;
       acted = false;
