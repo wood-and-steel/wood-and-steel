@@ -104,6 +104,8 @@ When a player collects 30 or more railroad ties from contract fulfillment, the g
 
 - **Regional Office:** If a player has purchased a Regional Office, they are awarded bonus railroad ties.
 
+Players check connection and monopoly bonuses themselves at the end of the game, counting routes from independent railroads they acquired. The app doesn't have complete information about each player's routes, so it can't award these bonuses.
+
 
 ## Set Up
 
@@ -284,6 +286,8 @@ The Mountain and Challenger multipliers are rounded down to the nearest $1,000.
 ### Merge with an independent railroad
 
 Independent railroads can be acquired once a player's rail network connects with one or more cities in the independent railroad. Independent railroads cost $3,000 per route until the any player fulfills a contract in either Western region. After this happens, independent railroads cost $4,000 per route track.
+
+Acquiring an independent railroad doesn't award railroad ties by itself, but its routes become part of the player's rail network and count toward connection and monopoly bonuses.
 
 ### Go first next round
 
