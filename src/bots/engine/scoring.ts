@@ -6,6 +6,7 @@
 import { commodities } from '../../data';
 import { railroadTieValue } from '../../Contract';
 import {
+  ACQUISITION_TIES,
   CHALLENGER_END_TIES,
   MONOPOLY_TIES,
   REGIONAL_OFFICE_END_TIES,
@@ -21,6 +22,8 @@ export interface TieBreakdown {
   breadth: number;
   depth: number;
   monopoly: number;
+  /** From acquired independent railroads, awarded right away. */
+  acquisitions: number;
   /** End of game: depth (above), Regional Office, and Challenger. */
   regionalOffice: number;
   challenger: number;
@@ -49,6 +52,7 @@ export function tieBreakdown(world: BotWorld, playerID: string = world.playerID)
     exchange && connectedToAllSuppliers(world, exchange, playerID)
       ? (MONOPOLY_TIES[commodities.get(exchange)?.cities.length ?? 0] ?? 0)
       : 0;
+  const acquisitions = (playerProps(world, playerID)?.railroadsAcquired ?? 0) * ACQUISITION_TIES;
   const regionalOffice = playerProps(world, playerID)?.regionalOffice ? REGIONAL_OFFICE_END_TIES : 0;
   const challenger = engineTypes(world, playerID).includes('challenger') ? CHALLENGER_END_TIES : 0;
   return {
@@ -56,8 +60,9 @@ export function tieBreakdown(world: BotWorld, playerID: string = world.playerID)
     breadth,
     depth,
     monopoly,
+    acquisitions,
     regionalOffice,
     challenger,
-    total: fulfillment + breadth + depth + monopoly + regionalOffice + challenger,
+    total: fulfillment + breadth + depth + monopoly + acquisitions + regionalOffice + challenger,
   };
 }

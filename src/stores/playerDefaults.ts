@@ -20,6 +20,7 @@ export function startingPlayerBoard(): PlayerBoardFields {
     exchangeCommodity: null,
     centralDebtServicePaid: false,
     westernDeliveryMade: false,
+    railroadsAcquired: 0,
   };
 }
 
@@ -79,6 +80,10 @@ export function normalizePlayerProps(raw: unknown): PlayerProps {
     exchangeCommodity: commodityOrNull(p.exchangeCommodity),
     centralDebtServicePaid: p.centralDebtServicePaid === true,
     westernDeliveryMade: p.westernDeliveryMade === true,
+    railroadsAcquired:
+      typeof p.railroadsAcquired === 'number' && Number.isInteger(p.railroadsAcquired) && p.railroadsAcquired >= 0
+        ? p.railroadsAcquired
+        : start.railroadsAcquired,
   };
 }
 

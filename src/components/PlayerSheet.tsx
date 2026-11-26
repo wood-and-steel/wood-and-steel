@@ -1,6 +1,6 @@
 import React from "react";
 import { moneyValue } from "../Contract";
-import { contractTies } from "../utils/ties";
+import { playerTies } from "../utils/ties";
 import type { GameState } from "../stores/gameStore";
 import { engineDistance, formatCommodity, getEngineType, type EngineSlot } from "../rules/playerBoard";
 import { UPGRADE_NAMES, type UpgradeKey } from "../rules/rulesData";
@@ -56,7 +56,7 @@ export function PlayerSheet({ G, playerID, onClose }: PlayerSheetProps): React.R
         </div>
         <div>
           <span className="sheet__label">Ties</span>
-          <strong>{contractTies(G.contracts, playerID)}</strong>
+          <strong>{playerTies(G.contracts, playerID, props)}</strong>
         </div>
       </div>
 

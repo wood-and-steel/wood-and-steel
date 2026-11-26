@@ -55,7 +55,9 @@ export function AcquireRailroadSheet({ G, player, moves, onBack, onClose }: Acqu
           })}
         </div>
       )}
-      <p className="sheet__note">You can acquire a railroad once your network reaches one of its cities.</p>
+      <p className="sheet__note">
+        You can acquire a railroad once your network reaches one of its cities. Each acquisition earns 1 railroad tie.
+      </p>
     </Sheet>
   );
 }

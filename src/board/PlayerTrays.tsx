@@ -8,6 +8,7 @@
  */
 import React from 'react';
 import { moneyValue, railroadTieValue, type Contract } from '../Contract';
+import { playerTies } from '../utils/ties';
 import { contractTieIcons } from '../shared/assets/icons';
 import { useGameStore, type PlayerProps } from '../stores/gameStore';
 import { commodityIcons } from '../shared/assets/icons';
@@ -168,13 +169,6 @@ function activeContracts(contracts: readonly Contract[], playerID: string): Cont
     .sort((a, b) => (a.type === b.type ? a.creationTime - b.creationTime : a.type === 'private' ? -1 : 1));
 }
 
-/** Railroad ties earned: the tie value of every contract the player has fulfilled, as the app scores it. */
-function earnedTies(contracts: readonly Contract[], playerID: string): number {
-  return contracts
-    .filter((c) => c.playerID === playerID && c.fulfilled)
-    .reduce((sum, c) => sum + railroadTieValue(c), 0);
-}
-
 function TieCount({ ties }: { ties: number }): React.ReactElement {
   const label = `${ties} railroad ${ties === 1 ? 'tie' : 'ties'}`;
   return (
@@ -284,7 +278,7 @@ export function PlayerTrays({
               <header className="boardTray__header">
                 <span className="boardTray__name">
                   <Swatch color={player.color} /> {player.name}
-                  <TieCount ties={earnedTies(contracts, player.id)} />
+                  <TieCount ties={playerTies(contracts, player.id, props)} />
                   {props && (
                     <>
                       <span className="boardTray__separator" aria-hidden="true">·</span>

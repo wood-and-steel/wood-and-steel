@@ -18,7 +18,7 @@ import {
   type UpgradePurchase,
 } from '../engine/costs';
 import { mapDistance, networkCities, routeCities } from '../engine/network';
-import { MARKET_CONTRACT_MIN_ENGINE, MONOPOLY_TIES, UPGRADED_STATIONS_BONUS } from '../engine/rulesData';
+import { ACQUISITION_TIES, MARKET_CONTRACT_MIN_ENGINE, MONOPOLY_TIES, UPGRADED_STATIONS_BONUS } from '../engine/rulesData';
 import { engineTypes, fulfilledContracts, hasUpgrade, openMarketContracts, type BotWorld } from '../engine/world';
 import { MARKET_TABLEAU_SIZE, moneyValue, railroadTieValue } from '../../Contract';
 import { engineLevel } from '../engine/world';
@@ -143,7 +143,8 @@ function ownsEngineAtLeastType(engine: Parameters<typeof engineLevel>[0], than: 
 
 /**
  * An independent railroad is worth the track it saves building (more on the plan's path), plus
- * the build actions it saves (two routes an action), each worth half a turn of income.
+ * the build actions it saves (two routes an action), each worth half a turn of income, plus the
+ * tie the acquisition earns.
  */
 function indieValue(world: BotWorld, p: Params, routeKeys: string[], best: DeliveryPlan | null, perTurn: number): number {
   const planCities = new Set(best?.path.cities ?? []);
@@ -152,7 +153,7 @@ function indieValue(world: BotWorld, p: Params, routeKeys: string[], best: Deliv
     return sum + trackCost(world, key) * useful;
   }, 0);
   const actionsSaved = routeKeys.length / 2;
-  return (track + actionsSaved * (perTurn / 2)) * p.indieFactor;
+  return (track + actionsSaved * (perTurn / 2)) * p.indieFactor + ACQUISITION_TIES * p.tieDollars;
 }
 
 /** Every purchase open to the bot, valued. Includes unaffordable ones (the policy may borrow). */

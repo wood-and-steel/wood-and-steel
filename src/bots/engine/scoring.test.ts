@@ -37,6 +37,11 @@ describe('tieBreakdown', () => {
     expect(tieBreakdown(world)).toMatchObject({ regionalOffice: 2, challenger: 2, total: 4 });
   });
 
+  test('one tie for each acquired independent railroad', () => {
+    const world = makeWorld({ players: { '0': { railroadsAcquired: 2 }, '1': {} } });
+    expect(tieBreakdown(world)).toMatchObject({ acquisitions: 2, total: 2 });
+  });
+
   test('monopoly ties when the exchange commodity is fully connected', () => {
     const track: Record<string, string[]> = {};
     for (const key of ['Boston-Syracuse', 'Syracuse-Toronto', 'Detroit-Toronto', 'Chicago-Detroit', 'Chicago-Milwaukee']) track[key] = ['0'];

@@ -92,6 +92,8 @@ export const INDIE_PRICE_PER_ROUTE = 3000;
 export const INDIE_PRICE_PER_ROUTE_AFTER_WEST = 4000;
 /** A railroad can be acquired once the acquirer's network touches one of its cities. */
 export const INDIE_MUST_CONNECT = true;
+/** Railroad ties awarded right away for each acquisition; they don't count toward the game end. */
+export const ACQUISITION_TIES = 1;
 
 // --- Upgrades ----------------------------------------------------------------
 
