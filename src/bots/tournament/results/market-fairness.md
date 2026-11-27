@@ -18,8 +18,8 @@ among its seats.
 | 5 | before | 1.3 | 0.5 | 3.0 | 4.6 | 9% | 33.0 |
 | 5 | anchored | 0.6 | 0.2 | 3.3 | 4.2 | 5% | 32.4 |
 
-Win rates by strategy, 4 players (a fair rate is 25%; with about 100 seats per strategy, differences
-under roughly 10 points are within noise):
+Win rates by strategy in the 150-game 4-player runs moved more than they do over a longer run;
+see the 600-game run below, which supersedes them.
 
 | Strategy | Before | Anchored |
 |---|---|---|
@@ -29,3 +29,25 @@ under roughly 10 points are within noise):
 | express | 30% | 41% |
 | merchant | 10% | 2% |
 | regionalist | 33% | 27% |
+
+## 600 games, 4 players, seed 2
+
+A longer run on a different seed, to check the win-rate changes above. The ± figures are 95%
+intervals.
+
+| Generator | Access gap | Access | Market deliveries per seat | Delivery spread per game | Seats with no market deliveries | Rounds |
+|---|---|---|---|---|---|---|
+| before | 1.1 | 0.4 | 3.6 | 4.4 | 6% | 32.6 |
+| anchored | 0.5 | 0.2 | 3.9 | 4.6 | 5% | 33.2 |
+
+| Strategy | Seats | Win rate before | Win rate anchored | Market deliveries before → anchored |
+|---|---|---|---|---|
+| builder | 381 | 21.3% ±4.1 | 21.3% ±4.1 | 3.8 → 4.3 |
+| speculator | 401 | 24.9% ±4.2 | 22.4% ±4.1 | 3.4 → 3.8 |
+| consolidator | 416 | 33.2% ±4.5 | 32.7% ±4.5 | 3.5 → 3.9 |
+| express | 388 | 37.9% ±4.8 | 43.3% ±4.9 | 4.2 → 4.6 |
+| merchant | 412 | 4.6% ±2.0 | 5.8% ±2.3 | 3.3 → 3.5 |
+| regionalist | 402 | 28.6% ±4.4 | 25.1% ±4.2 | 3.5 → 3.6 |
+
+Merchant is weak with either generator, so its drop in the 150-game run was noise. Express's rise
+is within noise at this size. Every strategy makes slightly more market deliveries with anchoring.
