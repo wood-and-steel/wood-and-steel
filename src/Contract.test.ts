@@ -1,7 +1,10 @@
 import { describe, test, expect } from 'vitest';
 import {
   type Contract,
+  commodityDistanceFrom,
   generateMarketContract,
+  leastServedPlayer,
+  marketAccessDistance,
   moneyValue,
   newContract,
   generatePrivateContractSpec,
@@ -10,6 +13,7 @@ import {
 import { cities, commodities } from './data';
 import type { GameContext, GameState, PlayerProps, RegionCode } from './stores/gameStore';
 import { startingPlayerBoard } from './stores/playerDefaults';
+import { citiesConnectedTo } from './utils/graph';
 
 /** Minimal game context for contract tests; only currentPlayer matters. */
 function makeCtx(currentPlayer: string): GameContext {
@@ -233,6 +237,88 @@ describe('generateMarketContract', () => {
         expect(value).toBeGreaterThanOrEqual(6000);
       }
     }
+  });
+});
+
+describe('market contract anchoring', () => {
+  const EAST = ['Boston', 'Portland ME'];
+  const WEST = ['Portland OR', 'Seattle'];
+  const SOUTH = ['Dallas', 'Houston'];
+
+  function marketState(contracts: Contract[] = []): GameState {
+    return {
+      contracts,
+      independentRailroads: {},
+      players: [EAST, WEST, SOUTH].map((activeCities, i) => [
+        String(i),
+        { ...startingPlayerBoard(), name: `P${i}`, activeCities, hubCity: null, regionalOffice: null },
+      ]) as [string, PlayerProps][],
+    };
+  }
+
+  const openMarket = (commodity: string): Contract => newContract('Chicago', commodity, { type: 'market' })!;
+
+  /** Commodities produced within 1 segment of the given cities (including them). */
+  function commoditiesNear(cityKeys: string[]): Set<string> {
+    const near = new Set<string>();
+    citiesConnectedTo(cityKeys, { distance: 1, includeFromCities: true }).forEach((key: string) =>
+      cities.get(key)?.commodities.forEach((c) => near.add(c))
+    );
+    return near;
+  }
+
+  test('commodityDistanceFrom measures segments to the nearest producing city', () => {
+    expect(commodityDistanceFrom(['Boston'], 'machinery')).toBe(0);
+    expect(commodityDistanceFrom(['Boston'], 'aluminum')).toBe(1);
+    expect(commodityDistanceFrom(['Boston', 'Houston'], 'oil')).toBe(0);
+    expect(commodityDistanceFrom([], 'coal')).toBe(Infinity);
+  });
+
+  test('marketAccessDistance is the nearest open commodity, Infinity with no open contracts', () => {
+    expect(marketAccessDistance(EAST, [openMarket('oil'), openMarket('aluminum')])).toBe(0);
+    expect(marketAccessDistance(EAST, [])).toBe(Infinity);
+  });
+
+  test('leastServedPlayer picks the player farthest from every open commodity', () => {
+    const G = marketState();
+    // Aluminum is in Portland ME (east) and oil in Dallas and Houston (south); the west is left out.
+    expect(leastServedPlayer(G, [openMarket('aluminum'), openMarket('oil')])).toBe('1');
+    // Wood is in Portland ME and Portland OR; only the south is far from it.
+    expect(leastServedPlayer(G, [openMarket('wood')])).toBe('2');
+  });
+
+  test('leastServedPlayer breaks ties at random and skips players without active cities', () => {
+    const G = marketState();
+    expect(leastServedPlayer(G, [], () => 0)).toBe('0');
+    expect(leastServedPlayer(G, [], () => 0.99)).toBe('2');
+    G.players[0][1].activeCities = [];
+    expect(leastServedPlayer(G, [], () => 0)).toBe('1');
+    G.players.forEach(([, p]) => (p.activeCities = []));
+    expect(leastServedPlayer(G, [])).toBeUndefined();
+  });
+
+  test.each([['0', EAST], ['1', WEST], ['2', SOUTH]])(
+    'a contract anchored on player %s has a commodity from near their cities',
+    (anchor, anchorCities) => {
+      const G = marketState();
+      const near = commoditiesNear(anchorCities);
+      const allActive = new Set([...EAST, ...WEST, ...SOUTH]);
+      const destinations = citiesConnectedTo([...allActive], { distance: 2 });
+      for (let i = 0; i < 40; i++) {
+        const contract = generateMarketContract(G, anchor)!;
+        expect(near.has(contract.commodity)).toBe(true);
+        expect(moneyValue(contract)).toBeGreaterThanOrEqual(6000);
+        // The destination is still drawn from the union of everyone's active cities, never one of them.
+        expect(allActive.has(contract.destinationKey)).toBe(false);
+        expect(destinations.has(contract.destinationKey)).toBe(true);
+      }
+    }
+  );
+
+  test('an unknown anchor falls back to the whole market area', () => {
+    const contract = generateMarketContract(marketState(), 'nobody');
+    expect(contract).toBeDefined();
+    expect(moneyValue(contract!)).toBeGreaterThanOrEqual(6000);
   });
 });
 
