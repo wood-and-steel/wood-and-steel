@@ -75,9 +75,43 @@ export interface ReportOptions {
   markets: number;
 }
 
+/**
+ * Market fairness across games: how far the worst-served seat is from the open market
+ * compared with the best-served one, and how evenly market deliveries are spread.
+ */
+export interface MarketFairness {
+  /** Average worst-minus-best marketAccessDistance (segments), per round. */
+  accessGap: number;
+  /** Average seat marketAccessDistance (segments). */
+  access: number;
+  /** Average market deliveries per seat. */
+  deliveries: number;
+  /** Average, per game, of the most minus the fewest market deliveries among its seats. */
+  deliverySpread: number;
+  /** Share of seats with no market deliveries. */
+  shutOut: number;
+}
+
+export function marketFairness(games: GameResult[]): MarketFairness {
+  const seats = games.flatMap((g) => g.seats);
+  return {
+    accessGap: mean(games.map((g) => g.marketAccessGap)),
+    access: mean(seats.map((s) => s.marketAccess)),
+    deliveries: mean(seats.map((s) => s.marketDeliveries)),
+    deliverySpread: mean(
+      games.map((g) => {
+        const counts = g.seats.map((s) => s.marketDeliveries);
+        return Math.max(...counts) - Math.min(...counts);
+      })
+    ),
+    shutOut: mean(seats.map((s) => (s.marketDeliveries === 0 ? 1 : 0))),
+  };
+}
+
 export function markdownReport(games: GameResult[], options: ReportOptions): string {
   const rows = summarize(games);
   const finished = games.filter((g) => g.finished);
+  const market = marketFairness(games);
   const lines = [
     '# Bot tournament',
     '',
@@ -106,6 +140,15 @@ export function markdownReport(games: GameResult[], options: ReportOptions): str
       return `| ${r.strategy} | ${n1(r.upgrades)} | ${pct(r.hub)} | ${pct(r.railyard)} | ${pct(r.regionalOffice)} | ${pct(r.exchange)} | ${n1(r.acquisitions)} | ${common} |`;
     }),
     '',
+    '## Market fairness',
+    '',
+    'Access is the number of segments from a seat\'s active cities to the nearest source of an open market ' +
+      'contract\'s commodity, sampled once a round. The gap is the worst-served seat\'s access minus the best-served seat\'s.',
+    '',
+    '| Access gap | Access | Market deliveries per seat | Delivery spread per game | Seats with no market deliveries |',
+    '|---|---|---|---|---|',
+    `| ${n1(market.accessGap)} | ${n1(market.access)} | ${n1(market.deliveries)} | ${n1(market.deliverySpread)} | ${pct(market.shutOut)} |`,
+    '',
   ];
   return lines.join('\n');
 }
@@ -113,7 +156,7 @@ export function markdownReport(games: GameResult[], options: ReportOptions): str
 const CSV_HEADER = [
   'seed', 'rounds', 'finished', 'player', 'strategy', 'won', 'ties', 'fulfillment_ties', 'deliveries', 'cash', 'debt',
   'best_engine', 'upgrades', 'hub', 'railyard', 'regional_office', 'exchange', 'routes', 'acquisitions', 'borrows',
-  'redraws', 'idle_turns', 'errors',
+  'redraws', 'idle_turns', 'errors', 'market_deliveries', 'market_access', 'market_access_gap',
 ];
 
 export function csvReport(games: GameResult[]): string {
@@ -122,7 +165,8 @@ export function csvReport(games: GameResult[]): string {
       [
         g.seed, g.rounds, g.finished, s.playerID, s.strategy, s.won, s.ties, s.fulfillmentTies, s.deliveries, s.cash, s.debt,
         s.bestEngine ?? '', s.upgrades.join(' '), s.hub, s.railyard, s.regionalOffice, s.exchange, s.routes, s.acquisitions,
-        s.borrows, s.redraws, s.idleTurns, s.errors,
+        s.borrows, s.redraws, s.idleTurns, s.errors, s.marketDeliveries, s.marketAccess.toFixed(2),
+        g.marketAccessGap.toFixed(2),
       ].join(',')
     )
   );

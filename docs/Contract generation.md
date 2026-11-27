@@ -95,11 +95,20 @@ Starting contracts are a special kind of private contract given to players durin
 
 ## Market contract
 
-1. **Select destination city**: Within 2 segments of any active city (of any player), but **not** an active city itself. Selection weighted by city value.
+Each new market contract is aimed at one player, the **anchor**, so that over time every player finds market contracts they can reach. Players don't see this.
 
-2. **Select commodity**
-   - Must be available in active cities or cities within 1 segment of active cities (including the active cities).
+1. **Choose the anchor**: the player the open market serves worst. For each player, take the shortest distance (in segments) from any of their active cities to a city that produces the commodity of an open market contract; the anchor is the player with the largest distance (no open contracts counts as infinitely far). Ties are broken at random. Every player with active cities counts, including players who can't claim market contracts yet (no Mogul) and players who already hold a claimed one. Only open (unclaimed) contracts count, and a contract that is expiring this round-end doesn't count toward the replacement drawn for it. When several contracts are drawn at once (opening the market), the anchor is chosen again before each one, counting the ones just drawn.
+
+2. **Select destination city**: Within 2 segments of any active city (of any player), but **not** an active city itself. Active cities are combined into one set first, so a city near several players is one candidate, with its usual weight. Selection weighted by city value. Only destinations for which step 3 has at least one valid commodity are candidates.
+
+3. **Select commodity**
+   - Must be available in the anchor's active cities or cities within 1 segment of them.
    - Must **not** be produced in the destination city.
-   - Must have **distance ≥ 2** from the destination (shortest path to any city that produces the commodity). This ensures a minimum cash reward of $6,000 (2 segments × $3,000). Market and private generation share this distance filter via `filterCommoditiesByMinDistance` in [Contract.ts](../src/Contract.ts); market always requires it, while private applies it only under the minimum-value floor in step 4 above.
+   - Must have **distance ≥ 2** from the destination (shortest path to any city that produces the commodity). This ensures a minimum cash reward of $6,000 (2 segments × $3,000). Market and private generation share this distance rule; market always requires it, while private applies it only under the minimum-value floor in step 4 of Private contract above.
+   - Chosen at random with equal probability among valid commodities.
 
-3. Chosen at random with equal probability among valid commodities.
+4. **Fallback**: if no destination has a valid commodity from near the anchor (or there is no anchor), the commodity is drawn from cities within 1 segment of **any** player's active cities instead, as above.
+
+A new contract never duplicates the commodity and destination of an active (unfulfilled) contract; generation is retried up to 50 times with the same anchor.
+
+The bot tournament (`npm run bots:tournament`) reports market fairness: each seat's access distance, sampled once a round, the gap between the worst- and best-served seats, and how market deliveries are spread across seats.

@@ -3,9 +3,10 @@
  * the real runner, heuristic, moves, and store, until someone reaches 30 fulfillment ties or the
  * round limit. Math.random (contract offers, independent railroads) is seeded per game.
  */
-import { railroadTieValue } from '../../Contract';
+import { marketAccessDistance, railroadTieValue } from '../../Contract';
 import { initializeIndependentRailroads } from '../../independentRailroads';
 import { generateMarketContract, endTurn } from '../../stores/gameActions';
+import { openMarketContracts } from '../../stores/marketExpiration';
 import { useGameStore, type GameState } from '../../stores/gameStore';
 import { getPlayerAvatarColorForIndex } from '../../utils/playerAvatar';
 import { newPlayerProps } from '../../stores/playerDefaults';
@@ -37,6 +38,10 @@ export interface SeatResult {
   ties: number;
   fulfillmentTies: number;
   deliveries: number;
+  /** Fulfilled market contracts. */
+  marketDeliveries: number;
+  /** Average over rounds of marketAccessDistance (segments to the nearest open market commodity). */
+  marketAccess: number;
   cash: number;
   debt: number;
   bestEngine: string | null;
@@ -61,6 +66,8 @@ export interface GameResult {
   rounds: number;
   /** Someone reached 30 fulfillment ties (otherwise the round limit ended it). */
   finished: boolean;
+  /** Average over rounds of the worst-served minus the best-served seat's marketAccessDistance. */
+  marketAccessGap: number;
   seats: SeatResult[];
 }
 
@@ -111,6 +118,24 @@ export async function playGame({ strategies, seed, maxRounds = 80, markets = 3, 
       return decision;
     };
 
+    // Market fairness probe: sample every seat's access to the open market once a round.
+    const accessSum: Record<string, number> = Object.fromEntries(ids.map((id) => [id, 0]));
+    let accessSamples = 0;
+    let gapSum = 0;
+    let sampledRound = -1;
+    const sampleMarketAccess = (G: GameState) => {
+      const open = openMarketContracts(G.contracts);
+      if (open.length === 0) return;
+      const distances = ids.map((id) => {
+        const props = G.players.find(([pid]) => pid === id)![1];
+        return marketAccessDistance(props.activeCities, open);
+      });
+      if (distances.some((d) => !Number.isFinite(d))) return;
+      ids.forEach((id, i) => (accessSum[id] += distances[i]));
+      gapSum += Math.max(...distances) - Math.min(...distances);
+      accessSamples += 1;
+    };
+
     let marketsPlaced = false;
     const errors: Record<string, number> = {};
     const maxTurns = maxRounds * n + n;
@@ -121,6 +146,11 @@ export async function playGame({ strategies, seed, maxRounds = 80, markets = 3, 
         marketsPlaced = true;
       }
       if (ids.some((id) => fulfillmentTiesOf(G, id) >= GAME_END_TIES)) break;
+      if (ctx.phase === 'play' && ctx.round !== sampledRound) {
+        sampledRound = ctx.round ?? -1;
+        // Read the store again: opening the market above changed it after G was read.
+        sampleMarketAccess(useGameStore.getState().G);
+      }
       const player = ctx.currentPlayer;
       acted = false;
       try {
@@ -149,6 +179,8 @@ export async function playGame({ strategies, seed, maxRounds = 80, markets = 3, 
         ties: tieBreakdown(world).total,
         fulfillmentTies: fulfillmentTiesOf(G, id),
         deliveries: G.contracts.filter((c) => c.playerID === id && c.fulfilled).length,
+        marketDeliveries: G.contracts.filter((c) => c.playerID === id && c.fulfilled && c.type === 'market').length,
+        marketAccess: accessSamples ? accessSum[id] / accessSamples : 0,
         cash: props.cash,
         debt: props.debt,
         bestEngine: best,
@@ -171,7 +203,7 @@ export async function playGame({ strategies, seed, maxRounds = 80, markets = 3, 
     // Ties split the win; break exact ties by fulfillment ties.
     const bestFulfillment = Math.max(...winners.map((s) => s.fulfillmentTies));
     for (const s of winners) s.won = s.fulfillmentTies === bestFulfillment;
-    return { seed, rounds: ctx.round ?? 0, finished, seats };
+    return { seed, rounds: ctx.round ?? 0, finished, marketAccessGap: accessSamples ? gapSum / accessSamples : 0, seats };
   } finally {
     Math.random = realRandom;
   }

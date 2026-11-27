@@ -2,7 +2,7 @@ import { cities, commodities } from "./data";
 import type { GameState, GameContext } from "./stores/gameStore";
 import { shortestDistance, citiesConnectedTo } from "./utils/graph";
 import { cardinalDirection } from "./utils/geo";
-import { weightedRandom, randomSetItem } from "./utils/random";
+import { weightedRandom, randomArrayItem, randomSetItem } from "./utils/random";
 
 /** Contract type: id, destination, commodity, fulfillment, and optional player. */
 export interface Contract {
@@ -298,21 +298,66 @@ export const MARKET_EXPIRATION_START_CHANCE = 0.35;
 export const MARKET_EXPIRATION_GUARANTEE_ROUNDS = 2;
 
 /**
- * Create a market contract from the given active cities
+ * Commodities produced in `cityKeys` or within 1 segment of them.
+ */
+function commoditiesNear(cityKeys: Iterable<string>): Set<string> {
+  const near = new Set<string>();
+  citiesConnectedTo([...cityKeys], { distance: 1, includeFromCities: true }).forEach((cityKey: string) => {
+    cities.get(cityKey)?.commodities.forEach((c) => near.add(c));
+  });
+  return near;
+}
+
+/**
+ * Cities fewer than 2 segments from a city producing `commodity` (the producers and their
+ * neighbors): a contract for it to any of these would be worth less than $6k.
+ */
+function citiesTooCloseTo(commodity: string): Set<string> {
+  return citiesConnectedTo(commodities.get(commodity)?.cities ?? [], { distance: 1, includeFromCities: true });
+}
+
+/**
+ * Create a market contract. Destinations are within 2 segments of the union of every player's
+ * active cities (never an active city itself), weighted by city value. With an anchor player, the
+ * commodity comes from within 1 segment of the anchor's active cities, and only destinations with
+ * such a commodity worth $6k or more are drawn; if there are none (or no anchor), the commodity
+ * comes from within 1 segment of any player's active cities.
  *
  * @param G - Game state object
+ * @param anchorPlayerID - Player whose nearby commodities to draw from (see leastServedPlayer)
  * @returns A contract, or undefined if generation fails
  */
-export function generateMarketContract(G: GameState): Contract | undefined {
-  // Collect keys of all active cities
+export function generateMarketContract(G: GameState, anchorPlayerID?: string): Contract | undefined {
+  // Collect keys of all active cities, each city once however many players have it
   const activeCitiesSet = new Set<string>();
   G.players.forEach(([, value]) => {
     value.activeCities.forEach((city) => activeCitiesSet.add(city));
   });
   const activeCitiesKeys = [...activeCitiesSet];
 
-  // Choose a city within 2 hops of active cities (but not an active city), randomly weighted by value
+  // Cities within 2 hops of active cities (but not an active city)
   const candidatesSet = citiesConnectedTo(activeCitiesKeys, { distance: 2 });
+
+  const anchorCities = G.players.find(([id]) => id === anchorPlayerID)?.[1].activeCities ?? [];
+  if (anchorCities.length > 0) {
+    // Commodities near the anchor, each paired with the destinations it is worth $6k or more to
+    const anchorCommodities = [...commoditiesNear(anchorCities)].map((commodity) => ({
+      commodity,
+      tooClose: citiesTooCloseTo(commodity),
+    }));
+    const choicesByDestination = new Map<string, string[]>();
+    candidatesSet.forEach((cityKey: string) => {
+      const choices = anchorCommodities.filter(({ tooClose }) => !tooClose.has(cityKey)).map(({ commodity }) => commodity);
+      if (choices.length > 0) choicesByDestination.set(cityKey, choices);
+    });
+    const contractCity = weightedRandomCity(G, choicesByDestination.keys());
+    if (contractCity) {
+      const contractCommodity = randomArrayItem(choicesByDestination.get(contractCity) ?? []);
+      if (contractCommodity) return newContract(contractCity, contractCommodity, { type: "market" });
+    }
+  }
+
+  // No anchor, or nothing near the anchor works: draw from the whole market area.
   const contractCity = weightedRandomCity(G, candidatesSet);
   if (!contractCity) return undefined;
 
@@ -320,27 +365,16 @@ export function generateMarketContract(G: GameState): Contract | undefined {
   //  - not available in the destination city
   //  - available within any active city or 1 away from them
   //  - at least distance 2 from the destination (to ensure $6k or more value)
-  const citiesWithinOneHop = citiesConnectedTo(activeCitiesKeys, {
-    distance: 1,
-    includeFromCities: true,
-  });
-
-  const possibleCommodities = new Set<string>();
-  citiesWithinOneHop.forEach((cityWithinOneHop) => {
-    const city = cities.get(cityWithinOneHop);
-    if (!city) return;
-    const destCity = cities.get(contractCity);
-    if (!destCity) return;
-    city.commodities
-      .filter((commodity) => !destCity.commodities.includes(commodity))
-      .forEach((c) => possibleCommodities.add(c));
-  });
+  const destCity = cities.get(contractCity);
+  if (!destCity) return undefined;
+  const possibleCommodities = new Set(
+    [...commoditiesNear(activeCitiesKeys)].filter((commodity) => !destCity.commodities.includes(commodity))
+  );
 
   // Filter out commodities that are too close to the destination (distance < 2).
   // This ensures all market contracts are worth at least $6k (2 segments × $3k)
   const validCommodities = filterCommoditiesByMinDistance(possibleCommodities, contractCity, 2);
 
-  // TODO: Write test to ensure this case never happens (low priority, seems very unlikely by inspection)
   if (validCommodities.size === 0) {
     console.error(`generateMarketContract: no valid commodities with distance >= 2`);
     return undefined;
@@ -351,6 +385,64 @@ export function generateMarketContract(G: GameState): Contract | undefined {
   if (!contractCommodity) return undefined;
 
   return newContract(contractCity, contractCommodity, { type: "market" });
+}
+
+/**
+ * Segments from the nearest of `activeCities` to the nearest city producing `commodity`
+ * (0 when an active city produces it), or Infinity if none can be reached.
+ */
+export function commodityDistanceFrom(activeCities: Iterable<string>, commodity: string): number {
+  const produces = (c: string) => cities.get(c)?.commodities.includes(commodity) ?? false;
+  let best = Infinity;
+  for (const cityKey of activeCities) {
+    const distance = shortestDistance(cityKey, produces);
+    if (distance !== undefined && distance < best) best = distance;
+    if (best === 0) break;
+  }
+  return best;
+}
+
+/**
+ * How well the open market serves a player: segments from their active cities to the nearest
+ * source of any open contract's commodity. Infinity when there are no open contracts.
+ */
+export function marketAccessDistance(activeCities: Iterable<string>, openContracts: Contract[]): number {
+  const cityKeys = [...activeCities];
+  const commoditiesOpen = new Set(openContracts.map((c) => c.commodity));
+  let best = Infinity;
+  for (const commodity of commoditiesOpen) {
+    best = Math.min(best, commodityDistanceFrom(cityKeys, commodity));
+    if (best === 0) break;
+  }
+  return best;
+}
+
+/**
+ * The player the open market serves worst (largest marketAccessDistance), ties broken at random.
+ * Every player with active cities counts, whether or not they can claim market contracts yet.
+ *
+ * @param random - Source of randomness in [0, 1); injectable for tests.
+ * @returns A player ID, or undefined if no player has active cities
+ */
+export function leastServedPlayer(
+  G: GameState,
+  openContracts: Contract[],
+  random: () => number = Math.random
+): string | undefined {
+  let worst = -1;
+  let tied: string[] = [];
+  for (const [id, props] of G.players) {
+    if (props.activeCities.length === 0) continue;
+    const distance = marketAccessDistance(props.activeCities, openContracts);
+    if (distance > worst) {
+      worst = distance;
+      tied = [id];
+    } else if (distance === worst) {
+      tied.push(id);
+    }
+  }
+  if (tied.length === 0) return undefined;
+  return tied[Math.min(Math.floor(random() * tied.length), tied.length - 1)];
 }
 
 /**

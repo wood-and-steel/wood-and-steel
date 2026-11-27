@@ -13,7 +13,6 @@ import { drawMarketContract, openMarketContracts, withReplacementMarketContract 
 import {
   generateStartingContract as generateStartingContractContract,
   generatePrivateContract as generatePrivateContractContract,
-  generateMarketContract as generateMarketContractContract,
   newContract,
   MARKET_TABLEAU_SIZE,
 } from '../Contract';
@@ -190,32 +189,10 @@ export function generateMarketContract(): void {
     return;
   }
 
-  const activeContractKeys = new Set(
-    G.contracts
-      .filter((c) => !c.fulfilled)
-      .map((c) => `${c.commodity}|${c.destinationKey}`)
-  );
-
-  const maxAttempts = 50;
-  let contract: Contract | undefined;
-
-  for (let attempts = 0; attempts < maxAttempts; attempts++) {
-    const candidate = generateMarketContractContract(G);
-    if (!candidate) {
-      console.error('[generateMarketContract] Contract generation failed');
-      return;
-    }
-    const key = `${candidate.commodity}|${candidate.destinationKey}`;
-    if (!activeContractKeys.has(key)) {
-      contract = candidate;
-      break;
-    }
-  }
-
+  // Anchored on the player the open market serves worst, like every other market draw.
+  const contract = drawMarketContract(G, G.contracts);
   if (!contract) {
-    console.error(
-      '[generateMarketContract] Failed to generate a market contract that does not duplicate an active contract after 50 attempts'
-    );
+    console.error('[generateMarketContract] Failed to generate a market contract that does not duplicate an active contract');
     return;
   }
 
