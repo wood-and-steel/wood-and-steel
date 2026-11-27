@@ -49,9 +49,10 @@ export function historicalRate(world: BotWorld, p: Params): number {
   return earned / Math.max(4, world.turn);
 }
 
-/** Rounds a game lasts, before any player has a record to go by. */
+/** A typical game (tournament averages), before the bots have a record to go by. */
 export const TYPICAL_GAME_ROUNDS = 32;
-/** Rounds of the typical pace (or of the plan's estimate) blended into an early record. */
+export const TYPICAL_DELIVERIES_PER_ROUND = 0.35;
+/** Rounds of the typical game blended into a record, so an early record doesn't swing estimates. */
 const PRIOR_ROUNDS = 8;
 
 /**
@@ -67,18 +68,19 @@ export function roundsLeft(world: BotWorld): number {
 /**
  * The bot's income per turn and deliveries per turn. A plan near completion has a high rate, so
  * income is estimated over a whole pickup-and-delivery cycle, and capped by the bot's record so far.
- * Deliveries per turn blend the plan's cycle with the bot's record, which soon outweighs it: one
- * plan's cycle undercounts deliveries made by two engines or picked up on the way.
+ * Deliveries per turn are the bot's record blended toward a typical game's: one plan's cycle
+ * undercounts deliveries made by two engines or picked up on the way.
  */
 export function incomeEstimate(world: BotWorld, p: Params, best: DeliveryPlan | null): { perTurn: number; deliveriesPerTurn: number } {
   const delivered = fulfilledContracts(world).length;
-  const record = (planned: number) => (delivered + planned * PRIOR_ROUNDS) / (Math.max(0, world.turn) + PRIOR_ROUNDS);
-  if (!best) return { perTurn: 1000, deliveriesPerTurn: Math.min(0.6, Math.max(0.1, record(0.15))) };
+  const record = (delivered + TYPICAL_DELIVERIES_PER_ROUND * PRIOR_ROUNDS) / (Math.max(0, world.turn) + PRIOR_ROUNDS);
+  const deliveriesPerTurn = Math.min(0.6, Math.max(0.1, record));
+  if (!best) return { perTurn: 1000, deliveriesPerTurn };
   const cycle = best.turns + 2;
   const cap = 2 * historicalRate(world, p) + 3000;
   return {
     perTurn: Math.min(cap, Math.max(1000, (best.utility - best.path.buildCost * p.trackCostShare) / cycle)),
-    deliveriesPerTurn: Math.min(0.6, Math.max(0.1, record(1 / cycle))),
+    deliveriesPerTurn,
   };
 }
 
