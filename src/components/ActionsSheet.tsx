@@ -123,6 +123,20 @@ export function ActionsSheet({
         >
           <span className="sheet__label">Replace your private contract</span>
         </ListRow>
+        <ListRow
+          title="Go first next round"
+          onSelect={G.goFirstNextRound === undefined ? () => {
+            if (moves.goFirstNextRound()) onClose();
+          } : undefined}
+        >
+          <span className="sheet__label">
+            {G.goFirstNextRound === undefined
+              ? "Start next round; order otherwise stays the same"
+              : G.goFirstNextRound === playerID
+                ? "You go first next round"
+                : `Locked: ${G.players.find(([id]) => id === G.goFirstNextRound)?.[1].name ?? "another player"} took it`}
+          </span>
+        </ListRow>
       </div>
       <div className="sheet__box" aria-label="Money this turn">
         <div className="sheet__subhead">Money this turn</div>

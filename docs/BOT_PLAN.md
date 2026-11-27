@@ -19,7 +19,7 @@ Current conventions: [BYOD_AGENT_GUIDE.md](BYOD_AGENT_GUIDE.md) (seats), [BOARD_
 | Narration | **Templated, plain descriptions.** No character voices. The tray shows the bot's last turn. |
 | Bot-private state | New Supabase table **`bot_states`** (one row per game), not `board_states` and not `G`. |
 | Physical-table state | Bot track, engine positions and types, cargo, Railyard, and upgrades are written to `board_states` with the existing `BoardOp`s, so the phase 2 trays show them with no new code. |
-| Go first next round | Not implemented in the app; **bots never choose it**. |
+| Go first next round | Chosen with a spare action when nothing better is left, unless the bot already starts the round. |
 | Bankruptcy | Auctions aren't implemented; **bots avoid bankruptcy** (no delivery whose debt service they can't pay). |
 | Undo | Humans can't undo a bot's turn. |
 | New engine placement | A new (not traded-in) engine goes in any city on the bot's network, per the clarified rules. The bot picks the city its plan needs. |
@@ -165,14 +165,14 @@ Rules constants the board doesn't already hold (prices, cost table, debt service
 | Buy upgrade | Hub: `claimHubCity`; Regional Office: `claimRegionalOffice` | `setUpgrade` for the six tracked upgrades; Railyard: `moveRailyard` | Cash; exchange commodity |
 | Discard and redraw private contract | `deleteContract` then offers and `addContract` | (none) | (none) |
 | End turn | `endTurn` | (none) | Log entry finalized |
-| **Go first next round** | **Never chosen** | | |
+| Go first next round | `goFirstNextRound` | (none) | (none) |
 
 ## Heuristic player (`src/bots/heuristic/`)
 
 Each turn:
 
 1. **Candidate plans.** For each held contract, claimable market contract, and redraw option, the engine builds a delivery plan: pickup city, path, track to build, engine runs, cost, turns to deliver, money, and ties. Investment plans cover each affordable engine, upgrade, Hub site, Railyard site, independent railroad, and borrow or repay option. A candidate is the next one or two actions plus the multi-turn plan they serve.
-2. **Score.** Projected ties and money per turn over the planning horizon, shaped by the bot's weights (table below). Hard constraints: no bankruptcy; never "go first".
+2. **Score.** Projected ties and money per turn over the planning horizon, shaped by the bot's weights (table below). Hard constraints: no bankruptcy.
 3. **Stickiness.** The current `plan` gets a bonus, so the bot doesn't flip-flop between targets. It drops the plan when it becomes impossible, for example when a market contract is taken or a Hub city is claimed by someone else.
 4. **Choose.** Keep candidates scoring within a band of the best; the band's width grows with the **variability** weight. Pick among them by weighted random using the bot's `Rng`.
 5. **Explain.** Return templated narration lines for the chosen actions.
@@ -300,7 +300,7 @@ The runner appends each line to the turn's `BotTurnLog` as the action completes,
 | `src/utils/gameManager.test.ts` | Add and remove bot seats: host only, before start only, full game, remove a human refused; bots counted by `allPlayersJoined` and `assignRandomPlayerIDs` |
 | `src/bots/host/BotSeatControls.test.tsx` | Random default; random avoids repeated strategies and names; disabled when full |
 | `src/bots/state/botStates.test.ts` | Normalization, version refusal, conditional saves and conflicts, row creation |
-| `src/bots/engine/*.test.ts` | Track costs (mountainous, parallel, Hub discount), debt service by region, engine purchase limits and trade-ins, indie pricing before and after a Western delivery, Timetable and Roundhouse movement, bonuses, legal actions, never "go first" |
+| `src/bots/engine/*.test.ts` | Track costs (mountainous, parallel, Hub discount), debt service by region, engine purchase limits and trade-ins, indie pricing before and after a Western delivery, Timetable and Roundhouse movement, bonuses, legal actions, go first lock |
 | `src/bots/heuristic/*.test.ts` | Weight draws stay in range; each strategy shows its signature behavior in staged worlds; seeded choices are reproducible; no bankrupting delivery |
 | `src/bots/runner/*.test.ts` | Full turns through in-memory ports; pacing; guard stops on turn change; resume after a simulated reload does not repeat a move |
 | `src/bots/rules/coverage.test.ts`, `rulesFingerprint.test.ts` | Every move and rule heading labeled; fingerprint matches |
@@ -324,7 +324,7 @@ Then run unit tests, typecheck, `npm run check:board-build`, and a short tournam
 - A server-side runner (the ports are designed for it)
 - An LLM agent player (it would reuse the engine as tools and need a server-side API proxy)
 - Character voices in narration
-- Go first next round, bankruptcy auctions, and connection bonuses (not in the app)
+- Bankruptcy auctions, and connection bonuses (not in the app)
 - Any change to core game logic, or tracking human money
 
 ## Open questions (non-blocking; defaults in brackets)

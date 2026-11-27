@@ -3,7 +3,7 @@
  * actions now; applyAction checks one and returns the predicted next world plus its effects:
  * the app moves, board ops, and narration the runner carries out, in order.
  *
- * Never offered: "Go first next round" (not in the app). Bankrupting deliveries are refused.
+ * Bankrupting deliveries are refused.
  */
 import { routes } from '../../data';
 import { STARTING_CITY_PAIRS } from '../../data/startingRoutes';
@@ -85,6 +85,7 @@ export type Action =
   | { type: 'repay'; amount: number }
   | { type: 'buyUpgrade'; upgrade: UpgradeKey; city?: string; region?: RegionCode; commodity?: string }
   | { type: 'redrawPrivateContract'; contractId: string }
+  | { type: 'goFirstNextRound' }
   /** Free: pick one of the offers after a private contract was fulfilled or discarded. */
   | { type: 'choosePrivateContract'; offer: PrivateContractSpec }
   | { type: 'endTurn' };
@@ -106,7 +107,8 @@ export type GameMove =
   | { name: 'payForTrack'; args: [number] }
   | { name: 'buyEngine'; args: [EngineSlot, EngineTypeId] }
   | { name: 'buyUpgrade'; args: [UpgradeKey] | [UpgradeKey, string] }
-  | { name: 'setCargo'; args: [EngineSlot, string | null] };
+  | { name: 'setCargo'; args: [EngineSlot, string | null] }
+  | { name: 'goFirstNextRound'; args: [] };
 
 export type Effect =
   | { kind: 'move'; move: GameMove }
@@ -128,6 +130,7 @@ export function actionKind(action: Action): ActionKind | null {
     case 'repay':
     case 'buyUpgrade':
     case 'redrawPrivateContract':
+    case 'goFirstNextRound':
       return action.type;
     default:
       return null;
@@ -303,6 +306,7 @@ export function listActions(world: BotWorld): Action[] {
     if (!used.has('redrawPrivateContract')) {
       for (const c of openPrivateContracts(world)) actions.push({ type: 'redrawPrivateContract', contractId: c.id });
     }
+    if (world.goFirstNextRound === null) actions.push({ type: 'goFirstNextRound' });
   }
   actions.push({ type: 'endTurn' });
   return actions;
@@ -588,6 +592,14 @@ function checkAndApply(world: BotWorld, action: Action): ApplyResult {
       move({ name: 'deleteContract', args: [contract.id] });
       effects.push({ kind: 'requestOffers' });
       narrate(`discarded private contract: ${contractLabel(contract)}`);
+      return { ok: true, world: next, effects };
+    }
+
+    case 'goFirstNextRound': {
+      if (world.goFirstNextRound !== null) return fail('someone already took Go first next round this round');
+      next.goFirstNextRound = world.playerID;
+      move({ name: 'goFirstNextRound', args: [] });
+      narrate('will go first next round');
       return { ok: true, world: next, effects };
     }
   }

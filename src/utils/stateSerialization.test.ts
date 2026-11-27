@@ -78,4 +78,10 @@ describe('state serialization', () => {
     );
     expect(G).not.toHaveProperty('lastRoundRoutesAdded');
   });
+
+  it('keeps the player who chose Go first next round through a save and load', () => {
+    const G = { contracts: [], players: [], independentRailroads: {}, goFirstNextRound: '1' };
+    const { G: loaded } = deserializeStateFromJSON(serializeStateToJSON(G, ctx));
+    expect(loaded.goFirstNextRound).toBe('1');
+  });
 });

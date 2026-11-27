@@ -163,6 +163,9 @@ export function callMove(move: GameMove): void {
     case 'setCargo':
       gameActions.setCargo(move.args[0], move.args[1]);
       return;
+    case 'goFirstNextRound':
+      gameActions.goFirstNextRound();
+      return;
   }
 }
 

@@ -30,6 +30,7 @@ const MOVES_BY_PHASE: Record<PhaseName, readonly string[]> = {
     'buyEngine',
     'buyUpgrade',
     'setCargo',
+    'goFirstNextRound',
     'setPlayerBoard',
   ],
   scoring: [],

@@ -6,7 +6,7 @@
  *  3. A delivery that can happen right now.
  *  4. A purchase, if it's worth more than an action spent on the plan (borrowing for it if allowed).
  *  5. The next step of the best delivery plan: run toward it, or build the track it lacks.
- *  6. Otherwise: redraw a hopeless private contract, repay debt, or end the turn.
+ *  6. Otherwise: redraw a hopeless private contract, repay debt, go first next round, or end the turn.
  *
  * Choices among near-equal options are random within the bot's variability band, using its
  * seeded Rng, so a bot's play is reproducible for a given state.
@@ -267,6 +267,13 @@ export const heuristicPolicy: Policy = (world, rng) => {
   if (!world.turnState.actions.includes('repay') && world.bot.weights.debtTolerance < 0.5) {
     const amounts = repayOptions(world.bot).filter((a) => world.bot.cash - a >= Math.max(8000, reserve(world, best)));
     if (amounts.length > 0) return { action: { type: 'repay', amount: Math.max(...amounts) } };
+  }
+
+  // A spare action: go first next round, which is worth most to a bot that plays late in the
+  // order (it gets two turns in a row) and also keeps rivals from taking it.
+  const goFirst: Action = { type: 'goFirstNextRound' };
+  if (world.playOrder[0] !== world.playerID && valid(world, goFirst)) {
+    return { action: goFirst, plan: best ? toRecord(best) : undefined };
   }
 
   return { ...endTurn, plan: best ? toRecord(best) : undefined };

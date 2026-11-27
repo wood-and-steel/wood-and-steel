@@ -15,6 +15,7 @@ export interface SerializedState {
     marketRoundsWithoutExpirationStart?: number;
     turnLedger?: unknown;
     roundReport?: unknown;
+    goFirstNextRound?: string;
   };
   ctx: Record<string, unknown>;
 }
@@ -43,6 +44,7 @@ export function serializeState(
     }),
     ...(isRecord(G.turnLedger) && { turnLedger: deepClone(G.turnLedger) }),
     ...(isRecord(G.roundReport) && { roundReport: deepClone(G.roundReport) }),
+    ...(typeof G.goFirstNextRound === 'string' && { goFirstNextRound: G.goFirstNextRound }),
   };
 
   const serializedCtx: Record<string, unknown> = {};
@@ -112,6 +114,7 @@ export function deserializeState(data: unknown): SerializedState {
       ...(marketRoundsWithoutExpirationStart !== undefined && { marketRoundsWithoutExpirationStart }),
       ...(turnLedger && { turnLedger }),
       ...(roundReport && { roundReport }),
+      ...(typeof gObj.goFirstNextRound === 'string' && { goFirstNextRound: gObj.goFirstNextRound }),
     },
     ctx: deepClone(ctx) as Record<string, unknown>,
   };
@@ -156,6 +159,7 @@ function normalizeRoundReport(raw: unknown): RoundReport | undefined {
     marketExpired: reportedContracts(raw.marketExpired),
     marketAdded: reportedContracts(raw.marketAdded),
     marketLastRound: reportedContracts(raw.marketLastRound),
+    ...(typeof raw.goFirst === 'string' && { goFirst: raw.goFirst }),
   };
 }
 

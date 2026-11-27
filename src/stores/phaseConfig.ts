@@ -4,6 +4,12 @@ import type { PhaseName } from './moveValidation';
 import { roundReportFrom, snapshotForReport } from './roundReport';
 import type { GameState, GameContext } from './gameStore';
 
+/** Play order rotated so `first` leads, keeping the cycle: A,B,C with B first is B,C,A. */
+export function rotatedToStart(playOrder: string[], first: string): string[] {
+  const i = playOrder.indexOf(first);
+  return i <= 0 ? playOrder : [...playOrder.slice(i), ...playOrder.slice(0, i)];
+}
+
 /**
  * Phase configuration: phase structure, transitions, and hooks for turn/phase management.
  * Each phase has: next (phase to transition to), endIf (when phase ends), onEnd (phase-end hook), turn.onEnd (turn-end hook).
@@ -84,6 +90,11 @@ export const phaseConfig: Record<PhaseName, PhaseConfigEntry> = {
             ctx.round = 1;
           }
           G.roundReport = roundReportFrom(before, G, endedRound);
+          if (G.goFirstNextRound !== undefined) {
+            G.roundReport.goFirst = G.goFirstNextRound;
+            ctx.playOrder = rotatedToStart(ctx.playOrder, G.goFirstNextRound);
+            delete G.goFirstNextRound;
+          }
         }
       },
     },
