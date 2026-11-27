@@ -25,7 +25,7 @@ const label = (c) => LABEL[c] ?? c;
 // ---- style -----------------------------------------------------------------
 const C = {
   paper: '#f4efe4', ink: '#2f2a25', soft: '#8b8275', route: '#ffffff', routeEdge: '#b9b0a2',
-  red: '#b8423a', blue: '#3d6fa8', green: '#4e8a4a', tan: '#b8996a', pink: '#c86f9c', indie: '#1f1f1f',
+  red: '#b8423a', blue: '#3d6fa8', green: '#4e8a4a', orange: '#d9822b', tan: '#b8996a', pink: '#c86f9c', indie: '#1f1f1f',
   stamp: '#b0412e', note: '#6b6257',
   NE: '#e7e2d6', SE: '#dfe6d8', NC: '#dfe6d8', SC: '#e7e2d6', NW: '#e7e2d6', SW: '#dfe6d8',
 };
@@ -232,7 +232,7 @@ ${t(450, 372, 'Cover art brief: a 4-4-0 American crossing a timber trestle at da
 // ---- Fig 3: setup ----------------------------------------------------------
 {
   const starts = [['Montreal', 'Quebec City'], ['Boston', 'Portland ME'], ['New York', 'Philadelphia'], ['Philadelphia', 'Washington'], ['Norfolk', 'Raleigh'], ['Charleston', 'Savannah']];
-  const chosen = { 'New York|Philadelphia': C.red, 'Norfolk|Raleigh': C.blue, 'Boston|Portland ME': C.green };
+  const chosen = { 'New York|Philadelphia': C.red, 'Norfolk|Raleigh': C.blue, 'Boston|Portland ME': C.orange };
   const indies = [['Duluth', 'Thunder Bay'], ['Thunder Bay', 'Winnipeg'], ['Kansas City', 'Omaha'], ['Dallas', 'Houston'], ['Seattle', 'Portland OR'], ['Phoenix', 'San Diego'], ['Memphis', 'Saint Louis'], ['Denver', 'Omaha'], ['Atlanta', 'Birmingham'], ['Bismarck', 'Fargo']];
   const indieRoutes = indies.map(([a, b2]) => ({ a, b: b2, color: C.indie, width: 4 }));
   // Left: the whole continent, with the Independent Railroads
@@ -255,7 +255,7 @@ ${t(450, 372, 'Cover art brief: a 4-4-0 American crossing a timber trestle at da
       let o = '';
       o += engineToken(P('New York').x + 22, P('New York').y - 18, C.red, false, 0.75);
       o += engineToken(P('Norfolk').x + 24, P('Norfolk').y - 18, C.blue, false, 0.75);
-      o += engineToken(P('Boston').x + 22, P('Boston').y - 20, C.green, false, 0.75);
+      o += engineToken(P('Boston').x + 22, P('Boston').y - 20, C.orange, false, 0.75);
       o += callout(P('Raleigh').x + 34, P('Raleigh').y + 16, 'B');
       o += callout(P('New York').x + 50, P('New York').y - 34, 'C');
       return o;
@@ -408,7 +408,7 @@ ${t(450, 372, 'Cover art brief: a 4-4-0 American crossing a timber trestle at da
     ['Denver', 'Southwest', 'first West', '$3,000', '#e4d3c8'],
     ['Boston', 'Northeast', 'after the West', '$3,000', '#e4d3c8'],
   ];
-  b += t(30, 40, 'Green has $15,000 Debt: Debt Service is $3,000 when due.', { size: 15, weight: 'bold' });
+  b += t(30, 40, 'Orange has $15,000 Debt: Debt Service is $3,000 when due.', { size: 15, weight: 'bold' });
   b += `<line x1="70" y1="150" x2="850" y2="150" stroke="${C.ink}" stroke-width="3"/>`;
   stops.forEach(([city, region, why, due, fill], i) => {
     const x = 90 + i * 150;
@@ -467,8 +467,8 @@ ${t(450, 372, 'Cover art brief: a 4-4-0 American crossing a timber trestle at da
   const m = mapCrop({
     cities: ['Duluth', 'Thunder Bay', 'Winnipeg', 'Minneapolis'], width: 660, pad: 200, extraHeight: 34,
     routes: [
-      { a: 'Minneapolis', b: 'Duluth', color: C.green },
-      { a: 'Des Moines', b: 'Minneapolis', color: C.green },
+      { a: 'Minneapolis', b: 'Duluth', color: C.orange },
+      { a: 'Des Moines', b: 'Minneapolis', color: C.orange },
       { a: 'Duluth', b: 'Thunder Bay', color: C.indie, width: 5 },
       { a: 'Thunder Bay', b: 'Winnipeg', color: C.indie, width: 5 },
     ],
@@ -478,7 +478,7 @@ ${t(450, 372, 'Cover art brief: a 4-4-0 American crossing a timber trestle at da
       return `<g transform="translate(${(tb.x + wi.x) / 2 + 40},${(tb.y + wi.y) / 2 + 70})"><rect x="-90" y="-16" width="180" height="40" rx="6" fill="#fff" stroke="${C.indie}"/>${t(0, 0, 'Lake Superior & Northern', { size: 12, anchor: 'middle', weight: 'bold' })}${t(0, 16, '2 Routes × $3,000 = $6,000', { size: 11.5, anchor: 'middle' })}</g>`;
     },
   });
-  let b = m.body + t(20, m.h - 14, 'Green\'s track (green) reaches Duluth, a City of the railroad (black). Green may acquire it: +1 Railroad Tie.', { size: 12.5, italic: true, fill: C.note });
+  let b = m.body + t(20, m.h - 14, 'Orange\'s track (orange) reaches Duluth, a City of the railroad (black). Orange may acquire it: +1 Railroad Tie.', { size: 12.5, italic: true, fill: C.note });
   files['fig-11-acquire.svg'] = svg(m.w, m.h, b, 11, 'Acquire an Independent Railroad example');
 }
 
