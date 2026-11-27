@@ -18,7 +18,14 @@ import {
   type UpgradePurchase,
 } from '../engine/costs';
 import { mapDistance, networkCities, routeCities } from '../engine/network';
-import { ACQUISITION_TIES, MARKET_CONTRACT_MIN_ENGINE, MONOPOLY_TIES, UPGRADED_STATIONS_BONUS } from '../engine/rulesData';
+import {
+  ACQUISITION_TIES,
+  GAME_END_TIES,
+  MARKET_CONTRACT_MIN_ENGINE,
+  MONOPOLY_TIES,
+  UPGRADED_STATIONS_BONUS,
+} from '../engine/rulesData';
+import { fulfillmentTies } from '../engine/scoring';
 import { engineTypes, fulfilledContracts, hasUpgrade, openMarketContracts, type BotWorld } from '../engine/world';
 import { MARKET_TABLEAU_SIZE, moneyValue, railroadTieValue } from '../../Contract';
 import { engineLevel } from '../engine/world';
@@ -42,17 +49,36 @@ export function historicalRate(world: BotWorld, p: Params): number {
   return earned / Math.max(4, world.turn);
 }
 
+/** Rounds a game lasts, before any player has a record to go by. */
+export const TYPICAL_GAME_ROUNDS = 32;
+/** Rounds of the typical pace (or of the plan's estimate) blended into an early record. */
+const PRIOR_ROUNDS = 8;
+
+/**
+ * Rounds the game likely has left: the leader's fulfillment ties against the leader's pace so far,
+ * blended toward a typical game's pace while the record is short.
+ */
+export function roundsLeft(world: BotWorld): number {
+  const leader = Math.max(0, ...world.players.map(([id]) => fulfillmentTies(world, id)));
+  const pace = (leader + (GAME_END_TIES / TYPICAL_GAME_ROUNDS) * PRIOR_ROUNDS) / (Math.max(0, world.turn) + PRIOR_ROUNDS);
+  return Math.min(TYPICAL_GAME_ROUNDS + 8, Math.max(1, (GAME_END_TIES - leader) / pace));
+}
+
 /**
  * The bot's income per turn and deliveries per turn. A plan near completion has a high rate, so
  * income is estimated over a whole pickup-and-delivery cycle, and capped by the bot's record so far.
+ * Deliveries per turn blend the plan's cycle with the bot's record, which soon outweighs it: one
+ * plan's cycle undercounts deliveries made by two engines or picked up on the way.
  */
 export function incomeEstimate(world: BotWorld, p: Params, best: DeliveryPlan | null): { perTurn: number; deliveriesPerTurn: number } {
-  if (!best) return { perTurn: 1000, deliveriesPerTurn: 0.15 };
+  const delivered = fulfilledContracts(world).length;
+  const record = (planned: number) => (delivered + planned * PRIOR_ROUNDS) / (Math.max(0, world.turn) + PRIOR_ROUNDS);
+  if (!best) return { perTurn: 1000, deliveriesPerTurn: Math.min(0.6, Math.max(0.1, record(0.15))) };
   const cycle = best.turns + 2;
   const cap = 2 * historicalRate(world, p) + 3000;
   return {
     perTurn: Math.min(cap, Math.max(1000, (best.utility - best.path.buildCost * p.trackCostShare) / cycle)),
-    deliveriesPerTurn: Math.min(0.6, Math.max(0.1, 1 / cycle)),
+    deliveriesPerTurn: Math.min(0.6, Math.max(0.1, record(1 / cycle))),
   };
 }
 
@@ -102,7 +128,8 @@ function upgradeValue(
   const types = engineTypes(world).filter((t): t is NonNullable<typeof t> => t !== null);
   switch (purchase.upgrade) {
     case 'upgraded-stations':
-      return UPGRADED_STATIONS_BONUS * deliveriesPerTurn * p.horizon;
+      // Permanent and paid on every delivery: worth it over the rest of the game, not just the horizon.
+      return UPGRADED_STATIONS_BONUS * deliveriesPerTurn * roundsLeft(world);
     case 'timetable':
       return perTurn * p.horizon * 0.12;
     case 'service-yard': {
@@ -162,8 +189,9 @@ export function investments(world: BotWorld, p: Params, best: DeliveryPlan | nul
   const w = world.bot.weights;
   const used = new Set(world.turnState.actions);
   const list: Investment[] = [];
-  const add = (action: Action, cost: number, value: number, label: string) => {
-    const payback = value > 0 ? cost / (value / p.horizon) : Infinity;
+  // `turns`: how many turns `value` is earned over, for its payback.
+  const add = (action: Action, cost: number, value: number, label: string, turns = p.horizon) => {
+    const payback = value > 0 ? cost / (value / turns) : Infinity;
     list.push({ action, cost, value, payback, label });
   };
 
@@ -184,7 +212,8 @@ export function investments(world: BotWorld, p: Params, best: DeliveryPlan | nul
       if (purchase.region) action.region = purchase.region;
       if (purchase.commodity) action.commodity = purchase.commodity;
       const value = upgradeValue(world, p, purchase, best, income) * like(UPGRADE_AFFINITY[purchase.upgrade]);
-      add(action, purchase.cost, value, `upgrade ${purchase.upgrade}`);
+      const turns = purchase.upgrade === 'upgraded-stations' ? roundsLeft(world) : p.horizon;
+      add(action, purchase.cost, value, `upgrade ${purchase.upgrade}`, turns);
     }
   }
   if (!used.has('acquireRailroad')) {
