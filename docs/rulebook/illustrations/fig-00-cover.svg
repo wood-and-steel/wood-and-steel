@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="900" height="420" font-family="Georgia, 'Times New Roman', serif">
+<title>Cover placeholder</title>
+<rect width="900" height="420" fill="#f4efe4"/>
+
+<rect x="20" y="30" width="860" height="370" fill="none" stroke="#8b8275" stroke-width="1.5" stroke-dasharray="6 5"/>
+<path d="M60,330 C220,250 380,300 520,240 S760,170 840,150" fill="none" stroke="#8b8275" stroke-width="2"/>
+<g fill="none" stroke="#2f2a25" stroke-width="2">
+  <path d="M280,300 v-40 m-25,0 h50"/><path d="M330,300 v-43 m-25,0 h50"/><path d="M380,300 v-46 m-25,0 h50"/><path d="M430,300 v-49 m-25,0 h50"/><path d="M480,300 v-52 m-25,0 h50"/><path d="M530,300 v-55 m-25,0 h50"/><path d="M580,300 v-58 m-25,0 h50"/>
+  <path d="M250,258 L600,236"/>
+</g>
+<g transform="translate(420,214)">
+  <rect x="-70" y="-30" width="120" height="40" rx="6" fill="#2f2a25"/>
+  <rect x="50" y="-48" width="45" height="58" rx="4" fill="#2f2a25"/>
+  <rect x="-58" y="-62" width="16" height="32" fill="#2f2a25"/>
+  <path d="M-75,10 l-22,22 h26 z" fill="#2f2a25"/>
+  <circle cx="-40" cy="20" r="15" fill="#fff" stroke="#2f2a25" stroke-width="3"/><circle cx="-5" cy="20" r="15" fill="#fff" stroke="#2f2a25" stroke-width="3"/><circle cx="30" cy="20" r="15" fill="#fff" stroke="#2f2a25" stroke-width="3"/><circle cx="70" cy="20" r="11" fill="#fff" stroke="#2f2a25" stroke-width="3"/>
+  <path d="M-52,-66 c-6,-18 20,-26 14,-44 c24,6 50,-6 76,-14" fill="none" stroke="#8b8275" stroke-width="8" stroke-linecap="round" opacity="0.6"/>
+</g>
+<text x="450" y="82" font-size="40" fill="#2f2a25" text-anchor="middle" font-weight="bold">WOOD AND STEEL</text>
+<text x="450" y="372" font-size="13" fill="#6b6257" text-anchor="middle" font-style="italic">Cover art brief: a 4-4-0 American crossing a timber trestle at dawn; the continent and its routes fading to the west.</text>
+
+<g transform="translate(888,18)"><text text-anchor="end" font-size="11" letter-spacing="1.5" fill="#b0412e" font-family="Arial, sans-serif" font-weight="bold">DRAFT · FIG. 0</text></g>
+</svg>
