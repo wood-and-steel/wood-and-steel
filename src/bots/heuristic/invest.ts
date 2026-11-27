@@ -20,14 +20,17 @@ import {
 import { mapDistance, networkCities, routeCities } from '../engine/network';
 import {
   ACQUISITION_TIES,
+  ENGINE_PRICES,
   GAME_END_TIES,
   MARKET_CONTRACT_MIN_ENGINE,
   MONOPOLY_TIES,
   UPGRADED_STATIONS_BONUS,
+  tradeInValue,
 } from '../engine/rulesData';
 import { fulfillmentTies } from '../engine/scoring';
 import { engineTypes, fulfilledContracts, hasUpgrade, openMarketContracts, type BotWorld } from '../engine/world';
 import { MARKET_TABLEAU_SIZE, moneyValue, railroadTieValue } from '../../Contract';
+import { ENGINE_TYPES, type EngineTypeId } from '../../rules/playerBoard';
 import { engineLevel } from '../engine/world';
 import type { Params } from './params';
 import { affinity, type Affinity } from './strategies';
@@ -96,16 +99,45 @@ function placementCity(world: BotWorld, best: DeliveryPlan | null): string {
   return network.reduce((a, b) => ((mapDistance(b, goal) ?? 99) < (mapDistance(a, goal) ?? 99) ? b : a));
 }
 
+/** Experiment switches. */
+const ENGINE_LADDER = true;
+const ENGINE_PERMANENT = true;
+
+/** Turns an engine purchase is valued over: the rest of the game, since engines are kept. */
+function engineTurns(world: BotWorld, p: Params): number {
+  return ENGINE_PERMANENT ? roundsLeft(world) : p.horizon;
+}
+
+/** What moving from `oldReach` to `engine` is worth on its own, over `turns` turns. */
+function tradeUpGain(world: BotWorld, p: Params, oldReach: number, engine: EngineTypeId, perTurn: number, turns: number): number {
+  // Most of a delivery cycle is moving; a longer reach shortens that share.
+  let value = perTurn * turns * 0.8 * (1 - oldReach / reachOf(world, engine));
+  if (engine === 'mountain' || engine === 'challenger') value += perTurn * turns * 0.2;
+  if (engine === 'challenger') value += 2 * p.tieDollars;
+  return value;
+}
+
 function engineValue(world: BotWorld, p: Params, w: BotWorld['bot']['weights'], purchase: EnginePurchase, perTurn: number): number {
-  const newReach = reachOf(world, purchase.engine);
+  const turns = engineTurns(world, p);
   let value: number;
   if (purchase.tradeIn) {
     const oldReach = reachOf(world, purchase.tradeIn);
-    // Most of a delivery cycle is moving; a longer reach shortens that share.
-    value = perTurn * p.horizon * 0.8 * (1 - oldReach / newReach);
+    value = tradeUpGain(world, p, oldReach, purchase.engine, perTurn, turns);
+    if (ENGINE_LADDER) {
+      // Engines are bought a level at a time, so a step is also worth the levels it leads to,
+      // less what those later steps cost.
+      let extra = 0;
+      for (let level = engineLevel(purchase.engine) + 1; level < ENGINE_TYPES.length; level++) {
+        const engine = ENGINE_TYPES[level].id;
+        extra += ENGINE_PRICES[engine] - tradeInValue(ENGINE_TYPES[level - 1].id);
+        value = Math.max(value, tradeUpGain(world, p, oldReach, engine, perTurn, turns) - extra);
+      }
+    }
   } else {
     // A second engine adds capacity, limited by two actions a turn.
-    value = perTurn * p.horizon * 0.25;
+    value = perTurn * turns * 0.25;
+    if (purchase.engine === 'mountain' || purchase.engine === 'challenger') value += perTurn * turns * 0.2;
+    if (purchase.engine === 'challenger') value += 2 * p.tieDollars;
   }
   // The Mogul opens market contracts; money-minded bots care more.
   if (!ownsEngineAtLeast(world, MARKET_CONTRACT_MIN_ENGINE) && engineLevel(purchase.engine) >= engineLevel(MARKET_CONTRACT_MIN_ENGINE)) {
@@ -114,8 +146,6 @@ function engineValue(world: BotWorld, p: Params, w: BotWorld['bot']['weights'], 
     const markets = opensMarket ? MARKET_TABLEAU_SIZE : openMarketContracts(world).length;
     value += perTurn * p.horizon * 0.15 * (2 - w.tiesOverMoney) * Math.min(1, markets);
   }
-  if (purchase.engine === 'mountain' || purchase.engine === 'challenger') value += perTurn * p.horizon * 0.2;
-  if (purchase.engine === 'challenger') value += 2 * p.tieDollars;
   return value;
 }
 
@@ -204,7 +234,7 @@ export function investments(world: BotWorld, p: Params, best: DeliveryPlan | nul
       const action: Action = purchase.tradeIn
         ? { type: 'buyEngine', engine: purchase.engine, slot }
         : { type: 'buyEngine', engine: purchase.engine, slot, city: placementCity(world, best) };
-      add(action, purchase.cost, engineValue(world, p, w, purchase, income.perTurn) * like('engines'), `engine ${purchase.engine}`);
+      add(action, purchase.cost, engineValue(world, p, w, purchase, income.perTurn) * like('engines'), `engine ${purchase.engine}`, engineTurns(world, p));
     }
   }
   if (!used.has('buyUpgrade')) {
