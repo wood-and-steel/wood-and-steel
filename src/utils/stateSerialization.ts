@@ -15,6 +15,7 @@ export interface SerializedState {
     marketRoundsWithoutExpirationStart?: number;
     turnLedger?: unknown;
     roundReport?: unknown;
+    goFirstNextRound?: string;
   };
   ctx: Record<string, unknown>;
 }
@@ -43,6 +44,7 @@ export function serializeState(
     }),
     ...(isRecord(G.turnLedger) && { turnLedger: deepClone(G.turnLedger) }),
     ...(isRecord(G.roundReport) && { roundReport: deepClone(G.roundReport) }),
+    ...(typeof G.goFirstNextRound === 'string' && { goFirstNextRound: G.goFirstNextRound }),
   };
 
   const serializedCtx: Record<string, unknown> = {};

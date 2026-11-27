@@ -85,15 +85,17 @@ export function WoodAndSteelState({
 
   // Turn sheets belong to this turn: when it ends (here or on another device), forget them so
   // they don't reappear on the player's next turn.
+  // A turn is identified by turn and play-order position too: a player who goes first next round
+  // after ending the round has two turns in a row and stays the current player.
+  const turnKey = `${ctx.turn}:${ctx.playOrderPos}`;
   React.useEffect(() => {
-    if (isMyTurn) return;
     setReceiptContractId(null);
     setClaimContractId(null);
     setOpenSheet(null);
     // New contracts go to the current player, so offers from a finished turn must not be picked.
     setIsPrivateContractModalOpen(false);
     setReplacePrivateContract(false);
-  }, [isMyTurn]);
+  }, [isMyTurn, turnKey]);
   /** Why the player can't claim a market contract now, or null. */
   const claimRefusal = !myProps
     ? null

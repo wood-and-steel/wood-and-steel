@@ -249,7 +249,12 @@ const AppContent = (): React.ReactElement => {
           useGameStore.setState((current) => {
             const newG = state.G as GameState;
             const newCtx = state.ctx as GameContext;
-            const turnChanged = newCtx.currentPlayer !== current.ctx.currentPlayer;
+            // A player who goes first next round right after ending the round keeps currentPlayer,
+            // so compare the turn and play-order position too.
+            const turnChanged =
+              newCtx.currentPlayer !== current.ctx.currentPlayer ||
+              newCtx.turn !== current.ctx.turn ||
+              newCtx.playOrderPos !== current.ctx.playOrderPos;
             return {
               G: newG,
               ctx: newCtx,
