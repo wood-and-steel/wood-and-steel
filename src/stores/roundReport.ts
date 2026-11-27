@@ -55,6 +55,7 @@ export function reportHasNews(report: RoundReport): boolean {
     Object.keys(report.routesAdded).length > 0 ||
     report.marketExpired.length > 0 ||
     report.marketAdded.length > 0 ||
-    report.marketLastRound.length > 0
+    report.marketLastRound.length > 0 ||
+    report.goFirst !== undefined
   );
 }

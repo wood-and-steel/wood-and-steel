@@ -29,7 +29,8 @@ export type ActionKind =
   | 'borrow'
   | 'repay'
   | 'buyUpgrade'
-  | 'redrawPrivateContract';
+  | 'redrawPrivateContract'
+  | 'goFirstNextRound';
 
 export interface TurnState {
   /** Actions taken this turn, in order. */
@@ -55,6 +56,9 @@ export interface BotWorld {
   round: number;
   turn: number;
   currentPlayer: string;
+  playOrder: string[];
+  /** Who took Go first next round this round, if anyone. */
+  goFirstNextRound: string | null;
   contracts: Contract[];
   players: [string, PlayerProps][];
   independentRailroads: GameState['independentRailroads'];
@@ -93,6 +97,8 @@ export function buildWorld({ G, ctx, board, bot, playerID, turnState }: BuildWor
     round: ctx.round ?? 0,
     turn: ctx.turn ?? 0,
     currentPlayer: ctx.currentPlayer,
+    playOrder: [...(ctx.playOrder ?? [])],
+    goFirstNextRound: G.goFirstNextRound ?? null,
     contracts: structuredClone(G.contracts ?? []),
     players: structuredClone(G.players ?? []),
     independentRailroads: structuredClone(G.independentRailroads ?? {}),

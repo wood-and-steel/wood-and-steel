@@ -61,6 +61,8 @@ export function makeWorld(spec: WorldSpec = {}): BotWorld {
     round: 3,
     turn: 6,
     currentPlayer: spec.currentPlayer ?? '0',
+    playOrder: ['0', '1'],
+    goFirstNextRound: null,
     contracts: (spec.contracts ?? []).map((c) => contract(c)),
     players: Object.entries(players).map(([id, p]) => [
       id,

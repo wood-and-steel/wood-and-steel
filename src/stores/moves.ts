@@ -22,6 +22,7 @@ import {
   buyUpgrade,
   setCargo,
   setPlayerBoard,
+  goFirstNextRound,
 } from './gameActions';
 import type { EngineSlot, EngineTypeId } from '../rules/playerBoard';
 import type { UpgradeKey } from '../rules/rulesData';
@@ -52,6 +53,7 @@ export interface Moves {
   buyEngine: (slot: EngineSlot, engineType: EngineTypeId) => boolean;
   buyUpgrade: (upgrade: UpgradeKey, choice?: string) => boolean;
   setCargo: (slot: EngineSlot, commodity: string | null) => boolean;
+  goFirstNextRound: () => boolean;
   setPlayerBoard: (
     playerID: string,
     board: Partial<Pick<PlayerProps, 'cash' | 'debt' | 'engines' | 'cargo' | 'upgrades' | 'exchangeCommodity'>>
@@ -111,6 +113,8 @@ export function createMoves(
     buyUpgrade: (upgrade, choice) => buyUpgrade(upgrade, choice),
 
     setCargo: (slot, commodity) => setCargo(slot, commodity),
+
+    goFirstNextRound: () => goFirstNextRound(),
 
     setPlayerBoard: (playerID, board) => setPlayerBoard(playerID, board),
   };

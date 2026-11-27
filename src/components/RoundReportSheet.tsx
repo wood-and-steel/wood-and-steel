@@ -166,6 +166,9 @@ export function RoundReportSheet({
           <span className="sheet__label">Round {displayRound(report.round + 1)} starts with</span>
           <strong>{firstName}</strong>
         </div>
+        {report.goFirst !== undefined && report.goFirst === firstID && (
+          <p className="sheet__note">{firstName} chose Go first next round.</p>
+        )}
       </div>
 
       <label className="roundReport__switch" htmlFor={switchId}>

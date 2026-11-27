@@ -69,6 +69,8 @@ export interface RoundReport {
   marketAdded: ReportedContract[];
   /** Open market contracts that entered their last round at this round end. */
   marketLastRound: ReportedContract[];
+  /** The player who took Go first next round during the round, and so starts the next one. */
+  goFirst?: string;
 }
 
 /** A route owned by an independent railroad, with the round it was added. */
@@ -94,6 +96,8 @@ export interface GameState {
   turnLedger?: TurnLedger;
   /** What changed at the last round end. Absent until a round ends. */
   roundReport?: RoundReport;
+  /** The player who took Go first next round this round. Absent until someone does; cleared at round end. */
+  goFirstNextRound?: string;
 }
 
 /** Game context (ctx): phase, player, turn info. All player references are by ID. */

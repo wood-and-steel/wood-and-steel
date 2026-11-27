@@ -69,10 +69,25 @@ describe('turn order and phase', () => {
     expect(lines(effects)).toEqual([]);
   });
 
-  test('never offers anything but known actions (no "go first")', () => {
+  test('never offers anything but known actions', () => {
     const world = makeWorld({ bot: { cash: 100000 }, contracts: [{ commodity: 'machinery', destinationKey: 'Philadelphia' }] });
-    const known = ['acquireRailroad', 'borrow', 'buildTrack', 'buyEngine', 'buyUpgrade', 'endTurn', 'pickUp', 'redrawPrivateContract', 'repay', 'runTrains'];
+    const known = ['acquireRailroad', 'borrow', 'buildTrack', 'buyEngine', 'buyUpgrade', 'endTurn', 'goFirstNextRound', 'pickUp', 'redrawPrivateContract', 'repay', 'runTrains'];
     expect(types(listActions(world)).every((t) => known.includes(t))).toBe(true);
+  });
+});
+
+describe('go first next round', () => {
+  test('takes it, makes the move, and narrates', () => {
+    const { world, effects } = apply(makeWorld(), { type: 'goFirstNextRound' });
+    expect(world.goFirstNextRound).toBe('0');
+    expect(moves(effects)).toEqual([{ name: 'goFirstNextRound', args: [] }]);
+    expect(lines(effects)).toEqual(['→ Will go first next round']);
+  });
+
+  test('is locked once another player took it this round', () => {
+    const world: BotWorld = { ...makeWorld(), goFirstNextRound: '1' };
+    expect(types(listActions(world))).not.toContain('goFirstNextRound');
+    expect(applyAction(world, { type: 'goFirstNextRound' }).ok).toBe(false);
   });
 });
 

@@ -112,6 +112,7 @@ export function deserializeState(data: unknown): SerializedState {
       ...(marketRoundsWithoutExpirationStart !== undefined && { marketRoundsWithoutExpirationStart }),
       ...(turnLedger && { turnLedger }),
       ...(roundReport && { roundReport }),
+      ...(typeof gObj.goFirstNextRound === 'string' && { goFirstNextRound: gObj.goFirstNextRound }),
     },
     ctx: deepClone(ctx) as Record<string, unknown>,
   };
@@ -156,6 +157,7 @@ function normalizeRoundReport(raw: unknown): RoundReport | undefined {
     marketExpired: reportedContracts(raw.marketExpired),
     marketAdded: reportedContracts(raw.marketAdded),
     marketLastRound: reportedContracts(raw.marketLastRound),
+    ...(typeof raw.goFirst === 'string' && { goFirst: raw.goFirst }),
   };
 }
 

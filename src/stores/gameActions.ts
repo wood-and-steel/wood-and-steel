@@ -827,6 +827,25 @@ export function endTurn(): void {
   saveCurrentGameState();
 }
 
+/**
+ * Go first next round: the current player starts the next round, and play order otherwise
+ * keeps its cycle. Only the first player to take it in a round may.
+ */
+export function goFirstNextRound(): boolean {
+  const { G, ctx } = useGameStore.getState();
+  if (!isMoveAllowed('goFirstNextRound', ctx)) {
+    console.warn('[goFirstNextRound] Move not allowed in current phase');
+    return false;
+  }
+  if (G.goFirstNextRound !== undefined) {
+    console.warn(`[goFirstNextRound] Player ${G.goFirstNextRound} already took it this round`);
+    return false;
+  }
+  useGameStore.setState({ G: { ...G, goFirstNextRound: ctx.currentPlayer } });
+  finishMove();
+  return true;
+}
+
 // --- Money, engines and upgrades (docs/PLAYER_APP_REDESIGN_PLAN.md, Moves) ------------------
 
 /** The smallest unit of money in the game. */

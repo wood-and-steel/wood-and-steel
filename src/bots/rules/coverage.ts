@@ -55,6 +55,7 @@ export const MOVE_COVERAGE: Record<string, Coverage> = {
   buyEngine: { status: 'used', where: 'engine/actions.ts buyEngine' },
   buyUpgrade: { status: 'used', where: 'engine/actions.ts buyUpgrade' },
   setCargo: { status: 'used', where: 'engine/actions.ts pickUp, runOne (final load), Roundhouse hand-over' },
+  goFirstNextRound: { status: 'used', where: 'engine/actions.ts goFirstNextRound' },
   setPlayerBoard: {
     status: 'ignored',
     reason: 'A playtest fix-up for games started before the app tracked money and engines.',
@@ -67,10 +68,7 @@ export const ACTION_COVERAGE: Record<string, Coverage> = {
   'Build track': { status: 'used', where: 'engine/actions.ts buildTrack, engine/costs.ts trackCost' },
   'Buy an engine': { status: 'used', where: 'engine/actions.ts buyEngine, engine/costs.ts enginePurchases' },
   'Merge with an independent railroad': { status: 'used', where: 'engine/actions.ts acquireRailroad' },
-  'Go first next round': {
-    status: 'ignored',
-    reason: 'Not in the app (play order is random), and bots never choose it (docs/BOT_PLAN.md).',
-  },
+  'Go first next round': { status: 'used', where: 'engine/actions.ts goFirstNextRound; heuristic/policy.ts spare action' },
   'Borrow money': { status: 'used', where: 'engine/actions.ts borrow' },
   'Repay debt': { status: 'used', where: 'engine/actions.ts repay, engine/finance.ts repayOptions' },
   'Buy an upgrade': { status: 'used', where: 'engine/actions.ts buyUpgrade, engine/costs.ts upgradePurchases' },

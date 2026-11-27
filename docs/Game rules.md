@@ -47,7 +47,7 @@ Once the game is started, each player sees two tabs in the app:
 - Home, where they see their engines and cargo, their contracts and the market (each valued for them, net of any debt service), their upgrades, and their fulfilled contracts
 - Railroads, a list of the independent railroads, their routes, and their price
 
-Above the tabs, each player sees their railroad ties, cash and debt, with a Loans button for borrowing and repaying, and the other players with their railroad ties. Pressing another player shows their board, laid out like Home: their railroad ties, cash, debt, number of deliveries and debt-service progress, then their engines and recorded cargo, their contracts (private and claimed market), and upgrades. Claiming a market contract offers to record its commodity on one of the player's engines. On their turn, an Actions button lists the turn actions that involve the app: buying an engine or an upgrade, acquiring a railroad, paying for track (the player enters what it cost), and drawing a new private contract. Fulfilling a contract shows a receipt of what it pays before the player confirms.
+Above the tabs, each player sees their railroad ties, cash and debt, with a Loans button for borrowing and repaying, and the other players with their railroad ties. Pressing another player shows their board, laid out like Home: their railroad ties, cash, debt, number of deliveries and debt-service progress, then their engines and recorded cargo, their contracts (private and claimed market), and upgrades. Claiming a market contract offers to record its commodity on one of the player's engines. On their turn, an Actions button lists the turn actions that involve the app: buying an engine or an upgrade, acquiring a railroad, paying for track (the player enters what it cost), and drawing a new private contract, and going first next round. Fulfilling a contract shows a receipt of what it pays before the player confirms.
 
 
 #### Global state information
@@ -55,6 +55,7 @@ Above the tabs, each player sees their railroad ties, cash and debt, with a Loan
 * List of players and their play order
 * Phase of the game
 * Current player
+* The player who chose Go first next round this round, if any
 * All contracts
 * Independent railroads
   * name
@@ -184,10 +185,7 @@ The available actions are:
 * Repay debt  
 * Buy an upgrade  
 * Discard and draw a new private contract  
-
-Actions that are not yet available in the game, but will be in the future:
-
-* Go first the next round
+* Go first next round
 
 ### Run trains
 
@@ -292,7 +290,11 @@ Acquiring an independent railroad immediately awards 1 railroad tie. Its routes 
 
 ### Go first next round
 
-This allows you to go first. Once a player has chosen this, no other player can choose it this round. (Not yet implemented in the app; it sets player order randomly at the beginning of the game.)
+This lets you take the first turn of the next round. Only the first player to choose it in a round may take it; after that it is locked for everyone else until the round ends.
+
+The app chooses the player order at random at the start of the game. Choosing Go first next round doesn't otherwise change that order: at the end of the round the order rotates so the chosen player goes first, and the rest follow in the same cycle. For example, if the order is A, B, C and B chooses it, the next round's order is B, C, A, and it stays that way until another player chooses it. A player who chooses it as the last player in the order takes two turns in a row: the last turn of this round and the first of the next.
+
+In the app, it's on the Actions list; the round report names who starts the next round.
 
 ### Borrow money
 
@@ -364,7 +366,7 @@ After all players have taken a turn, the round is over.
 
 The app determines how each of the independent railroads are expanding. Players add the corresponding track segments on the central map board.
 
-The app's round report shows what changed: a small map for each independent railroad that grew, with its new routes drawn thick, and the market contracts that expired and the ones that replaced them. It opens for every player at the end of the round unless they've switched that off on their device; the round label in the toolbar always opens the latest report, and shows a dot when there's one they haven't seen.
+The app's round report shows what changed: a small map for each independent railroad that grew, with its new routes drawn thick, the market contracts that expired and the ones that replaced them, and who starts the next round (noting when a player chose Go first next round). It opens for every player at the end of the round unless they've switched that off on their device; the round label in the toolbar always opens the latest report, and shows a dot when there's one they haven't seen.
 
 Independent railroads never start on or expand into mountainous routes of length 4 or more.
 

@@ -63,6 +63,8 @@ export function isMoveDone(
       return me?.hubCity != null;
     case 'claimRegionalOffice':
       return me?.regionalOffice != null;
+    case 'goFirstNextRound':
+      return G.goFirstNextRound === playerID;
     case 'endTurn':
       return ctx.currentPlayer !== playerID || ctx.turn !== turn.turn || ctx.playOrderPos !== turn.playOrderPos;
     // Each money move happens at most once a turn, and leaves its line in this turn's money log.

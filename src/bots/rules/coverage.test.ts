@@ -31,8 +31,8 @@ describe('bot coverage map', () => {
     expect(sorted(Object.keys(UPGRADE_COVERAGE)), HINT).toEqual(sorted(upgrades));
   });
 
-  it('never uses "Go first next round"', () => {
-    expect(ACTION_COVERAGE['Go first next round'].status).toBe('ignored');
+  it('uses "Go first next round"', () => {
+    expect(ACTION_COVERAGE['Go first next round'].status).toBe('used');
   });
 });
 
