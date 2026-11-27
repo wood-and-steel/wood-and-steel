@@ -2,7 +2,7 @@
 
 Bot tournaments before and after anchoring each new market contract on the player the open market
 serves worst (docs/Contract generation.md, Market contract). Each run is 150 games, seed 1, round
-limit 80, 3 market contracts at the start; `summary.md` is the anchored 4-player run.
+limit 80, 3 market contracts at the start. `summary.md` has since been replaced by later runs.
 
 Access is the number of segments from a seat's active cities to the nearest source of an open market
 contract's commodity, sampled once a round. The gap is the worst-served seat's access minus the

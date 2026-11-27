@@ -71,10 +71,12 @@ export const STRATEGY_BANDS: Record<StrategyId, Record<WeightKey, Band>> = {
     competitiveness: 'low',
     variability: 'medium',
   },
+  // Horizon and patience at least medium: with less, an engine trade-in never pays back within
+  // the bot's patience and it stays on its Mogul all game (6% win rate in tournaments).
   merchant: {
     debtTolerance: 'lowMed',
-    planningHorizon: 'lowMed',
-    paybackPatience: 'low',
+    planningHorizon: 'medium',
+    paybackPatience: 'medium',
     reach: 'lowMed',
     tiesOverMoney: 'low',
     indieAppetite: 'lowMed',
