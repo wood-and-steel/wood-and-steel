@@ -3,7 +3,7 @@ import type { Action } from '../engine/actions';
 import { makeWorld } from '../engine/world.testHelper';
 import { createRng } from '../rng';
 import { createBotRecord } from '../state/botStates';
-import { investments, worthwhile } from './invest';
+import { TYPICAL_GAME_ROUNDS, investments, roundsLeft, worthwhile } from './invest';
 import { chooseWithinBand, params, paramsFromWeights } from './params';
 import { cheapestPath, planDelivery, rankPlans } from './plans';
 import { EMERGENCY_DEBT, advance, heuristicPolicy } from './policy';
@@ -179,6 +179,26 @@ describe('signature purchases', () => {
       return investments(world, p, rankPlans(world, p)[0]).find((i) => i.label === 'engine mogul')!.value;
     };
     expect(value('express')).toBeGreaterThan(value('builder'));
+  });
+
+  test('Upgraded Stations is worth its bonus on every delivery left in the game', () => {
+    const start = makeWorld({ bot: { cash: 30000 } });
+    const late = makeWorld({
+      bot: { cash: 30000 },
+      contracts: Array.from({ length: 9 }, () => ({ commodity: 'cotton', destinationKey: 'Seattle', fulfilled: true })),
+    });
+    start.turn = 0;
+    late.turn = 24;
+    expect(roundsLeft(start)).toBeCloseTo(TYPICAL_GAME_ROUNDS);
+    expect(roundsLeft(late)).toBeLessThan(4);
+    const stations = (world: ReturnType<typeof makeWorld>) => {
+      const p = params(world);
+      return investments(world, p, rankPlans(world, p)[0]).find((i) => i.label === 'upgrade upgraded-stations')!;
+    };
+    // At the start: about 0.35 deliveries a round for 32 rounds, so well over its $10,000 cost.
+    expect(stations(start).value).toBeGreaterThan(30000);
+    expect(stations(start).payback).toBeLessThan(10);
+    expect(stations(late).value).toBeLessThan(10000);
   });
 
   test('a purchase must pay back within the bot’s patience, longer with idle cash', () => {
