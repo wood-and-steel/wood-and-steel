@@ -1,4 +1,4 @@
-/** Independent railroad prices (docs/Game rules.md, Merge with an independent railroad). */
+/** Independent railroad prices (the rulebook, Acquire an Independent Railroad). */
 import type { Contract } from '../Contract';
 import type { RegionCode } from '../stores/gameStore';
 import { cityRegion } from './regions';

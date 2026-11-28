@@ -140,7 +140,7 @@ The app does not know about your track or where your Engines are.
 
 6. Draw your Starting Route on the map with your marker, and put your lighter-colored engine token on either of its two Cities **(C)**.
 7. When everyone has chosen, the app places the Independent Railroads. Draw each of their Routes on the map with the black marker.
-8. The app deals each player a **(E)**, which they can see in their app.
+8. The app deals each player a Private Contract **(E)**, which they can see in their app.
 
 ### Starting state
 
@@ -461,7 +461,7 @@ In this example, the play order is Red, Blue, Orange.
 * Orange takes their turn. They cannot choose Go First Next Round because Blue already took it this round.
 * The next round starts with Blue going first, followed by Orange and then Red.
 
-Red could have selected Go First Next Round as one of their actions, which would not have changed the play order, but would have prevented BLue or Orange from choosing it. If Blue had not taken it and Orange had, then Orange get two turns in a row: the end of the round where they chose the action, and the start of the next one.
+Red could have selected Go First Next Round as one of their actions, which would not have changed the play order, but would have prevented Blue or Orange from choosing it. If Blue had not taken it and Orange had, then Orange gets two turns in a row: the end of the round where they chose the action, and the start of the next one.
 
 ---
 
@@ -575,11 +575,11 @@ After the last player in order ends their turn, the app ends the round:
 1. **The Market ages.** Once the Market is open, each Market Contract that is counting down loses a round. One that runs out leaves the Market, and the app deals a replacement. Then the app may start one unclaimed Market Contract counting down from 5. If none has started in the last two rounds, one always does. A countdown shows on the Contract ("3 rounds left").
 2. **Independent Railroads grow**, from the end of round 2 on. The app adds new Routes; one player draws them on the map with the black marker. Independent Railroads will never take a Mountain Route printed $10,000 or more.
 3. **The Round Report** opens for everyone: a small map of each Independent Railroad that grew, with its new Routes in bold, and the Market Contracts that left and arrived.
-4. **The next round starts** with the same first player.
+4. **The next round starts.**
 
 ![Fig. 14 — The Round Report](illustrations/fig-14-round-report.svg)
 
-> **IN THE APP.** The round label in the top bar opens the latest Round Report. A dot means there's one you haven't seen. You can stop it opening by itself, in the menu.
+> **IN THE APP.** The round label in the top bar opens the latest Round Report. A dot means there's one you haven't seen.
 
 ---
 
@@ -640,7 +640,6 @@ tie, the player with the most upgrades wins. If they are still tied, they share 
 
 These are planned but not in the playtest yet. Don't play them unless the designer asks you to.
 
-- **West Coast bonus:** extra Railroad Ties for the first player, and later players, to deliver to a West Coast City.
 - **Bankruptcy:** what happens when you can't pay Debt Service. For now, the app blocks the delivery and you borrow first.
 
 ---

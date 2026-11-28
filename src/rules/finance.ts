@@ -1,5 +1,5 @@
 /**
- * Money: contract payouts, debt service, borrowing and repaying (docs/Game rules.md, Fulfilling a
+ * Money: contract payouts, debt service, borrowing and repaying (the rulebook, Fulfilling a
  * contract, Borrow money, Repay debt). Amounts are in dollars. Shared by the player app and the bots.
  */
 import { moneyValue, type Contract } from '../Contract';

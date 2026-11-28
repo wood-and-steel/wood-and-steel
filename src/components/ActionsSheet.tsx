@@ -24,7 +24,7 @@ const REGION_NAMES: Record<string, string> = {
   SE: "Southeast",
 };
 
-/** One-line effects for the upgrades list, from docs/Game rules.md. */
+/** One-line effects for the upgrades list, from the rulebook (docs/rulebook/). */
 const UPGRADE_EFFECTS: Record<UpgradeKey, string> = {
   "service-yard": "Consolidation and better engines move 1 farther",
   "upgraded-stations": "+$3K on every delivery",

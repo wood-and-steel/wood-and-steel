@@ -1,4 +1,4 @@
-/** Map regions (docs/Game rules.md, Fulfilling a contract). */
+/** Map regions (the rulebook, Regions). */
 import { cities } from '../data';
 
 /** The region code of a city ("NE", "SC", …), or undefined for an unknown city. */

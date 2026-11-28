@@ -1,6 +1,6 @@
 /**
  * What things cost and which purchases are open to the bot: track, engines, upgrades, and
- * independent railroads (docs/Game rules.md, Turn actions).
+ * independent railroads (the rulebook, Actions).
  */
 import { cities, commodities, routes } from '../../data';
 import type { EngineTypeId } from '../../board/playerBoardData';

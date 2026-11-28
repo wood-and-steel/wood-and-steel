@@ -31,8 +31,8 @@ describe('bot coverage map', () => {
     expect(sorted(Object.keys(UPGRADE_COVERAGE)), HINT).toEqual(sorted(upgrades));
   });
 
-  it('uses "Go first next round"', () => {
-    expect(ACTION_COVERAGE['Go first next round'].status).toBe('used');
+  it('uses "Go First Next Round"', () => {
+    expect(ACTION_COVERAGE['Go First Next Round'].status).toBe('used');
   });
 });
 
@@ -42,18 +42,20 @@ describe('rules source parsing', () => {
     expect(parsed).toEqual({ a: [], setup: ['m1'], play: ['m2', 'm3'] });
   });
 
-  it('reads action and upgrade headings, dropping prices', () => {
+  it('reads action and upgrade headings', () => {
     const md = [
-      '## Turn actions',
-      '### Run trains',
-      '#### Picking up a commodity',
-      '### Buy an upgrade',
-      '#### Hub – $15,000 (early-mid)',
-      '#### Railyard - $10,000 (mid)',
-      '### Borrow money',
-      '## End of round',
+      '## Your Turn',
+      '### Actions',
+      '## Actions',
+      '### Run Trains',
+      '#### Claiming a Market Contract',
+      '### Borrow Money',
+      '## Upgrades',
+      '### Hub',
+      '### Railyard',
+      '## End of the Round',
       '### Not an action',
     ].join('\n');
-    expect(ruleHeadings(md)).toEqual({ actions: ['Run trains', 'Buy an upgrade', 'Borrow money'], upgrades: ['Hub', 'Railyard'] });
+    expect(ruleHeadings(md)).toEqual({ actions: ['Run Trains', 'Borrow Money'], upgrades: ['Hub', 'Railyard'] });
   });
 });
