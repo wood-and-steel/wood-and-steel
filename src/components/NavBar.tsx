@@ -2,17 +2,18 @@ import React from "react";
 import hamburgerIcon from "../shared/assets/images/hamburger-icon.svg";
 import { PopupMenu, PopupMenuItem, PopupMenuSeparator } from "./PopupMenu";
 
-function useIsDesktop(): boolean {
-  const [isDesktop, setIsDesktop] = React.useState(
-    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = React.useState(
+    () => typeof window !== "undefined" && window.matchMedia(query).matches
   );
   React.useEffect(() => {
-    const mql = window.matchMedia("(min-width: 1024px)");
-    const handler = () => setIsDesktop(mql.matches);
+    const mql = window.matchMedia(query);
+    const handler = () => setMatches(mql.matches);
+    handler();
     mql.addEventListener("change", handler);
     return () => mql.removeEventListener("change", handler);
-  }, []);
-  return isDesktop;
+  }, [query]);
+  return matches;
 }
 
 export interface NavBarGameManager {
@@ -23,9 +24,6 @@ export interface NavBarProps {
   gameManager: NavBarGameManager;
   onNavigateToLobby: () => void;
   onOpenEditPlaytest: () => void;
-  /** Opens the latest round report. Shown in play; disabled until the first round has ended. */
-  onShowRoundReport?: () => void;
-  hasRoundReport?: boolean;
   /** Playtest tool: fill the market tableau (the old +M button). Shown only on the player's turn in play. */
   onFillMarket?: () => void;
   /** Opens the discard sheet. Shown in play; disabled when it's not the player's turn. */
@@ -46,8 +44,6 @@ export function NavBar({
   gameManager,
   onNavigateToLobby,
   onOpenEditPlaytest,
-  onShowRoundReport,
-  hasRoundReport,
   onFillMarket,
   onDiscardContract,
   onDrawPrivateContract,
@@ -57,7 +53,9 @@ export function NavBar({
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const menuButtonRef = React.useRef<HTMLButtonElement>(null);
   const menuButtonDesktopRef = React.useRef<HTMLButtonElement>(null);
-  const isDesktop = useIsDesktop();
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+  // The board app isn't laid out for phones, so the menu leaves it out there.
+  const isPhone = useMediaQuery("(max-width: 767px)");
 
   const placement = React.useMemo(
     () => (isDesktop ? { side: "bottom" as const, align: "start" as const } : { side: "top" as const, align: "end" as const }),
@@ -114,7 +112,7 @@ export function NavBar({
         placement={placement}
       >
         <PopupMenuItem onClick={() => handleMenuClick("lobby")}>Go to Lobby</PopupMenuItem>
-        {__INCLUDE_BOARD__ && gameManager?.currentGameCode && (
+        {__INCLUDE_BOARD__ && !isPhone && gameManager?.currentGameCode && (
           <PopupMenuItem onClick={handleOpenBoard} aria-label="Open Board (opens in a new tab)">
             Open Board
             <svg
@@ -172,18 +170,6 @@ export function NavBar({
             }}
           >
             Fill Market Tableau
-          </PopupMenuItem>
-        )}
-        {onFillMarket && onShowRoundReport && <PopupMenuSeparator />}
-        {onShowRoundReport && (
-          <PopupMenuItem
-            disabled={!hasRoundReport}
-            onClick={() => {
-              onShowRoundReport();
-              setIsMenuOpen(false);
-            }}
-          >
-            Show Round Report
           </PopupMenuItem>
         )}
       </PopupMenu>

@@ -8,6 +8,7 @@ import { simplePolicy } from './simplePolicy.testHelper';
 import { setUpHostGame, type HostGame } from './hostGame.testHelper';
 import { stableStringify } from '../host/hostPorts';
 import { serializeState } from '../../utils/stateSerialization';
+import { saveGameState } from '../../utils/gameManager';
 
 const contract = (fields: Partial<Contract>): Contract => ({
   id: 'k1',
@@ -63,6 +64,23 @@ describe('runBotTurn', () => {
     const record = botRecord(game);
     expect(record.turnInProgress).toBeNull();
     expect(last(record.log).lines).toEqual([`Chose starting cities ${me.activeCities[0]} & ${me.activeCities[1]}`]);
+  });
+
+  test('setup: ends the turn if the stored game has its cities chosen but the turn unchanged', async () => {
+    const game = await setUpHostGame({ phase: 'setup' });
+    expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 })).toBe('done');
+    const after = useGameStore.getState();
+    // Simulate the older save (cities chosen, turn still on bot 0) landing last.
+    const stuckCtx = { ...after.ctx, currentPlayer: '0', playOrderPos: 0, turn: 0 };
+    useGameStore.setState({ ctx: stuckCtx });
+    await saveGameState(game.code, after.G, stuckCtx);
+    const contracts = after.G.contracts.length;
+
+    expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 })).toBe('done');
+    const { G, ctx } = useGameStore.getState();
+    expect(ctx.currentPlayer).toBe('1');
+    expect(G.contracts).toHaveLength(contracts);
+    expect(await storedMatchesStore(game)).toBe(true);
   });
 
   test('play: delivers, takes a new private contract, and ends the turn', async () => {

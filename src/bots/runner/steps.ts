@@ -39,7 +39,12 @@ export function isMoveDone(
   const contract = (id: string) => G.contracts.find((c) => c.id === id);
   switch (move.name) {
     case 'generateStartingContract':
-      return (me?.activeCities.length ?? 0) > 0;
+      // Done once the cities are chosen and the turn has moved on; cities chosen while the turn
+      // is still this player's means the turn change was lost, and the move must run again.
+      return (
+        (me?.activeCities.length ?? 0) > 0 &&
+        !(ctx.phase === 'setup' && ctx.currentPlayer === playerID && ctx.turn === turn.turn && ctx.playOrderPos === turn.playOrderPos)
+      );
     case 'toggleContractFulfilled':
       return contract(move.args[0])?.fulfilled === true;
     case 'claimMarketContract':

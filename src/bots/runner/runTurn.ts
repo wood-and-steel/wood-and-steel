@@ -121,6 +121,17 @@ export async function runBotTurn({
   const id = currentTurn(ports, playerID);
   if (!id) return 'not-my-turn';
 
+  // Starting cities already chosen but the turn is still ours: the turn change was lost (an
+  // older save landed last). Re-send the move, which now just ends the turn.
+  {
+    const { G, ctx } = ports.game.getState();
+    const cities = G.players.find(([pid]) => pid === playerID)?.[1].activeCities ?? [];
+    if (ctx.phase === 'setup' && cities.length === 2) {
+      await ports.game.applyMove({ name: 'generateStartingContract', args: [[cities[0], cities[1]], playerID] });
+      return 'done';
+    }
+  }
+
   const stored = await ports.bots.load();
   let record = stored?.bots[playerID];
   if (!record) throw new Error(`No bot record for player ${playerID}.`);
