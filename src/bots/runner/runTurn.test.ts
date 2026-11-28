@@ -117,6 +117,11 @@ describe('runBotTurn', () => {
       bots: { ...s.bots, '0': { ...s.bots['0'], turnInProgress: { turn: stuckCtx.turn, playOrderPos: stuckCtx.playOrderPos, steps: ['chooseStartingCities'], pending } } },
     }) as typeof s);
 
+    // A stopped runner leaves the pending action for next time.
+    expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0, shouldStop: () => true })).toBe('stopped');
+    expect(useGameStore.getState().ctx.currentPlayer).toBe('0');
+    expect(botRecord(game).turnInProgress?.pending).toBeTruthy();
+
     expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 })).toBe('done');
     expect(useGameStore.getState().ctx.currentPlayer).toBe('1');
     expect(useGameStore.getState().G.contracts).toHaveLength(contracts);

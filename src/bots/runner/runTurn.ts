@@ -128,12 +128,13 @@ export async function runBotTurn({
   // Starting cities already chosen but the turn is still ours, with no pending action to resume:
   // the turn change was lost (an older save landed last). Re-send the move, which now just ends
   // the turn. A same-turn pending action is left to the resume below, which re-runs the move too.
+  // Both recovery paths below can make moves, so a stopped runner leaves them for next time.
+  if (shouldStop()) return 'stopped';
   const pendingThisTurn = sameTurn(id, record.turnInProgress) && !!record.turnInProgress!.pending;
   if (!pendingThisTurn) {
     const { G, ctx } = ports.game.getState();
     const cities = G.players.find(([pid]) => pid === playerID)?.[1].activeCities ?? [];
     if (ctx.phase === 'setup' && cities.length === 2) {
-      if (shouldStop()) return 'stopped';
       await ports.game.applyMove({ name: 'generateStartingContract', args: [[cities[0], cities[1]], playerID] });
       return 'done';
     }
