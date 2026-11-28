@@ -94,7 +94,7 @@ describe('runBotTurn', () => {
     return { contracts: after.G.contracts.length, stuckCtx };
   }
 
-  test('setup: a stopped runner doesn’t recover a stuck turn', async () => {
+  test('setup: a stopped runner doesnâ€™t recover a stuck turn', async () => {
     const game = await setUpHostGame({ phase: 'setup' });
     await stuckAfterChoosingCities(game);
     expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0, shouldStop: () => true })).toBe('stopped');
@@ -152,7 +152,7 @@ describe('runBotTurn', () => {
     expect(record.deliveries).toEqual({ machinery: 1 });
     expect(record.turnInProgress).toBeNull();
     const lines = last(record.log).lines;
-    expect(lines[0]).toMatch(/^â†’ Ran light engine Boston to New York, picked up machinery in Boston & delivered machinery to New York for \$/);
+    expect(lines[0]).toMatch(/^â†â€™ Ran light engine Boston to New York, picked up machinery in Boston & delivered machinery to New York for \$/);
     expect(lines[1]).toMatch(/^Chose private contract, discarding /);
     expect(lines.some((l) => /ended/i.test(l))).toBe(false);
   });
