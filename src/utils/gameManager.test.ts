@@ -113,6 +113,30 @@ describe('Persistence Tests', () => {
       saveSpy.mockRestore();
     });
 
+    test('the last setup player’s cities save only the state after the turn advances into play', async () => {
+      const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
+      generateStartingContract(['New York', 'Philadelphia']);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const saveSpy = vi.spyOn(memoryAdapter, 'saveGame');
+      saveSpy.mockClear();
+
+      generateStartingContract(['Boston', 'Portland ME']);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const { ctx: finalCtx } = useGameStore.getState();
+      expect(finalCtx.phase).toBe('play');
+      const savedCtxs = saveSpy.mock.calls.map((call) => (call[1] as unknown as { ctx: GameContext }).ctx);
+      expect(savedCtxs.length).toBeGreaterThan(0);
+      for (const ctx of savedCtxs) {
+        expect(ctx.phase).toBe('play');
+        expect(ctx.currentPlayer).toBe(finalCtx.currentPlayer);
+        expect(ctx.turn).toBe(finalCtx.turn);
+      }
+      const saved = await loadGameState(gameCode);
+      expect(saved!.ctx.currentPlayer).toBe(finalCtx.currentPlayer);
+      saveSpy.mockRestore();
+    });
+
     test('state persists after generatePrivateContract', async () => {
       const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
 

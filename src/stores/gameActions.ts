@@ -155,7 +155,7 @@ export function generateStartingContract(
   }));
 
   const updatedState = useGameStore.getState();
-  checkPhaseTransition(updatedState.G, updatedState.ctx);
+  checkPhaseTransition(updatedState.G, updatedState.ctx, { persist: false });
 
   // Automatically end turn after choosing starting cities. Don't save here: endTurnEvent() saves
   // the state after the turn advances, and two async saves can land out of order, leaving the

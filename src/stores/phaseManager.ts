@@ -8,7 +8,15 @@ import type { GameState, GameContext } from './gameStore';
  * Evaluates the phase's endIf condition, runs onEnd hook, updates state, and persists.
  * @returns true if a phase transition occurred, false otherwise.
  */
-export function checkPhaseTransition(G: GameState, ctx: GameContext): boolean {
+/**
+ * `persist: false` skips the save, for a caller that saves right after (e.g. by ending the turn),
+ * so two async saves can't land out of order.
+ */
+export function checkPhaseTransition(
+  G: GameState,
+  ctx: GameContext,
+  { persist = true }: { persist?: boolean } = {}
+): boolean {
   const currentPhaseConfig = getPhaseConfig(ctx.phase);
 
   if (!currentPhaseConfig) {
@@ -51,7 +59,7 @@ export function checkPhaseTransition(G: GameState, ctx: GameContext): boolean {
   });
 
   // Persist state after transition (when we have a game code)
-  const gameCode = getCurrentGameCode();
+  const gameCode = persist ? getCurrentGameCode() : null;
   if (gameCode) {
     const updatedState = useGameStore.getState();
     saveGameState(gameCode, updatedState.G, updatedState.ctx).catch((error) => {

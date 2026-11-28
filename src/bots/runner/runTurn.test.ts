@@ -83,6 +83,48 @@ describe('runBotTurn', () => {
     expect(await storedMatchesStore(game)).toBe(true);
   });
 
+  /** Run bot 0's setup turn, then save a stuck game: its cities chosen, the turn still on it. */
+  async function stuckAfterChoosingCities(game: HostGame) {
+    const before = useGameStore.getState().ctx;
+    await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 });
+    const after = useGameStore.getState();
+    const stuckCtx = { ...after.ctx, currentPlayer: before.currentPlayer, playOrderPos: before.playOrderPos, turn: before.turn };
+    useGameStore.setState({ ctx: stuckCtx });
+    await saveGameState(game.code, after.G, stuckCtx);
+    return { contracts: after.G.contracts.length, stuckCtx };
+  }
+
+  test('setup: a stopped runner doesn’t recover a stuck turn', async () => {
+    const game = await setUpHostGame({ phase: 'setup' });
+    await stuckAfterChoosingCities(game);
+    expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0, shouldStop: () => true })).toBe('stopped');
+    expect(useGameStore.getState().ctx.currentPlayer).toBe('0');
+  });
+
+  test('setup: a stuck turn with a pending action resumes it, keeping its narration', async () => {
+    const game = await setUpHostGame({ phase: 'setup' });
+    const { contracts, stuckCtx } = await stuckAfterChoosingCities(game);
+    const me = useGameStore.getState().G.players.find(([id]) => id === '0')![1];
+    const pending = {
+      step: 'chooseStartingCities',
+      effects: [
+        { kind: 'move', move: { name: 'generateStartingContract', args: [[me.activeCities[0], me.activeCities[1]], '0'] } },
+        { kind: 'narrate', line: 'Resumed narration' },
+      ],
+    };
+    await game.ports.bots.update((s) => ({
+      ...s,
+      bots: { ...s.bots, '0': { ...s.bots['0'], turnInProgress: { turn: stuckCtx.turn, playOrderPos: stuckCtx.playOrderPos, steps: ['chooseStartingCities'], pending } } },
+    }) as typeof s);
+
+    expect(await runBotTurn({ playerID: '0', ports: game.ports, policy: simplePolicy, paceMs: 0 })).toBe('done');
+    expect(useGameStore.getState().ctx.currentPlayer).toBe('1');
+    expect(useGameStore.getState().G.contracts).toHaveLength(contracts);
+    const record = botRecord(game);
+    expect(record.turnInProgress).toBeNull();
+    expect(last(record.log).lines).toContain('Resumed narration');
+  });
+
   test('play: delivers, takes a new private contract, and ends the turn', async () => {
     const game = await setUpHostGame({
       phase: 'play',
