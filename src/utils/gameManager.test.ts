@@ -113,7 +113,7 @@ describe('Persistence Tests', () => {
       saveSpy.mockRestore();
     });
 
-    test('the last setup player’s cities save only the state after the turn advances into play', async () => {
+    test('the last setup playerâ€™s cities save only the state after the turn advances into play', async () => {
       const gameCode = await createNewGame({ hostDeviceId: TEST_HOST_DEVICE });
       generateStartingContract(['New York', 'Philadelphia']);
       await new Promise((resolve) => setTimeout(resolve, 0));
