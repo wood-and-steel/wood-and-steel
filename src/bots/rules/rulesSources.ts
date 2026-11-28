@@ -8,7 +8,8 @@ import { join } from 'node:path';
 
 /** Files whose changes may need bot changes. Moves are read from moveValidation.ts separately. */
 export const FINGERPRINT_FILES = [
-  'docs/Game rules.md',
+  'docs/rulebook/Wood and Steel Rulebook.md',
+  'docs/RULES_AGENT_GUIDE.md',
   'src/data/cities.ts',
   'src/data/commodities.ts',
   'src/data/routes.ts',
@@ -17,7 +18,7 @@ export const FINGERPRINT_FILES = [
 ] as const;
 
 export const MOVE_VALIDATION_FILE = 'src/stores/moveValidation.ts';
-export const RULES_DOC = 'docs/Game rules.md';
+export const RULES_DOC = 'docs/rulebook/Wood and Steel Rulebook.md';
 
 export function readRepoFile(root: string, path: string): string {
   return readFileSync(join(root, path), 'utf8').replace(/\r\n/g, '\n');
@@ -42,35 +43,25 @@ export function allMoves(movesByPhase: Record<string, string[]>): string[] {
   return [...new Set(Object.values(movesByPhase).flat())].sort();
 }
 
-/** "Service Yard – $10,000 (early)" -> "Service Yard" */
-function headingName(line: string): string {
-  return line.replace(/^#+\s*/, '').split(/\s[–-]\s/)[0].trim();
+/** The `###` headings in the `## <title>` section of `markdown`. */
+function sectionHeadings(markdown: string, title: string): string[] {
+  const lines = markdown.split('\n');
+  const start = lines.findIndex((l) => l.trim() === `## ${title}`);
+  if (start === -1) throw new Error(`"## ${title}" not found in the rules`);
+  let end = lines.findIndex((l, i) => i > start && /^## /.test(l));
+  if (end === -1) end = lines.length;
+  return lines
+    .slice(start + 1, end)
+    .filter((l) => /^### /.test(l))
+    .map((l) => l.replace(/^###\s*/, '').trim());
 }
 
 /**
- * The action headings the bots must account for: each `###` under "## Turn actions", and each
- * `####` under "### Buy an upgrade".
+ * The headings the bots must account for: each `###` under "## Actions" and each `###` under
+ * "## Upgrades" in the rulebook.
  */
 export function ruleHeadings(markdown: string): { actions: string[]; upgrades: string[] } {
-  const lines = markdown.split('\n');
-  const start = lines.findIndex((l) => l.trim() === '## Turn actions');
-  if (start === -1) throw new Error('"## Turn actions" not found in the rules');
-  let end = lines.findIndex((l, i) => i > start && /^## /.test(l));
-  if (end === -1) end = lines.length;
-  const section = lines.slice(start + 1, end);
-  const actions: string[] = [];
-  const upgrades: string[] = [];
-  let inUpgrades = false;
-  for (const line of section) {
-    if (/^### /.test(line)) {
-      const name = headingName(line);
-      actions.push(name);
-      inUpgrades = name === 'Buy an upgrade';
-    } else if (inUpgrades && /^#### /.test(line)) {
-      upgrades.push(headingName(line));
-    }
-  }
-  return { actions, upgrades };
+  return { actions: sectionHeadings(markdown, 'Actions'), upgrades: sectionHeadings(markdown, 'Upgrades') };
 }
 
 /** SHA-256 over the fingerprint files and the move list. */

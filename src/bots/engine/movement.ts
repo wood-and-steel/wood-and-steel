@@ -1,5 +1,5 @@
 /**
- * Running trains (docs/Game rules.md, Run trains): engines move along the player's own track up
+ * Running trains (the rulebook, Run Trains): engines move along the player's own track up
  * to their distance, picking up a commodity in a city that supplies it and delivering it to a
  * city with an open contract for it. Delivering ends the move unless the player has a Timetable.
  * With a Roundhouse, an empty engine can meet a loaded one and carry its commodity on.

@@ -1,5 +1,5 @@
 /**
- * Rules numbers from docs/Game rules.md: costs, prices, debt service, limits, bonuses. Shared by
+ * Rules numbers from the rulebook (docs/rulebook/): costs, prices, debt service, limits, bonuses. Shared by
  * the player app and the bot engine, so it must stay free of stores (type imports aside) and React.
  * The rules fingerprint test (src/bots/rules/) fails when the rules change, so review these then.
  *

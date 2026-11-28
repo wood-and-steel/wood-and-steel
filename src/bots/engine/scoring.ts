@@ -1,5 +1,5 @@
 /**
- * Railroad ties (docs/Game rules.md, Object of the game and scoring). The app shows only
+ * Railroad ties (the rulebook, End of the Game). The app shows only
  * fulfillment ties, so the engine scores the bonuses itself. Connection bonuses and the West
  * Coast bonus aren't implemented in the app and aren't scored.
  */

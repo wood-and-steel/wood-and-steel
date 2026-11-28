@@ -1,5 +1,5 @@
 /**
- * Engine purchases and the gates that depend on engines (docs/Game rules.md, Buy an engine,
+ * Engine purchases and the gates that depend on engines (the rulebook, Buy an Engine,
  * Service Yard, Monopolies). Pure functions over plain values, shared by the player app and the bots.
  */
 import { commodities } from '../data';

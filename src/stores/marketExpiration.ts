@@ -2,7 +2,7 @@
  * Market contract helpers shared by the moves and the end-of-round hook: drawing replacement
  * market contracts, and expiring open market contracts so the tableau stays fresh.
  *
- * Expiration rules (see docs/Game rules.md, Market contracts):
+ * Expiration rules (see the rulebook, End of the Round):
  * - The market clock starts at the first round-end with any open market contract.
  * - At each market round-end: every countdown ticks down by 1; contracts that reach 0 leave the
  *   tableau and are replaced one-for-one; then maybe one open contract with no countdown starts

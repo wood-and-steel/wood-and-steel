@@ -9,7 +9,7 @@ Notes on the playtest-draft rulebook, written to [RULEBOOK_WRITING_GUIDE.md](../
 | [illustrations/](illustrations/) | 15 draft figures (SVG), each stamped `DRAFT · FIG. n` |
 | [illustrations/make-figures.mjs](illustrations/make-figures.mjs) | Redraws the figures from the game's real map data: `node docs/rulebook/illustrations/make-figures.mjs .` from the repo root |
 
-**Sources.** [Game rules.md](../Game%20rules.md), [Contract generation.md](../Contract%20generation.md), the rules numbers in `src/rules/`, the player app (`src/components/ActionsSheet.tsx` for action labels), and the redesign decisions in [PLAYER_APP_REDESIGN_PLAN.md](../PLAYER_APP_REDESIGN_PLAN.md). Where they disagreed, the book follows the code and the newest decision, and the disagreement is listed below.
+**Sources.** `Game rules.md` (since replaced: the rulebook is now the rules source, and [RULES_AGENT_GUIDE.md](../RULES_AGENT_GUIDE.md) covers implementation), [Contract generation.md](../Contract%20generation.md), the rules numbers in `src/rules/`, the player app (`src/components/ActionsSheet.tsx` for action labels), and the redesign decisions in [PLAYER_APP_REDESIGN_PLAN.md](../PLAYER_APP_REDESIGN_PLAN.md). Where they disagreed, the book follows the code and the newest decision, and the disagreement is listed below.
 
 ## Open questions for the designer
 
@@ -39,7 +39,7 @@ Each is marked ⚑Qn in the book. The book doesn't invent an answer to any of th
 
 ## Out-of-date statements in the existing docs
 
-Found while writing. Not changed, since `Game rules.md` is the designer's source of truth.
+Found while writing. `Game rules.md` has since been replaced by [RULES_AGENT_GUIDE.md](../RULES_AGENT_GUIDE.md), so the entries about it are history.
 
 - **`Game rules.md`, Set Up:** "make a note they have $10,000 cash and $0 debt" on paper, and "switch to the Contracts tab". The app tracks money now, and Home is the only page.
 - **`Game rules.md`, App:** describes a Railroads tab. It's now the "Acquire a railroad" step of Actions.

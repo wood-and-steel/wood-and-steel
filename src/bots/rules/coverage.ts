@@ -62,20 +62,20 @@ export const MOVE_COVERAGE: Record<string, Coverage> = {
   },
 };
 
-/** Every "###" heading under "## Turn actions" in docs/Game rules.md. */
+/** Every "###" heading under "## Actions" in the rulebook. */
 export const ACTION_COVERAGE: Record<string, Coverage> = {
-  'Run trains': { status: 'used', where: 'engine/movement.ts, engine/actions.ts runTrains' },
-  'Build track': { status: 'used', where: 'engine/actions.ts buildTrack, engine/costs.ts trackCost' },
-  'Buy an engine': { status: 'used', where: 'engine/actions.ts buyEngine, engine/costs.ts enginePurchases' },
-  'Merge with an independent railroad': { status: 'used', where: 'engine/actions.ts acquireRailroad' },
-  'Go first next round': { status: 'used', where: 'engine/actions.ts goFirstNextRound; heuristic/policy.ts spare action' },
-  'Borrow money': { status: 'used', where: 'engine/actions.ts borrow' },
-  'Repay debt': { status: 'used', where: 'engine/actions.ts repay, engine/finance.ts repayOptions' },
-  'Buy an upgrade': { status: 'used', where: 'engine/actions.ts buyUpgrade, engine/costs.ts upgradePurchases' },
-  'Discard and draw a new Private Contract': { status: 'used', where: 'engine/actions.ts redrawPrivateContract' },
+  'Run Trains': { status: 'used', where: 'engine/movement.ts, engine/actions.ts runTrains' },
+  'Build Track': { status: 'used', where: 'engine/actions.ts buildTrack, engine/costs.ts trackCost' },
+  'Buy an Engine': { status: 'used', where: 'engine/actions.ts buyEngine, engine/costs.ts enginePurchases' },
+  'Acquire an Independent Railroad': { status: 'used', where: 'engine/actions.ts acquireRailroad' },
+  'Go First Next Round': { status: 'used', where: 'engine/actions.ts goFirstNextRound; heuristic/policy.ts spare action' },
+  'Borrow Money': { status: 'used', where: 'engine/actions.ts borrow' },
+  'Repay Debt': { status: 'used', where: 'engine/actions.ts repay, engine/finance.ts repayOptions' },
+  'Buy an Upgrade': { status: 'used', where: 'engine/actions.ts buyUpgrade, engine/costs.ts upgradePurchases' },
+  'Discard and Draw a New Contract': { status: 'used', where: 'engine/actions.ts redrawPrivateContract' },
 };
 
-/** Every "####" heading under "### Buy an upgrade". */
+/** Every "###" heading under "## Upgrades" in the rulebook. */
 export const UPGRADE_COVERAGE: Record<string, Coverage> = {
   'Service Yard': { status: 'used', where: 'engine/movement.ts engineReach; available once anyone owns a Consolidation' },
   'Upgraded Stations': { status: 'used', where: 'engine/finance.ts deliveryPayment' },
@@ -88,5 +88,5 @@ export const UPGRADE_COVERAGE: Record<string, Coverage> = {
     status: 'used',
     where: 'engine/costs.ts regionalOfficeRegions; end-of-game ties in engine/scoring.ts. Its extra contract offer is not in the app.',
   },
-  'Commodities Exchange Office': { status: 'used', where: 'engine/costs.ts connectedToAllSuppliers, engine/scoring.ts monopoly' },
+  'Commodities Exchange': { status: 'used', where: 'engine/costs.ts connectedToAllSuppliers, engine/scoring.ts monopoly' },
 };

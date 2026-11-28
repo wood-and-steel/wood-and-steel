@@ -18,7 +18,7 @@ writeFileSync(
  * docs/BOT_AGENT_GUIDE.md (Rule changes), then run \`npm run bots:ack-rules\`.
  *
  * What changed since the last review:
- *   git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/rules/playerBoard.ts
+ *   git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- docs/rulebook docs/RULES_AGENT_GUIDE.md src/stores/moveValidation.ts src/data src/rules/playerBoard.ts
  */
 export const RULES_FINGERPRINT = '${hash}';
 `

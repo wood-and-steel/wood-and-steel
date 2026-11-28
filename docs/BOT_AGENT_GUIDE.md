@@ -65,16 +65,16 @@ Each action's narration lines are saved to the bot's `log` in `bot_states` (the 
 
 ## Rule changes
 
-The fingerprint covers `docs/Game rules.md`, `MOVES_BY_PHASE` in `src/stores/moveValidation.ts`, `src/data/*.ts` (except `index.ts`), and `src/rules/playerBoard.ts`. When `rulesFingerprint.test.ts` fails:
+The fingerprint covers the rulebook (`docs/rulebook/Wood and Steel Rulebook.md`), `docs/RULES_AGENT_GUIDE.md`, `MOVES_BY_PHASE` in `src/stores/moveValidation.ts`, `src/data/*.ts` (except `index.ts`), and `src/rules/playerBoard.ts`. When `rulesFingerprint.test.ts` fails:
 
 1. **See what changed since the bots were last reviewed:**
 
    ```bash
-   git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/rules/playerBoard.ts
+   git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- docs/rulebook docs/RULES_AGENT_GUIDE.md src/stores/moveValidation.ts src/data src/rules/playerBoard.ts
    ```
 
 2. **Decide the bot impact** of each change:
-   - A new or renamed move, turn action, or upgrade also fails `coverage.test.ts`. Label it in `src/bots/rules/coverage.ts` as `used` (with where), `ignored` (with why), or `notInApp`.
+   - A new or renamed move, or a new or renamed `###` heading under the rulebook's `## Actions` or `## Upgrades`, also fails `coverage.test.ts`. Label it in `src/bots/rules/coverage.ts` as `used` (with where), `ignored` (with why), or `notInApp`.
    - New or changed numbers: update `engine/rulesData.ts`.
    - New or changed mechanics: update the engine module that owns them (table above) and its tests. Add narration for any new action.
    - Map data changes (routes, cities, commodities) usually need nothing beyond the tests passing.

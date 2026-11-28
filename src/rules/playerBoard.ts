@@ -1,7 +1,7 @@
 /**
  * Static reference data for what the player board tracks: engine types, the six upgrades with a
  * checkbox on the board, and commodity groups as printed on the board. Values come from
- * docs/Game rules.md. Shared by the player app, the board app, and the bots
+ * the rulebook (docs/rulebook/). Shared by the player app, the board app, and the bots
  * (docs/PLAYER_APP_REDESIGN_PLAN.md, Shared rules module), so it must stay free of stores and React.
  */
 

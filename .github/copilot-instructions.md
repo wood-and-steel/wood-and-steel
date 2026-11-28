@@ -55,7 +55,7 @@ npm run build
 wood-and-steel/
 ├── .github/              # GitHub configuration (workflows, templates)
 ├── docs/                 # Project documentation
-│   ├── Game rules.md     # Complete game rules and mechanics
+│   ├── RULES_AGENT_GUIDE.md # How the rules map to code, implementation status
 │   ├── CSS_ARCHITECTURE.md   # CSS styling guidelines (IMPORTANT!)
 │   └── PHASES_AGENT_GUIDE.md # Game phase system (source of truth for agents)
 ├── public/              # Static assets
@@ -285,7 +285,7 @@ test('renders component correctly', () => {
 
 ## Work-in-Progress Notes
 
-This is an actively developed project. Some features described in `/docs/Game rules.md` are not yet implemented. Always check the actual code to understand current functionality.
+This is an actively developed project. Some rules in `/docs/rulebook/` are not yet implemented (see `/docs/RULES_AGENT_GUIDE.md`). Always check the actual code to understand current functionality.
 
 Key areas still in development:
 - Full contract fulfillment logic

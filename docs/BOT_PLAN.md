@@ -259,12 +259,12 @@ The runner appends each line to the turn's `BotTurnLog` as the action completes,
 ## Rule changes: guide, coverage map, fingerprint
 
 - **`docs/BOT_AGENT_GUIDE.md`**, linked from `AGENTS.md`, covers file layout, ports, invariants, how to add an action or upgrade, how to tune strategies, and the checklist below.
-- **`src/bots/rules/coverage.ts`** labels every move in `MOVES_BY_PHASE` and every action and upgrade heading in `docs/Game rules.md` (the `###` entries under Turn actions and the `####` entries under Buy an upgrade) as `used`, `ignored` (with a reason, for example go-first), or `notInApp`. **`coverage.test.ts`** fails if any move or heading is unlabeled, or if a label names something that no longer exists.
-- **`src/bots/rules/rulesFingerprint.ts`** stores a SHA-256 of `docs/Game rules.md`, `MOVES_BY_PHASE` (parsed from `moveValidation.ts`, which stays unchanged), `src/data/*.ts`, and `src/board/playerBoardData.ts`; `src/bots/rules/rulesSources.ts` computes it. **`rulesFingerprint.test.ts` fails** when the hash differs, with a message pointing to the guide. `npm run bots:ack-rules` rewrites the hash; it is run deliberately after review, and a typo-only change is committed with a note that it has no bot impact.
+- **`src/bots/rules/coverage.ts`** labels every move in `MOVES_BY_PHASE` and every action and upgrade heading in the rulebook (the `###` entries under `## Actions` and `## Upgrades` in `docs/rulebook/Wood and Steel Rulebook.md`) as `used`, `ignored` (with a reason, for example go-first), or `notInApp`. **`coverage.test.ts`** fails if any move or heading is unlabeled, or if a label names something that no longer exists.
+- **`src/bots/rules/rulesFingerprint.ts`** stores a SHA-256 of the rulebook, `docs/RULES_AGENT_GUIDE.md`, `MOVES_BY_PHASE` (parsed from `moveValidation.ts`, which stays unchanged), `src/data/*.ts`, and `src/board/playerBoardData.ts`; `src/bots/rules/rulesSources.ts` computes it. **`rulesFingerprint.test.ts` fails** when the hash differs, with a message pointing to the guide. `npm run bots:ack-rules` rewrites the hash; it is run deliberately after review, and a typo-only change is committed with a note that it has no bot impact.
 - **Diff since the last sync:**
 
   ```bash
-  git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- "docs/Game rules.md" src/stores/moveValidation.ts src/data src/board/playerBoardData.ts
+  git diff $(git log -1 --format=%H -- src/bots/rules/rulesFingerprint.ts) -- docs/rulebook docs/RULES_AGENT_GUIDE.md src/stores/moveValidation.ts src/data src/rules/playerBoard.ts
   ```
 
 - **Checklist in the guide:** run the diff; update `rulesData`, the engine, the coverage map, and narration templates; add tests; rerun the tournament and compare with the last results; then acknowledge the fingerprint.

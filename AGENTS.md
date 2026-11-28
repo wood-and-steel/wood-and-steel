@@ -19,7 +19,8 @@ This file is the entrypoint for AI agents to find project conventions and avoid 
 - [docs/LOBBY_AGENT_GUIDE.md](docs/LOBBY_AGENT_GUIDE.md) — Lobby screen, game list, entry/exit behavior
 - [docs/BYOD_AGENT_GUIDE.md](docs/BYOD_AGENT_GUIDE.md) — BYOD multiplayer, seat assignment, waiting phase
 - [docs/CSS_ARCHITECTURE.md](docs/CSS_ARCHITECTURE.md) — Styling: no inline styles, centralized CSS, BEM, variables
-- [docs/Game rules.md](docs/Game%20rules.md) — Game rules and implementation status
+- [docs/rulebook/Wood and Steel Rulebook.md](docs/rulebook/Wood%20and%20Steel%20Rulebook.md) — The game rules (playtest draft)
+- [docs/RULES_AGENT_GUIDE.md](docs/RULES_AGENT_GUIDE.md) — What the rulebook doesn't say: what the code enforces or trusts, what isn't built, names in code, changing a rule
 - [docs/TS_JS_CONFIG_POLICY.md](docs/TS_JS_CONFIG_POLICY.md) — TypeScript/JS migration, extensionless imports
 - [docs/BOARD_AGENT_GUIDE.md](docs/BOARD_AGENT_GUIDE.md) — Playtest board app at `/board` (`src/board/`): read-only toward `G`/`ctx`, own store and table
 - [docs/BOT_AGENT_GUIDE.md](docs/BOT_AGENT_GUIDE.md) — Playtest bot players (`src/bots/`): engine, invariants, what to do when the rules change
