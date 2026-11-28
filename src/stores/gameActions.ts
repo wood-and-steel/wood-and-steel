@@ -125,6 +125,14 @@ export function generateStartingContract(
     return;
   }
 
+  // Cities already chosen but the turn never advanced (e.g. an older save landed last): just
+  // finish the move by ending the turn, without a second starting contract.
+  const current = G.players.find(([id]) => id === ctx.currentPlayer)?.[1];
+  if ((current?.activeCities.length ?? 0) > 0) {
+    endTurnEvent();
+    return;
+  }
+
   const activeCitiesTuple: [string, string] = [activeCities[0], activeCities[1]];
   const contract = generateStartingContractContract(G, activeCitiesTuple, ctx.currentPlayer);
 
@@ -147,10 +155,11 @@ export function generateStartingContract(
   }));
 
   const updatedState = useGameStore.getState();
-  checkPhaseTransition(updatedState.G, updatedState.ctx);
+  checkPhaseTransition(updatedState.G, updatedState.ctx, { persist: false });
 
-  saveCurrentGameState();
-  // Automatically end turn after choosing starting cities; endTurnEvent() saves state internally
+  // Automatically end turn after choosing starting cities. Don't save here: endTurnEvent() saves
+  // the state after the turn advances, and two async saves can land out of order, leaving the
+  // saved game with the cities chosen but the turn still on this player.
   endTurnEvent();
 }
 
